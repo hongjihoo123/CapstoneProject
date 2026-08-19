@@ -9,16 +9,24 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5b5547270451b5a40a8b7d018a34d35b, type: 3}
+  m_Script: {fileID: 11500000, guid: 2afef6bbafda4fd408baf552e969ba1f, type: 3}
   m_Name: Test_LaserDealer
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.LaserDealerData
   weaponName: New Weapon
-  type: 0
+  type: 1
   description: 
   cooldown: 0.5
   resourceMax: 100
+  reloadDuration: 1.5
   damagePerSecond: 20
   range: 15
   resourceDrainPerSecond: 15
   rampUpRate: 1
   maxRampMultiplier: 3
+  maxGauge: 100
+  gaugeChargePerSecond: 40
+  energyBallPrefab: {fileID: 4723048514511160704, guid: 331acd152d2cc994b974f63cb7841d54, type: 3}
+  energyBallDamage: 60
+  energyBallSpeed: 20
+  energyBallAimRange: 40
+  energyBallCooldown: 1.5
