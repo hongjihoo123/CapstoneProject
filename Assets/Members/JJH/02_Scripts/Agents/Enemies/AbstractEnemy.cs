@@ -22,6 +22,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
 
             BehaviorAgent.SetVariableValue("Enemy", this);
+            BehaviorAgent.SetVariableValue("AttackCooltime", EnemyData.AttackCooltime);
         }
 
         public virtual void Attack() { }
