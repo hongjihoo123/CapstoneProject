@@ -51,7 +51,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
             _targetPos = Target.Value.transform.position;
 
-            if (Vector3.Distance(Enemy.Value.transform.position, _targetPos) <= 2.5f)
+            if (Vector3.Distance(Enemy.Value.transform.position, _targetPos) <= Enemy.Value.EnemyData.AttackRange)
             {
                 return Status.Success;
             }

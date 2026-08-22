@@ -7,7 +7,6 @@ namespace Members.JJH._02_Scripts.Agents.Modules
     public class AgentSensor : Module, ISensor
     {
         [Header("Layer")]
-        [field: SerializeField] public LayerMask ObstacleLayer { get; private set; }
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }
 
         private float _debugRange = 0;
