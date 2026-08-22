@@ -7,8 +7,7 @@ namespace Members.JJH._02_Scripts.Agents.Modules
 {
     public class AgentNavMesh : Module
     {
-        [field: SerializeField] public NavMeshAgent NavMeshAgent { get; private set; }
-
+        public NavMeshAgent NavMeshAgent { get; private set; }
 
         public override void Initialize(ModuleOwner owner)
         {
