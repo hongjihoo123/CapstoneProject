@@ -9,7 +9,7 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem
         //비어있는 클래스    
     }
 
-    [CreateAssetMenu(fileName = "Event channel", menuName = "Lib/EventChannel", order = 0)]
+    [CreateAssetMenu(fileName = "Event channel", menuName = "SO/Event/EventChannel", order = 0)]
     public class EventChannelSO : ScriptableObject
     {
         private readonly Dictionary<Type, Action<GameEvent>> _events = new();

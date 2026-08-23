@@ -7,12 +7,7 @@ namespace Members.JJH._02_Scripts.Agents.Modules
     public class AgentSensor : Module, ISensor
     {
         [Header("Layer")]
-        [field: SerializeField] public LayerMask ObstacleLayer { get; private set; }
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }
-
-        [Header("Layer")]
-        [SerializeField] private float selfCheckRadius;
-        [SerializeField] private float viewAngle = 120f;
 
         private float _debugRange = 0;
 
@@ -25,7 +20,6 @@ namespace Members.JJH._02_Scripts.Agents.Modules
 
         private void OnDrawGizmos()
         {
-            _debugRange = selfCheckRadius;
             if (_debugRange > 0f)
             {
                 Gizmos.color = Color.blue;
