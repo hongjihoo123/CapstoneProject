@@ -12,10 +12,7 @@ namespace Members.KYR._01_Scripts
     [RequireComponent(typeof(CharacterController))]
     public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable
     {
-        // 자식(또는 같은 오브젝트)에 필요:
-        // AgentRenderer, PlayerSensor, PlayerMover, PlayerHealth, PlayerWeapon,
-        // ControlStateModule, MoveStateModule, WeaponStateModule
-
+      
         [SerializeField] private PlayerInputSO playerInput;
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private Transform muzzleOrigin;
@@ -145,6 +142,9 @@ namespace Members.KYR._01_Scripts
         private void PushAnimator()
         {
             if (Renderer == null)
+                return;
+            if (speedParam == null && groundedParam == null && crouchParam == null
+                && airborneParam == null && aimParam == null && reloadParam == null)
                 return;
 
             if (speedParam != null)

@@ -92,10 +92,6 @@ namespace Members.KYR._01_Scripts
                 JumpPressed = true;
         }
 
-        public void OnPrevious(InputAction.CallbackContext context) { }
-
-        public void OnNext(InputAction.CallbackContext context) { }
-
         public void OnSprint(InputAction.CallbackContext context)
         {
             RunHeld = context.ReadValue<float>() > 0.5f;
