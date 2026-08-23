@@ -16,11 +16,12 @@ namespace Members.KYR._01_Scripts
         // AgentRenderer, PlayerSensor, PlayerMover, PlayerHealth, PlayerWeapon,
         // ControlStateModule, MoveStateModule, WeaponStateModule
 
+        [SerializeField] private PlayerInputSO playerInput;
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private Transform muzzleOrigin;
         [SerializeField] private bool lockCursor = true;
 
-        [Header("Animator (optional)")]
+        [Header("Animator")]
         [SerializeField] private AnimParamSO speedParam;
         [SerializeField] private AnimParamSO groundedParam;
         [SerializeField] private AnimParamSO crouchParam;
@@ -51,6 +52,7 @@ namespace Members.KYR._01_Scripts
             MoveFsm = GetModule<MoveStateModule>();
             WeaponFsm = GetModule<WeaponStateModule>();
 
+            Debug.Assert(playerInput != null, $"{name}에는 PlayerInputSO가 필요합니다.");
             Debug.Assert(Mover != null, $"{name}에는 PlayerMover 모듈이 필요합니다.");
             Debug.Assert(Health != null, $"{name}에는 PlayerHealth 모듈이 필요합니다.");
             Debug.Assert(Weapon != null, $"{name}에는 PlayerWeapon 모듈이 필요합니다.");
@@ -77,7 +79,10 @@ namespace Members.KYR._01_Scripts
 
             float dt = Time.deltaTime;
 
-            Input.Collect();
+            if (playerInput != null)
+                playerInput.Fill(Input);
+            else
+                Input.Clear();
             Health.Tick(dt);
             ControlFsm.Tick(dt);
 

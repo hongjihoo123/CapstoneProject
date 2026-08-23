@@ -1,7 +1,4 @@
 using UnityEngine;
-#if ENABLE_INPUT_SYSTEM
-using UnityEngine.InputSystem;
-#endif
 
 namespace Members.KYR._01_Scripts
 {
@@ -21,44 +18,23 @@ namespace Members.KYR._01_Scripts
 
         public bool HasMoveInput => MoveSqrMagnitude > 0.01f;
 
-        public void Collect()
+        public void CopyFrom(PlayerInputSO source)
         {
-#if ENABLE_INPUT_SYSTEM
-            Keyboard keyboard = Keyboard.current;
-            Mouse mouse = Mouse.current;
-
-            Vector2 move = Vector2.zero;
-            if (keyboard != null)
+            if (source == null)
             {
-                if (keyboard.wKey.isPressed) move.y += 1f;
-                if (keyboard.sKey.isPressed) move.y -= 1f;
-                if (keyboard.dKey.isPressed) move.x += 1f;
-                if (keyboard.aKey.isPressed) move.x -= 1f;
+                Clear();
+                return;
             }
 
-            Move = move.sqrMagnitude > 1f ? move.normalized : move;
-            Look = mouse != null ? mouse.delta.ReadValue() : Vector2.zero;
-            JumpPressed = keyboard != null && keyboard.spaceKey.wasPressedThisFrame;
-            CrouchHeld = keyboard != null && keyboard.leftCtrlKey.isPressed;
-            RunHeld = keyboard != null && keyboard.leftShiftKey.isPressed;
-            FireHeld = mouse != null && mouse.leftButton.isPressed;
-            FirePressed = mouse != null && mouse.leftButton.wasPressedThisFrame;
-            AimHeld = mouse != null && mouse.rightButton.isPressed;
-            ReloadPressed = keyboard != null && keyboard.rKey.wasPressedThisFrame;
-#else
-            Move = new Vector2(Input.GetAxisRaw("Horizontal"), Input.GetAxisRaw("Vertical"));
-            if (Move.sqrMagnitude > 1f)
-                Move = Move.normalized;
-
-            Look = new Vector2(Input.GetAxisRaw("Mouse X"), Input.GetAxisRaw("Mouse Y"));
-            JumpPressed = Input.GetButtonDown("Jump");
-            CrouchHeld = Input.GetKey(KeyCode.LeftControl);
-            RunHeld = Input.GetKey(KeyCode.LeftShift);
-            FireHeld = Input.GetButton("Fire1");
-            FirePressed = Input.GetButtonDown("Fire1");
-            AimHeld = Input.GetButton("Fire2");
-            ReloadPressed = Input.GetKeyDown(KeyCode.R);
-#endif
+            Move = source.Move;
+            Look = source.Look;
+            JumpPressed = source.JumpPressed;
+            CrouchHeld = source.CrouchHeld;
+            RunHeld = source.RunHeld;
+            FireHeld = source.FireHeld;
+            FirePressed = source.FirePressed;
+            AimHeld = source.AimHeld;
+            ReloadPressed = source.ReloadPressed;
         }
 
         public void Clear()
