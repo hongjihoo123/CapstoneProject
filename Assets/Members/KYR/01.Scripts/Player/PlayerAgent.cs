@@ -160,5 +160,10 @@ namespace Members.KYR._01_Scripts
             if (reloadParam != null)
                 Renderer.SetBool(reloadParam.HashValue, WeaponFsm.Machine.IsCurrent<ReloadWeaponState>());
         }
+
+        public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0)
+        {
+            throw new System.NotImplementedException();
+        }
     }
 }
