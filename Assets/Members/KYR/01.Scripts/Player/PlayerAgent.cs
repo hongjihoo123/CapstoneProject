@@ -14,16 +14,17 @@ namespace Members.KYR._01_Scripts
     [RequireComponent(typeof(CharacterController))]
     public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable
     {
-      
+
         [SerializeField] private PlayerInputSO playerInput;
-        
+
         [Header("총 관련")]
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private Transform muzzleOrigin;
         [SerializeField] private Text ammoText;
-
+        [Header("반동 관련")]
+        [SerializeField] private CinemachineCamera cinemachineCamera;
         private float currentFOV;
-        
+
         [SerializeField] private bool lockCursor = true;
 
         [Header("Animator")]
@@ -46,6 +47,7 @@ namespace Members.KYR._01_Scripts
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
         public bool IsAlive => Health != null && !Health.IsDead;
+        public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
         protected override void InitializeModules()
         {
@@ -76,6 +78,8 @@ namespace Members.KYR._01_Scripts
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+
+            if (cinemachineCamera != null) currentFOV = cinemachineCamera.Lens.FieldOfView;
         }
 
         private void Update()

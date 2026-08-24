@@ -532,6 +532,9 @@ MonoBehaviour:
   dutchSpringStrength: 1600
   dutchDamping: 16
   crouchRecoilMultiplier: 0.5
+  adsCameraLocalOffset: {x: 0, y: 0, z: 0.3}
+  aimFov: 27
+  aimFovTransitionSpeed: 14
 --- !u!114 &155723186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -586,6 +589,7 @@ MonoBehaviour:
   aimOrigin: {fileID: 1978470640}
   muzzleOrigin: {fileID: 1166429711}
   ammoText: {fileID: 788995162}
+  cinemachineCamera: {fileID: 1978470642}
   lockCursor: 1
   speedParam: {fileID: 0}
   groundedParam: {fileID: 0}

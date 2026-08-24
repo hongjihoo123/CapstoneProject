@@ -24,6 +24,8 @@ namespace Members.KYR._01_Scripts.Modules
         private float _pitch;
         private Vector2 _planarInput;
         private float _planarSpeed;
+        private Vector3 _hipCameraLocalPosition;
+        private bool _hipCameraPositionCaptured;
 
         public float WalkSpeed => walkSpeed;
         public float RunSpeed => runSpeed;
@@ -44,6 +46,12 @@ namespace Members.KYR._01_Scripts.Modules
 
             _standingHeight = characterController.height;
             _standingCenter = characterController.center;
+
+            if (cameraPivot != null)
+            {
+                _hipCameraLocalPosition = cameraPivot.localPosition;
+                _hipCameraPositionCaptured = true;
+            }
         }
 
         public void SetOwnerSpeedMultiplier(float multiplier)
@@ -90,6 +98,22 @@ namespace Members.KYR._01_Scripts.Modules
         public void ApplyRecoilYaw(float yawDelta)
         {
             _owner.transform.Rotate(0f, yawDelta, 0f);
+        }
+
+        public Vector3 HipCameraLocalPosition => _hipCameraPositionCaptured ? _hipCameraLocalPosition : Vector3.zero;
+
+        public void SetCameraLocalPositionInstant(Vector3 localPosition)
+        {
+            if (cameraPivot == null)
+                return;
+            cameraPivot.localPosition = localPosition;
+        }
+
+        public void ResetCameraToHipInstant()
+        {
+            if (cameraPivot == null || !_hipCameraPositionCaptured)
+                return;
+            cameraPivot.localPosition = _hipCameraLocalPosition;
         }
 
         public void TickLook(Vector2 lookDelta)
