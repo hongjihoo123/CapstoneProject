@@ -13,16 +13,16 @@ namespace RobotWeapons
         [Header("연사")]
         public float fireRate = 6f;
 
-        [Header("탄 튀김 (스프레드)")]
+        [Header("탄 튀김")]
         public float baseSpreadAngle = 1.5f;
         public float maxSpreadAngle = 8f;
         public float spreadGrowthPerShot = 1.2f;
         public float spreadRecoverPerSecond = 6f;
 
-        [Header("조준 (Secondary)")]
+        [Header("조준")]
         public float aimSpreadMultiplier = 0.4f;
 
-        [Header("반동 (에임 자체가 밀림)")]
+        [Header("반동")]
         public float recoilPerShotVertical = 1.2f;
         public float recoilPerShotHorizontalMin = -0.3f;
         public float recoilPerShotHorizontalMax = 0.3f;

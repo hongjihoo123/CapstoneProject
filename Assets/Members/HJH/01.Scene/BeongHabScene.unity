@@ -153,7 +153,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.TestDummy
   maxHP: 500
   flashDuration: 0.15
-  hitEffectPrefab: {fileID: 175238106323727875, guid: a598a8503c47cb948aa0fa75bd41f31f, type: 3}
+  hitEffectPrefab: {fileID: 4493611332370995337, guid: c4c443d7ba3858441ab0998524adb8dc, type: 3}
 --- !u!23 &46609061
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -529,8 +529,9 @@ MonoBehaviour:
   energyBallShakeForce: 1
   muzzleFlash: {fileID: 0}
   tracerVisual: {fileID: 0}
-  dutchSpringStrength: 400
-  dutchDamping: 4
+  dutchSpringStrength: 1600
+  dutchDamping: 16
+  crouchRecoilMultiplier: 0.5
 --- !u!114 &155723186
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -774,7 +775,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.TestDummy
   maxHP: 500
   flashDuration: 0.15
-  hitEffectPrefab: {fileID: 175238106323727875, guid: a598a8503c47cb948aa0fa75bd41f31f, type: 3}
+  hitEffectPrefab: {fileID: 4493611332370995337, guid: c4c443d7ba3858441ab0998524adb8dc, type: 3}
 --- !u!23 &694071212
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -1057,7 +1058,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.TestDummy
   maxHP: 500
   flashDuration: 0.15
-  hitEffectPrefab: {fileID: 175238106323727875, guid: a598a8503c47cb948aa0fa75bd41f31f, type: 3}
+  hitEffectPrefab: {fileID: 4493611332370995337, guid: c4c443d7ba3858441ab0998524adb8dc, type: 3}
 --- !u!23 &896939080
 MeshRenderer:
   m_ObjectHideFlags: 0
