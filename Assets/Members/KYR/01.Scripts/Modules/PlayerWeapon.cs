@@ -22,6 +22,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         [SerializeField] private float dutchSpringStrength = 400f;
         [SerializeField] private float dutchDamping = 4f;
+        [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
 
         private IWeapon _weapon;
         private bool _fsmWantsAim;
@@ -139,9 +140,15 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
             {
-                player.Mover.ApplyRecoilPitch(pitchDelta);
+                float multiplier = (player.MoveFsm != null && player.MoveFsm.Capabilities.IsCrouching)
+                    ? crouchRecoilMultiplier
+                    : 1f;
+
+                player.Mover.ApplyRecoilPitch(pitchDelta * multiplier);
                 if (!Mathf.Approximately(yawDelta, 0f))
-                    player.Mover.ApplyRecoilYaw(yawDelta);
+                    player.Mover.ApplyRecoilYaw(yawDelta * multiplier);
+
+                dutchImpulse *= multiplier;
             }
             _dutchVelocity += dutchImpulse;
         }
