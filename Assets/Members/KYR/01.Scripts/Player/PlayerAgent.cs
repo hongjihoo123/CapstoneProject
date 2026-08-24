@@ -1,0 +1,211 @@
+using Members.JJH._02_Scripts.Agents;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts.FSM.Control;
+using Members.KYR._01_Scripts.FSM.Move;
+using Members.KYR._01_Scripts.FSM.Weapon;
+using Members.KYR._01_Scripts.Modules;
+using RobotWeapons;
+using Unity.Cinemachine;
+using UnityEngine;
+using UnityEngine.UI;
+
+namespace Members.KYR._01_Scripts
+{
+    [RequireComponent(typeof(CharacterController))]
+    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable
+    {
+
+        [SerializeField] private PlayerInputSO playerInput;
+
+        [Header("총 관련")]
+        [SerializeField] private Transform aimOrigin;
+        [SerializeField] private Transform muzzleOrigin;
+        [SerializeField] private Text ammoText;
+        [Header("반동 관련")]
+        [SerializeField] private CinemachineCamera cinemachineCamera;
+        private float currentFOV;
+
+        [SerializeField] private bool lockCursor = true;
+
+        [Header("Animator")]
+        [SerializeField] private AnimParamSO speedParam;
+        [SerializeField] private AnimParamSO groundedParam;
+        [SerializeField] private AnimParamSO crouchParam;
+        [SerializeField] private AnimParamSO airborneParam;
+        [SerializeField] private AnimParamSO aimParam;
+        [SerializeField] private AnimParamSO reloadParam;
+
+
+        public PlayerInputState Input { get; } = new();
+        public PlayerMover Mover { get; private set; }
+        public PlayerHealth Health { get; private set; }
+        public PlayerWeapon Weapon { get; private set; }
+        public ControlStateModule ControlFsm { get; private set; }
+        public MoveStateModule MoveFsm { get; private set; }
+        public WeaponStateModule WeaponFsm { get; private set; }
+
+        public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
+        public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
+        public bool IsAlive => Health != null && !Health.IsDead;
+        public CinemachineCamera CinemachineCamera => cinemachineCamera;
+
+        protected override void InitializeModules()
+        {
+            base.InitializeModules();
+
+            Mover = GetModule<PlayerMover>();
+            Health = GetModule<PlayerHealth>();
+            Weapon = GetModule<PlayerWeapon>();
+            ControlFsm = GetModule<ControlStateModule>();
+            MoveFsm = GetModule<MoveStateModule>();
+            WeaponFsm = GetModule<WeaponStateModule>();
+
+            Debug.Assert(playerInput != null, $"{name}에는 PlayerInputSO가 필요합니다.");
+            Debug.Assert(Mover != null, $"{name}에는 PlayerMover 모듈이 필요합니다.");
+            Debug.Assert(Health != null, $"{name}에는 PlayerHealth 모듈이 필요합니다.");
+            Debug.Assert(Weapon != null, $"{name}에는 PlayerWeapon 모듈이 필요합니다.");
+            Debug.Assert(ControlFsm != null, $"{name}에는 ControlStateModule이 필요합니다.");
+            Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
+            Debug.Assert(WeaponFsm != null, $"{name}에는 WeaponStateModule이 필요합니다.");
+        }
+
+        protected override void Start()
+        {
+            base.Start();
+
+            if (!lockCursor)
+                return;
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+
+            if (cinemachineCamera != null) currentFOV = cinemachineCamera.Lens.FieldOfView;
+        }
+
+        private void Update()
+        {
+            if (ControlFsm == null)
+                return;
+
+            float dt = Time.deltaTime;
+
+            if (playerInput != null)
+                playerInput.Fill(Input);
+            else
+                Input.Clear();
+            Health.Tick(dt);
+            ControlFsm.Tick(dt);
+
+            UpdateAmmoUI();
+
+            if (ControlFsm.IsGameplayAlive)
+            {
+                Mover.TickLook(Input.Look);
+                MoveFsm.Tick(dt);
+                WeaponFsm.Tick(dt);
+                Weapon.Tick(dt);
+            }
+            else
+            {
+                Mover.SetPlanarInput(Vector2.zero, 0f);
+            }
+
+            Mover.TickPhysics(dt);
+            PushAnimator();
+        }
+        private void UpdateAmmoUI()
+        {
+            if (ammoText == null) return;
+
+            if (Weapon.Weapon is MeleeSawedOffWeapon melee)
+            {
+                ammoText.gameObject.SetActive(melee.IsShotgunMode);
+                if (melee.IsShotgunMode)
+                    ammoText.text = melee.ShotgunIsReloading ? "재장전 중..." : $"{melee.ShotgunCurrentAmmo} / {melee.ShotgunMaxAmmo}";
+                return;
+            }
+
+            if (Weapon.Weapon is SniperSawedOffWeapon sniper)
+            {
+                ammoText.gameObject.SetActive(true);
+                if (sniper.IsShotgunMode)
+                    ammoText.text = sniper.ShotgunIsReloading ? "재장전 중..." : $"{sniper.ShotgunCurrentAmmo} / {sniper.ShotgunMaxAmmo}";
+                else
+                    ammoText.text = sniper.SniperIsReloading ? "재장전 중..." : $"{sniper.SniperCurrentAmmo} / {sniper.SniperMaxAmmo}";
+                return;
+            }
+
+            bool hasAmmo = Weapon.Weapon is GunDealerWeapon || Weapon.Weapon is LaserDealerWeapon;
+            ammoText.gameObject.SetActive(hasAmmo);
+            if (!hasAmmo) return;
+
+            ammoText.text = Weapon.Weapon.IsReloading
+                ? "재장전 중..."
+                : $"{Mathf.CeilToInt(Weapon.Weapon.CurrentResource)} / {Mathf.CeilToInt(Weapon.Weapon.MaxResource)}";
+        }
+
+        public void TakeDamage(float amount, GameObject source)
+        {
+            Health.TakeDamage(amount);
+        }
+
+        public void Heal(float amount)
+        {
+            Health.Heal(amount);
+        }
+
+        public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
+        {
+            target?.TakeDamage(amount, gameObject);
+        }
+
+        public void ApplyHealTo(IHealable target, float amount)
+        {
+            target?.Heal(amount);
+        }
+
+        public void SetMoveSpeedMultiplier(float multiplier)
+        {
+            Mover.SetOwnerSpeedMultiplier(multiplier);
+        }
+
+        public void SetWeaponHitboxActive(bool active)
+        {
+            Weapon.SetHitboxActive(active);
+        }
+
+        [ContextMenu("Log FSM States")]
+        private void LogFsmStates()
+        {
+            Debug.Log(
+                $"{name} Control={ControlFsm?.Machine.CurrentType?.Name} " +
+                $"Move={MoveFsm?.Machine.CurrentType?.Name} " +
+                $"Weapon={WeaponFsm?.Machine.CurrentType?.Name}",
+                this);
+        }
+
+        private void PushAnimator()
+        {
+            if (Renderer == null)
+                return;
+            if (speedParam == null && groundedParam == null && crouchParam == null
+                && airborneParam == null && aimParam == null && reloadParam == null)
+                return;
+
+            if (speedParam != null)
+                Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed);
+            if (groundedParam != null)
+                Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
+            if (crouchParam != null)
+                Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
+            if (airborneParam != null)
+                Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
+            if (aimParam != null)
+                Renderer.SetBool(aimParam.HashValue, WeaponFsm.Machine.IsCurrent<AimWeaponState>());
+            if (reloadParam != null)
+                Renderer.SetBool(reloadParam.HashValue, WeaponFsm.Machine.IsCurrent<ReloadWeaponState>());
+        }
+
+        public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f) => Weapon.ApplyRecoil(pitchDelta, yawDelta, dutchImpulse);
+    }
+}
