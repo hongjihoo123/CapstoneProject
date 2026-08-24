@@ -78,6 +78,20 @@ namespace Members.KYR._01_Scripts.Modules
                 : _standingCenter;
         }
 
+        public void ApplyRecoilPitch(float pitchDelta)
+        {
+            if (cameraPivot == null)
+                return;
+
+            _pitch = Mathf.Clamp(_pitch - pitchDelta, minPitch, maxPitch);
+            cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
+        public void ApplyRecoilYaw(float yawDelta)
+        {
+            _owner.transform.Rotate(0f, yawDelta, 0f);
+        }
+
         public void TickLook(Vector2 lookDelta)
         {
             if (cameraPivot == null)

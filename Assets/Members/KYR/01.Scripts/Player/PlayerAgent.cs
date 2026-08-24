@@ -5,7 +5,9 @@ using Members.KYR._01_Scripts.FSM.Move;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
 using RobotWeapons;
+using Unity.Cinemachine;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Members.KYR._01_Scripts
 {
@@ -14,8 +16,14 @@ namespace Members.KYR._01_Scripts
     {
       
         [SerializeField] private PlayerInputSO playerInput;
+        
+        [Header("총 관련")]
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private Transform muzzleOrigin;
+        [SerializeField] private Text ammoText;
+
+        private float currentFOV;
+        
         [SerializeField] private bool lockCursor = true;
 
         [Header("Animator")]
@@ -25,6 +33,7 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private AnimParamSO airborneParam;
         [SerializeField] private AnimParamSO aimParam;
         [SerializeField] private AnimParamSO reloadParam;
+
 
         public PlayerInputState Input { get; } = new();
         public PlayerMover Mover { get; private set; }
@@ -83,6 +92,8 @@ namespace Members.KYR._01_Scripts
             Health.Tick(dt);
             ControlFsm.Tick(dt);
 
+            UpdateAmmoUI();
+
             if (ControlFsm.IsGameplayAlive)
             {
                 Mover.TickLook(Input.Look);
@@ -97,6 +108,36 @@ namespace Members.KYR._01_Scripts
 
             Mover.TickPhysics(dt);
             PushAnimator();
+        }
+        private void UpdateAmmoUI()
+        {
+            if (ammoText == null) return;
+
+            if (Weapon.Weapon is MeleeSawedOffWeapon melee)
+            {
+                ammoText.gameObject.SetActive(melee.IsShotgunMode);
+                if (melee.IsShotgunMode)
+                    ammoText.text = melee.ShotgunIsReloading ? "재장전 중..." : $"{melee.ShotgunCurrentAmmo} / {melee.ShotgunMaxAmmo}";
+                return;
+            }
+
+            if (Weapon.Weapon is SniperSawedOffWeapon sniper)
+            {
+                ammoText.gameObject.SetActive(true);
+                if (sniper.IsShotgunMode)
+                    ammoText.text = sniper.ShotgunIsReloading ? "재장전 중..." : $"{sniper.ShotgunCurrentAmmo} / {sniper.ShotgunMaxAmmo}";
+                else
+                    ammoText.text = sniper.SniperIsReloading ? "재장전 중..." : $"{sniper.SniperCurrentAmmo} / {sniper.SniperMaxAmmo}";
+                return;
+            }
+
+            bool hasAmmo = Weapon.Weapon is GunDealerWeapon || Weapon.Weapon is LaserDealerWeapon;
+            ammoText.gameObject.SetActive(hasAmmo);
+            if (!hasAmmo) return;
+
+            ammoText.text = Weapon.Weapon.IsReloading
+                ? "재장전 중..."
+                : $"{Mathf.CeilToInt(Weapon.Weapon.CurrentResource)} / {Mathf.CeilToInt(Weapon.Weapon.MaxResource)}";
         }
 
         public void TakeDamage(float amount, GameObject source)
@@ -161,9 +202,6 @@ namespace Members.KYR._01_Scripts
                 Renderer.SetBool(reloadParam.HashValue, WeaponFsm.Machine.IsCurrent<ReloadWeaponState>());
         }
 
-        public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0)
-        {
-            throw new System.NotImplementedException();
-        }
+        public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f) => Weapon.ApplyRecoil(pitchDelta, yawDelta, dutchImpulse);
     }
 }
