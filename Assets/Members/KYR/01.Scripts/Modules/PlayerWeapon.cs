@@ -47,7 +47,8 @@ namespace Members.KYR._01_Scripts.Modules
 
         public IWeapon Weapon => _weapon;
         public bool CanStartReload =>
-            _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource;
+     _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
+     && !(_weapon is GunDealerWeapon gunBursting && gunBursting.IsBursting);
 
         public override void Initialize(ModuleOwner owner)
         {
@@ -200,10 +201,6 @@ namespace Members.KYR._01_Scripts.Modules
 
             switch (animId)
             {
-                case "Gun_Fire":
-                    muzzleFlash?.Play();
-                    impulseSource?.GenerateImpulseWithForce(gunShakeForce);
-                    break;
                 case "Laser_EnergyBall":
                     float chargeRatio = (_weapon as LaserDealerWeapon)?.LastFireChargeRatio ?? 1f;
                     impulseSource?.GenerateImpulseWithForce(energyBallShakeForce * chargeRatio);
@@ -213,12 +210,13 @@ namespace Members.KYR._01_Scripts.Modules
                         tracerVisual?.Fire(sniperShot.LastShotStart, sniperShot.LastShotEnd);
                     impulseSource?.GenerateImpulseWithForce(gunShakeForce);
                     break;
-                case "SawedOff_FireLeft":
-                case "SawedOff_FireRight":
-                    muzzleFlash?.Play();
-                    impulseSource?.GenerateImpulseWithForce(gunShakeForce);
-                    break;
             }
+        }
+        public void Anim_MuzzleFlash()
+        {
+            _weapon?.ExecuteHit();
+            muzzleFlash?.Play();
+            impulseSource?.GenerateImpulseWithForce(gunShakeForce);
         }
     }
 }
