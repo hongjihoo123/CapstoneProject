@@ -1,6 +1,7 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts.FSM.Core;
 using UnityEngine;
+using UnityEngine.AdaptivePerformance;
 
 namespace Members.KYR._01_Scripts.FSM.Weapon
 {
