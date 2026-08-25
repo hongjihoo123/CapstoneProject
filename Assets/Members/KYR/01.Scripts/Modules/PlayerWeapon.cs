@@ -30,6 +30,8 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float aimFov = 50f;
         [SerializeField] private float aimFovTransitionSpeed = 14f;
 
+        public event System.Action<string> OnWeaponFired;
+
         private bool _isAiming;
         private float _currentFov;
         private float _hipFov;
@@ -194,6 +196,8 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
+            OnWeaponFired?.Invoke(animId);
+
             switch (animId)
             {
                 case "Gun_Fire":

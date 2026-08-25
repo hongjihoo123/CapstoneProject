@@ -28,12 +28,24 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private bool lockCursor = true;
 
         [Header("Animator")]
+        [SerializeField] private AnimParamSO idleParam;
         [SerializeField] private AnimParamSO speedParam;
         [SerializeField] private AnimParamSO groundedParam;
         [SerializeField] private AnimParamSO crouchParam;
         [SerializeField] private AnimParamSO airborneParam;
-        [SerializeField] private AnimParamSO aimParam;
+        [SerializeField] private AnimParamSO isAimParam;      // 조준 진입 펄스 (한 번)
+        [SerializeField] private AnimParamSO aimIdleParam;    // 조준 유지 루프
+        [SerializeField] private AnimParamSO isFireParam;     // 비조준 사격 펄스
+        [SerializeField] private AnimParamSO isAimFireParam;  // 조준 사격 펄스
         [SerializeField] private AnimParamSO reloadParam;
+
+        [SerializeField] private float aimEnterPulseDuration = 0.15f;
+        [SerializeField] private float firePulseDuration = 0.15f;
+
+        private bool wasAimingLastFrame;
+        private float aimEnterPulseTimer;
+        private float firePulseTimer;
+        private bool lastFireWasAimed;
 
 
         public PlayerInputState Input { get; } = new();
@@ -67,6 +79,9 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(ControlFsm != null, $"{name}에는 ControlStateModule이 필요합니다.");
             Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
             Debug.Assert(WeaponFsm != null, $"{name}에는 WeaponStateModule이 필요합니다.");
+
+            if (Weapon != null)
+                Weapon.OnWeaponFired += HandleWeaponFired;
         }
 
         protected override void Start()
@@ -186,26 +201,57 @@ namespace Members.KYR._01_Scripts
 
         private void PushAnimator()
         {
-            if (Renderer == null)
-                return;
-            if (speedParam == null && groundedParam == null && crouchParam == null
-                && airborneParam == null && aimParam == null && reloadParam == null)
-                return;
+            if (Renderer == null) return;
 
-            if (speedParam != null)
-                Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed);
-            if (groundedParam != null)
-                Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
-            if (crouchParam != null)
-                Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
-            if (airborneParam != null)
-                Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
-            if (aimParam != null)
-                Renderer.SetBool(aimParam.HashValue, WeaponFsm.Machine.IsCurrent<AimWeaponState>());
-            if (reloadParam != null)
-                Renderer.SetBool(reloadParam.HashValue, WeaponFsm.Machine.IsCurrent<ReloadWeaponState>());
+            bool isAimingNow = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
+            bool isReloadingNow = WeaponFsm.Machine.IsCurrent<ReloadWeaponState>();
+
+            if (isAimingNow && !wasAimingLastFrame)
+                aimEnterPulseTimer = aimEnterPulseDuration;
+            wasAimingLastFrame = isAimingNow;
+
+            if (aimEnterPulseTimer > 0f) aimEnterPulseTimer -= Time.deltaTime;
+            if (firePulseTimer > 0f) firePulseTimer -= Time.deltaTime;
+
+            bool isAimPulseActive = aimEnterPulseTimer > 0f;
+            bool isFirePulseActive = firePulseTimer > 0f;
+
+            bool isFireNow = isFirePulseActive && !lastFireWasAimed;
+            bool isAimFireNow = isFirePulseActive && lastFireWasAimed;
+            bool isAimIdleNow = isAimingNow && !isAimPulseActive && !isFirePulseActive;
+            bool isIdleNow = !isAimingNow && !isFirePulseActive && !isReloadingNow;
+
+            if (idleParam != null) Renderer.SetBool(idleParam.HashValue, isIdleNow);
+            if (speedParam != null) Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed);
+            if (groundedParam != null) Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
+            if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
+            if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
+            if (isAimParam != null) Renderer.SetBool(isAimParam.HashValue, isAimPulseActive);
+            if (aimIdleParam != null) Renderer.SetBool(aimIdleParam.HashValue, isAimIdleNow);
+            if (isFireParam != null) Renderer.SetBool(isFireParam.HashValue, isFireNow);
+            if (isAimFireParam != null) Renderer.SetBool(isAimFireParam.HashValue, isAimFireNow);
+            if (reloadParam != null) Renderer.SetBool(reloadParam.HashValue, isReloadingNow);
         }
-
         public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f) => Weapon.ApplyRecoil(pitchDelta, yawDelta, dutchImpulse);
+
+        private void OnDestroy()
+        {
+            if (Weapon != null)
+                Weapon.OnWeaponFired -= HandleWeaponFired;
+        }
+        private void HandleWeaponFired(string animId)
+        {
+            switch (animId)
+            {
+                case "Gun_Fire":
+                case "Sniper_Fire":
+                case "SawedOff_FireLeft":
+                case "SawedOff_FireRight":
+                case "Laser_EnergyBall":
+                    firePulseTimer = firePulseDuration;
+                    lastFireWasAimed = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
+                    break;
+            }
+        }
     }
 }
