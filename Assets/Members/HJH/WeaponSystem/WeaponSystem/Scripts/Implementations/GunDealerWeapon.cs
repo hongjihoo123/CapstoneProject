@@ -9,7 +9,13 @@ namespace RobotWeapons
         private float currentSpread;
         private bool isAiming;
 
-        public override bool PrimaryIsHeld => true;
+        private int burstShotsRemaining;
+        private float burstSafetyTimer;
+
+        public float AttackSpeedMultiplier = 1f; // 업그레이드/버프로 공격속도 오르면 이 값만 조절
+        public bool IsBursting => burstShotsRemaining > 0;
+
+        public override bool PrimaryIsHeld => !data.isBurstFire;
 
         public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
 
@@ -18,13 +24,51 @@ namespace RobotWeapons
             fireCooldown -= dt;
             currentSpread = Mathf.Max(data.baseSpreadAngle, currentSpread - data.spreadRecoverPerSecond * dt);
             TickReload(dt);
+
+            if (burstShotsRemaining > 0)
+            {
+                burstSafetyTimer -= dt;
+                if (burstSafetyTimer <= 0f)
+                {
+                    while (burstShotsRemaining > 0)
+                    {
+                        FireOneShot();
+                        burstShotsRemaining--;
+                    }
+                }
+            }
         }
 
         public override void PrimaryAttack()
         {
             if (IsReloading || CurrentResource <= 0f) return;
             if (fireCooldown > 0f || owner == null || data.projectilePrefab == null) return;
-            fireCooldown = 1f / data.fireRate;
+            if (burstShotsRemaining > 0) return;
+
+            fireCooldown = (1f / data.fireRate) / AttackSpeedMultiplier;
+
+            if (data.isBurstFire)
+            {
+                burstShotsRemaining = data.burstCount;
+                burstSafetyTimer = data.burstSafetyDuration;
+                RaiseAttackTriggered("Gun_Fire");
+                return;
+            }
+
+            FireOneShot();
+        }
+
+        public override void ExecuteHit()
+        {
+            if (burstShotsRemaining <= 0) return;
+            FireOneShot();
+            burstShotsRemaining--;
+            burstSafetyTimer = data.burstSafetyDuration;
+        }
+
+        private void FireOneShot()
+        {
+            if (CurrentResource <= 0f) return;
             CurrentResource -= 1f;
 
             float spread = isAiming ? currentSpread * data.aimSpreadMultiplier : currentSpread;

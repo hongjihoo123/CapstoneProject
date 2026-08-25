@@ -33,10 +33,10 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private AnimParamSO groundedParam;
         [SerializeField] private AnimParamSO crouchParam;
         [SerializeField] private AnimParamSO airborneParam;
-        [SerializeField] private AnimParamSO isAimParam;      // 조준 진입 펄스 (한 번)
-        [SerializeField] private AnimParamSO aimIdleParam;    // 조준 유지 루프
-        [SerializeField] private AnimParamSO isFireParam;     // 비조준 사격 펄스
-        [SerializeField] private AnimParamSO isAimFireParam;  // 조준 사격 펄스
+        [SerializeField] private AnimParamSO isAimParam;
+        [SerializeField] private AnimParamSO aimIdleParam;
+        [SerializeField] private AnimParamSO isFireParam;
+        [SerializeField] private AnimParamSO isAimFireParam;
         [SerializeField] private AnimParamSO reloadParam;
 
         [SerializeField] private float aimEnterPulseDuration = 0.15f;
@@ -64,6 +64,8 @@ namespace Members.KYR._01_Scripts
         protected override void InitializeModules()
         {
             base.InitializeModules();
+
+            AimUtility.IgnoreLayerMask = LayerMask.GetMask("Player");
 
             Mover = GetModule<PlayerMover>();
             Health = GetModule<PlayerHealth>();
@@ -213,8 +215,10 @@ namespace Members.KYR._01_Scripts
             if (aimEnterPulseTimer > 0f) aimEnterPulseTimer -= Time.deltaTime;
             if (firePulseTimer > 0f) firePulseTimer -= Time.deltaTime;
 
+            bool isBursting = (Weapon.Weapon as GunDealerWeapon)?.IsBursting ?? false;
+
             bool isAimPulseActive = aimEnterPulseTimer > 0f;
-            bool isFirePulseActive = firePulseTimer > 0f;
+            bool isFirePulseActive = firePulseTimer > 0f || isBursting;
 
             bool isFireNow = isFirePulseActive && !lastFireWasAimed;
             bool isAimFireNow = isFirePulseActive && lastFireWasAimed;
@@ -222,7 +226,11 @@ namespace Members.KYR._01_Scripts
             bool isIdleNow = !isAimingNow && !isFirePulseActive && !isReloadingNow;
 
             if (idleParam != null) Renderer.SetBool(idleParam.HashValue, isIdleNow);
-            if (speedParam != null) Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed);
+            if (speedParam != null)
+            {
+                float maxSpeed = Mathf.Max(Mover.RunSpeed, 0.0001f);
+                Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed / maxSpeed);
+            }
             if (groundedParam != null) Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
             if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
             if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);

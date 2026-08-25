@@ -28,5 +28,10 @@ namespace RobotWeapons
         public float recoilPerShotHorizontalMax = 0.3f;
         public float dutchKickMin = -40f;
         public float dutchKickMax = 40f;
+
+        [Header("점사")]
+        public bool isBurstFire = false;
+        public int burstCount = 3;
+        public float burstSafetyDuration = 1f;
     }
 }

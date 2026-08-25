@@ -10,6 +10,11 @@ namespace RobotWeapons
 
         private float lightTimer;
 
+        public void Awake()
+        {
+            flashLight.enabled = false;
+        }
+
         public void Play()
         {
             flashParticle?.Play();
