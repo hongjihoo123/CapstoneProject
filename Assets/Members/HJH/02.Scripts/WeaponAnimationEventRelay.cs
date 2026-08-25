@@ -9,6 +9,5 @@ public class WeaponAnimationEventRelay : MonoBehaviour
     public void Anim_MuzzleFlash()
     {
         playerWeapon?.Anim_MuzzleFlash();
-        
     }
 }

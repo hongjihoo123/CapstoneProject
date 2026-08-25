@@ -30,6 +30,7 @@ namespace Members.KYR._01_Scripts
         [Header("Animator")]
         [SerializeField] private AnimParamSO idleParam;
         [SerializeField] private AnimParamSO speedParam;
+        [SerializeField] private AnimParamSO rand_Reload;
         [SerializeField] private AnimParamSO groundedParam;
         [SerializeField] private AnimParamSO crouchParam;
         [SerializeField] private AnimParamSO airborneParam;
@@ -46,6 +47,7 @@ namespace Members.KYR._01_Scripts
         private float aimEnterPulseTimer;
         private float firePulseTimer;
         private bool lastFireWasAimed;
+        private bool wasReloadingLastFrame;
 
 
         public PlayerInputState Input { get; } = new();
@@ -231,6 +233,11 @@ namespace Members.KYR._01_Scripts
                 float maxSpeed = Mathf.Max(Mover.RunSpeed, 0.0001f);
                 Renderer.SetFloat(speedParam.HashValue, Mover.PlanarSpeed / maxSpeed);
             }
+
+            if (isReloadingNow && !wasReloadingLastFrame && rand_Reload != null)
+                Renderer.SetFloat(rand_Reload.HashValue, Random.Range(0, 3));
+
+            wasReloadingLastFrame = isReloadingNow;
             if (groundedParam != null) Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
             if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
             if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
