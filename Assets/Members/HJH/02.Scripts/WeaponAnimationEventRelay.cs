@@ -5,9 +5,16 @@ public class WeaponAnimationEventRelay : MonoBehaviour
 {
     [SerializeField] private PlayerWeapon playerWeapon;
     [SerializeField] private AudioClip fireSound;
+    [SerializeField] private AudioClip[] reloadingSound;
 
     public void Anim_MuzzleFlash()
     {
         playerWeapon?.Anim_MuzzleFlash();
+        SoundManager.Instance.PlaySFX(fireSound);
+    }
+
+    public void Reloading(int i)
+    {
+        SoundManager.Instance.PlaySFX(reloadingSound[i]);
     }
 }

@@ -6,6 +6,7 @@ using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
 using RobotWeapons;
 using Unity.Cinemachine;
+using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -63,10 +64,11 @@ namespace Members.KYR._01_Scripts
         public bool IsAlive => Health != null && !Health.IsDead;
         public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
+        private NetworkObject networkObject;
         protected override void InitializeModules()
         {
             base.InitializeModules();
-
+            networkObject = GetComponent<NetworkObject>();
             AimUtility.IgnoreLayerMask = LayerMask.GetMask("Player");
 
             Mover = GetModule<PlayerMover>();
