@@ -66,6 +66,7 @@ namespace RobotWeapons
         // 애니메이션 이벤트가 직접 호출 - 점사 중일 때만 의미 있고, 아니면 그냥 무시됨
         public override void ExecuteHit()
         {
+            Debug.Log($"[Burst] ExecuteHit 호출됨, 남은 발수: {burstShotsRemaining}");
             if (burstShotsRemaining <= 0) return;
             FireOneShot();
             burstShotsRemaining--;

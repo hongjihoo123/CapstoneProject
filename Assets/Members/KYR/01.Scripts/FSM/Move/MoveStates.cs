@@ -90,7 +90,16 @@ namespace Members.KYR._01_Scripts.FSM.Move
         public override bool CanAim => true;
         public override bool CanFire => true;
         public override bool IsAirborne => true;
-        public override float PlanarSpeed => Module.Player.Mover.WalkSpeed * Module.Player.Mover.AirControl;
+
+        public override float PlanarSpeed
+        {
+            get
+            {
+                var input = Module.Player.Input;
+                float baseSpeed = input.RunHeld ? Module.Player.Mover.RunSpeed : Module.Player.Mover.WalkSpeed;
+                return baseSpeed * Module.Player.Mover.AirControl;
+            }
+        }
 
         public override void Enter()
         {
@@ -101,8 +110,7 @@ namespace Members.KYR._01_Scripts.FSM.Move
         public override void Tick(float deltaTime)
         {
             _ignoreGroundedTime -= deltaTime;
-            if (_ignoreGroundedTime > 0f)
-                return;
+            if (_ignoreGroundedTime > 0f) return;
 
             if (Module.Player.Mover.IsGrounded)
                 Module.ResolveGrounded();
