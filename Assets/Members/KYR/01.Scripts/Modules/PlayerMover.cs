@@ -17,6 +17,9 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float minPitch = -80f;
         [SerializeField] private float maxPitch = 80f;
         [SerializeField] private float crouchHeight = 1.2f;
+        [SerializeField] private float acceleration = 18f;
+
+        private float _targetPlanarSpeed;
 
         private float _verticalVelocity;
         private float _standingHeight;
@@ -34,7 +37,6 @@ namespace Members.KYR._01_Scripts.Modules
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public float PlanarSpeed => new Vector3(characterController.velocity.x, 0f, characterController.velocity.z).magnitude;
-
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
@@ -62,7 +64,7 @@ namespace Members.KYR._01_Scripts.Modules
         public void SetPlanarInput(Vector2 input, float speed)
         {
             _planarInput = input.sqrMagnitude > 1f ? input.normalized : input;
-            _planarSpeed = Mathf.Max(0f, speed) * OwnerSpeedMultiplier;
+            _targetPlanarSpeed = Mathf.Max(0f, speed) * OwnerSpeedMultiplier;
         }
 
         public void Jump()
@@ -132,6 +134,8 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (characterController == null)
                 return;
+
+            _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime); // 추가
 
             if (IsGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;
