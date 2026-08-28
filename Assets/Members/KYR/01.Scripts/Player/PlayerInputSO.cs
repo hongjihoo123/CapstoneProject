@@ -4,11 +4,19 @@ using UnityEngine.InputSystem;
 namespace Members.KYR._01_Scripts
 {
     [CreateAssetMenu(fileName = "PlayerInput", menuName = "SO/Player Input")]
-    public class PlayerInputSO : ScriptableObject, Controls.IPlayerActions
+    public class PlayerInputSO : ScriptableObject
     {
         private Controls _controls;
         private InputAction _aim;
         private InputAction _reload;
+
+        private InputAction _skillQ;
+        private InputAction _skillE;
+        private InputAction _skillX;
+
+        public bool QPressed { get; private set; }
+        public bool EPressed { get; private set; }
+        public bool XPressed { get; private set; }
 
         public Vector2 Move { get; private set; }
         public Vector2 Look { get; private set; }
@@ -26,18 +34,28 @@ namespace Members.KYR._01_Scripts
             {
                 _controls = new Controls();
                 BindAimReload();
-                _controls.Player.AddCallbacks(this);
+                BindSkillActions();
+                // 콜백(AddCallbacks) 방식은 일부러 안 씀 - Fill()의 폴링 방식이랑
+                // 동시에 같은 값을 따로 덮어쓰면서 레이스 컨디션이 생겨서
+                // (클릭 한 번이 두 프레임에 걸쳐 중복 감지되는 등) 제거함.
             }
 
             _controls.Player.Enable();
             _aim?.Enable();
             _reload?.Enable();
+
+            _skillQ?.Enable();
+            _skillE?.Enable();
+            _skillX?.Enable();
         }
 
         private void OnDisable()
         {
             _aim?.Disable();
             _reload?.Disable();
+            _skillQ?.Disable();
+            _skillE?.Disable();
+            _skillX?.Disable();
             _controls?.Player.Disable();
         }
 
@@ -59,53 +77,10 @@ namespace Members.KYR._01_Scripts
             AimHeld = _aim != null && _aim.IsPressed();
             ReloadPressed = _reload != null && _reload.WasPressedThisFrame();
 
+            QPressed = _skillQ != null && _skillQ.WasPressedThisFrame();
+            EPressed = _skillE != null && _skillE.WasPressedThisFrame();
+            XPressed = _skillX != null && _skillX.WasPressedThisFrame();
             state.CopyFrom(this);
-        }
-
-        public void OnMove(InputAction.CallbackContext context)
-        {
-            Move = context.ReadValue<Vector2>();
-        }
-
-        public void OnLook(InputAction.CallbackContext context)
-        {
-            Look = context.ReadValue<Vector2>();
-        }
-
-        public void OnAttack(InputAction.CallbackContext context)
-        {
-            FireHeld = context.ReadValue<float>() > 0.5f;
-            if (context.performed)
-                FirePressed = true;
-        }
-
-        public void OnInteract(InputAction.CallbackContext context) { }
-
-        public void OnCrouch(InputAction.CallbackContext context)
-        {
-            CrouchHeld = context.ReadValue<float>() > 0.5f;
-        }
-
-        public void OnJump(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-                JumpPressed = true;
-        }
-
-        public void OnSprint(InputAction.CallbackContext context)
-        {
-            RunHeld = context.ReadValue<float>() > 0.5f;
-        }
-
-        public void OnAim(InputAction.CallbackContext context)
-        {
-            AimHeld = context.ReadValue<float>() > 0.5f;
-        }
-
-        public void OnReload(InputAction.CallbackContext context)
-        {
-            if (context.performed)
-                ReloadPressed = true;
         }
 
         private void BindAimReload()
@@ -126,6 +101,32 @@ namespace Members.KYR._01_Scripts
                 _reload = new InputAction("Reload", InputActionType.Button);
                 _reload.AddBinding("<Keyboard>/r");
                 _reload.AddBinding("<Gamepad>/leftShoulder");
+            }
+        }
+
+        private void BindSkillActions()
+        {
+            InputActionMap map = _controls.asset.FindActionMap("Player");
+
+            _skillQ = map.FindAction("SkillQ");
+            if (_skillQ == null)
+            {
+                _skillQ = new InputAction("SkillQ", InputActionType.Button);
+                _skillQ.AddBinding("<Keyboard>/q");
+            }
+
+            _skillE = map.FindAction("SkillE");
+            if (_skillE == null)
+            {
+                _skillE = new InputAction("SkillE", InputActionType.Button);
+                _skillE.AddBinding("<Keyboard>/e");
+            }
+
+            _skillX = map.FindAction("SkillX");
+            if (_skillX == null)
+            {
+                _skillX = new InputAction("SkillX", InputActionType.Button);
+                _skillX.AddBinding("<Keyboard>/x");
             }
         }
     }

@@ -36037,6 +36037,7 @@ GameObject:
   - component: {fileID: 1978900850}
   - component: {fileID: 1978900849}
   - component: {fileID: 1978900848}
+  - component: {fileID: 1978900860}
   m_Layer: 8
   m_Name: Player (1)
   m_TagString: Untagged
@@ -36242,6 +36243,7 @@ MonoBehaviour:
   minPitch: -80
   maxPitch: 80
   crouchHeight: 1.2
+  acceleration: 18
 --- !u!114 &1978900857
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -36271,7 +36273,7 @@ MonoBehaviour:
   isFireParam: {fileID: 11400000, guid: fc9f3f38fc2895a40a51eb1c10624dbf, type: 2}
   isAimFireParam: {fileID: 11400000, guid: 44d1a3e21d860d945b519a349878de91, type: 2}
   reloadParam: {fileID: 11400000, guid: 39ef46045a76c774ba43c3a6dfcbe1d9, type: 2}
-  aimEnterPulseDuration: 0.3
+  aimEnterPulseDuration: 0.11
   firePulseDuration: 0.15
 --- !u!143 &1978900858
 CharacterController:
@@ -36317,6 +36319,21 @@ Transform:
   - {fileID: 1849498092}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1978900860
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1978900847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fb7281d6176d478409d2073ae2d44462, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillStateModule
+  qSkillData: {fileID: 11400000, guid: 385cfe2710e6da74a91272e392dc602f, type: 2}
+  eSkillData: {fileID: 0}
+  xSkillData: {fileID: 0}
 --- !u!1 &1980486668
 GameObject:
   m_ObjectHideFlags: 0

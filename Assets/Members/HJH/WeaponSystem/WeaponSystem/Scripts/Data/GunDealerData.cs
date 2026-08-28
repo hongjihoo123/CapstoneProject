@@ -5,12 +5,17 @@ namespace RobotWeapons
     [CreateAssetMenu(menuName = "Weapon/Gun Dealer Data", fileName = "New GunDealerData")]
     public class GunDealerData : WeaponData
     {
+        public enum FireMode { Auto, Semi, Burst }
+
         public float damagePerBullet = 12f;
         public GameObject projectilePrefab;
         public float projectileSpeed = 40f;
         public float aimRange = 100f;
 
-        [Header("연사")]
+        [Header("발사 방식")]
+        public FireMode fireMode = FireMode.Auto;
+
+        [Header("연사/발사 간격")]
         public float fireRate = 6f;
 
         [Header("탄 튀김")]
@@ -29,8 +34,7 @@ namespace RobotWeapons
         public float dutchKickMin = -40f;
         public float dutchKickMax = 40f;
 
-        [Header("점사")]
-        public bool isBurstFire = false;
+        [Header("점사 (Fire Mode = Burst 일 때만 사용)")]
         public int burstCount = 3;
         public float burstSafetyDuration = 1f;
     }

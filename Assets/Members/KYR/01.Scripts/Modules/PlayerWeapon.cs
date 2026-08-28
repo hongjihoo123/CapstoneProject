@@ -197,6 +197,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
+            Debug.Log($"[발사이벤트] {animId} at {Time.frameCount}");
             OnWeaponFired?.Invoke(animId);
 
             switch (animId)

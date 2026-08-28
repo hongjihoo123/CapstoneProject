@@ -30,12 +30,19 @@ namespace Members.KYR._01_Scripts.Modules
         private Vector3 _hipCameraLocalPosition;
         private bool _hipCameraPositionCaptured;
 
+        // 대쉬 전용 이동 벡터. 남은 시간(_dashTimeRemaining)이 있는 동안
+        // TickPhysics에서 일반 planar 이동 대신 이 값을 사용함.
+        private Vector3 _dashDirection;
+        private float _dashSpeed;
+        private float _dashTimeRemaining;
+
         public float WalkSpeed => walkSpeed;
         public float RunSpeed => runSpeed;
         public float CrouchSpeed => crouchSpeed;
         public float AirControl => airControl;
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
+        public bool IsDashing => _dashTimeRemaining > 0f;
         public float PlanarSpeed => new Vector3(characterController.velocity.x, 0f, characterController.velocity.z).magnitude;
         public override void Initialize(ModuleOwner owner)
         {
@@ -142,10 +149,31 @@ namespace Members.KYR._01_Scripts.Modules
             else
                 _verticalVelocity += gravity * deltaTime;
 
-            Vector3 planar = (_owner.transform.right * _planarInput.x + _owner.transform.forward * _planarInput.y)
-                             * _planarSpeed;
+            Vector3 planar;
+            if (_dashTimeRemaining > 0f)
+            {
+                planar = _dashDirection * _dashSpeed;
+                _dashTimeRemaining -= deltaTime;
+            }
+            else
+            {
+                planar = (_owner.transform.right * _planarInput.x + _owner.transform.forward * _planarInput.y)
+                         * _planarSpeed;
+            }
+
             Vector3 motion = planar + Vector3.up * _verticalVelocity;
             characterController.Move(motion * deltaTime);
+        }
+
+        public void Dash(Vector3 direction, float speed, float duration)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                direction = _owner.transform.forward;
+
+            _dashDirection = direction.normalized;
+            _dashSpeed = speed;
+            _dashTimeRemaining = duration;
         }
     }
 }

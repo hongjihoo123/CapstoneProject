@@ -2,6 +2,7 @@ using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
 using RobotWeapons;
@@ -58,6 +59,7 @@ namespace Members.KYR._01_Scripts
         public ControlStateModule ControlFsm { get; private set; }
         public MoveStateModule MoveFsm { get; private set; }
         public WeaponStateModule WeaponFsm { get; private set; }
+        public SkillStateModule SkillFsm { get; private set; }
 
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
@@ -77,6 +79,7 @@ namespace Members.KYR._01_Scripts
             ControlFsm = GetModule<ControlStateModule>();
             MoveFsm = GetModule<MoveStateModule>();
             WeaponFsm = GetModule<WeaponStateModule>();
+            SkillFsm = GetModule<SkillStateModule>();
 
             Debug.Assert(playerInput != null, $"{name}에는 PlayerInputSO가 필요합니다.");
             Debug.Assert(Mover != null, $"{name}에는 PlayerMover 모듈이 필요합니다.");
@@ -85,6 +88,7 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(ControlFsm != null, $"{name}에는 ControlStateModule이 필요합니다.");
             Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
             Debug.Assert(WeaponFsm != null, $"{name}에는 WeaponStateModule이 필요합니다.");
+            Debug.Assert(SkillFsm != null, $"{name}에는 SkillStateModule이 필요합니다.");
 
             if (Weapon != null)
                 Weapon.OnWeaponFired += HandleWeaponFired;
@@ -124,6 +128,8 @@ namespace Members.KYR._01_Scripts
                 Mover.TickLook(Input.Look);
                 MoveFsm.Tick(dt);
                 WeaponFsm.Tick(dt);
+                SkillFsm.ResolveInput();
+                SkillFsm.Tick(dt);
                 Weapon.Tick(dt);
             }
             else
@@ -201,7 +207,8 @@ namespace Members.KYR._01_Scripts
             Debug.Log(
                 $"{name} Control={ControlFsm?.Machine.CurrentType?.Name} " +
                 $"Move={MoveFsm?.Machine.CurrentType?.Name} " +
-                $"Weapon={WeaponFsm?.Machine.CurrentType?.Name}",
+                $"Weapon={WeaponFsm?.Machine.CurrentType?.Name} " +
+                $"Skill={SkillFsm?.Machine.CurrentType?.Name}",
                 this);
         }
 

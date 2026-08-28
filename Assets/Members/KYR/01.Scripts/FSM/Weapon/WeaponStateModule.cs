@@ -74,7 +74,7 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
 
         private void TryFire()
         {
-            if (!Capabilities.AllowsFire || !Player.MoveFsm.Capabilities.CanFire)
+            if (!Capabilities.AllowsFire || !Player.MoveFsm.Capabilities.CanFire || !Player.SkillFsm.Capabilities.AllowsFire)
                 return;
 
             Player.Weapon.TryFire(Player.Input.FireHeld, Player.Input.FirePressed);

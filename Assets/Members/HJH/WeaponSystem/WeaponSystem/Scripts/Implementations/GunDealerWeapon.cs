@@ -11,13 +11,12 @@ namespace RobotWeapons
 
         private int burstShotsRemaining;
         private float burstSafetyTimer;
-        private bool suppressNextFireEvent; // 점사 킥오프 신호랑 첫 발 신호가 겹치는 것 방지용
 
-        public float AttackSpeedMultiplier = 1f; // 업그레이드/버프로 공격속도 오르면 이 값만 조절
-        public bool IsBursting => burstShotsRemaining > 0; // 애니메이터가 발사 상태를 계속 유지해야 할지 판단용
+        public float AttackSpeedMultiplier = 1f;
+        public bool IsBursting => burstShotsRemaining > 0;
 
-        // 점사 무기는 클릭 한 번에 애니메이션이 알아서 여러 발 트리거하므로 홀드 연사가 아님
-        public override bool PrimaryIsHeld => !data.isBurstFire;
+        // Auto만 누르고 있는 동안 계속 발사. Semi/Burst는 클릭(프레스)마다 한 번씩만 반응.
+        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto;
 
         public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
 
@@ -32,10 +31,9 @@ namespace RobotWeapons
                 burstSafetyTimer -= dt;
                 if (burstSafetyTimer <= 0f)
                 {
-                    // 애니메이션 이벤트가 안 불렸을 때를 대비한 안전장치 - 강제로 나머지 발사
                     while (burstShotsRemaining > 0)
                     {
-                        FireOneShot();
+                        FireOneShot(raiseFireEvent: false);
                         burstShotsRemaining--;
                     }
                 }
@@ -46,34 +44,33 @@ namespace RobotWeapons
         {
             if (IsReloading || CurrentResource <= 0f) return;
             if (fireCooldown > 0f || owner == null || data.projectilePrefab == null) return;
-            if (burstShotsRemaining > 0) return; // 점사 진행 중엔 새 입력 무시
+            if (burstShotsRemaining > 0) return;
 
             fireCooldown = (1f / data.fireRate) / AttackSpeedMultiplier;
 
-            if (data.isBurstFire)
+            if (data.fireMode == GunDealerData.FireMode.Burst)
             {
-                // 실제 발사는 여기서 안 하고, 애니메이션 이벤트가 ExecuteHit()을 부를 때마다 한 발씩
                 burstShotsRemaining = data.burstCount;
                 burstSafetyTimer = data.burstSafetyDuration;
-                suppressNextFireEvent = true; // 첫 발이 나갈 때 이 킥오프 신호랑 중복으로 안 겹치게
+                // 킥오프 신호 딱 한 번만 - 이걸로 IsBursting이 버스트 끝날 때까지 발사상태를 계속 유지해줌.
+                // 개별 발들은 더 이상 이 신호를 재발행할 필요가 없음 (마지막 발에서 중복 재생되던 원인이었음).
                 RaiseAttackTriggered("Gun_Fire");
                 return;
             }
 
-            FireOneShot();
+            // Semi/Auto 둘 다 한 발만 - 매 발이 자기 몫의 신호가 필요함(버스트처럼 유지해주는 게 없어서)
+            FireOneShot(raiseFireEvent: true);
         }
 
-        // 애니메이션 이벤트가 직접 호출 - 점사 중일 때만 의미 있고, 아니면 그냥 무시됨
         public override void ExecuteHit()
         {
-            Debug.Log($"[Burst] ExecuteHit 호출됨, 남은 발수: {burstShotsRemaining}");
             if (burstShotsRemaining <= 0) return;
-            FireOneShot();
+            FireOneShot(raiseFireEvent: false); // 버스트 개별 발은 이벤트 재발행 안 함
             burstShotsRemaining--;
-            burstSafetyTimer = data.burstSafetyDuration; // 다음 발까지 다시 유예 - 총 길이랑 무관해짐
+            burstSafetyTimer = data.burstSafetyDuration;
         }
 
-        private void FireOneShot()
+        private void FireOneShot(bool raiseFireEvent)
         {
             if (CurrentResource <= 0f) return;
             CurrentResource -= 1f;
@@ -88,9 +85,7 @@ namespace RobotWeapons
 
             currentSpread = Mathf.Min(data.maxSpreadAngle, currentSpread + data.spreadGrowthPerShot);
 
-            if (suppressNextFireEvent)
-                suppressNextFireEvent = false; // 킥오프 때 이미 신호 나갔으니 이번만 건너뜀
-            else
+            if (raiseFireEvent)
                 RaiseAttackTriggered("Gun_Fire");
 
             float horizontalKick = Random.Range(data.recoilPerShotHorizontalMin, data.recoilPerShotHorizontalMax);
