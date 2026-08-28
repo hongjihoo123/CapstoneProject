@@ -1,5 +1,4 @@
 using UnityEngine;
-
 namespace Members.KYR._01_Scripts
 {
     public sealed class PlayerInputState
@@ -13,11 +12,11 @@ namespace Members.KYR._01_Scripts
         public bool FirePressed { get; private set; }
         public bool AimHeld { get; private set; }
         public bool ReloadPressed { get; private set; }
-
+        public bool QPressed { get; private set; }
+        public bool EPressed { get; private set; }
+        public bool XPressed { get; private set; }
         public float MoveSqrMagnitude => Move.sqrMagnitude;
-
         public bool HasMoveInput => MoveSqrMagnitude > 0.01f;
-
         public void CopyFrom(PlayerInputSO source)
         {
             if (source == null)
@@ -25,7 +24,6 @@ namespace Members.KYR._01_Scripts
                 Clear();
                 return;
             }
-
             Move = source.Move;
             Look = source.Look;
             JumpPressed = source.JumpPressed;
@@ -35,8 +33,10 @@ namespace Members.KYR._01_Scripts
             FirePressed = source.FirePressed;
             AimHeld = source.AimHeld;
             ReloadPressed = source.ReloadPressed;
+            QPressed = source.QPressed;
+            EPressed = source.EPressed;
+            XPressed = source.XPressed;
         }
-
         public void Clear()
         {
             Move = Vector2.zero;
@@ -48,6 +48,9 @@ namespace Members.KYR._01_Scripts
             FirePressed = false;
             AimHeld = false;
             ReloadPressed = false;
+            QPressed = false;
+            EPressed = false;
+            XPressed = false;
         }
     }
 }

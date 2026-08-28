@@ -84,7 +84,13 @@ namespace Members.KYR._01_Scripts.FSM.Move
         private void ApplyMovement()
         {
             IMoveCapabilities capabilities = Capabilities;
-            float speed = capabilities.PlanarSpeed * Player.WeaponFsm.Capabilities.MoveSpeedMultiplier;
+            float speed = capabilities.PlanarSpeed
+                * Player.WeaponFsm.Capabilities.MoveSpeedMultiplier
+                * Player.SkillFsm.Capabilities.MoveSpeedMultiplier;
+
+            if (!Player.SkillFsm.Capabilities.AllowsMove)
+                speed = 0f;
+
             Player.Mover.SetCrouching(capabilities.IsCrouching);
             Player.Mover.SetPlanarInput(Player.Input.Move, speed);
         }
