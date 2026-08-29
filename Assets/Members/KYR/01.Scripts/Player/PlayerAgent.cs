@@ -41,6 +41,8 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private AnimParamSO isFireParam;
         [SerializeField] private AnimParamSO isAimFireParam;
         [SerializeField] private AnimParamSO reloadParam;
+        [SerializeField] private AnimParamSO isSkillParam;
+        [SerializeField] private AnimParamSO skillBlendParam;
 
         [SerializeField] private float aimEnterPulseDuration = 0.15f;
         [SerializeField] private float firePulseDuration = 0.15f;
@@ -201,6 +203,10 @@ namespace Members.KYR._01_Scripts
             Weapon.SetHitboxActive(active);
         }
 
+        // 애니메이션 이벤트에서 직접 호출하는 용도 (E스킬 콜라이더 on/off)
+        public void Anim_SkillHitboxOn() => Weapon.Anim_SkillHitboxOn();
+        public void Anim_SkillHitboxOff() => Weapon.Anim_SkillHitboxOff();
+
         [ContextMenu("Log FSM States")]
         private void LogFsmStates()
         {
@@ -233,8 +239,10 @@ namespace Members.KYR._01_Scripts
 
             bool isFireNow = isFirePulseActive && !lastFireWasAimed;
             bool isAimFireNow = isFirePulseActive && lastFireWasAimed;
+            bool isSkillPlayingNow = !SkillFsm.Machine.IsCurrent<IdleSkillState>();
+
             bool isAimIdleNow = isAimingNow && !isAimPulseActive && !isFirePulseActive;
-            bool isIdleNow = !isAimingNow && !isFirePulseActive && !isReloadingNow;
+            bool isIdleNow = !isAimingNow && !isFirePulseActive && !isReloadingNow && !isSkillPlayingNow;
 
             if (idleParam != null) Renderer.SetBool(idleParam.HashValue, isIdleNow);
             if (speedParam != null)
@@ -255,6 +263,9 @@ namespace Members.KYR._01_Scripts
             if (isFireParam != null) Renderer.SetBool(isFireParam.HashValue, isFireNow);
             if (isAimFireParam != null) Renderer.SetBool(isAimFireParam.HashValue, isAimFireNow);
             if (reloadParam != null) Renderer.SetBool(reloadParam.HashValue, isReloadingNow);
+
+            if (isSkillParam != null) Renderer.SetBool(isSkillParam.HashValue, isSkillPlayingNow);
+            if (skillBlendParam != null) Renderer.SetFloat(skillBlendParam.HashValue, SkillFsm.AnimBlendIndex);
         }
         public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f) => Weapon.ApplyRecoil(pitchDelta, yawDelta, dutchImpulse);
 

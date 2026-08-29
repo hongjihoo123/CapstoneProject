@@ -1,3 +1,4 @@
+using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using RobotWeapons;
 using Unity.Cinemachine;
@@ -9,6 +10,7 @@ namespace Members.KYR._01_Scripts.Modules
     {
         [SerializeField] private WeaponData equippedWeaponData;
         [SerializeField] private WeaponHitbox weaponHitbox;
+        [SerializeField] private Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox skillOverlapHitbox;
         [SerializeField] private bool treatSecondaryAsAim = true;
 
         [Header("화면 흔들림")]
@@ -16,11 +18,11 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float gunShakeForce = 0.3f;
         [SerializeField] private float energyBallShakeForce = 1f;
 
-        [Header("발사 이펙트 (선택)")]
+        [Header("발사 이펙트")]
         [SerializeField] private MuzzleFlash muzzleFlash;
         [SerializeField] private TracerVisual tracerVisual;
 
-        [Header("리코일")]
+        [Header("반동")]
         [SerializeField] private float dutchSpringStrength = 400f;
         [SerializeField] private float dutchDamping = 4f;
         [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
@@ -46,6 +48,7 @@ namespace Members.KYR._01_Scripts.Modules
         private bool _aimOriginBaseCaptured;
 
         public IWeapon Weapon => _weapon;
+        public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
         public bool CanStartReload =>
      _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
      && !(_weapon is GunDealerWeapon gunBursting && gunBursting.IsBursting);
@@ -176,6 +179,46 @@ namespace Members.KYR._01_Scripts.Modules
         public void SetHitboxActive(bool active)
         {
             weaponHitbox?.SetActive(active);
+        }
+
+        // 히트 판정만 임시로 다르게 받고 싶을 때 사용혀
+        public void SetSkillHitCallback(Action<IDamageable, bool> onHit)
+        {
+            weaponHitbox?.SetOverrideHandler(onHit);
+        }
+
+        public void ClearSkillHitCallback()
+        {
+            weaponHitbox?.ClearOverrideHandler();
+        }
+
+        // 애니메이션 이벤트 - 콜라이더
+        public void Anim_SkillHitboxOn()
+        {
+            weaponHitbox?.SetActive(true);
+        }
+
+        public void Anim_SkillHitboxOff()
+        {
+            weaponHitbox?.SetActive(false);
+        }
+
+        // Animator가 붙은 오브젝트에서 직접 호출하는 용도여
+        public void TriggerSkillOverlapHit()
+        {
+            if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
+                player.SkillFsm.Anim_SkillOverlapHit();
+        }
+        public void BeginSkillHitWindow(Action<IDamageable, bool> onHit)
+        {
+            weaponHitbox?.SetOverrideHandler(onHit);
+            weaponHitbox?.SetActive(true);
+        }
+
+        public void EndSkillHitWindow()
+        {
+            weaponHitbox?.SetActive(false);
+            weaponHitbox?.ClearOverrideHandler();
         }
 
         public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f)
