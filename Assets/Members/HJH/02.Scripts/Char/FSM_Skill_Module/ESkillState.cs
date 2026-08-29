@@ -2,22 +2,31 @@
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // 검 공격 (정커퀸 E 스타일)
     public class ESkillState : SkillStateBase
     {
-        private const float Duration = 0.6f;
+        private readonly SkillData _data;
 
-        public override float Cooldown => 6f;
-        public override bool AllowsMove => false;
-        public override bool AllowsFire => false;
-        public override bool IsFinished => Time.time - EnterTime >= Duration;
+        public override float Cooldown => _data.Cooldown;
+        public override bool AllowsMove => _data.AllowsMove;
+        public override bool AllowsFire => _data.AllowsFire;
+        public override float MoveSpeedMultiplier => _data.MoveSpeedMultiplier;
+        public override bool IsFinished => Time.time - EnterTime >= _data.Duration;
+        public override float DebugDuration => _data.Duration;
 
-        public ESkillState(SkillStateModule owner) : base(owner) { }
+        public ESkillState(SkillStateModule owner, SkillData data) : base(owner)
+        {
+            _data = data;
+        }
 
         public override void Enter()
         {
             base.Enter();
-            // TODO: 애니메이션 트리거 + 타이밍 맞춰 히트 판정
+            _data.Execute(Owner);
+        }
+
+        public override void OnAnimationHitEvent()
+        {
+            _data.OnAnimationHitEvent(Owner);
         }
     }
 }

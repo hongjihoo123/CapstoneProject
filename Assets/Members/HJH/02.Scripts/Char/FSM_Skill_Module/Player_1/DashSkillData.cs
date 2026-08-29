@@ -14,7 +14,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
 
         public override void Execute(SkillStateModule owner)
         {
-            // owner.Player.Mover 쪽 대쉬 API 연결
+            Debug.Log("대쉬 실행");
             owner.Player.Mover.Dash(owner.transform.forward, dashForce, Duration);
         }
     }

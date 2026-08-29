@@ -2,21 +2,26 @@
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // Q 슬롯. 실제 동작은 SkillData가 결정 (대쉬든 뭐든 캐릭터별로 교체 가능).
     public class QSkillState : SkillStateBase
     {
-        private const float Duration = 0.25f;
+        private readonly SkillData _data;
 
-        public override float Cooldown => 3f;
-        public override bool AllowsMove => false;
-        public override bool AllowsFire => false;
-        public override bool IsFinished => Time.time - EnterTime >= Duration;
+        public override float Cooldown => _data.Cooldown;
+        public override bool AllowsMove => _data.AllowsMove;
+        public override bool AllowsFire => _data.AllowsFire;
+        public override float MoveSpeedMultiplier => _data.MoveSpeedMultiplier;
+        public override bool IsFinished => Time.time - EnterTime >= _data.Duration;
 
-        public QSkillState(SkillStateModule owner) : base(owner) { }
+        public QSkillState(SkillStateModule owner, SkillData data) : base(owner)
+        {
+            _data = data;
+        }
 
         public override void Enter()
         {
             base.Enter();
-            // TODO: Owner.Player.Mover 쪽 대쉬 임펄스 API 연결
+            _data.Execute(Owner);
         }
     }
 }

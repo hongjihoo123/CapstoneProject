@@ -1,5 +1,4 @@
-﻿// FSM_Skill_Module/SkillData.cs
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
@@ -17,7 +16,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public bool AllowsFire => allowsFire;
         public float MoveSpeedMultiplier => moveSpeedMultiplier;
 
-        // 대쉬/검공격/버프마다 다른 실제 동작
+        // 스킬 진입 시 실제로 뭘 할지 구현 싹싹
         public abstract void Execute(SkillStateModule owner);
+
+        // 애니메이션 이벤트 타이밍
+        public virtual void OnAnimationHitEvent(SkillStateModule owner) { }
     }
 }
