@@ -17,7 +17,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             base.InitializeModules();
 
             EnemyNavMeshAgent = GetModule<INavMesh>();
-            Debug.Assert(EnemyNavMeshAgent != null, $"{gameObject.name}에는 INavMeshAgent모듈이 필요합니다.");
+            Debug.Assert(EnemyNavMeshAgent != null, $"{gameObject.name}에는 INavMesh모듈이 필요합니다.");
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
 
