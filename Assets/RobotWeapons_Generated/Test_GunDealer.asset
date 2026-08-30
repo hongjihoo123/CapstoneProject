@@ -9,22 +9,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 461aaac2198a64949a2bc930f80a1c51, type: 3}
+  m_Script: {fileID: 11500000, guid: 6b71f1cb8e70cc34aa930b8fe415c121, type: 3}
   m_Name: Test_GunDealer
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.GunDealerData
   weaponName: New Weapon
-  type: 0
+  type: 1
   description: 
-  cooldown: 0.5
-  resourceMax: 100
-  reloadDuration: 1.5
-  damagePerBullet: 12
-  projectilePrefab: {fileID: 0}
-  projectileSpeed: 40
+  resourceMax: 300
+  reloadDuration: 2.2
+  damagePerBullet: 1
+  projectilePrefab: {fileID: 5777736917815825439, guid: cd25bb7a0729aa34db85ab0957ee5e20, type: 3}
+  projectileSpeed: 120
   aimRange: 100
-  fireRate: 6
-  baseSpreadAngle: 1.5
-  maxSpreadAngle: 8
-  spreadGrowthPerShot: 1.2
-  spreadRecoverPerSecond: 6
+  fireMode: 2
+  fireRate: 2
+  baseSpreadAngle: 0.1
+  maxSpreadAngle: 0.53333336
+  spreadGrowthPerShot: 0.08
+  spreadRecoverPerSecond: 0.4
   aimSpreadMultiplier: 0.4
+  recoilPerShotVertical: 0.6
+  recoilPerShotHorizontalMin: -0.3
+  recoilPerShotHorizontalMax: 0.3
+  dutchKickMin: -40
+  dutchKickMax: 40
+  burstCount: 3
+  burstSafetyDuration: 1
