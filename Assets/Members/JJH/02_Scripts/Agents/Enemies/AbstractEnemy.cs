@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Unity.Behavior;
 using UnityEngine;
 
@@ -7,6 +8,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
     public abstract class AbstractEnemy : Agent
     {
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
+        [field: SerializeField] public AnimParamSO MoveSpeedParam { get; private set; }
 
         public INavMesh EnemyNavMeshAgent { get; private set; }
 
@@ -23,6 +25,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
             BehaviorAgent.SetVariableValue("Enemy", this);
             BehaviorAgent.SetVariableValue("AttackCooltime", EnemyData.AttackCooltime);
+
+            Renderer.SetFloat(MoveSpeedParam.HashValue, EnemyData.EnemySpeed);
         }
 
         public virtual void Attack() { }
