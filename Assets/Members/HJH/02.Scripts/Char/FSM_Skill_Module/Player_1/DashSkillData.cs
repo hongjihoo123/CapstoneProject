@@ -16,6 +16,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
         {
             Debug.Log("대쉬 실행");
             owner.Player.Mover.Dash(owner.transform.forward, dashForce, Duration);
+            owner.Player.Weapon.Weapon?.InstantReload();
         }
     }
 }

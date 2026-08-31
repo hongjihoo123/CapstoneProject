@@ -87,7 +87,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             if (Machine.Current is SkillStateBase skillState && !skillState.IsFinished)
             {
-                Debug.Log($"[Skill] 대기중 / State={Machine.CurrentType?.Name} / Time.time={Time.time:F3} / 경과={skillState.DebugElapsed:F3} / Duration={skillState.DebugDuration:F3}");
                 return;
             }
 
@@ -108,6 +107,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             public bool AllowsMove => true;
             public bool AllowsFire => true;
+            public bool AllowsReload => true;
             public float MoveSpeedMultiplier => 1f;
         }
     }

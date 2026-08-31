@@ -35,6 +35,7 @@ namespace RobotWeapons
         void StartHitWindow();
         void EndHitWindow();
         void OnHitboxTouch(IDamageable target, bool isWeakpoint);
+        void InstantReload();
 
         event Action<string> OnAttackTriggered;
         event Action<float> OnDamageDealt;
