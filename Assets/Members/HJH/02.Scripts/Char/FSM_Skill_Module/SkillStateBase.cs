@@ -12,6 +12,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public virtual bool AllowsMove => true;
         public virtual bool AllowsFire => true;
+        public virtual bool AllowsReload => false;
         public virtual float MoveSpeedMultiplier => 1f;
         public virtual bool IsFinished => true;
         public abstract float Cooldown { get; }

@@ -56,13 +56,14 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
                 return;
             }
 
-            if (input.ReloadPressed && Player.Weapon.CanStartReload)
+            if (input.ReloadPressed && Player.Weapon.CanStartReload && Player.SkillFsm.Capabilities.AllowsReload)
             {
                 ChangeState<ReloadWeaponState>();
                 return;
             }
 
             bool wantAim = input.AimHeld && Player.MoveFsm.Capabilities.CanAim;
+
             if (wantAim)
             {
                 ChangeState<AimWeaponState>();
