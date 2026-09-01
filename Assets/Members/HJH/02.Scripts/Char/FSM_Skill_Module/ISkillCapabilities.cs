@@ -4,6 +4,7 @@
     {
         bool AllowsMove { get; }
         bool AllowsFire { get; }
+        bool AllowsReload { get; }
         float MoveSpeedMultiplier { get; }
     }
 }

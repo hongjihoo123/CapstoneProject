@@ -64,6 +64,13 @@ namespace RobotWeapons
             reloadTimer = baseData.reloadDuration;
         }
 
+        public virtual void InstantReload()
+        {
+            IsReloading = false;
+            reloadTimer = 0f;
+            CurrentResource = MaxResource;
+        }
+
         public virtual void SwapMode() { }
 
         public virtual void OnPrimaryPressed() { }

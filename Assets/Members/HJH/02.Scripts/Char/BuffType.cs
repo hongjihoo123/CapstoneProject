@@ -10,6 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.Char
     {
         AttackSpeed,
         Damage,
+        ReloadSpeed,
         MoveSpeed
     }
 }
