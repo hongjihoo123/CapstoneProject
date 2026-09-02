@@ -17,6 +17,7 @@ namespace RobotWeapons
 
         [Header("연사/발사 간격")]
         public float fireRate = 6f;
+        public float ultimateFireRate = 60;
 
         [Header("탄 튀김")]
         public float baseSpreadAngle = 1.5f;
