@@ -22,6 +22,7 @@ namespace RobotWeapons
                 MeleeSawedOffData d => new MeleeSawedOffWeapon(d),
                 SniperSawedOffData d => new SniperSawedOffWeapon(d),
                 HealerData d => new HealerWeapon(d),
+                EnemyGunData d => new EnemyGunWeapon(d),
                 _ => null
             };
 

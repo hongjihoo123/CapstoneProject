@@ -33,9 +33,9 @@ namespace RobotWeapons
         private void OnTriggerEnter(Collider other)
         {
             var target = other.GetComponentInParent<IHealable>();
-            if (target != null)
+            if (target != null && caster is IHealCapable healCaster)
             {
-                caster?.ApplyHealTo(target, healAmount);
+                healCaster.ApplyHealTo(target, healAmount);
                 Destroy(gameObject);
             }
         }

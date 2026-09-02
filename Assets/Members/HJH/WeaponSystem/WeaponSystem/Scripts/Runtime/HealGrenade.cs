@@ -24,8 +24,8 @@ namespace RobotWeapons
             foreach (var col in Physics.OverlapSphere(transform.position, radius))
             {
                 var ally = col.GetComponentInParent<IHealable>();
-                if (ally != null && ally.IsAlive)
-                    thrower?.ApplyHealTo(ally, heal);
+                if (ally != null && ally.IsAlive && thrower is IHealCapable healCaster)
+                    healCaster.ApplyHealTo(ally, heal);
 
                 var enemy = col.GetComponentInParent<IDamageable>();
                 if (enemy != null && enemy.IsAlive)
