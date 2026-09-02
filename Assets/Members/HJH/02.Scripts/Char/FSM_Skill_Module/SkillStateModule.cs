@@ -14,11 +14,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField] private SkillData qSkillData;
         [SerializeField] private SkillData eSkillData;
         [SerializeField] private SkillData xSkillData;
+        private GenericSkillState _qSkill;
+        private GenericSkillState _eSkill;
+        private GenericSkillState _xSkill;
 
         private IdleSkillState _idleSkill;
-        private QSkillState _qSkill;
-        private ESkillState _eSkill;
-        private XSkillState _xSkill;
 
         private readonly HashSet<RobotWeapons.IDamageable> _hitThisActivation = new();
 
@@ -30,10 +30,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             get
             {
-                var current = Machine?.CurrentType;
-                if (current == typeof(QSkillState)) return 0;
-                if (current == typeof(ESkillState)) return 1;
-                if (current == typeof(XSkillState)) return 2;
+                var current = Machine?.Current;
+                if (current == _qSkill) return 0;
+                if (current == _eSkill) return 1;
+                if (current == _xSkill) return 2;
                 return 3;
             }
         }
@@ -53,9 +53,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             Machine = new StateMachine();
             _idleSkill = new IdleSkillState(this);
-            _qSkill = new QSkillState(this, qSkillData);
-            _eSkill = new ESkillState(this, eSkillData);
-            _xSkill = new XSkillState(this, xSkillData);
+            _qSkill = new GenericSkillState(this, qSkillData);
+            _eSkill = new GenericSkillState(this, eSkillData);
+            _xSkill = new GenericSkillState(this, xSkillData);
 
             Machine.Register(_idleSkill);
             Machine.ChangeState<IdleSkillState>();
@@ -92,11 +92,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             PlayerInputState input = Player.Input;
 
-            if (input.QPressed) Debug.Log($"[Skill] Q입력 감지 / _qSkill null={_qSkill == null} / IsReady={_qSkill?.IsReady}");
-            if (input.EPressed) Debug.Log($"[Skill] E입력 감지 / _eSkill null={_eSkill == null} / IsReady={_eSkill?.IsReady}");
-
-            if (input.QPressed && _qSkill.IsReady) { Debug.Log("[Skill] Q 상태로 전환함"); Machine.ChangeState(_qSkill); return; }
-            if (input.EPressed && _eSkill.IsReady) { Debug.Log("[Skill] E 상태로 전환함"); Machine.ChangeState(_eSkill); return; }
+            if (input.QPressed && _qSkill.IsReady) { Machine.ChangeState(_qSkill); return; }
+            if (input.EPressed && _eSkill.IsReady) { Machine.ChangeState(_eSkill); return; }
             if (input.XPressed && _xSkill.IsReady) { Machine.ChangeState(_xSkill); return; }
 
             if (!Machine.IsCurrent<IdleSkillState>())

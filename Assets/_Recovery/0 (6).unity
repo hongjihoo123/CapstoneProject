@@ -61014,7 +61014,6 @@ GameObject:
   - component: {fileID: 1978900849}
   - component: {fileID: 1978900848}
   - component: {fileID: 1978900860}
-  - component: {fileID: 1978900861}
   m_Layer: 8
   m_Name: Player (1)
   m_TagString: Untagged
@@ -61034,7 +61033,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Unity.Netcode.Runtime::Unity.Netcode.NetworkObject
-  GlobalObjectIdHash: 701391842
+  GlobalObjectIdHash: 1648561287
   InScenePlacedSourceGlobalObjectIdHash: 0
   m_InScenePlacedDisabledByDefault: 0
   DeferredDespawnTick: 0
@@ -61255,10 +61254,6 @@ MonoBehaviour:
   skillBlendParam: {fileID: 11400000, guid: ea78a6c2aabb20e4dbcc3fbe02cbe953, type: 2}
   aimEnterPulseDuration: 0.3
   firePulseDuration: 0.15
-  passiveKillThreshold: 5
-  passiveAttackSpeedMultiplier: 1.3
-  passiveReloadSpeedMultiplier: 1.3
-  passiveDuration: 5
 --- !u!143 &1978900858
 CharacterController:
   m_ObjectHideFlags: 0
@@ -61318,19 +61313,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillStateModule
   qSkillData: {fileID: 11400000, guid: 385cfe2710e6da74a91272e392dc602f, type: 2}
   eSkillData: {fileID: 11400000, guid: 394f3fc0ada97304ab1d1e951084b7db, type: 2}
-  xSkillData: {fileID: 11400000, guid: d02ecf77bb99d5b4c971412900f24045, type: 2}
---- !u!114 &1978900861
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1978900847}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6fc0b0dc95990914bac7af75f952e550, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.StatusEffectModule
+  xSkillData: {fileID: 0}
 --- !u!1 &1983726631
 GameObject:
   m_ObjectHideFlags: 0
