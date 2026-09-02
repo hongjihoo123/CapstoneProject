@@ -1,5 +1,6 @@
+using RobotWeapons;
 using UnityEngine;
-
+using static UnityEngine.UI.GridLayoutGroup;
 namespace RobotWeapons
 {
     public class GunDealerWeapon : WeaponBase
@@ -15,8 +16,19 @@ namespace RobotWeapons
         public float AttackSpeedMultiplier = 1f;
         public bool IsBursting => burstShotsRemaining > 0;
 
-        // Auto만 누르고 있는 동안 계속 발사. Semi/Burst는 클릭(프레스)마다 한 번씩만 반응.
-        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto;
+        [Header("궁 (연사 모드)")]
+        public float ultimateFireRate = 10f;
+        private float ultimateTimer;
+        public bool IsUltimateActive => ultimateTimer > 0f;
+
+        public void ActivateUltimate(float duration)
+        {
+            ultimateTimer = duration;
+            burstShotsRemaining = 0; // 진행 중이던 점사 취소하고 즉시 연사로 전환
+        }
+
+        // Auto거나 궁 활성 중이면 계속 발사
+        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto || IsUltimateActive;
 
         public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
 
@@ -25,6 +37,9 @@ namespace RobotWeapons
             fireCooldown -= dt;
             currentSpread = Mathf.Max(data.baseSpreadAngle, currentSpread - data.spreadRecoverPerSecond * dt);
             TickReload(dt);
+
+            if (ultimateTimer > 0f)
+                ultimateTimer -= dt;
 
             if (burstShotsRemaining > 0)
             {
@@ -42,38 +57,42 @@ namespace RobotWeapons
 
         public override void PrimaryAttack()
         {
-            if (IsReloading || CurrentResource <= 0f) return;
+            if (IsReloading) return;
+            if (!IsUltimateActive && CurrentResource <= 0f) return;
             if (fireCooldown > 0f || owner == null || data.projectilePrefab == null) return;
             if (burstShotsRemaining > 0) return;
 
             fireCooldown = (1f / data.fireRate) / AttackSpeedMultiplier;
 
-            if (data.fireMode == GunDealerData.FireMode.Burst)
+            fireCooldown = (1f / (IsUltimateActive ? data.ultimateFireRate : data.fireRate)) / AttackSpeedMultiplier;
+
+            // 궁 활성 중엔 Burst든 뭐든 전부 단발 연사로 처리
+            if (!IsUltimateActive && data.fireMode == GunDealerData.FireMode.Burst)
             {
                 burstShotsRemaining = data.burstCount;
                 burstSafetyTimer = data.burstSafetyDuration;
-                // 킥오프 신호 딱 한 번만 - 이걸로 IsBursting이 버스트 끝날 때까지 발사상태를 계속 유지해줌.
-                // 개별 발들은 더 이상 이 신호를 재발행할 필요가 없음 (마지막 발에서 중복 재생되던 원인이었음).
                 RaiseAttackTriggered("Gun_Fire");
                 return;
             }
 
-            // Semi/Auto 둘 다 한 발만 - 매 발이 자기 몫의 신호가 필요함(버스트처럼 유지해주는 게 없어서)
             FireOneShot(raiseFireEvent: true);
         }
 
         public override void ExecuteHit()
         {
             if (burstShotsRemaining <= 0) return;
-            FireOneShot(raiseFireEvent: false); // 버스트 개별 발은 이벤트 재발행 안 함
+            FireOneShot(raiseFireEvent: false);
             burstShotsRemaining--;
             burstSafetyTimer = data.burstSafetyDuration;
         }
 
         private void FireOneShot(bool raiseFireEvent)
         {
-            if (CurrentResource <= 0f) return;
-            CurrentResource -= 1f;
+            if (!IsUltimateActive)
+            {
+                if (CurrentResource <= 0f) return;
+                CurrentResource -= 1f;
+            }
 
             float spread = isAiming ? currentSpread * data.aimSpreadMultiplier : currentSpread;
             Vector3 aimDir = GetSpreadDirection(owner.AimOrigin.forward, spread);
@@ -81,7 +100,7 @@ namespace RobotWeapons
 
             GameObject proj = GameObject.Instantiate(data.projectilePrefab, owner.MuzzleOrigin.position, muzzleRot);
             if (proj.TryGetComponent<Projectile>(out var p))
-                p.Init(data.damagePerBullet + bonusDamage, data.projectileSpeed, owner);
+                p.Init((data.damagePerBullet + bonusDamage) * DamageMultiplier, data.projectileSpeed, owner);
 
             currentSpread = Mathf.Min(data.maxSpreadAngle, currentSpread + data.spreadGrowthPerShot);
 
@@ -90,7 +109,9 @@ namespace RobotWeapons
 
             float horizontalKick = Random.Range(data.recoilPerShotHorizontalMin, data.recoilPerShotHorizontalMax);
             float dutchKick = Random.Range(data.dutchKickMin, data.dutchKickMax);
-            owner.ApplyRecoil(data.recoilPerShotVertical, horizontalKick, dutchKick);
+
+            if (owner is IRecoilCapable recoilOwner)
+                recoilOwner.ApplyRecoil(data.recoilPerShotVertical, horizontalKick, dutchKick);
         }
 
         public override void SecondaryAction()

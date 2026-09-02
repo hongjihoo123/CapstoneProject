@@ -30,8 +30,6 @@ namespace Members.KYR._01_Scripts.Modules
         private Vector3 _hipCameraLocalPosition;
         private bool _hipCameraPositionCaptured;
 
-        // 대쉬 전용 이동 벡터. 남은 시간(_dashTimeRemaining)이 있는 동안
-        // TickPhysics에서 일반 planar 이동 대신 이 값을 사용함.
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;

@@ -22,7 +22,10 @@ namespace Members.JJH._02_Scripts.Agents
 
         public void PlayClip(int clipHash, float normalizedTime, float crossFadeDuration, int layerIndex = 0)
         {
-            Animator.CrossFadeInFixedTime(clipHash, crossFadeDuration, layerIndex, normalizedTime);
+            if (crossFadeDuration <= 0f)
+                Animator.PlayInFixedTime(clipHash, layerIndex, normalizedTime);
+            else
+                Animator.CrossFadeInFixedTime(clipHash, crossFadeDuration, layerIndex, normalizedTime);
         }
 
         public void SetFloat(int hash, float value, float dampTime = 0, float deltaTime = 0)

@@ -22,5 +22,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             base.Enter();
             _data.Execute(Owner);
         }
+        public override void OnAnimationHitEvent()
+        {
+            _data.OnAnimationHitEvent(Owner);
+        }
     }
 }

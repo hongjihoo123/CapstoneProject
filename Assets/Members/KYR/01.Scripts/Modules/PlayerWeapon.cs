@@ -3,6 +3,7 @@ using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
+using Assets.Members.HJH._02.Scripts.Char;
 
 namespace Members.KYR._01_Scripts.Modules
 {
@@ -100,6 +101,25 @@ namespace Members.KYR._01_Scripts.Modules
             _weapon?.Tick(deltaTime);
             UpdateDutchRoll(deltaTime);
             UpdateAimFov(deltaTime);
+            ApplyStatusEffectBuffs();
+        }
+
+        private void ApplyStatusEffectBuffs()
+        {
+            if (_weapon == null) return;
+
+            var status = _owner?.GetModule<StatusEffectModule>();
+            if (status == null) return;
+
+            if (_weapon is GunDealerWeapon gunDealer)
+                gunDealer.AttackSpeedMultiplier = status.Get(BuffType.AttackSpeed);
+
+            if (_weapon is WeaponBase weaponBase)
+            {
+                weaponBase.ReloadSpeedMultiplier = status.Get(BuffType.ReloadSpeed);
+                weaponBase.DamageMultiplier = status.Get(BuffType.Damage);
+            }
+
         }
 
         public void TryFire(bool fireHeld, bool firePressed)

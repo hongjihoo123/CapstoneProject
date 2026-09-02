@@ -11,6 +11,9 @@ namespace RobotWeapons
         public bool IsReloading { get; protected set; }
         protected float reloadTimer;
 
+        public float ReloadSpeedMultiplier = 1f;
+        public float DamageMultiplier = 1f;
+
         protected IWeaponOwner owner;
         protected WeaponData baseData;
 
@@ -23,7 +26,6 @@ namespace RobotWeapons
         public event Action<string> OnAttackTriggered;
         public event Action<float> OnDamageDealt;
         public event Action<float> OnHealApplied;
-
         protected WeaponBase(WeaponData data)
         {
             baseData = data;
@@ -80,7 +82,7 @@ namespace RobotWeapons
         protected void TickReload(float dt)
         {
             if (!IsReloading) return;
-            reloadTimer -= dt;
+            reloadTimer -= dt * ReloadSpeedMultiplier;
             if (reloadTimer <= 0f)
             {
                 CurrentResource = MaxResource;

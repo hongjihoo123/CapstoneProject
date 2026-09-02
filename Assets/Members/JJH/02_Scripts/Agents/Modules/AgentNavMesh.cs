@@ -5,7 +5,7 @@ using UnityEngine.AI;
 
 namespace Members.JJH._02_Scripts.Agents.Modules
 {
-    public class AgentNavMesh : Module
+    public class AgentNavMesh : Module, INavMesh
     {
         public NavMeshAgent NavMeshAgent { get; private set; }
 
@@ -14,7 +14,8 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             base.Initialize(owner);
 
             NavMeshAgent = GetComponentInParent<NavMeshAgent>();
-            NavMeshAgent.updateRotation = false;
+            NavMeshAgent.angularSpeed = 720f;
+            NavMeshAgent.updateRotation = true;
             NavMeshAgent.autoBraking = true;
 
             if (owner is AbstractEnemy enemy)
