@@ -1,5 +1,6 @@
+using RobotWeapons;
 using UnityEngine;
-
+using static UnityEngine.UI.GridLayoutGroup;
 namespace RobotWeapons
 {
     public class GunDealerWeapon : WeaponBase
@@ -14,7 +15,20 @@ namespace RobotWeapons
 
         public float AttackSpeedMultiplier = 1f;
         public bool IsBursting => burstShotsRemaining > 0;
-        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto;
+
+        [Header("궁 (연사 모드)")]
+        public float ultimateFireRate = 10f;
+        private float ultimateTimer;
+        public bool IsUltimateActive => ultimateTimer > 0f;
+
+        public void ActivateUltimate(float duration)
+        {
+            ultimateTimer = duration;
+            burstShotsRemaining = 0; // 진행 중이던 점사 취소하고 즉시 연사로 전환
+        }
+
+        // Auto거나 궁 활성 중이면 계속 발사
+        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto || IsUltimateActive;
 
         public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
 
@@ -23,6 +37,9 @@ namespace RobotWeapons
             fireCooldown -= dt;
             currentSpread = Mathf.Max(data.baseSpreadAngle, currentSpread - data.spreadRecoverPerSecond * dt);
             TickReload(dt);
+
+            if (ultimateTimer > 0f)
+                ultimateTimer -= dt;
 
             if (burstShotsRemaining > 0)
             {
@@ -40,17 +57,20 @@ namespace RobotWeapons
 
         public override void PrimaryAttack()
         {
-            if (IsReloading || CurrentResource <= 0f) return;
+            if (IsReloading) return;
+            if (!IsUltimateActive && CurrentResource <= 0f) return;
             if (fireCooldown > 0f || owner == null || data.projectilePrefab == null) return;
             if (burstShotsRemaining > 0) return;
 
             fireCooldown = (1f / data.fireRate) / AttackSpeedMultiplier;
 
-            if (data.fireMode == GunDealerData.FireMode.Burst)
+            fireCooldown = (1f / (IsUltimateActive ? data.ultimateFireRate : data.fireRate)) / AttackSpeedMultiplier;
+
+            // 궁 활성 중엔 Burst든 뭐든 전부 단발 연사로 처리
+            if (!IsUltimateActive && data.fireMode == GunDealerData.FireMode.Burst)
             {
                 burstShotsRemaining = data.burstCount;
                 burstSafetyTimer = data.burstSafetyDuration;
-
                 RaiseAttackTriggered("Gun_Fire");
                 return;
             }
@@ -68,15 +88,17 @@ namespace RobotWeapons
 
         private void FireOneShot(bool raiseFireEvent)
         {
-            if (CurrentResource <= 0f) return;
-            CurrentResource -= 1f;
+            if (!IsUltimateActive)
+            {
+                if (CurrentResource <= 0f) return;
+                CurrentResource -= 1f;
+            }
 
             float spread = isAiming ? currentSpread * data.aimSpreadMultiplier : currentSpread;
             Vector3 aimDir = GetSpreadDirection(owner.AimOrigin.forward, spread);
             Quaternion muzzleRot = AimUtility.GetConvergedMuzzleRotation(owner, aimDir, data.aimRange);
 
             GameObject proj = GameObject.Instantiate(data.projectilePrefab, owner.MuzzleOrigin.position, muzzleRot);
-
             if (proj.TryGetComponent<Projectile>(out var p))
                 p.Init((data.damagePerBullet + bonusDamage) * DamageMultiplier, data.projectileSpeed, owner);
 

@@ -9,11 +9,11 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 6b71f1cb8e70cc34aa930b8fe415c121, type: 3}
+  m_Script: {fileID: 11500000, guid: 84933cd91b7ccf7428ea0b2e19529e00, type: 3}
   m_Name: Test_GunDealer
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.GunDealerData
   weaponName: New Weapon
-  type: 1
+  type: 0
   description: 
   resourceMax: 300
   reloadDuration: 2.2
@@ -23,8 +23,9 @@ MonoBehaviour:
   aimRange: 100
   fireMode: 2
   fireRate: 2
+  ultimateFireRate: 60
   baseSpreadAngle: 0.1
-  maxSpreadAngle: 0.53333336
+  maxSpreadAngle: 0.53
   spreadGrowthPerShot: 0.08
   spreadRecoverPerSecond: 0.4
   aimSpreadMultiplier: 0.4
