@@ -16558,7 +16558,6 @@ Transform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 1824962587}
   - {fileID: 1426775514}
   - {fileID: 1235707374}
   - {fileID: 734126826}
@@ -55535,6 +55534,7 @@ Transform:
   m_LocalScale: {x: 89.823715, y: 89.823715, z: 89.82371}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1824962587}
   - {fileID: 515649070}
   m_Father: {fileID: 510870525}
   m_LocalEulerAnglesHint: {x: -88.89659, y: -2.820773, z: -0.0000058591877}
@@ -57988,13 +57988,13 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1824962586}
   serializedVersion: 2
-  m_LocalRotation: {x: -0.00047120167, y: -0.9999536, z: 0.009616629, w: -0.000004531582}
-  m_LocalPosition: {x: 0.00013928866, y: 0.008457792, z: -0.021517001}
-  m_LocalScale: {x: 0.04453165, y: 0.044531677, z: 0.04453166}
+  m_LocalRotation: {x: -0.0003363956, y: -0.713874, z: -0.7002741, w: 0.00032998624}
+  m_LocalPosition: {x: -0.00004999745, y: 0.02152, z: 0.008460002}
+  m_LocalScale: {x: 0.044531643, y: 0.044531666, z: 0.044531643}
   m_ConstrainProportionsScale: 0
   m_Children:
   - {fileID: 1484240690}
-  m_Father: {fileID: 515649070}
+  m_Father: {fileID: 1755189458}
   m_LocalEulerAnglesHint: {x: 1.102, y: -180, z: 0.054}
 --- !u!1 &1827364633
 GameObject:
@@ -61014,6 +61014,7 @@ GameObject:
   - component: {fileID: 1978900849}
   - component: {fileID: 1978900848}
   - component: {fileID: 1978900860}
+  - component: {fileID: 1978900861}
   m_Layer: 8
   m_Name: Player (1)
   m_TagString: Untagged
@@ -61167,7 +61168,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4b99d88f97f97d24d99d1341da4c93b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.KYR._01_Scripts.Modules.PlayerWeapon
-  equippedWeaponData: {fileID: 11400000, guid: fe2597cb2af01e14ab364a12d2f28490, type: 2}
+  equippedWeaponData: {fileID: 11400000, guid: 5adedf1c16e20b04a919c6c9625b915a, type: 2}
   weaponHitbox: {fileID: 1372611872}
   skillOverlapHitbox: {fileID: 724820079}
   treatSecondaryAsAim: 1
@@ -61236,7 +61237,7 @@ MonoBehaviour:
   playerInput: {fileID: 11400000, guid: 9d2f6c8e1a4b4d7c8e3f0a1b5c6d7890, type: 2}
   aimOrigin: {fileID: 960557375}
   muzzleOrigin: {fileID: 1824962587}
-  ammoText: {fileID: 0}
+  ammoText: {fileID: 788995162}
   cinemachineCamera: {fileID: 960557377}
   lockCursor: 1
   idleParam: {fileID: 11400000, guid: 69dc072ebf8be1d45893dd6d7a7ca34a, type: 2}
@@ -61254,6 +61255,10 @@ MonoBehaviour:
   skillBlendParam: {fileID: 11400000, guid: ea78a6c2aabb20e4dbcc3fbe02cbe953, type: 2}
   aimEnterPulseDuration: 0.3
   firePulseDuration: 0.15
+  passiveKillThreshold: 5
+  passiveAttackSpeedMultiplier: 1.3
+  passiveReloadSpeedMultiplier: 1.3
+  passiveDuration: 5
 --- !u!143 &1978900858
 CharacterController:
   m_ObjectHideFlags: 0
@@ -61313,7 +61318,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillStateModule
   qSkillData: {fileID: 11400000, guid: 385cfe2710e6da74a91272e392dc602f, type: 2}
   eSkillData: {fileID: 11400000, guid: 394f3fc0ada97304ab1d1e951084b7db, type: 2}
-  xSkillData: {fileID: 0}
+  xSkillData: {fileID: 11400000, guid: d3aa1804c5f0d3a4ebc935f63d54999f, type: 2}
+--- !u!114 &1978900861
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1978900847}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 6fc0b0dc95990914bac7af75f952e550, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.StatusEffectModule
 --- !u!1 &1983726631
 GameObject:
   m_ObjectHideFlags: 0
