@@ -118,8 +118,10 @@ namespace Members.KYR._01_Scripts.Modules
             {
                 weaponBase.ReloadSpeedMultiplier = status.Get(BuffType.ReloadSpeed);
                 weaponBase.DamageMultiplier = status.Get(BuffType.Damage);
-            }
 
+                if (_weapon is GunDealerWeapon g)
+                    Debug.Log($"[¹«±â] AttackSpeedMult={g.AttackSpeedMultiplier}, ReloadMult={weaponBase.ReloadSpeedMultiplier}");
+            }
         }
 
         public void TryFire(bool fireHeld, bool firePressed)

@@ -10,10 +10,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     {
         private static readonly AllowAllSkillFallback Fallback = new();
 
-        [Header("캐릭터별 스킬 데이터")]
+        [Header("캐릭터별 스킬/패시브 데이터")]
         [SerializeField] private SkillData qSkillData;
         [SerializeField] private SkillData eSkillData;
         [SerializeField] private SkillData xSkillData;
+        [SerializeField] private PassiveData passiveData;
+
         private GenericSkillState _qSkill;
         private GenericSkillState _eSkill;
         private GenericSkillState _xSkill;
@@ -100,6 +102,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 Machine.ChangeState<IdleSkillState>();
         }
 
+        public void NotifyEnemyKilled()
+        {
+            Debug.Log($"[패시브] 킬 이벤트 수신, passiveData null? {passiveData == null}");
+            passiveData?.OnEnemyKilled(this);
+        }
         private sealed class AllowAllSkillFallback : ISkillCapabilities
         {
             public bool AllowsMove => true;

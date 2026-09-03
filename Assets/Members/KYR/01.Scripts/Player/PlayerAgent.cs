@@ -47,12 +47,6 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private float aimEnterPulseDuration = 0.15f;
         [SerializeField] private float firePulseDuration = 0.15f;
 
-        [Header("패시브 - 5킬")]
-        [SerializeField] private int passiveKillThreshold = 5;
-        [SerializeField] private float passiveAttackSpeedMultiplier = 1.3f;
-        [SerializeField] private float passiveReloadSpeedMultiplier = 1.3f;
-        [SerializeField] private float passiveDuration = 5f;
-
         private int _killCount;
 
         private bool wasAimingLastFrame;
@@ -212,16 +206,7 @@ namespace Members.KYR._01_Scripts
         }
         public void OnEnemyKilled()
         {
-            _killCount++;
-            if (_killCount < passiveKillThreshold)
-                return;
-
-            _killCount = 0;
-            var status = GetModule<Assets.Members.HJH._02.Scripts.Char.StatusEffectModule>();
-            if (status == null) return;
-
-            status.Apply(Assets.Members.HJH._02.Scripts.Char.BuffType.AttackSpeed, passiveAttackSpeedMultiplier, passiveDuration);
-            status.Apply(Assets.Members.HJH._02.Scripts.Char.BuffType.ReloadSpeed, passiveReloadSpeedMultiplier, passiveDuration);
+            SkillFsm.NotifyEnemyKilled();   
         }
 
         // 애니메이션 이벤트에서 직접 호출하는 용도 (E스킬 콜라이더 on/off)
