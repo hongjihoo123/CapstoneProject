@@ -1,6 +1,5 @@
 ﻿using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts;
 using RobotWeapons;
 using UnityEngine;
 
@@ -12,6 +11,7 @@ namespace Members.JJH._02_Scripts.Agents
         public ISensor Sensor { get; private set; }
         public IHealth Health { get; private set; }
         public virtual bool IsAlive { get => Health.CurrentHealth > 0; }
+
         protected override void InitializeModules()
         {
             base.InitializeModules();
