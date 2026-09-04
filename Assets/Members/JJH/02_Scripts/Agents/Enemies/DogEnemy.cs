@@ -4,7 +4,7 @@
     {
         public override void Attack()
         {
-            base.Attack();
+            Weapon?.PrimaryAttack();
         }
     }
 }

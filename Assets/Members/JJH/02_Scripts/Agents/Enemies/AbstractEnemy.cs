@@ -1,15 +1,30 @@
+using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using RobotWeapons;
 using Unity.Behavior;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies
 {
-    public abstract class AbstractEnemy : Agent
+    public abstract class AbstractEnemy : Agent, IWeaponOwner
     {
+        [Header("Enemy Data")]
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
+        [SerializeField] private AnimParamSO moveSpeedParam;
 
+        [Header("Gun Data")]
+        [SerializeField] private Transform aimOrigin;
+        [SerializeField] private Transform muzzleOrigin;
+        [SerializeField] private WeaponData equippedWeaponData;
+        [SerializeField] private WeaponHitbox weaponHitbox;
+
+        public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
+        public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
+
+        public IWeapon Weapon { get; private set; }
         public INavMesh EnemyNavMeshAgent { get; private set; }
+
         protected BehaviorGraphAgent BehaviorAgent { get; private set; }
 
         protected override void InitializeModules()
@@ -21,13 +36,34 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
 
+            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.EnemySpeed);
+            Health.InitHealth(EnemyData.EnemyHealth);
+
             BehaviorAgent.SetVariableValue("Enemy", this);
             BehaviorAgent.SetVariableValue("AttackCooltime", EnemyData.AttackCooltime);
+
+            if (equippedWeaponData != null)
+            {
+                Weapon = WeaponFactory.Create(equippedWeaponData);
+                Weapon.Equip(this);
+                weaponHitbox?.Init(Weapon);
+            }
+        }
+
+        private void Update()
+        {
+            if (IsAlive == false)
+            {
+                BehaviorAgent.SetVariableValue("State", EnemyState.DEAD);
+            }
         }
 
         public virtual void Attack() { }
 
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
             => target?.TakeDamage(amount, gameObject);
+
+        public void SetWeaponHitboxActive(bool active)
+            => weaponHitbox?.SetActive(active);
     }
 }
