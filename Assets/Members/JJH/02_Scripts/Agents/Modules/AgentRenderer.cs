@@ -37,5 +37,10 @@ namespace Members.JJH._02_Scripts.Agents
         {
             Animator.SetBool(hash, value);
         }
+
+        public void Dead()
+        {
+            ((Agent)_owner).Dead();
+        }
     }
 }

@@ -30,5 +30,10 @@ namespace Members.JJH._02_Scripts.Agents
             if (wasAlive && !IsAlive && source != null && source.TryGetComponent(out Members.KYR._01_Scripts.PlayerAgent killer))
                 killer.OnEnemyKilled();
         }
+
+        public virtual void Dead()
+        {
+            Destroy(gameObject);
+        }
     }
 }

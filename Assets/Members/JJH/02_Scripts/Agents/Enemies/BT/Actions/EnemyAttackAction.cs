@@ -10,10 +10,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     [NodeDescription(name: "EnemyAttack", story: "[Enemy] Attack", category: "Action", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
     public partial class AttackAction : Action
     {
-    [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
+        [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
+
         protected override Status OnStart()
         {
-            if (Enemy.Value == null)
+            if (Enemy.Value == null || Enemy.Value.EnemyData == null)
                 return Status.Failure;
 
             Enemy.Value.Attack();
