@@ -71,6 +71,8 @@ namespace Members.KYR._01_Scripts
         public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
         private NetworkObject networkObject;
+
+        public event System.Action<bool> OnAimStateChanged;
         protected override void InitializeModules()
         {
             base.InitializeModules();
@@ -144,6 +146,7 @@ namespace Members.KYR._01_Scripts
             Mover.TickPhysics(dt);
             PushAnimator();
         }
+
         private void UpdateAmmoUI()
         {
             if (ammoText == null) return;

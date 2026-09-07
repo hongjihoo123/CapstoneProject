@@ -1,4 +1,5 @@
 using Members.KYR._01_Scripts.FSM.Core;
+using static UnityEngine.UI.GridLayoutGroup;
 
 namespace Members.KYR._01_Scripts.FSM.Weapon
 {
@@ -48,11 +49,13 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
         public override void Enter()
         {
             Module.Player.Weapon.SetAiming(true);
+            //Module.Player.OnAimStateChanged?.Invoke(true);
         }
 
         public override void Exit()
         {
             Module.Player.Weapon.SetAiming(false);
+            //Module.Player.OnAimStateChanged?.Invoke(false);
         }
 
         public override void Tick(float deltaTime)
