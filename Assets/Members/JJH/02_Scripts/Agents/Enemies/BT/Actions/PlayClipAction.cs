@@ -16,7 +16,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         [SerializeReference] public BlackboardVariable<bool> PlayOnce;
 
         private int _savedClipHash;
-        private int _oneShotClipHash;
 
         protected override Status OnStart()
         {

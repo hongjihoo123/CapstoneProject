@@ -12,14 +12,39 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
 
+        private float _elapsedTime;
+        private float _attackTime;
+
         protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.EnemyData == null)
                 return Status.Failure;
 
+            _elapsedTime = 0f;
+            _attackTime = Enemy.Value.EnemyData.AttackTime;
+
             Enemy.Value.Attack();
 
-            return Status.Success;
+            if (_attackTime <= 0f)
+                return Status.Success;
+
+            return Status.Running;
+        }
+
+        protected override Status OnUpdate()
+        {
+            _elapsedTime += Time.deltaTime;
+
+            if (_elapsedTime >= _attackTime)
+                return Status.Success;
+
+            return Status.Running;
+        }
+
+        protected override void OnEnd()
+        {
+            _elapsedTime = 0f;
+            _attackTime = 0f;
         }
     }
 }
