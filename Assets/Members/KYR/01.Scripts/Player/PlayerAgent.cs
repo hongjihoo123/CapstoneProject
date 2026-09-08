@@ -15,7 +15,7 @@ using UnityEngine.UI;
 namespace Members.KYR._01_Scripts
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable
+    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable,IRecoilCapable
     {
 
         [SerializeField] private PlayerInputSO playerInput;
@@ -48,6 +48,8 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private float aimEnterPulseDuration = 0.15f;
         [SerializeField] private float firePulseDuration = 0.15f;
 
+        private int _killCount;
+
         private bool wasAimingLastFrame;
         private float aimEnterPulseTimer;
         private float firePulseTimer;
@@ -57,7 +59,7 @@ namespace Members.KYR._01_Scripts
 
         public PlayerInputState Input { get; } = new();
         public PlayerMover Mover { get; private set; }
-        public PlayerHealth Health { get; private set; }
+        public new PlayerHealth Health { get; private set; }
         public PlayerStatsModule Stats { get; private set; }
         public PlayerWeapon Weapon { get; private set; }
         public ControlStateModule ControlFsm { get; private set; }
@@ -67,10 +69,12 @@ namespace Members.KYR._01_Scripts
 
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
-        public bool IsAlive => Health != null && !Health.IsDead;
+        public override bool IsAlive => Health != null && !Health.IsDead;
         public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
         private NetworkObject networkObject;
+
+        public event System.Action<bool> OnAimStateChanged;
         protected override void InitializeModules()
         {
             base.InitializeModules();
@@ -146,6 +150,7 @@ namespace Members.KYR._01_Scripts
             Mover.TickPhysics(dt);
             PushAnimator();
         }
+
         private void UpdateAmmoUI()
         {
             if (ammoText == null) return;
@@ -177,7 +182,7 @@ namespace Members.KYR._01_Scripts
                 : $"{Mathf.CeilToInt(Weapon.Weapon.CurrentResource)} / {Mathf.CeilToInt(Weapon.Weapon.MaxResource)}";
         }
 
-        public void TakeDamage(float amount, GameObject source)
+        public override void TakeDamage(float amount, GameObject source)
         {
             Health.TakeDamage(amount);
         }
@@ -206,6 +211,10 @@ namespace Members.KYR._01_Scripts
         public void SetWeaponHitboxActive(bool active)
         {
             Weapon.SetHitboxActive(active);
+        }
+        public void OnEnemyKilled()
+        {
+            SkillFsm.NotifyEnemyKilled();   
         }
 
         // 애니메이션 이벤트에서 직접 호출하는 용도 (E스킬 콜라이더 on/off)

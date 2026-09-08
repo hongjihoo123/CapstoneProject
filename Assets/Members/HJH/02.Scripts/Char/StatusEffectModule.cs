@@ -26,6 +26,7 @@ namespace Assets.Members.HJH._02.Scripts.Char
         {
             _multipliers[type] = multiplier;
             _active.Add((type, Time.time + duration));
+            Debug.Log($"[Status] {type} 버프 적용: x{multiplier}, {duration}초");
         }
 
         public float Get(BuffType type) => _multipliers.TryGetValue(type, out var m) ? m : 1f;
