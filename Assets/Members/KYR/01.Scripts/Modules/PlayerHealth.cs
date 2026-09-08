@@ -1,26 +1,34 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerHealth : Module
+    public class PlayerHealth : Module, IAfterInitModule
     {
         [SerializeField] private float maxHp = 100f;
         [SerializeField] private float stunOnHitDuration;
 
+        private PlayerStatsModule _stats;
         private float _hp;
         private float _stunRemaining;
 
         public float Hp => _hp;
-        public float MaxHp => maxHp;
+        public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
         public bool IsDead => _hp <= 0f;
         public bool IsStunned => _stunRemaining > 0f;
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+            _stats = owner.GetModule<PlayerStatsModule>();
             _hp = maxHp;
             _stunRemaining = 0f;
+        }
+
+        public void AfterInit()
+        {
+            _hp = MaxHp;
         }
 
         public void Tick(float deltaTime)
@@ -48,7 +56,7 @@ namespace Members.KYR._01_Scripts.Modules
             if (IsDead || amount <= 0f)
                 return;
 
-            _hp = Mathf.Min(maxHp, _hp + amount);
+            _hp = Mathf.Min(MaxHp, _hp + amount);
         }
 
         public void ApplyStun(float duration)

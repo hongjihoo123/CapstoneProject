@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
@@ -35,10 +36,11 @@ namespace Members.KYR._01_Scripts.Modules
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;
+        private PlayerStatsModule _stats;
 
-        public float WalkSpeed => walkSpeed;
-        public float RunSpeed => runSpeed;
-        public float CrouchSpeed => crouchSpeed;
+        public float WalkSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.WalkSpeed) : walkSpeed;
+        public float RunSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.RunSpeed) : runSpeed;
+        public float CrouchSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.CrouchSpeed) : crouchSpeed;
         public float AirControl => airControl;
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
@@ -47,6 +49,7 @@ namespace Members.KYR._01_Scripts.Modules
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+            _stats = owner.GetModule<PlayerStatsModule>();
 
             if (characterController == null)
                 characterController = owner.GetComponent<CharacterController>();
