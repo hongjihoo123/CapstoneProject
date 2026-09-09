@@ -8,7 +8,7 @@ using Action = Unity.Behavior.Action;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "ChaseTarget", story: "[Enemy] chase [Target]", category: "Action/Navigation", id: "aa9256dd7d934aa6de4744e3c043a6c4")]
+    [NodeDescription(name: "Chase Target", story: "[Enemy] chase [Target]", category: "Action/Navigation", id: "aa9256dd7d934aa6de4744e3c043a6c4")]
     public partial class ChaseTargetAction : Action
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;

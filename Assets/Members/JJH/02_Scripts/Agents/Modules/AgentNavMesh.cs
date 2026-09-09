@@ -14,12 +14,18 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             base.Initialize(owner);
 
             NavMeshAgent = GetComponentInParent<NavMeshAgent>();
-            NavMeshAgent.angularSpeed = 720f;
             NavMeshAgent.updateRotation = true;
             NavMeshAgent.autoBraking = true;
 
             if (owner is AbstractEnemy enemy)
-                NavMeshAgent.speed = enemy.EnemyData.EnemySpeed;
+                NavMeshAgent.speed = enemy.EnemyData.Speed;
+        }
+
+        public void SetNavMeshAgent(float speed, float angularSpeed, float acceleration)
+        {
+            NavMeshAgent.speed = speed;
+            NavMeshAgent.angularSpeed = angularSpeed;
+            NavMeshAgent.acceleration = acceleration;
         }
 
         public void MoveTo(Vector3 targetPosition)

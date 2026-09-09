@@ -15,13 +15,16 @@ namespace Members.JJH._02_Scripts.Agents.Modules
                     _health = Mathf.Min(value, _maxHealth);
             }
         }
+
         private float _health;
         private float _maxHealth;
+
         public void InitHealth(float maxHealth)
         {
             _maxHealth = maxHealth;
             CurrentHealth = _maxHealth;
         }
+
         public void TakeDamage(float damage)
             => CurrentHealth -= damage;
     }

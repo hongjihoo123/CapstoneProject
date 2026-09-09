@@ -5,10 +5,11 @@ namespace Members.JJH._02_Scripts.Agents.Modules
 {
     public interface INavMesh
     {
-        public NavMeshAgent NavMeshAgent { get; }
+        NavMeshAgent NavMeshAgent { get; }
 
-        public void MoveTo(Vector3 targetPosition);
-        public void KeepChase(bool value);
-        public void StopImmediately();
+        void SetNavMeshAgent(float speed, float angularSpeed, float acceleration);
+        void MoveTo(Vector3 targetPosition);
+        void KeepChase(bool value);
+        void StopImmediately();
     }
 }

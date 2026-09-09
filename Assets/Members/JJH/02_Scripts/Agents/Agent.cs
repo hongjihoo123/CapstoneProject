@@ -10,6 +10,7 @@ namespace Members.JJH._02_Scripts.Agents
         public IRenderer Renderer { get; private set; }
         public ISensor Sensor { get; private set; }
         public IHealth Health { get; private set; }
+
         public virtual bool IsAlive { get => Health.CurrentHealth > 0; }
 
         protected override void InitializeModules()

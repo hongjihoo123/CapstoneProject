@@ -36,11 +36,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
 
-            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.EnemySpeed);
-            Health.InitHealth(EnemyData.EnemyHealth);
+            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.Speed);
+            Health.InitHealth(EnemyData.Health);
+            EnemyNavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.AngularSpeed,
+                                                                            EnemyData.Acceleration);
 
             BehaviorAgent.SetVariableValue("Enemy", this);
-            BehaviorAgent.SetVariableValue("AttackCooltime", EnemyData.AttackCooltime);
 
             if (equippedWeaponData != null)
             {
@@ -53,9 +54,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         private void Update()
         {
             if (IsAlive == false)
-            {
                 BehaviorAgent.SetVariableValue("State", EnemyState.DEAD);
-            }
         }
 
         public virtual void Attack() { }
