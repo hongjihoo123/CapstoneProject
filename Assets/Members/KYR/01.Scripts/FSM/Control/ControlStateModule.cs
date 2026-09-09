@@ -25,6 +25,7 @@ namespace Members.KYR._01_Scripts.FSM.Control
             Machine.Register(new AliveControlState(this));
             Machine.Register(new StunnedControlState(this));
             Machine.Register(new DeadControlState(this));
+            Machine.Register(new UiControlState(this));
             Machine.ChangeState<AliveControlState>();
         }
 

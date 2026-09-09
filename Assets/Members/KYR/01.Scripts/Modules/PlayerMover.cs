@@ -72,6 +72,28 @@ namespace Members.KYR._01_Scripts.Modules
             _targetPlanarSpeed = Mathf.Max(0f, speed) * OwnerSpeedMultiplier;
         }
 
+        public void Teleport(Vector3 position, Quaternion? rotation = null)
+        {
+            bool wasEnabled = characterController != null && characterController.enabled;
+            if (characterController != null)
+                characterController.enabled = false;
+
+            _owner.transform.position = position;
+            if (rotation.HasValue)
+                _owner.transform.rotation = rotation.Value;
+
+            _verticalVelocity = 0f;
+            _dashTimeRemaining = 0f;
+            _planarInput = Vector2.zero;
+            _planarSpeed = 0f;
+            _targetPlanarSpeed = 0f;
+
+            if (characterController != null)
+                characterController.enabled = wasEnabled;
+
+            Physics.SyncTransforms();
+        }
+
         public void Jump()
         {
             _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);

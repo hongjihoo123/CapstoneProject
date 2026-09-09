@@ -57,6 +57,13 @@ namespace Members.KYR._01_Scripts.Modules
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+
+            // 캐릭터 선택 화면에서 고른 캐릭터의 무기가 있으면 우선 적용하고,
+            // 없으면(예: 게임 씬을 바로 실행해서 테스트할 때) 인스펙터에 지정된 기본 무기를 사용한다.
+            var selectedCharacter = CharacterSelectionContext.Selected;
+            if (selectedCharacter != null && selectedCharacter.weaponData != null)
+                equippedWeaponData = selectedCharacter.weaponData;
+
             _lastEquippedData = equippedWeaponData;
             if (equippedWeaponData == null)
                 return;
@@ -77,6 +84,17 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_weapon != null)
                 _weapon.OnAttackTriggered -= HandleAttackTriggered;
+        }
+
+        public void ApplySelectedCharacter()
+        {
+            var selected = CharacterSelectionContext.Selected;
+            if (selected == null || selected.weaponData == null)
+                return;
+
+            equippedWeaponData = selected.weaponData;
+            _lastEquippedData = equippedWeaponData;
+            Equip(WeaponFactory.Create(equippedWeaponData));
         }
 
         public void Equip(IWeapon weapon)
