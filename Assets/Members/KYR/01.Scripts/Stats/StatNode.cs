@@ -5,8 +5,14 @@ namespace Members.KYR._01_Scripts.Stats
 {
     public sealed class StatNode
     {
+        private struct TimedModifier
+        {
+            public StatModifier Modifier;
+            public float Remaining;
+        }
+
         private readonly List<StatNode> _children = new();
-        private readonly List<StatModifier> _modifiers = new();
+        private readonly List<TimedModifier> _modifiers = new();
 
         public PlayerStatId Id { get; }
         public float BaseValue { get; set; }
@@ -32,12 +38,35 @@ namespace Members.KYR._01_Scripts.Stats
 
         public void AddModifier(StatModifier modifier)
         {
-            _modifiers.Add(modifier);
+            _modifiers.Add(new TimedModifier
+            {
+                Modifier = modifier,
+                Remaining = modifier.IsTimed ? modifier.Duration : -1f
+            });
         }
 
         public void RemoveModifiers(object source)
         {
-            _modifiers.RemoveAll(modifier => Equals(modifier.Source, source));
+            _modifiers.RemoveAll(slot => Equals(slot.Modifier.Source, source));
+        }
+
+        public void Tick(float deltaTime)
+        {
+            if (deltaTime <= 0f)
+                return;
+
+            for (int i = _modifiers.Count - 1; i >= 0; i--)
+            {
+                TimedModifier slot = _modifiers[i];
+                if (slot.Remaining < 0f)
+                    continue;
+
+                slot.Remaining -= deltaTime;
+                if (slot.Remaining <= 0f)
+                    _modifiers.RemoveAt(i);
+                else
+                    _modifiers[i] = slot;
+            }
         }
 
         public float ComputeFinal()
@@ -55,7 +84,7 @@ namespace Members.KYR._01_Scripts.Stats
         {
             for (int i = 0; i < node._modifiers.Count; i++)
             {
-                StatModifier modifier = node._modifiers[i];
+                StatModifier modifier = node._modifiers[i].Modifier;
                 if (modifier.Type == StatModifierType.Flat)
                     flat += modifier.Value;
                 else

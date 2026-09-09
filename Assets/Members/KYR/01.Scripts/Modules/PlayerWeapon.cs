@@ -1,5 +1,6 @@
 using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
@@ -47,6 +48,7 @@ namespace Members.KYR._01_Scripts.Modules
         private float _dutchVelocity;
         private Quaternion _aimOriginBaseRotation;
         private bool _aimOriginBaseCaptured;
+        private PlayerStatsModule _stats;
 
         public IWeapon Weapon => _weapon;
         public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
@@ -57,6 +59,7 @@ namespace Members.KYR._01_Scripts.Modules
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+            _stats = owner.GetModule<PlayerStatsModule>();
             _lastEquippedData = equippedWeaponData;
             if (equippedWeaponData == null)
                 return;
@@ -108,19 +111,25 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_weapon == null) return;
 
+            float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
+            float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
+            float damage = 1f;
+
             var status = _owner?.GetModule<StatusEffectModule>();
-            if (status == null) return;
+            if (status != null)
+            {
+                attackSpeed *= status.Get(BuffType.AttackSpeed);
+                reloadSpeed *= status.Get(BuffType.ReloadSpeed);
+                damage = status.Get(BuffType.Damage);
+            }
 
             if (_weapon is GunDealerWeapon gunDealer)
-                gunDealer.AttackSpeedMultiplier = status.Get(BuffType.AttackSpeed);
+                gunDealer.AttackSpeedMultiplier = attackSpeed;
 
             if (_weapon is WeaponBase weaponBase)
             {
-                weaponBase.ReloadSpeedMultiplier = status.Get(BuffType.ReloadSpeed);
-                weaponBase.DamageMultiplier = status.Get(BuffType.Damage);
-
-                if (_weapon is GunDealerWeapon g)
-                    Debug.Log($"[¹«±â] AttackSpeedMult={g.AttackSpeedMultiplier}, ReloadMult={weaponBase.ReloadSpeedMultiplier}");
+                weaponBase.ReloadSpeedMultiplier = reloadSpeed;
+                weaponBase.DamageMultiplier = damage;
             }
         }
 
@@ -250,6 +259,10 @@ namespace Members.KYR._01_Scripts.Modules
                 float multiplier = (player.MoveFsm != null && player.MoveFsm.Capabilities.IsCrouching)
                     ? crouchRecoilMultiplier
                     : 1f;
+                float recoilControl = _stats != null && _stats.Tree != null
+                    ? Mathf.Clamp01(_stats.Get(PlayerStatId.RecoilControl))
+                    : 0f;
+                multiplier *= 1f - recoilControl;
 
                 player.Mover.ApplyRecoilPitch(pitchDelta * multiplier);
                 if (!Mathf.Approximately(yawDelta, 0f))

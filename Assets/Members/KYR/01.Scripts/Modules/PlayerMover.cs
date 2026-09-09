@@ -36,10 +36,11 @@ namespace Members.KYR._01_Scripts.Modules
         private float _dashTimeRemaining;
         private PlayerStatsModule _stats;
 
-        public float WalkSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.WalkSpeed) : walkSpeed;
-        public float RunSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.RunSpeed) : runSpeed;
-        public float CrouchSpeed => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.CrouchSpeed) : crouchSpeed;
-        public float AirControl => airControl;
+        public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
+        public float RunSpeed => GetStat(PlayerStatId.RunSpeed, runSpeed);
+        public float CrouchSpeed => GetStat(PlayerStatId.CrouchSpeed, crouchSpeed);
+        public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
+        public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public bool IsDashing => _dashTimeRemaining > 0f;
@@ -77,7 +78,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void Jump()
         {
-            _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * gravity);
         }
 
         public void SetCrouching(bool crouch)
@@ -173,8 +174,13 @@ namespace Members.KYR._01_Scripts.Modules
                 direction = _owner.transform.forward;
 
             _dashDirection = direction.normalized;
-            _dashSpeed = speed;
-            _dashTimeRemaining = duration;
+            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f);
+            _dashTimeRemaining = duration * GetStat(PlayerStatId.DashDuration, 1f);
+        }
+
+        private float GetStat(PlayerStatId id, float fallback)
+        {
+            return _stats != null && _stats.Tree != null ? _stats.Get(id) : fallback;
         }
     }
 }

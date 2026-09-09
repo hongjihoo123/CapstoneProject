@@ -128,6 +128,7 @@ namespace Members.KYR._01_Scripts
                 playerInput.Fill(Input);
             else
                 Input.Clear();
+            Stats.Tick(dt);
             Health.Tick(dt);
             ControlFsm.Tick(dt);
 
@@ -195,6 +196,8 @@ namespace Members.KYR._01_Scripts
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
             float multiplier = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
+            if (isWeakpoint && Stats != null)
+                multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
             target?.TakeDamage(amount * multiplier, gameObject);
         }
 
