@@ -206,6 +206,37 @@ namespace Members.KYR._01_Scripts
             target?.Heal(amount);
         }
 
+        public void SetUiMode(bool uiOpen)
+        {
+            if (uiOpen)
+            {
+                ControlFsm.ChangeState<UiControlState>();
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+                return;
+            }
+
+            if (!Health.IsDead)
+                ControlFsm.ChangeState<AliveControlState>();
+
+            if (!lockCursor)
+                return;
+
+            Cursor.lockState = CursorLockMode.Locked;
+            Cursor.visible = false;
+        }
+
+        public void Teleport(Vector3 position, Quaternion? rotation = null)
+        {
+            Mover?.Teleport(position, rotation);
+        }
+
+        public void ApplySelectedCharacter()
+        {
+            Weapon?.ApplySelectedCharacter();
+            SkillFsm?.ApplySelectedCharacter();
+        }
+
         public void SetMoveSpeedMultiplier(float multiplier)
         {
             Mover.SetOwnerSpeedMultiplier(multiplier);
