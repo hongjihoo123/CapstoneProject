@@ -1,16 +1,14 @@
-using RobotWeapons;
-
 public static class CharacterSelectionContext
 {
-    public static WeaponData SelectedWeaponData { get; private set; }
+    public static CharacterDataSO Selected { get; private set; }
 
-    public static void Select(WeaponData data)
+    public static void Select(CharacterDataSO data)
     {
-        SelectedWeaponData = data;
+        Selected = data;
     }
 
     public static void Clear()
     {
-        SelectedWeaponData = null;
+        Selected = null;
     }
 }

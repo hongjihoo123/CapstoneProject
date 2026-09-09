@@ -49,15 +49,29 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void AfterInit()
         {
-            Debug.Assert(qSkillData != null, $"{name}의 SkillStateModule에 Q SkillData가 비어있습니다.");
-            Debug.Assert(eSkillData != null, $"{name}의 SkillStateModule에 E SkillData가 비어있습니다.");
-            Debug.Assert(xSkillData != null, $"{name}의 SkillStateModule에 X SkillData가 비어있습니다.");
+            // 캐릭터 선택 화면에서 고른 캐릭터의 스킬/패시브가 있으면 우선 적용하고,
+            // 없으면(예: 게임 씬을 바로 실행해서 테스트할 때) 인스펙터에 지정된 기본값을 사용한다.
+            var selectedCharacter = CharacterSelectionContext.Selected;
+            if (selectedCharacter != null)
+            {
+                if (selectedCharacter.qSkillData != null) qSkillData = selectedCharacter.qSkillData;
+                if (selectedCharacter.eSkillData != null) eSkillData = selectedCharacter.eSkillData;
+                if (selectedCharacter.xSkillData != null) xSkillData = selectedCharacter.xSkillData;
+                if (selectedCharacter.passiveData != null) passiveData = selectedCharacter.passiveData;
+            }
 
             Machine = new StateMachine();
             _idleSkill = new IdleSkillState(this);
-            _qSkill = new GenericSkillState(this, qSkillData);
-            _eSkill = new GenericSkillState(this, eSkillData);
-            _xSkill = new GenericSkillState(this, xSkillData);
+
+            // 스킬 데이터가 아직 없는(제작 중인) 캐릭터는 해당 스킬만 비활성화하고 넘어간다 - 크래시 방지
+            if (qSkillData != null) _qSkill = new GenericSkillState(this, qSkillData);
+            else Debug.LogWarning($"{name}의 SkillStateModule에 Q SkillData가 비어있습니다. (Q 스킬 비활성화)");
+
+            if (eSkillData != null) _eSkill = new GenericSkillState(this, eSkillData);
+            else Debug.LogWarning($"{name}의 SkillStateModule에 E SkillData가 비어있습니다. (E 스킬 비활성화)");
+
+            if (xSkillData != null) _xSkill = new GenericSkillState(this, xSkillData);
+            else Debug.LogWarning($"{name}의 SkillStateModule에 X SkillData가 비어있습니다. (X 스킬 비활성화)");
 
             Machine.Register(_idleSkill);
             Machine.ChangeState<IdleSkillState>();
@@ -66,6 +80,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public void Tick(float deltaTime)
         {
             Machine.Tick(deltaTime);
+        }
+
+        public void ApplySelectedCharacter()
+        {
+            if (Machine != null)
+                ForceIdle();
+            AfterInit();
         }
 
         public void ForceIdle()
@@ -94,9 +115,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             PlayerInputState input = Player.Input;
 
-            if (input.QPressed && _qSkill.IsReady) { Machine.ChangeState(_qSkill); return; }
-            if (input.EPressed && _eSkill.IsReady) { Machine.ChangeState(_eSkill); return; }
-            if (input.XPressed && _xSkill.IsReady) { Machine.ChangeState(_xSkill); return; }
+            if (_qSkill != null && input.QPressed && _qSkill.IsReady) { Machine.ChangeState(_qSkill); return; }
+            if (_eSkill != null && input.EPressed && _eSkill.IsReady) { Machine.ChangeState(_eSkill); return; }
+            if (_xSkill != null && input.XPressed && _xSkill.IsReady) { Machine.ChangeState(_xSkill); return; }
 
             if (!Machine.IsCurrent<IdleSkillState>())
                 Machine.ChangeState<IdleSkillState>();
