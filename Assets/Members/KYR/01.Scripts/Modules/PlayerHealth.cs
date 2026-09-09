@@ -1,19 +1,24 @@
-    using Members.JJH._02_Scripts.Systems.ModuleSystem;
-    using UnityEngine;
+using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
+using UnityEngine;
 
-    namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01_Scripts.Modules
+{
+    public class PlayerHealth : Module, IHealth, IAfterInitModule
     {
-        public class PlayerHealth : Module, IHealth
-        {
-            [SerializeField] private float maxHp = 100f;
-            [SerializeField] private float stunOnHitDuration;
-            public float CurrentHealth => _hp;
-            public float MaxHealth => maxHp;
+        [SerializeField] private float maxHp = 100f;
+        [SerializeField] private float stunOnHitDuration;
 
-            private float _hp;
-            private float _stunRemaining;
-            public bool IsDead => _hp <= 0f;
-            public bool IsStunned => _stunRemaining > 0f;
+        private PlayerStatsModule _stats;
+        private float _hp;
+        private float _stunRemaining;
+
+        public float CurrentHealth => _hp;
+        public float Hp => _hp;
+        public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
+        public bool IsDead => _hp <= 0f;
+        public bool IsStunned => _stunRemaining > 0f;
 
             public override void Initialize(ModuleOwner owner)
             {
@@ -37,9 +42,9 @@
                 if (IsDead || amount <= 0f)
                     return;
 
-                _hp = Mathf.Max(0f, _hp - amount);
-                if (!IsDead && stunOnHitDuration > 0f)
-                    ApplyStun(stunOnHitDuration);
+                    _hp = Mathf.Max(0f, _hp - amount);
+                    if (!IsDead && stunOnHitDuration > 0f)
+                         ApplyStun(stunOnHitDuration);
             }
 
             public void Heal(float amount)

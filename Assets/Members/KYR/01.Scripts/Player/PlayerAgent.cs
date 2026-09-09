@@ -5,6 +5,7 @@ using Members.KYR._01_Scripts.FSM.Move;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
+using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using Unity.Netcode;
@@ -59,6 +60,7 @@ namespace Members.KYR._01_Scripts
         public PlayerInputState Input { get; } = new();
         public PlayerMover Mover { get; private set; }
         public new PlayerHealth Health { get; private set; }
+        public PlayerStatsModule Stats { get; private set; }
         public PlayerWeapon Weapon { get; private set; }
         public ControlStateModule ControlFsm { get; private set; }
         public MoveStateModule MoveFsm { get; private set; }
@@ -81,6 +83,7 @@ namespace Members.KYR._01_Scripts
 
             Mover = GetModule<PlayerMover>();
             Health = GetModule<PlayerHealth>();
+            Stats = GetModule<PlayerStatsModule>();
             Weapon = GetModule<PlayerWeapon>();
             ControlFsm = GetModule<ControlStateModule>();
             MoveFsm = GetModule<MoveStateModule>();
@@ -90,6 +93,7 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(playerInput != null, $"{name}에는 PlayerInputSO가 필요합니다.");
             Debug.Assert(Mover != null, $"{name}에는 PlayerMover 모듈이 필요합니다.");
             Debug.Assert(Health != null, $"{name}에는 PlayerHealth 모듈이 필요합니다.");
+            Debug.Assert(Stats != null, $"{name}에는 PlayerStatsModule이 필요합니다.");
             Debug.Assert(Weapon != null, $"{name}에는 PlayerWeapon 모듈이 필요합니다.");
             Debug.Assert(ControlFsm != null, $"{name}에는 ControlStateModule이 필요합니다.");
             Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
@@ -190,7 +194,8 @@ namespace Members.KYR._01_Scripts
 
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
-            target?.TakeDamage(amount, gameObject);
+            float multiplier = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
+            target?.TakeDamage(amount * multiplier, gameObject);
         }
 
         public void ApplyHealTo(IHealable target, float amount)
