@@ -15,7 +15,7 @@ namespace Members.KYR._01_Scripts.Modules
         private float _stunRemaining;
 
         public float CurrentHealth => _hp;
-        public float Hp => _hp;
+        public float MaxHealth => MaxHp;
         public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
         public bool IsDead => _hp <= 0f;
         public bool IsStunned => _stunRemaining > 0f;

@@ -38,10 +38,10 @@ namespace RobotWeapons
             CurrentAmmo = maxAmmo;
         }
 
-        public void Tick(float dt)
+        public void Tick(float dt, float reloadSpeedMultiplier = 1f)
         {
             if (!IsReloading) return;
-            reloadTimer -= dt;
+            reloadTimer -= dt * reloadSpeedMultiplier;
             if (reloadTimer <= 0f)
             {
                 CurrentAmmo = MaxAmmo;
