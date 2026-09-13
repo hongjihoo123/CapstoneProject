@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using UnityEngine;
+using Members.KYR._01_Scripts.Stats;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
 {
@@ -22,11 +23,42 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
 
         public override void Execute(SkillStateModule owner)
         {
-            var status = owner.Player.GetModule<StatusEffectModule>();
-            if (status == null) return;
+            var stats = owner.Player.Stats;
+            if (stats == null || stats.Tree == null) return;
+
+            stats.RemoveModifiers(this);
 
             foreach (var buff in buffs)
-                status.Apply(buff.type, buff.multiplier, buff.duration);
+            {
+                if (!TryMap(buff.type, out PlayerStatId id))
+                    continue;
+
+                stats.AddModifier(
+                    id,
+                    new StatModifier(this, StatModifierType.PercentAdd, buff.multiplier - 1f, buff.duration));
+            }
+        }
+
+        public static bool TryMap(BuffType type, out PlayerStatId id)
+        {
+            switch (type)
+            {
+                case BuffType.AttackSpeed:
+                    id = PlayerStatId.AttackSpeed;
+                    return true;
+                case BuffType.Damage:
+                    id = PlayerStatId.Damage;
+                    return true;
+                case BuffType.ReloadSpeed:
+                    id = PlayerStatId.ReloadSpeed;
+                    return true;
+                case BuffType.MoveSpeed:
+                    id = PlayerStatId.Mobility;
+                    return true;
+                default:
+                    id = default;
+                    return false;
+            }
         }
     }
 }

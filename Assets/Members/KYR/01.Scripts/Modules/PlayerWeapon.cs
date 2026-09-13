@@ -4,7 +4,6 @@ using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
-using Assets.Members.HJH._02.Scripts.Char;
 
 namespace Members.KYR._01_Scripts.Modules
 {
@@ -131,15 +130,6 @@ namespace Members.KYR._01_Scripts.Modules
 
             float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
             float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
-            float damage = 1f;
-
-            var status = _owner?.GetModule<StatusEffectModule>();
-            if (status != null)
-            {
-                attackSpeed *= status.Get(BuffType.AttackSpeed);
-                reloadSpeed *= status.Get(BuffType.ReloadSpeed);
-                damage = status.Get(BuffType.Damage);
-            }
 
             if (_weapon is GunDealerWeapon gunDealer)
                 gunDealer.AttackSpeedMultiplier = attackSpeed;
@@ -147,7 +137,7 @@ namespace Members.KYR._01_Scripts.Modules
             if (_weapon is WeaponBase weaponBase)
             {
                 weaponBase.ReloadSpeedMultiplier = reloadSpeed;
-                weaponBase.DamageMultiplier = damage;
+                weaponBase.DamageMultiplier = 1f;
             }
         }
 
