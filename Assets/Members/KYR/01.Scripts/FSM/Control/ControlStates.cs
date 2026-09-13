@@ -65,6 +65,22 @@ namespace Members.KYR._01_Scripts.FSM.Control
         }
     }
 
+    public sealed class UiControlState : ControlState
+    {
+        public UiControlState(ControlStateModule module) : base(module) { }
+
+        public override void Enter()
+        {
+            FreezeLocomotionAndWeapon();
+        }
+
+        public override void Tick(float deltaTime)
+        {
+            if (Module.Player.Health.IsDead)
+                Module.ChangeState<DeadControlState>();
+        }
+    }
+
     public sealed class DeadControlState : ControlState
     {
         public DeadControlState(ControlStateModule module) : base(module) { }

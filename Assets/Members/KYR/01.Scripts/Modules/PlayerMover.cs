@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
@@ -7,17 +8,20 @@ namespace Members.KYR._01_Scripts.Modules
     {
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraPivot;
-        [SerializeField] private float walkSpeed = 4.5f;
-        [SerializeField] private float runSpeed = 7.5f;
-        [SerializeField] private float crouchSpeed = 2.2f;
-        [SerializeField] private float jumpHeight = 1.2f;
         [SerializeField] private float gravity = -25f;
-        [SerializeField] private float airControl = 0.7f;
         [SerializeField] private float lookSensitivity = 0.12f;
         [SerializeField] private float minPitch = -80f;
         [SerializeField] private float maxPitch = 80f;
         [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private float acceleration = 18f;
+        
+        [Header("스탯 풀백 모듈 없을 때만")]
+        [SerializeField] private float walkSpeed = 4.5f;
+        [SerializeField] private float runSpeed = 7.5f;
+        [SerializeField] private float crouchSpeed = 2.2f;
+        [SerializeField] private float jumpHeight = 1.2f;
+        [SerializeField] private float airControl = 0.7f;
+        
 
         private float _targetPlanarSpeed;
 
@@ -33,11 +37,13 @@ namespace Members.KYR._01_Scripts.Modules
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;
+        private PlayerStatsModule _stats;
 
-        public float WalkSpeed => walkSpeed;
-        public float RunSpeed => runSpeed;
-        public float CrouchSpeed => crouchSpeed;
-        public float AirControl => airControl;
+        public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
+        public float RunSpeed => GetStat(PlayerStatId.RunSpeed, runSpeed);
+        public float CrouchSpeed => GetStat(PlayerStatId.CrouchSpeed, crouchSpeed);
+        public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
+        public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public bool IsDashing => _dashTimeRemaining > 0f;
@@ -45,6 +51,7 @@ namespace Members.KYR._01_Scripts.Modules
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+            _stats = owner.GetModule<PlayerStatsModule>();
 
             if (characterController == null)
                 characterController = owner.GetComponent<CharacterController>();
@@ -72,9 +79,31 @@ namespace Members.KYR._01_Scripts.Modules
             _targetPlanarSpeed = Mathf.Max(0f, speed) * OwnerSpeedMultiplier;
         }
 
+        public void Teleport(Vector3 position, Quaternion? rotation = null)
+        {
+            bool wasEnabled = characterController != null && characterController.enabled;
+            if (characterController != null)
+                characterController.enabled = false;
+
+            _owner.transform.position = position;
+            if (rotation.HasValue)
+                _owner.transform.rotation = rotation.Value;
+
+            _verticalVelocity = 0f;
+            _dashTimeRemaining = 0f;
+            _planarInput = Vector2.zero;
+            _planarSpeed = 0f;
+            _targetPlanarSpeed = 0f;
+
+            if (characterController != null)
+                characterController.enabled = wasEnabled;
+
+            Physics.SyncTransforms();
+        }
+
         public void Jump()
         {
-            _verticalVelocity = Mathf.Sqrt(jumpHeight * -2f * gravity);
+            _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * gravity);
         }
 
         public void SetCrouching(bool crouch)
@@ -170,8 +199,13 @@ namespace Members.KYR._01_Scripts.Modules
                 direction = _owner.transform.forward;
 
             _dashDirection = direction.normalized;
-            _dashSpeed = speed;
-            _dashTimeRemaining = duration;
+            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f);
+            _dashTimeRemaining = duration * GetStat(PlayerStatId.DashDuration, 1f);
+        }
+
+        private float GetStat(PlayerStatId id, float fallback)
+        {
+            return _stats != null && _stats.Tree != null ? _stats.Get(id) : fallback;
         }
     }
 }

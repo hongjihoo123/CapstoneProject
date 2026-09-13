@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Members.KYR._01_Scripts.Stats;
+using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
@@ -16,7 +17,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public virtual float MoveSpeedMultiplier => 1f;
         public virtual bool IsFinished => true;
         public abstract float Cooldown { get; }
-        public bool IsReady => Time.time - _lastExitTime >= Cooldown;
+        public bool IsReady => Time.time - _lastExitTime >= EffectiveCooldown;
+
+        protected float EffectiveCooldown
+        {
+            get
+            {
+                float cooldown = Cooldown;
+                if (cooldown <= 0f)
+                    return 0f;
+
+                var stats = Owner.Player != null ? Owner.Player.Stats : null;
+                if (stats == null || stats.Tree == null)
+                    return cooldown;
+
+                float reduction = Mathf.Clamp01(stats.Get(PlayerStatId.SkillCooldownReduction));
+                return cooldown * (1f - reduction);
+            }
+        }
 
         public virtual void Enter()
         {

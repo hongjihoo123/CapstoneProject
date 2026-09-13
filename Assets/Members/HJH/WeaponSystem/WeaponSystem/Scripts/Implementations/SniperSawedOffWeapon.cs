@@ -79,14 +79,14 @@ namespace RobotWeapons
 
         public override void Tick(float dt)
         {
-            shotgun.Tick(dt);
+            shotgun.Tick(dt, ReloadSpeedMultiplier);
 
             if (sniperFireCooldown > 0f) sniperFireCooldown -= dt;
             if (postFireZoomLockTimer > 0f) postFireZoomLockTimer -= dt;
 
             if (sniperIsReloading)
             {
-                sniperReloadTimer -= dt;
+                sniperReloadTimer -= dt * ReloadSpeedMultiplier;
                 if (sniperReloadTimer <= 0f)
                 {
                     sniperAmmo = data.sniperMaxAmmo;

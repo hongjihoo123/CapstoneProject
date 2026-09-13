@@ -1,8 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using UnityEngine;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts;
 using RobotWeapons;
+using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char
 {
@@ -63,7 +64,7 @@ namespace Assets.Members.HJH._02.Scripts.Char
                 }
                 if (Time.time >= dot.NextTickTime)
                 {
-                    dot.Target.TakeDamage(dot.DamagePerTick, dot.Source);
+                    dot.Source.GetComponent<PlayerAgent>().ApplyDamageTo(dot.Target, dot.DamagePerTick);
                     dot.NextTickTime += dot.TickInterval;
                 }
             }
