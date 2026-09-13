@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Enemies.BT;
+using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using RobotWeapons;
@@ -27,6 +28,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         protected BehaviorGraphAgent BehaviorAgent { get; private set; }
 
+        private BlackboardVariable<StateChannel> _stateEvent;
+        private bool isDead = false;
+
         protected override void InitializeModules()
         {
             base.InitializeModules();
@@ -36,11 +40,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
 
-            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.EnemySpeed);
-            Health.InitHealth(EnemyData.EnemyHealth);
+            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.Speed);
+            Health.InitHealth(EnemyData.Health);
+            EnemyNavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.AngularSpeed,
+                                                                            EnemyData.Acceleration);
 
             BehaviorAgent.SetVariableValue("Enemy", this);
-            BehaviorAgent.SetVariableValue("AttackCooltime", EnemyData.AttackCooltime);
+            BehaviorAgent.GetVariable("StateChannel", out _stateEvent);
 
             if (equippedWeaponData != null)
             {
@@ -52,9 +58,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         private void Update()
         {
-            if (IsAlive == false)
+            if (IsAlive == false && isDead == false)
             {
-                BehaviorAgent.SetVariableValue("State", EnemyState.DEAD);
+                _stateEvent.Value.SendEventMessage(EnemyState.DEAD);
+                isDead = true;
             }
         }
 
