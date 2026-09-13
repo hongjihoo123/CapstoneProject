@@ -8,17 +8,20 @@ namespace Members.KYR._01_Scripts.Modules
     {
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraPivot;
-        [SerializeField] private float walkSpeed = 4.5f;
-        [SerializeField] private float runSpeed = 7.5f;
-        [SerializeField] private float crouchSpeed = 2.2f;
-        [SerializeField] private float jumpHeight = 1.2f;
         [SerializeField] private float gravity = -25f;
-        [SerializeField] private float airControl = 0.7f;
         [SerializeField] private float lookSensitivity = 0.12f;
         [SerializeField] private float minPitch = -80f;
         [SerializeField] private float maxPitch = 80f;
         [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private float acceleration = 18f;
+        
+        [Header("스탯 풀백 모듈 없을 때만")]
+        [SerializeField] private float walkSpeed = 4.5f;
+        [SerializeField] private float runSpeed = 7.5f;
+        [SerializeField] private float crouchSpeed = 2.2f;
+        [SerializeField] private float jumpHeight = 1.2f;
+        [SerializeField] private float airControl = 0.7f;
+        
 
         private float _targetPlanarSpeed;
 

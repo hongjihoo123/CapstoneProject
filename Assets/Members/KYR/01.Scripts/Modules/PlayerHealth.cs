@@ -7,8 +7,10 @@ namespace Members.KYR._01_Scripts.Modules
 {
     public class PlayerHealth : Module, IHealth, IAfterInitModule
     {
-        [SerializeField] private float maxHp = 100f;
+       
         [SerializeField] private float stunOnHitDuration;
+        [Header("스탯 풀백 모듈 없을 때")]
+        [SerializeField] private float maxHp = 100f;
 
         private PlayerStatsModule _stats;
         private float _hp;
