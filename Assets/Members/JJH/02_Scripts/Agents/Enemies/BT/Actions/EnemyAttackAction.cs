@@ -10,7 +10,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     [NodeDescription(name: "Enemy Attack", story: "[Enemy] Attack", category: "Action", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
     public partial class AttackAction : Action
     {
-    [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
+        [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
         private float _elapsedTime;
         private float _attackTime;
 
@@ -18,6 +18,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         {
             if (Enemy.Value == null || Enemy.Value.EnemyData == null)
                 return Status.Failure;
+
+            if (Enemy.Value.IsAlive == false)
+                return Status.Success;
 
             _elapsedTime = 0f;
             _attackTime = Enemy.Value.EnemyData.AttackCooltime;
@@ -32,6 +35,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         protected override Status OnUpdate()
         {
+            if (Enemy.Value.IsAlive == false)
+                return Status.Success;
+
             _elapsedTime += Time.deltaTime;
 
             if (_elapsedTime >= _attackTime)

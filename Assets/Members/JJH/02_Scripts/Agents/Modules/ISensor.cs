@@ -7,5 +7,6 @@ namespace Members.JJH._02_Scripts.Agents.Modules
         LayerMask TargetLayer { get; }
 
         public bool IsTargetInRange(float range, out Collider hitCollider);
+        public bool IsTargetInSight(float range, float sight);
     }
 }

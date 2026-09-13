@@ -29,6 +29,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 Enemy.Value.EnemyNavMeshAgent == null || Target.Value == null)
                 return Status.Failure;
 
+            if (Enemy.Value.IsAlive == false)
+                return Status.Success;
+
             _navMeshAgent = Enemy.Value.EnemyNavMeshAgent;
             _sensor = Enemy.Value.Sensor;
 
@@ -45,15 +48,39 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Target.Value == null)
                 return Status.Failure;
 
+            if (Enemy.Value.IsAlive == false)
+                return Status.Success;
+
             bool isInRadius = _sensor.IsTargetInRange(Enemy.Value.EnemyData.DetectRange, out Collider hitCollider);
+
             if (!isInRadius)
                 return Status.Failure;
 
             _targetPos = Target.Value.transform.position;
 
-            if (Vector3.Distance(Enemy.Value.transform.position, _targetPos) <= Enemy.Value.EnemyData.AttackRange)
+            Vector3 direction = _targetPos - Enemy.Value.transform.position;
+            direction.y = 0f;
+
+            float distanceToTarget = direction.magnitude;
+            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange)
             {
-                return Status.Success;
+                _navMeshAgent.KeepChase(false);
+
+                if (direction.sqrMagnitude > 0.001f)
+                {
+                    Quaternion targetRotation = Quaternion.LookRotation(direction);
+
+                    Enemy.Value.transform.rotation =
+                        Quaternion.RotateTowards(Enemy.Value.transform.rotation, targetRotation,
+                                                                   Enemy.Value.EnemyNavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
+                }
+
+                float angle = Vector3.Angle(Enemy.Value.transform.forward, direction);
+
+                if (angle <= 1f)
+                    return Status.Success;
+
+                return Status.Running;
             }
 
             if (Vector3.Distance(_lastTargetPos, _targetPos) >= destinationUpdateDistance)

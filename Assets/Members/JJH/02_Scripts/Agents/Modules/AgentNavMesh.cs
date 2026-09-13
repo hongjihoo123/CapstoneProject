@@ -45,6 +45,21 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             }
         }
 
+        public void RotateToTarget(Vector3 targetPosition)
+        {
+            Vector3 direction = targetPosition - transform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude <= 0.001f)
+                return;
+
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                NavMeshAgent.angularSpeed * Time.deltaTime);
+        }
+
         public void StopImmediately()
         {
             NavMeshAgent.ResetPath();

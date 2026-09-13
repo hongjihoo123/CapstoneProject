@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Enemies.BT;
+using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using RobotWeapons;
@@ -27,6 +28,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         protected BehaviorGraphAgent BehaviorAgent { get; private set; }
 
+        private BlackboardVariable<StateChannel> _stateEvent;
+        private bool isDead = false;
+
         protected override void InitializeModules()
         {
             base.InitializeModules();
@@ -42,6 +46,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
                                                                             EnemyData.Acceleration);
 
             BehaviorAgent.SetVariableValue("Enemy", this);
+            BehaviorAgent.GetVariable("StateChannel", out _stateEvent);
 
             if (equippedWeaponData != null)
             {
@@ -53,8 +58,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         private void Update()
         {
-            if (IsAlive == false)
-                BehaviorAgent.SetVariableValue("State", EnemyState.DEAD);
+            if (IsAlive == false && isDead == false)
+            {
+                _stateEvent.Value.SendEventMessage(EnemyState.DEAD);
+                isDead = true;
+            }
         }
 
         public virtual void Attack() { }
