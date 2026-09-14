@@ -4,7 +4,7 @@ namespace Members.JJH._02_Scripts.Agents.Modules
 {
     public class AgentHealth : Module, IHealth
     {
-        public float CurrentHealth
+        public virtual float CurrentHealth
         {
             get => _health;
             set
@@ -17,12 +17,13 @@ namespace Members.JJH._02_Scripts.Agents.Modules
         }
         private float _health;
         private float _maxHealth;
-        public void InitHealth(float maxHealth)
+        public float MaxHealth => _maxHealth;
+        public virtual void InitHealth(float maxHealth)
         {
             _maxHealth = maxHealth;
             CurrentHealth = _maxHealth;
         }
-        public void TakeDamage(float damage)
+        public virtual void TakeDamage(float damage)
             => CurrentHealth -= damage;
     }
 }

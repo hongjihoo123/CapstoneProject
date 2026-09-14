@@ -93,7 +93,7 @@ public class CharacterSelectZone : MonoBehaviour
             panel.SetActive(true);
 
         SetPromptVisible(false);
-        _playerInRange.SetUiMode(true);
+        UiFocusService.Acquire(this);
     }
 
     private void Close()
@@ -103,8 +103,7 @@ public class CharacterSelectZone : MonoBehaviour
         if (panel != null)
             panel.SetActive(false);
 
-        if (_playerInRange != null)
-            _playerInRange.SetUiMode(false);
+        UiFocusService.Release(this);
 
         SetPromptVisible(_playerInRange != null);
     }

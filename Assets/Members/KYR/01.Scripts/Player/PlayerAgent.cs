@@ -203,24 +203,37 @@ namespace Members.KYR._01_Scripts
             target?.Heal(amount);
         }
 
-        public void SetUiMode(bool uiOpen)
+        private void OnEnable()
         {
-            if (uiOpen)
+            UiFocusService.OnUiFocusChanged += HandleUiFocusChanged;
+        }
+
+        private void OnDisable()
+        {
+            UiFocusService.OnUiFocusChanged -= HandleUiFocusChanged;
+        }
+
+        private void HandleUiFocusChanged(bool uiFocused)
+        {
+            if (ControlFsm == null)
+                return;
+
+            if (uiFocused)
             {
                 ControlFsm.ChangeState<UiControlState>();
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
                 return;
             }
 
             if (!Health.IsDead)
                 ControlFsm.ChangeState<AliveControlState>();
+        }
 
-            if (!lockCursor)
-                return;
-
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+        public void SetUiMode(bool uiOpen)
+        {
+            if (uiOpen)
+                UiFocusService.Acquire(this);
+            else
+                UiFocusService.Release(this);
         }
 
         public void Teleport(Vector3 position, Quaternion? rotation = null)

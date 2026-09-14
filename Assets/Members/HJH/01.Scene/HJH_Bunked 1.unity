@@ -13138,37 +13138,6 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 313034356}
   m_Mesh: {fileID: -5495902117074765545, guid: a7f9471cb243f5d43b97aee11fa77d1f, type: 3}
---- !u!1 &313519037
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 313519038}
-  m_Layer: 0
-  m_Name: Teleport
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &313519038
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 313519037}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 19.74, y: 2.02, z: 41.185}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &313844524
 GameObject:
   m_ObjectHideFlags: 0
@@ -32114,7 +32083,7 @@ BoxCollider:
   m_Enabled: 1
   serializedVersion: 3
   m_Size: {x: 6.9458046, y: 4.4787645, z: 2.9937973}
-  m_Center: {x: 0, y: 1.739382, z: -0.26734543}
+  m_Center: {x: 0, y: 0, z: -0.26734543}
 --- !u!4 &824441400
 Transform:
   m_ObjectHideFlags: 0
@@ -32124,7 +32093,7 @@ Transform:
   m_GameObject: {fileID: 824441398}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -3.265, y: -0.88223, z: -39.678}
+  m_LocalPosition: {x: -3.265, y: 2, z: -39.678}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -32143,7 +32112,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Teleporter
   mode: 0
-  destination: {fileID: 313519038}
+  destination: {fileID: 1391097137}
   applyDestinationRotation: 1
   sceneName: 
   requireKeyPress: 1
@@ -54886,6 +54855,78 @@ Transform:
   m_Children: []
   m_Father: {fileID: 1868263889}
   m_LocalEulerAnglesHint: {x: -90, y: 0, z: -180}
+--- !u!1 &1391097134
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1391097137}
+  - component: {fileID: 1391097136}
+  - component: {fileID: 1391097135}
+  m_Layer: 0
+  m_Name: Teleport (2)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1391097135
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391097134}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: dd8e8ff9088a40bba72077040ac8fa4c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Teleporter
+  mode: 0
+  destination: {fileID: 824441400}
+  applyDestinationRotation: 1
+  sceneName: 
+  requireKeyPress: 1
+  activationKey: 20
+--- !u!65 &1391097136
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391097134}
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_IsTrigger: 1
+  m_ProvidesContacts: 0
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Size: {x: 6.9458046, y: 4.4787645, z: 5.30986}
+  m_Center: {x: 0, y: 0, z: 0.89068604}
+--- !u!4 &1391097137
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1391097134}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 23.56, y: 1.29, z: 40.81}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1396104646
 GameObject:
   m_ObjectHideFlags: 0
@@ -67117,8 +67158,16 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1447121774}
     - target: {fileID: 4670082724390062779, guid: 056a4634877675344b4382083fb409a7, type: 3}
+      propertyPath: m_InScenePlaced
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4670082724390062779, guid: 056a4634877675344b4382083fb409a7, type: 3}
       propertyPath: GlobalObjectIdHash
       value: 216583205
+      objectReference: {fileID: 0}
+    - target: {fileID: 4670082724390062779, guid: 056a4634877675344b4382083fb409a7, type: 3}
+      propertyPath: InScenePlacedSourceGlobalObjectIdHash
+      value: 2686071058
       objectReference: {fileID: 0}
     - target: {fileID: 8140922271540607419, guid: 056a4634877675344b4382083fb409a7, type: 3}
       propertyPath: m_Name
@@ -67130,7 +67179,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8179341554989681515, guid: 056a4634877675344b4382083fb409a7, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 1.567
+      value: 1.38
       objectReference: {fileID: 0}
     - target: {fileID: 8179341554989681515, guid: 056a4634877675344b4382083fb409a7, type: 3}
       propertyPath: m_LocalPosition.z
@@ -84845,7 +84894,7 @@ SceneRoots:
   - {fileID: 331290719}
   - {fileID: 2083078763}
   - {fileID: 1645255771}
-  - {fileID: 313519038}
   - {fileID: 824441400}
+  - {fileID: 1391097137}
   - {fileID: 10878933}
   - {fileID: 789605081}

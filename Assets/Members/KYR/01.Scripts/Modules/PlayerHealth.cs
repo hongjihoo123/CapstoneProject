@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerHealth : Module, IHealth, IAfterInitModule
+    public class PlayerHealth : AgentHealth, IAfterInitModule
     {
         [SerializeField] private float maxHp = 100f;
         [SerializeField] private float stunOnHitDuration;
@@ -14,7 +14,11 @@ namespace Members.KYR._01_Scripts.Modules
         private float _hp;
         private float _stunRemaining;
 
-        public float CurrentHealth => _hp;
+        public override float CurrentHealth
+        {
+            get => _hp;
+            set => _hp = Mathf.Clamp(value, 0f, MaxHp);
+        }
         public float Hp => _hp;
         public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
         public bool IsDead => _hp <= 0f;
@@ -23,7 +27,7 @@ namespace Members.KYR._01_Scripts.Modules
             public override void Initialize(ModuleOwner owner)
             {
                 base.Initialize(owner);
-                _hp = maxHp;
+                InitHealth(maxHp);
                 _stunRemaining = 0f;
             }
 
@@ -37,7 +41,7 @@ namespace Members.KYR._01_Scripts.Modules
                     _stunRemaining = 0f;
             }
 
-            public void TakeDamage(float amount)
+            public override void TakeDamage(float amount)
             {
                 if (IsDead || amount <= 0f)
                     return;
@@ -62,5 +66,11 @@ namespace Members.KYR._01_Scripts.Modules
 
                 _stunRemaining = Mathf.Max(_stunRemaining, duration);
             }
+
+        public void AfterInit()
+        {
+            _stats = _owner.GetModule<PlayerStatsModule>();
+            InitHealth(MaxHp);
         }
+    }
     }
