@@ -75,8 +75,8 @@ GameObject:
   m_Component:
   - component: {fileID: 655956942291552935}
   - component: {fileID: 7118357513057103327}
-  - component: {fileID: 6641270989390711191}
   - component: {fileID: 738119082457807208}
+  - component: {fileID: 6641270989390711191}
   - component: {fileID: 796296825116889210}
   m_Layer: 9
   m_Name: Dog Enemy
@@ -136,24 +136,6 @@ MonoBehaviour:
           m_Value1: 0
         Name: Self
         m_Value: {fileID: 4555680495768115287}
---- !u!114 &6641270989390711191
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 4555680495768115287}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 42e904c892e30e341b5646672cc22c9c, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy
-  <EnemyData>k__BackingField: {fileID: 11400000, guid: 959cf221cd5bca24a95c2bb2d722b126, type: 2}
-  moveSpeedParam: {fileID: 11400000, guid: 9796d0d7a8091fd40afbca950f14ffec, type: 2}
-  aimOrigin: {fileID: 4337879547775180486}
-  muzzleOrigin: {fileID: 854154552182541017}
-  equippedWeaponData: {fileID: 11400000, guid: 00b8ef31780abbe4ba54c46ef77ee127, type: 2}
-  weaponHitbox: {fileID: 5892028192851167089}
 --- !u!195 &738119082457807208
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -176,6 +158,24 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &6641270989390711191
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4555680495768115287}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 42e904c892e30e341b5646672cc22c9c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy
+  <EnemyData>k__BackingField: {fileID: 11400000, guid: 959cf221cd5bca24a95c2bb2d722b126, type: 2}
+  moveSpeedParam: {fileID: 11400000, guid: 9796d0d7a8091fd40afbca950f14ffec, type: 2}
+  aimOrigin: {fileID: 4337879547775180486}
+  muzzleOrigin: {fileID: 854154552182541017}
+  equippedWeaponData: {fileID: 11400000, guid: 00b8ef31780abbe4ba54c46ef77ee127, type: 2}
+  weaponHitbox: {fileID: 5892028192851167089}
 --- !u!65 &796296825116889210
 BoxCollider:
   m_ObjectHideFlags: 0

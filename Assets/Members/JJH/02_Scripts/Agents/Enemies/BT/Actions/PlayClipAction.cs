@@ -8,13 +8,12 @@ using Action = Unity.Behavior.Action;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "PlayClipAction", story: "[Enemy] play [Clip] [PlayOnce]", category: "Action/Animation", id: "b4daafc212e4747fd42229ca87255710")]
+    [NodeDescription(name: "Play Clip", story: "[Enemy] play [Clip] [PlayOnce]", category: "Action/Animation", id: "b4daafc212e4747fd42229ca87255710")]
     public partial class PlayClipAction : Action
     {
-        [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
-        [SerializeReference] public BlackboardVariable<AnimParamSO> Clip;
-        [SerializeReference] public BlackboardVariable<bool> PlayOnce;
-
+    [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
+    [SerializeReference] public BlackboardVariable<AnimParamSO> Clip;
+    [SerializeReference] public BlackboardVariable<bool> PlayOnce;
         private int _savedClipHash;
 
         protected override Status OnStart()
@@ -25,7 +24,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             Enemy.Value.Renderer.Animator.speed = 1f;
             if (PlayOnce.Value)
             {
-                Enemy.Value.Renderer.PlayClip(Clip.Value.HashValue, 0.5f, 0.2f, 0);
+                Enemy.Value.Renderer.PlayClip(Clip.Value.HashValue, 0f, 0.2f, 0);
                 return Status.Success;
             }
 

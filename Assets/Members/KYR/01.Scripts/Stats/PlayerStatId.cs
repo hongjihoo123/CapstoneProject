@@ -7,9 +7,23 @@ namespace Members.KYR._01_Scripts.Stats
         Mobility,
         Combat,
         MaxHp,
+        Defense,
+        MaxStamina,
+        StaminaRegen,
+        HealReceived,
         WalkSpeed,
         RunSpeed,
         CrouchSpeed,
-        Damage
+        JumpHeight,
+        DashSpeed,
+        DashDuration,
+        AirControl,
+        Damage,
+        AttackSpeed,
+        ReloadSpeed,
+        RecoilControl,
+        WeakpointMultiplier,
+        Skill,
+        SkillCooldownReduction
     }
 }

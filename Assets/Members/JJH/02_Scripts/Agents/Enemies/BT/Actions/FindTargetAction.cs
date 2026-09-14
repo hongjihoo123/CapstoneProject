@@ -7,12 +7,12 @@ using Action = Unity.Behavior.Action;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "FindTarget", story: "[Enemy] Find [Target]", category: "Action", id: "52447dd9636caa8f604c4492e81708e8")]
+    [NodeDescription(name: "Find Target", story: "[Enemy] Find [Target]", category: "Action/Find", id: "52447dd9636caa8f604c4492e81708e8")]
     public partial class EnemyFindTargetAction : Action
     {
     [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
     [SerializeReference] public BlackboardVariable<GameObject> Target;
-        protected override Status OnStart()
+    protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.Sensor == null)
                 return Status.Failure;

@@ -44,7 +44,7 @@ namespace RobotWeapons
             if (mode == Mode.Shotgun) shotgun.Reload();
         }
 
-        public override void Tick(float dt) => shotgun.Tick(dt);
+        public override void Tick(float dt) => shotgun.Tick(dt, ReloadSpeedMultiplier);
 
         private void FireMelee()
         {

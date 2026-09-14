@@ -14,12 +14,18 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             base.Initialize(owner);
 
             NavMeshAgent = GetComponentInParent<NavMeshAgent>();
-            NavMeshAgent.angularSpeed = 720f;
             NavMeshAgent.updateRotation = true;
             NavMeshAgent.autoBraking = true;
 
             if (owner is AbstractEnemy enemy)
-                NavMeshAgent.speed = enemy.EnemyData.EnemySpeed;
+                NavMeshAgent.speed = enemy.EnemyData.Speed;
+        }
+
+        public void SetNavMeshAgent(float speed, float angularSpeed, float acceleration)
+        {
+            NavMeshAgent.speed = speed;
+            NavMeshAgent.angularSpeed = angularSpeed;
+            NavMeshAgent.acceleration = acceleration;
         }
 
         public void MoveTo(Vector3 targetPosition)
@@ -37,6 +43,21 @@ namespace Members.JJH._02_Scripts.Agents.Modules
                 NavMeshAgent.ResetPath();
                 NavMeshAgent.velocity = Vector3.zero;
             }
+        }
+
+        public void RotateToTarget(Vector3 targetPosition)
+        {
+            Vector3 direction = targetPosition - transform.position;
+            direction.y = 0f;
+
+            if (direction.sqrMagnitude <= 0.001f)
+                return;
+
+            Quaternion targetRotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.RotateTowards(
+                transform.rotation,
+                targetRotation,
+                NavMeshAgent.angularSpeed * Time.deltaTime);
         }
 
         public void StopImmediately()

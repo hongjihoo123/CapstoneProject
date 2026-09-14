@@ -1,9 +1,9 @@
 using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
-using Assets.Members.HJH._02.Scripts.Char;
 
 namespace Members.KYR._01_Scripts.Modules
 {
@@ -14,21 +14,21 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox skillOverlapHitbox;
         [SerializeField] private bool treatSecondaryAsAim = true;
 
-        [Header("È­¸é Èçµé¸²")]
+        [Header("??? ???")]
         [SerializeField] private CinemachineImpulseSource impulseSource;
         [SerializeField] private float gunShakeForce = 0.3f;
         [SerializeField] private float energyBallShakeForce = 1f;
 
-        [Header("¹ß»ç ÀÌÆåÆ®")]
+        [Header("??? ?????")]
         [SerializeField] private MuzzleFlash muzzleFlash;
         [SerializeField] private TracerVisual tracerVisual;
 
-        [Header("¹İµ¿")]
+        [Header("???")]
         [SerializeField] private float dutchSpringStrength = 400f;
         [SerializeField] private float dutchDamping = 4f;
         [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
 
-        [Header("Á¶ÁØ")]
+        [Header("????")]
         [SerializeField] private Vector3 adsCameraLocalOffset = new Vector3(0f, 0f, 0.15f);
         [SerializeField] private float aimFov = 50f;
         [SerializeField] private float aimFovTransitionSpeed = 14f;
@@ -47,6 +47,7 @@ namespace Members.KYR._01_Scripts.Modules
         private float _dutchVelocity;
         private Quaternion _aimOriginBaseRotation;
         private bool _aimOriginBaseCaptured;
+        private PlayerStatsModule _stats;
 
         public IWeapon Weapon => _weapon;
         public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
@@ -57,9 +58,10 @@ namespace Members.KYR._01_Scripts.Modules
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+            _stats = owner.GetModule<PlayerStatsModule>();
 
-            // Ä³¸¯ÅÍ ¼±ÅÃ È­¸é¿¡¼­ °í¸¥ Ä³¸¯ÅÍÀÇ ¹«±â°¡ ÀÖÀ¸¸é ¿ì¼± Àû¿ëÇÏ°í,
-            // ¾øÀ¸¸é(¿¹: °ÔÀÓ ¾ÀÀ» ¹Ù·Î ½ÇÇàÇØ¼­ Å×½ºÆ®ÇÒ ¶§) ÀÎ½ºÆåÅÍ¿¡ ÁöÁ¤µÈ ±âº» ¹«±â¸¦ »ç¿ëÇÑ´Ù.
+            // ìºë¦­í„° ì„ íƒ í™”ë©´ì—ì„œ ê³ ë¥¸ ìºë¦­í„°ì˜ ë¬´ê¸°ê°€ ìˆìœ¼ë©´ ìš°ì„  ì ìš©í•˜ê³ ,
+            // ì—†ìœ¼ë©´(ì˜ˆ: ê²Œì„ ì”¬ì„ ë°”ë¡œ ì—´ì–´ì„œ í…ŒìŠ¤íŠ¸í•  ë•Œ) ì¸ìŠ¤í™í„°ì— ë„£ì–´ë‘” ê¸°ë³¸ ë¬´ê¸°ë¥¼ ì“´ë‹¤.
             var selectedCharacter = CharacterSelectionContext.Selected;
             if (selectedCharacter != null && selectedCharacter.weaponData != null)
                 equippedWeaponData = selectedCharacter.weaponData;
@@ -126,19 +128,16 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_weapon == null) return;
 
-            var status = _owner?.GetModule<StatusEffectModule>();
-            if (status == null) return;
+            float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
+            float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
 
             if (_weapon is GunDealerWeapon gunDealer)
-                gunDealer.AttackSpeedMultiplier = status.Get(BuffType.AttackSpeed);
+                gunDealer.AttackSpeedMultiplier = attackSpeed;
 
             if (_weapon is WeaponBase weaponBase)
             {
-                weaponBase.ReloadSpeedMultiplier = status.Get(BuffType.ReloadSpeed);
-                weaponBase.DamageMultiplier = status.Get(BuffType.Damage);
-
-                if (_weapon is GunDealerWeapon g)
-                    Debug.Log($"[¹«±â] AttackSpeedMult={g.AttackSpeedMultiplier}, ReloadMult={weaponBase.ReloadSpeedMultiplier}");
+                weaponBase.ReloadSpeedMultiplier = reloadSpeed;
+                weaponBase.DamageMultiplier = 1f;
             }
         }
 
@@ -221,7 +220,7 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(active);
         }
 
-        // È÷Æ® ÆÇÁ¤¸¸ ÀÓ½Ã·Î ´Ù¸£°Ô ¹Ş°í ½ÍÀ» ¶§ »ç¿ëÇô
+        // ??? ?????? ????? ????? ??? ???? ?? ?????
         public void SetSkillHitCallback(Action<IDamageable, bool> onHit)
         {
             weaponHitbox?.SetOverrideHandler(onHit);
@@ -232,7 +231,7 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.ClearOverrideHandler();
         }
 
-        // ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ® - Äİ¶óÀÌ´õ
+        // ??????? ???? - ??????
         public void Anim_SkillHitboxOn()
         {
             weaponHitbox?.SetActive(true);
@@ -243,7 +242,7 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(false);
         }
 
-        // Animator°¡ ºÙÀº ¿ÀºêÁ§Æ®¿¡¼­ Á÷Á¢ È£ÃâÇÏ´Â ¿ëµµ¿©
+        // Animator?? ???? ??????????? ???? ?????? ?????
         public void TriggerSkillOverlapHit()
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
@@ -268,6 +267,10 @@ namespace Members.KYR._01_Scripts.Modules
                 float multiplier = (player.MoveFsm != null && player.MoveFsm.Capabilities.IsCrouching)
                     ? crouchRecoilMultiplier
                     : 1f;
+                float recoilControl = _stats != null && _stats.Tree != null
+                    ? Mathf.Clamp01(_stats.Get(PlayerStatId.RecoilControl))
+                    : 0f;
+                multiplier *= 1f - recoilControl;
 
                 player.Mover.ApplyRecoilPitch(pitchDelta * multiplier);
                 if (!Mathf.Approximately(yawDelta, 0f))
@@ -280,7 +283,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
-            Debug.Log($"[¹ß»çÀÌº¥Æ®] {animId} at {Time.frameCount}");
+            Debug.Log($"[???????] {animId} at {Time.frameCount}");
             OnWeaponFired?.Invoke(animId);
 
             switch (animId)
