@@ -8,7 +8,6 @@ using Members.KYR._01_Scripts.Modules;
 using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -72,13 +71,9 @@ namespace Members.KYR._01_Scripts
         public override bool IsAlive => Health != null && !Health.IsDead;
         public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
-        private NetworkObject networkObject;
-
-        public event System.Action<bool> OnAimStateChanged;
         protected override void InitializeModules()
         {
             base.InitializeModules();
-            networkObject = GetComponent<NetworkObject>();
             AimUtility.IgnoreLayerMask = LayerMask.GetMask("Player");
 
             Mover = GetModule<PlayerMover>();
@@ -242,12 +237,6 @@ namespace Members.KYR._01_Scripts
         public void Teleport(Vector3 position, Quaternion? rotation = null)
         {
             Mover?.Teleport(position, rotation);
-        }
-
-        public void ApplySelectedCharacter()
-        {
-            Weapon?.ApplySelectedCharacter();
-            SkillFsm?.ApplySelectedCharacter();
         }
 
         public void SetMoveSpeedMultiplier(float multiplier)

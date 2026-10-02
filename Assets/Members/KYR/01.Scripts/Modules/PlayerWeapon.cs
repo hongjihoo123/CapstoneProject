@@ -14,21 +14,17 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox skillOverlapHitbox;
         [SerializeField] private bool treatSecondaryAsAim = true;
 
-        [Header("??? ???")]
         [SerializeField] private CinemachineImpulseSource impulseSource;
         [SerializeField] private float gunShakeForce = 0.3f;
         [SerializeField] private float energyBallShakeForce = 1f;
 
-        [Header("??? ?????")]
         [SerializeField] private MuzzleFlash muzzleFlash;
         [SerializeField] private TracerVisual tracerVisual;
 
-        [Header("???")]
         [SerializeField] private float dutchSpringStrength = 400f;
         [SerializeField] private float dutchDamping = 4f;
         [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
 
-        [Header("????")]
         [SerializeField] private Vector3 adsCameraLocalOffset = new Vector3(0f, 0f, 0.15f);
         [SerializeField] private float aimFov = 50f;
         [SerializeField] private float aimFovTransitionSpeed = 14f;
@@ -60,12 +56,6 @@ namespace Members.KYR._01_Scripts.Modules
             base.Initialize(owner);
             _stats = owner.GetModule<PlayerStatsModule>();
 
-            // 캐릭터 선택 화면에서 고른 캐릭터의 무기가 있으면 우선 적용하고,
-            // 없으면(예: 게임 씬을 바로 열어서 테스트할 때) 인스펙터에 넣어둔 기본 무기를 쓴다.
-            var selectedCharacter = CharacterSelectionContext.Selected;
-            if (selectedCharacter != null && selectedCharacter.weaponData != null)
-                equippedWeaponData = selectedCharacter.weaponData;
-
             _lastEquippedData = equippedWeaponData;
             if (equippedWeaponData == null)
                 return;
@@ -86,17 +76,6 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_weapon != null)
                 _weapon.OnAttackTriggered -= HandleAttackTriggered;
-        }
-
-        public void ApplySelectedCharacter()
-        {
-            var selected = CharacterSelectionContext.Selected;
-            if (selected == null || selected.weaponData == null)
-                return;
-
-            equippedWeaponData = selected.weaponData;
-            _lastEquippedData = equippedWeaponData;
-            Equip(WeaponFactory.Create(equippedWeaponData));
         }
 
         public void Equip(IWeapon weapon)
@@ -220,7 +199,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(active);
         }
 
-        // ??? ?????? ????? ????? ??? ???? ?? ?????
         public void SetSkillHitCallback(Action<IDamageable, bool> onHit)
         {
             weaponHitbox?.SetOverrideHandler(onHit);
@@ -231,7 +209,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.ClearOverrideHandler();
         }
 
-        // ??????? ???? - ??????
         public void Anim_SkillHitboxOn()
         {
             weaponHitbox?.SetActive(true);
@@ -242,7 +219,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(false);
         }
 
-        // Animator?? ???? ??????????? ???? ?????? ?????
         public void TriggerSkillOverlapHit()
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
@@ -283,7 +259,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
-            Debug.Log($"[???????] {animId} at {Time.frameCount}");
+            Debug.Log($"[PlayerWeapon] {animId} at {Time.frameCount}");
             OnWeaponFired?.Invoke(animId);
 
             switch (animId)

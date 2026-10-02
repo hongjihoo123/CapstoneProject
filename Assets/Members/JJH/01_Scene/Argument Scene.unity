@@ -676,10 +676,17 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: cbcbd5c062120614aa78c94ffe7a46e7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Augments.AugmentManager
-  allAugments:
-  - {fileID: 11400000, guid: dcf1144a69f4c1f48a10b84a6e7ea9e8, type: 2}
-  - {fileID: 11400000, guid: 506bd5840d6a1ae48adacae6391a025c, type: 2}
-  - {fileID: 11400000, guid: f23e2b569b1a34944854c06a57b21388, type: 2}
+  allTracks:
+  - {fileID: 11400000, guid: ed10f19ec9aa6734984df638e1553e4d, type: 2}
+  - {fileID: 11400000, guid: 342674bde09400b49908a19dcf906b58, type: 2}
+  - {fileID: 11400000, guid: 23c3d017df6043547b5b85d58c5c461b, type: 2}
+  - {fileID: 11400000, guid: 1b0fac8495bb4024999a3d824bcce6a5, type: 2}
+  - {fileID: 11400000, guid: 4b9919a7b3333f94daf4ca2aeae08628, type: 2}
+  - {fileID: 11400000, guid: 8dc01a7e040dc6949b82b0679b808cc9, type: 2}
+  - {fileID: 11400000, guid: 6e1bb6b5761b94546a14900775b3c8d3, type: 2}
+  - {fileID: 11400000, guid: 9aa9a923dcee26f47971e2ee40ed9365, type: 2}
+  augmentEventChannel: {fileID: 0}
+  rootPanel: {fileID: 0}
   augmentUIPrefab: {fileID: 632729065898725528, guid: eba094dc1cc65ea40b37386afda5d0d0, type: 3}
   augmentParent: {fileID: 746776365}
   slotAnchors:
@@ -693,6 +700,9 @@ MonoBehaviour:
   selectedFadeDuration: 0.3
   dismissDuration: 0.4
   screenOffsetY: 1200
+  enableTestKey: 1
+  testKey: 26
+  overridePlayer: {fileID: 0}
 --- !u!1 &1589715062
 GameObject:
   m_ObjectHideFlags: 0

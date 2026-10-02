@@ -1,4 +1,4 @@
-﻿using DG.Tweening;
+using DG.Tweening;
 using System;
 using TMPro;
 using UnityEngine;
@@ -14,7 +14,8 @@ namespace Members.JJH._02_Scripts.Augments
         [SerializeField] private TextMeshProUGUI descriptionText;
         [SerializeField] private Button button;
 
-        public AugmentSO Data { get; private set; }
+        public AugmentTrackSO Track { get; private set; }
+        public int NextTier { get; private set; }
         public RectTransform RectTransform { get; private set; }
 
         private Action<AugmentUI> onClickCallback;
@@ -28,18 +29,20 @@ namespace Members.JJH._02_Scripts.Augments
                 canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
 
-
-        public void Setup(AugmentSO data, Action<AugmentUI> onClick)
+        public void Setup(AugmentTrackSO track, int nextTier, Action<AugmentUI> onClick)
         {
-            Data = data;
+            Track = track;
+            NextTier = nextTier;
             onClickCallback = onClick;
 
+            AugmentTierInfo info = track.GetTierInfo(nextTier);
+
             if (iconImage != null)
-                iconImage.sprite = data.AugmentIcon;
+                iconImage.sprite = track.icon;
             if (nameText != null)
-                nameText.text = data.AugmentName;
+                nameText.text = $"{track.trackName} Lv.{nextTier}";
             if (descriptionText != null)
-                descriptionText.text = data.AugmentDescription;
+                descriptionText.text = info != null ? info.description : string.Empty;
 
             canvasGroup.alpha = 1f;
 

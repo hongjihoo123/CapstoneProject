@@ -169,7 +169,7 @@ namespace Members.KYR._01_Scripts.Modules
             if (characterController == null)
                 return;
 
-            _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime); // 추가
+            _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime);
 
             if (IsGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;

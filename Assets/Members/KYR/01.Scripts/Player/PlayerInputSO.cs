@@ -35,9 +35,6 @@ namespace Members.KYR._01_Scripts
                 _controls = new Controls();
                 BindAimReload();
                 BindSkillActions();
-                // 콜백(AddCallbacks) 방식은 일부러 안 씀 - Fill()의 폴링 방식이랑
-                // 동시에 같은 값을 따로 덮어쓰면서 레이스 컨디션이 생겨서
-                // (클릭 한 번이 두 프레임에 걸쳐 중복 감지되는 등) 제거함.
             }
 
             _controls.Player.Enable();
