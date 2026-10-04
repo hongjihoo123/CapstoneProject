@@ -30,7 +30,7 @@ namespace Members.KYR._01_Scripts.Modules
             _stunRemaining = 0f;
         }
 
-        public void AfterInit()
+        public void AfterInitalize()
         {
             _hp = MaxHp;
         }

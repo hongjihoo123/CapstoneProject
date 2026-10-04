@@ -47,7 +47,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Debug.Assert(Player != null, $"{owner.name}의 SkillStateModule은 PlayerAgent 아래여야 합니다.");
         }
 
-        public void AfterInit()
+        public void AfterInitalize()
         {
             // 캐릭터 선택 화면에서 고른 캐릭터의 스킬/패시브가 있으면 우선 적용하고,
             // 없으면(예: 게임 씬을 바로 실행해서 테스트할 때) 인스펙터에 지정된 기본값을 사용한다.
@@ -86,7 +86,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             if (Machine != null)
                 ForceIdle();
-            AfterInit();
+            AfterInitalize();
         }
 
         public void ForceIdle()

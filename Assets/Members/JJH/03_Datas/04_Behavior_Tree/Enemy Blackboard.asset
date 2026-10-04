@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 5c02bb70996b49eba31d0c206e28da24, type: 3}
   m_Name: Enemy Blackboard
   m_EditorClassIdentifier: Unity.Behavior::Unity.Behavior.RuntimeBlackboardAsset
-  VersionTimestamp: 639230331752651865
+  VersionTimestamp: 639257306307146663
   AssetID:
     m_Value0: 8387512054945390893
     m_Value1: 7151824914189349032
@@ -21,9 +21,6 @@ MonoBehaviour:
     - rid: 5733739210972594267
     - rid: 5733739210972594269
     - rid: 5733739244680642767
-    - rid: 5733739210972594273
-    - rid: 5733739244056216370
-    - rid: 5733739244056216438
     - rid: 5733739210972594276
     - rid: 5733739210972594287
   m_SharedBlackboardVariableGuids: []
@@ -46,14 +43,6 @@ MonoBehaviour:
           m_Value1: 11235014008550372303
         Name: Target
         m_Value: {fileID: 0}
-    - rid: 5733739210972594273
-      type: {class: 'BlackboardVariable`1[[Members.JJH._02_Scripts.Systems.AnimatorSystem.AnimParamSO, AnimatorSystem]]', ns: Unity.Behavior, asm: Unity.Behavior}
-      data:
-        GUID:
-          m_Value0: 12257731976058773313
-          m_Value1: 7384506169006865465
-        Name: Clip
-        m_Value: {fileID: 0}
     - rid: 5733739210972594276
       type: {class: 'BlackboardVariable`1[[Members.JJH._02_Scripts.Agents.Enemies.BT.EnemyState, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
       data:
@@ -69,22 +58,6 @@ MonoBehaviour:
           m_Value0: 2301213275225366763
           m_Value1: 13473708102771043281
         Name: StateChannel
-        m_Value: {fileID: 0}
-    - rid: 5733739244056216370
-      type: {class: 'BlackboardVariable`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
-      data:
-        GUID:
-          m_Value0: 15703522829081901290
-          m_Value1: 15094748190695073797
-        Name: PlayOnce
-        m_Value: 0
-    - rid: 5733739244056216438
-      type: {class: 'BlackboardVariable`1[[Members.JJH._02_Scripts.Agents.Enemies.BT.Channels.AnimationChannel, Assembly-CSharp]]', ns: Unity.Behavior, asm: Unity.Behavior}
-      data:
-        GUID:
-          m_Value0: 16666113380680034336
-          m_Value1: 5188747530694549075
-        Name: AnimationChannel
         m_Value: {fileID: 0}
     - rid: 5733739244680642767
       type: {class: 'BlackboardVariable`1[[System.Single, mscorlib]]', ns: Unity.Behavior, asm: Unity.Behavior}
@@ -113,12 +86,9 @@ MonoBehaviour:
   - rid: 5733739210972594266
   - rid: 5733739210972594268
   - rid: 5733739244680642766
-  - rid: 5733739210972594272
-  - rid: 5733739244056216369
-  - rid: 5733739244056216437
   - rid: 5733739210972594275
   - rid: 5733739210972594286
-  m_VersionTimestamp: 639230331752651865
+  m_VersionTimestamp: 639257306307146663
   m_CommandBuffer:
     m_Commands: []
   m_RuntimeBlackboardAsset: {fileID: -1273353104651887186}
@@ -145,16 +115,6 @@ MonoBehaviour:
         IsExposed: 1
         m_IsShared: 0
         m_Value: {fileID: 0}
-    - rid: 5733739210972594272
-      type: {class: 'TypedVariableModel`1[[Members.JJH._02_Scripts.Systems.AnimatorSystem.AnimParamSO, AnimatorSystem]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
-      data:
-        ID:
-          m_Value0: 12257731976058773313
-          m_Value1: 7384506169006865465
-        Name: Clip
-        IsExposed: 1
-        m_IsShared: 0
-        m_Value: {fileID: 0}
     - rid: 5733739210972594275
       type: {class: 'TypedVariableModel`1[[Members.JJH._02_Scripts.Agents.Enemies.BT.EnemyState, Assembly-CSharp]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
       data:
@@ -172,26 +132,6 @@ MonoBehaviour:
           m_Value0: 2301213275225366763
           m_Value1: 13473708102771043281
         Name: StateChannel
-        IsExposed: 1
-        m_IsShared: 0
-        m_Value: {fileID: 0}
-    - rid: 5733739244056216369
-      type: {class: 'TypedVariableModel`1[[System.Boolean, mscorlib]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
-      data:
-        ID:
-          m_Value0: 15703522829081901290
-          m_Value1: 15094748190695073797
-        Name: PlayOnce
-        IsExposed: 1
-        m_IsShared: 0
-        m_Value: 0
-    - rid: 5733739244056216437
-      type: {class: 'TypedVariableModel`1[[Members.JJH._02_Scripts.Agents.Enemies.BT.Channels.AnimationChannel, Assembly-CSharp]]', ns: Unity.Behavior.GraphFramework, asm: Unity.Behavior.GraphFramework}
-      data:
-        ID:
-          m_Value0: 16666113380680034336
-          m_Value1: 5188747530694549075
-        Name: AnimationChannel
         IsExposed: 1
         m_IsShared: 0
         m_Value: {fileID: 0}

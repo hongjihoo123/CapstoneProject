@@ -19,7 +19,7 @@ namespace Members.KYR._01_Scripts.FSM.Control
             Debug.Assert(Player != null, $"{owner.name}의 ControlStateModule은 PlayerAgent 아래여야 합니다.");
         }
 
-        public void AfterInit()
+        public void AfterInitalize()
         {
             Machine = new StateMachine();
             Machine.Register(new AliveControlState(this));
