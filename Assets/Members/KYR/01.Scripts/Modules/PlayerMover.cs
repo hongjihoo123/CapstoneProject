@@ -37,6 +37,10 @@ namespace Members.KYR._01_Scripts.Modules
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;
+        private float _dashTotalTime;
+        private float _dashSlowFraction;
+
+        private const float DashMinSpeedFactor = 0.35f;
         private PlayerStatsModule _stats;
 
         public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
@@ -188,7 +192,7 @@ namespace Members.KYR._01_Scripts.Modules
             Vector3 planar;
             if (_dashTimeRemaining > 0f)
             {
-                planar = _dashDirection * _dashSpeed;
+                planar = _dashDirection * (_dashSpeed * DashSpeedFactor());
                 _dashTimeRemaining -= deltaTime;
             }
             else
@@ -200,15 +204,31 @@ namespace Members.KYR._01_Scripts.Modules
             characterController.Move(motion * deltaTime);
         }
 
-        public void Dash(Vector3 direction, float speed, float duration)
+        public void CancelDash() => _dashTimeRemaining = 0f;
+
+        public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f)
         {
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f)
                 direction = _owner.transform.forward;
 
+            float slowFraction = Mathf.Clamp01(endSlowdown);
+            float averageFactor = (1f - slowFraction) + slowFraction * (1f + DashMinSpeedFactor) * 0.5f;
+
             _dashDirection = direction.normalized;
-            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f);
-            _dashTimeRemaining = duration * GetStat(PlayerStatId.DashDuration, 1f);
+            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f) / averageFactor;
+            _dashTotalTime = duration * GetStat(PlayerStatId.DashDuration, 1f);
+            _dashTimeRemaining = _dashTotalTime;
+            _dashSlowFraction = slowFraction;
+        }
+
+        private float DashSpeedFactor()
+        {
+            float slowTime = _dashTotalTime * _dashSlowFraction;
+            if (slowTime <= 0f || _dashTimeRemaining >= slowTime)
+                return 1f;
+
+            return Mathf.Lerp(DashMinSpeedFactor, 1f, _dashTimeRemaining / slowTime);
         }
 
         private float GetStat(PlayerStatId id, float fallback)

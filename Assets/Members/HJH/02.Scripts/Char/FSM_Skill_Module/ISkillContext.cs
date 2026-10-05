@@ -8,7 +8,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     public interface ISkillMover
     {
         Vector3 MoveInputDirection { get; }
-        void Dash(Vector3 direction, float speed, float duration);
+        Vector3 AimDirection { get; }
+        void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f);
+        void CancelDash();
+    }
+
+    public interface ISkillEffects
+    {
+        void SetSpinEffect(GameObject prefab, bool active, float radius);
+        void FlashRange(float radius, float duration);
     }
 
     public interface ISkillCombatant
@@ -32,7 +40,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         IWeapon Weapon { get; }
     }
 
-    public interface ISkillContext : ISkillMover, ISkillCombatant, ISkillStats, ISkillWeapon
+    public interface ISkillContext : ISkillMover, ISkillCombatant, ISkillStats, ISkillWeapon, ISkillEffects
     {
         Transform Transform { get; }
     }

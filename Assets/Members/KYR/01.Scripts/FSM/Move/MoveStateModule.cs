@@ -53,6 +53,12 @@ namespace Members.KYR._01_Scripts.FSM.Move
         {
             PlayerInputState input = Player.Input;
 
+            if (!Player.SkillFsm.Capabilities.AllowsMove)
+            {
+                ChangeState<IdleMoveState>();
+                return;
+            }
+
             if (Player.Mover.IsGrounded && input.JumpPressed)
             {
                 ChangeState<JumpMoveState>();

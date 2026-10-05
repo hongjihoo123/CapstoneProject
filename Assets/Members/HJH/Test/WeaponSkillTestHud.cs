@@ -50,7 +50,8 @@ namespace Members.HJH.Test
             SkillData data = player.SkillFsm.GetSkill(slot);
             float cooldown = player.SkillFsm.GetCooldownRemaining(slot);
             bool active = player.SkillFsm.AnimBlendIndex == (int)slot;
-            string state = active ? "사용중" : cooldown > 0f ? $"{cooldown:0.0}s" : "READY";
+            bool aiming = player.SkillFsm.AimingSlot == slot;
+            string state = aiming ? "조준중 (우클릭 취소)" : active ? "사용중" : cooldown > 0f ? $"{cooldown:0.0}s" : "READY";
 
             GUILayout.BeginHorizontal();
             GUILayout.Label(data != null ? data.name : "-", GUILayout.Width(210f));

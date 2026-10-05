@@ -105,6 +105,11 @@ namespace Members.KYR._01_Scripts
 
         public WeaponKitData Kit => kit;
 
+        private Vector3 _aimDirection;
+        public Vector3 AimDirection => _aimDirection.sqrMagnitude > 0.0001f ? _aimDirection : transform.forward;
+
+        public void SetAimDirection(Vector3 direction) => _aimDirection = direction;
+
         public string GetSkillKeyLabel(SkillSlotId slot) =>
             playerInput != null ? playerInput.GetSkillBindingLabel(slot) : string.Empty;
 
@@ -155,6 +160,7 @@ namespace Members.KYR._01_Scripts
             }
             else
             {
+                SkillFsm.CancelAim();
                 Mover.SetPlanarInput(Vector2.zero, 0f);
             }
 
@@ -249,6 +255,8 @@ namespace Members.KYR._01_Scripts
             SkillFsm.NotifyEnemyKilled();   
         }
 
+        public void Anim_SkillHitBegin() => SkillFsm.Anim_SkillHitBegin();
+        public void Anim_SkillHitEnd() => SkillFsm.Anim_SkillHitEnd();
         public void Anim_SkillHitboxOn() => Weapon.Anim_SkillHitboxOn();
         public void Anim_SkillHitboxOff() => Weapon.Anim_SkillHitboxOff();
 

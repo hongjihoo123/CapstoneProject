@@ -19,6 +19,8 @@ namespace Members.KYR._01_Scripts
 
         private readonly Dictionary<SkillSlotId, InputAction> _skillActions = new();
         private readonly bool[] _skillPressed = new bool[SkillSlots.Count];
+        private readonly bool[] _skillHeld = new bool[SkillSlots.Count];
+        private readonly bool[] _skillReleased = new bool[SkillSlots.Count];
 
         private Controls _controls;
         private InputAction _aim;
@@ -32,9 +34,12 @@ namespace Members.KYR._01_Scripts
         public bool FireHeld { get; private set; }
         public bool FirePressed { get; private set; }
         public bool AimHeld { get; private set; }
+        public bool AimPressed { get; private set; }
         public bool ReloadPressed { get; private set; }
 
         public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
+        public bool IsSkillHeld(SkillSlotId slot) => _skillHeld[(int)slot];
+        public bool WasSkillReleased(SkillSlotId slot) => _skillReleased[(int)slot];
 
         public string GetSkillBindingLabel(SkillSlotId slot) =>
             _skillActions.TryGetValue(slot, out InputAction action) ? action.GetBindingDisplayString() : string.Empty;
@@ -83,10 +88,16 @@ namespace Members.KYR._01_Scripts
             FireHeld = _controls.Player.Attack.IsPressed();
             FirePressed = _controls.Player.Attack.WasPressedThisFrame();
             AimHeld = _aim != null && _aim.IsPressed();
+            AimPressed = _aim != null && _aim.WasPressedThisFrame();
             ReloadPressed = _reload != null && _reload.WasPressedThisFrame();
 
             foreach (SkillSlotId slot in SkillSlots.All)
-                _skillPressed[(int)slot] = _skillActions.TryGetValue(slot, out InputAction action) && action.WasPressedThisFrame();
+            {
+                _skillActions.TryGetValue(slot, out InputAction action);
+                _skillPressed[(int)slot] = action != null && action.WasPressedThisFrame();
+                _skillHeld[(int)slot] = action != null && action.IsPressed();
+                _skillReleased[(int)slot] = action != null && action.WasReleasedThisFrame();
+            }
 
             state.CopyFrom(this);
         }

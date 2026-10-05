@@ -36,6 +36,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             base.Exit();
         }
 
+        public void SendAnimationEvent(SkillAnimationEvent animationEvent) => _execution?.OnAnimationEvent(animationEvent);
+
         public override void OnAnimationHitEvent() => Data.OnAnimationHitEvent(Host.Context);
     }
 }

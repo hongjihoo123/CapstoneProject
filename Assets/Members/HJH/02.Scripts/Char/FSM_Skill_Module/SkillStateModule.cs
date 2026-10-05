@@ -28,6 +28,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private readonly Dictionary<SkillSlotId, GenericSkillState> _slots = new();
         private PlayerSkillContext _context;
         private IdleSkillState _idleSkill;
+        private SkillSlotId? _aimingSlot;
+
+        public bool IsAimingSkill => _aimingSlot != null;
+        public SkillSlotId? AimingSlot => _aimingSlot;
 
         public PlayerAgent Player { get; private set; }
         public StateMachine Machine { get; private set; }
@@ -96,6 +100,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void Equip(SkillSlotId slot, SkillData data)
         {
+            if (_aimingSlot == slot)
+                CancelAim();
+
             if (_slots.TryGetValue(slot, out GenericSkillState previous) && Machine != null && ReferenceEquals(Machine.Current, previous))
                 ForceIdle();
 
@@ -117,20 +124,81 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void ResolveInput(ISkillInputSource input)
         {
-            if (Machine.Current is SkillStateBase active && !active.IsFinished)
+            if (Machine.Current is GenericSkillState running && !running.IsFinished)
+            {
+                if (running.Data.Cancelable && ShouldCancel(running, input))
+                    Machine.ChangeState<IdleSkillState>();
                 return;
+            }
 
             Machine.ChangeState<IdleSkillState>();
 
+            if (_aimingSlot == null)
+                TryBeginAim(input);
+
+            if (_aimingSlot == null)
+                return;
+
+            SkillSlotId slot = _aimingSlot.Value;
+            if (input.WasCancelPressed())
+            {
+                CancelAim();
+                return;
+            }
+
+            if (input.IsSkillHeld(slot) && !input.WasSkillReleased(slot))
+                return;
+
+            CancelAim();
+            if (_slots.TryGetValue(slot, out GenericSkillState state) && state.IsReady)
+            {
+                Machine.ChangeState(state);
+                SkillUsed?.Invoke(new SkillUsedInfo(slot, state.Data));
+            }
+        }
+
+        public void CancelAim() => _aimingSlot = null;
+
+        private bool ShouldCancel(GenericSkillState running, ISkillInputSource input)
+        {
+            if (input.WasJumpPressed() || input.WasSkillPressed(running.Slot))
+                return true;
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (slot != running.Slot && input.WasSkillPressed(slot) && _slots.TryGetValue(slot, out GenericSkillState other) && other.IsReady)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public void DescribeAimPreview(ISkillPreview preview)
+        {
+            if (_aimingSlot != null && _slots.TryGetValue(_aimingSlot.Value, out GenericSkillState state))
+                state.Data.DescribePreview(_context, preview);
+        }
+
+        private void TryBeginAim(ISkillInputSource input)
+        {
             foreach (SkillSlotId slot in SkillSlots.All)
             {
                 if (!input.WasSkillPressed(slot) || !_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
                     continue;
 
-                Machine.ChangeState(state);
-                SkillUsed?.Invoke(new SkillUsedInfo(slot, state.Data));
+                _aimingSlot = slot;
                 return;
             }
+        }
+
+        public void Anim_SkillHitBegin() => SendAnimationEvent(SkillAnimationEvent.HitBegin);
+
+        public void Anim_SkillHitEnd() => SendAnimationEvent(SkillAnimationEvent.HitEnd);
+
+        private void SendAnimationEvent(SkillAnimationEvent animationEvent)
+        {
+            if (Machine.Current is GenericSkillState state)
+                state.SendAnimationEvent(animationEvent);
         }
 
         public void Anim_SkillOverlapHit()

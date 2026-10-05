@@ -43,6 +43,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             if (toAim.sqrMagnitude < 0.04f)
                 return;
 
+            player.SetAimDirection(toAim.normalized);
+
             Quaternion target = Quaternion.LookRotation(toAim);
             transform.rotation = Quaternion.RotateTowards(transform.rotation, target, turnSpeed * Time.deltaTime);
         }

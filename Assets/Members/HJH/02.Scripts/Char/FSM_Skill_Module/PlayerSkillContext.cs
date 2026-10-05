@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
@@ -33,12 +34,44 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
+        public Vector3 AimDirection
+        {
+            get
+            {
+                Vector3 direction = _player.AimDirection;
+                direction.y = 0f;
+                return direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.forward;
+            }
+        }
+
         public bool StatsReady => _player.Stats != null && _player.Stats.Tree != null;
 
         public void BeginActivation() => _hitThisActivation.Clear();
 
-        public void Dash(Vector3 direction, float speed, float duration) =>
-            _player.Mover.Dash(direction, speed, duration);
+        public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f) =>
+            _player.Mover.Dash(direction, speed, duration, endSlowdown);
+
+        public void SetSpinEffect(GameObject prefab, bool active, float radius)
+        {
+            SkillSpinEffect effect = _player.GetComponent<SkillSpinEffect>();
+            if (effect == null)
+            {
+                if (!active)
+                    return;
+
+                effect = _player.gameObject.AddComponent<SkillSpinEffect>();
+            }
+
+            if (active)
+                effect.Play(prefab, radius);
+            else
+                effect.Stop();
+        }
+
+        public void FlashRange(float radius, float duration) =>
+            AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, _player.transform.position + Vector3.up, radius, duration));
+
+        public void CancelDash() => _player.Mover.CancelDash();
 
         public bool TryRegisterHit(IDamageable target) => _hitThisActivation.Add(target);
 

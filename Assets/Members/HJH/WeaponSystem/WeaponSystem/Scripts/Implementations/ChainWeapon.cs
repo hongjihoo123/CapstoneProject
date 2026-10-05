@@ -61,7 +61,11 @@ namespace RobotWeapons
                 ChainWeaponData.ComboStep step = data.steps[activeStep];
                 stepTimer += dt;
 
-                if (stepTimer >= step.hitStart && stepTimer <= step.hitEnd)
+                bool inHitWindow = stepTimer >= step.hitStart && stepTimer <= step.hitEnd;
+                if (stepTimer <= step.hitEnd)
+                    ShowArea(step, inHitWindow);
+
+                if (inHitWindow)
                     CheckHits(step);
 
                 if (stepTimer >= step.duration)
@@ -113,6 +117,14 @@ namespace RobotWeapons
 
             if (resetCombo)
                 nextStep = 0;
+        }
+
+        private void ShowArea(ChainWeaponData.ComboStep step, bool inHitWindow)
+        {
+            Transform origin = owner.AimOrigin;
+            Vector3 center = origin.position + origin.rotation * step.hitCenter;
+            AttackAreaKind kind = inHitWindow ? AttackAreaKind.WeaponHit : AttackAreaKind.WeaponWindup;
+            AttackAreaBus.Raise(AttackArea.Box(kind, center, origin.rotation, step.hitSize, 0.08f));
         }
 
         private void CheckHits(ChainWeaponData.ComboStep step)

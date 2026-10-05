@@ -9,12 +9,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField] private bool allowsMove = true;
         [SerializeField] private bool allowsFire = true;
         [SerializeField] private float moveSpeedMultiplier = 1f;
+        [SerializeField] private bool cancelable;
 
         public float Cooldown => cooldown;
         public float Duration => duration;
         public bool AllowsMove => allowsMove;
         public bool AllowsFire => allowsFire;
         public float MoveSpeedMultiplier => moveSpeedMultiplier;
+        public bool Cancelable => cancelable;
 
         public virtual ISkillExecution Begin(ISkillContext context)
         {
@@ -25,5 +27,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public virtual void Execute(ISkillContext context) { }
 
         public virtual void OnAnimationHitEvent(ISkillContext context) { }
+
+        public virtual void DescribePreview(ISkillContext context, ISkillPreview preview) { }
     }
 }
