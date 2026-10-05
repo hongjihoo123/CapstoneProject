@@ -16,24 +16,17 @@ namespace Members.KYR._01_Scripts.Stats
             StatNode survival = Add(PlayerStatId.Survival, 0f, Root);
             Add(PlayerStatId.MaxHp, bases.MaxHp, survival);
             Add(PlayerStatId.Defense, bases.Defense, survival);
-            Add(PlayerStatId.MaxStamina, bases.MaxStamina, survival);
-            Add(PlayerStatId.StaminaRegen, bases.StaminaRegen, survival);
             Add(PlayerStatId.HealReceived, bases.HealReceived, survival);
 
             StatNode mobility = Add(PlayerStatId.Mobility, 0f, Root);
             Add(PlayerStatId.WalkSpeed, bases.WalkSpeed, mobility);
             Add(PlayerStatId.RunSpeed, bases.RunSpeed, mobility);
-            Add(PlayerStatId.CrouchSpeed, bases.CrouchSpeed, mobility);
-            Add(PlayerStatId.JumpHeight, bases.JumpHeight, mobility);
             Add(PlayerStatId.DashSpeed, bases.DashSpeed, mobility);
             Add(PlayerStatId.DashDuration, bases.DashDuration, mobility);
-            Add(PlayerStatId.AirControl, bases.AirControl, mobility);
 
             StatNode combat = Add(PlayerStatId.Combat, 0f, Root);
             Add(PlayerStatId.Damage, bases.Damage, combat);
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, combat);
-            Add(PlayerStatId.ReloadSpeed, bases.ReloadSpeed, combat);
-            Add(PlayerStatId.RecoilControl, bases.RecoilControl, combat);
             Add(PlayerStatId.WeakpointMultiplier, bases.WeakpointMultiplier, combat);
 
             StatNode skill = Add(PlayerStatId.Skill, 0f, Root);

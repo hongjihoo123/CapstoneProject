@@ -21,7 +21,6 @@ namespace Members.KYR._01_Scripts.FSM.Control
         protected void FreezeLocomotionAndWeapon()
         {
             Module.Player.MoveFsm.ForceIdle();
-            Module.Player.WeaponFsm.ForceIdle();
             Module.Player.Mover.SetPlanarInput(Vector2.zero, 0f);
         }
     }

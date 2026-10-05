@@ -32,18 +32,6 @@ namespace Members.KYR._01_Scripts.FSM.Core
             Current = next;
             Current.Enter();
         }
-        public void ChangeState(IState next)
-        {
-            if (next == null)
-                throw new ArgumentNullException(nameof(next));
-
-            if (ReferenceEquals(Current, next))
-                return;
-
-            Current?.Exit();
-            Current = next;
-            Current.Enter();
-        }
 
         public bool IsCurrent<T>() where T : IState
         {

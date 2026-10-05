@@ -1,8 +1,5 @@
-using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
-using Unity.Cinemachine;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
@@ -12,56 +9,17 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private WeaponData equippedWeaponData;
         [SerializeField] private WeaponHitbox weaponHitbox;
         [SerializeField] private Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox skillOverlapHitbox;
-        [SerializeField] private bool treatSecondaryAsAim = true;
-
-        [Header("??? ???")]
-        [SerializeField] private CinemachineImpulseSource impulseSource;
-        [SerializeField] private float gunShakeForce = 0.3f;
-        [SerializeField] private float energyBallShakeForce = 1f;
-
-        [Header("??? ?????")]
-        [SerializeField] private MuzzleFlash muzzleFlash;
-        [SerializeField] private TracerVisual tracerVisual;
-
-        [Header("???")]
-        [SerializeField] private float dutchSpringStrength = 400f;
-        [SerializeField] private float dutchDamping = 4f;
-        [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
-
-        [Header("????")]
-        [SerializeField] private Vector3 adsCameraLocalOffset = new Vector3(0f, 0f, 0.15f);
-        [SerializeField] private float aimFov = 50f;
-        [SerializeField] private float aimFovTransitionSpeed = 14f;
-
-        public event System.Action<string> OnWeaponFired;
-
-        private bool _isAiming;
-        private float _currentFov;
-        private float _hipFov;
-        private bool _fovInitialized;
 
         private IWeapon _weapon;
-        private bool _fsmWantsAim;
         private WeaponData _lastEquippedData;
-        private float _dutch;
-        private float _dutchVelocity;
-        private Quaternion _aimOriginBaseRotation;
-        private bool _aimOriginBaseCaptured;
-        private PlayerStatsModule _stats;
 
         public IWeapon Weapon => _weapon;
         public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
-        public bool CanStartReload =>
-     _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
-     && !(_weapon is GunDealerWeapon gunBursting && gunBursting.IsBursting);
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
-            _stats = owner.GetModule<PlayerStatsModule>();
 
-            // 캐릭터 선택 화면에서 고른 캐릭터의 무기가 있으면 우선 적용하고,
-            // 없으면(예: 게임 씬을 바로 열어서 테스트할 때) 인스펙터에 넣어둔 기본 무기를 쓴다.
             var selectedCharacter = CharacterSelectionContext.Selected;
             if (selectedCharacter != null && selectedCharacter.weaponData != null)
                 equippedWeaponData = selectedCharacter.weaponData;
@@ -82,12 +40,6 @@ namespace Members.KYR._01_Scripts.Modules
                 Equip(WeaponFactory.Create(equippedWeaponData));
         }
 
-        private void OnDestroy()
-        {
-            if (_weapon != null)
-                _weapon.OnAttackTriggered -= HandleAttackTriggered;
-        }
-
         public void ApplySelectedCharacter()
         {
             var selected = CharacterSelectionContext.Selected;
@@ -101,118 +53,19 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void Equip(IWeapon weapon)
         {
-            if (_weapon != null)
-                _weapon.OnAttackTriggered -= HandleAttackTriggered;
-
             _weapon?.Unequip();
             _weapon = weapon;
-            _fsmWantsAim = false;
 
             if (_weapon == null || _owner is not IWeaponOwner weaponOwner)
                 return;
 
             _weapon.Equip(weaponOwner);
-            _weapon.OnAttackTriggered += HandleAttackTriggered;
             weaponHitbox?.Init(_weapon);
         }
 
         public void Tick(float deltaTime)
         {
             _weapon?.Tick(deltaTime);
-            UpdateDutchRoll(deltaTime);
-            UpdateAimFov(deltaTime);
-            ApplyStatusEffectBuffs();
-        }
-
-        private void ApplyStatusEffectBuffs()
-        {
-            if (_weapon == null) return;
-
-            float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
-            float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
-
-            if (_weapon is GunDealerWeapon gunDealer)
-                gunDealer.AttackSpeedMultiplier = attackSpeed;
-
-            if (_weapon is WeaponBase weaponBase)
-            {
-                weaponBase.ReloadSpeedMultiplier = reloadSpeed;
-                weaponBase.DamageMultiplier = 1f;
-            }
-        }
-
-        public void TryFire(bool fireHeld, bool firePressed)
-        {
-            if (_weapon == null)
-                return;
-            if (_weapon.PrimaryIsHeld)
-            {
-                if (fireHeld)
-                    _weapon.PrimaryAttack();
-                return;
-            }
-            if (firePressed)
-                _weapon.PrimaryAttack();
-        }
-
-        private void UpdateDutchRoll(float deltaTime)
-        {
-            if (_owner is not IWeaponOwner weaponOwner) return;
-            Transform aimOrigin = weaponOwner.AimOrigin;
-            if (aimOrigin == null) return;
-
-            if (!_aimOriginBaseCaptured)
-            {
-                _aimOriginBaseRotation = aimOrigin.localRotation;
-                _aimOriginBaseCaptured = true;
-            }
-
-            _dutchVelocity += -_dutch * dutchSpringStrength * deltaTime;
-            _dutchVelocity *= Mathf.Clamp01(1f - dutchDamping * deltaTime);
-            _dutch += _dutchVelocity * deltaTime;
-
-            aimOrigin.localRotation = _aimOriginBaseRotation * Quaternion.Euler(0f, 0f, _dutch);
-        }
-
-        public void RequestReload()
-        {
-            _weapon?.Reload();
-        }
-
-        public void SetAiming(bool wantAim)
-        {
-            if (_fsmWantsAim == wantAim)
-                return;
-            _fsmWantsAim = wantAim;
-            _isAiming = wantAim;
-
-            if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
-            {
-                if (wantAim)
-                    player.Mover.SetCameraLocalPositionInstant(player.Mover.HipCameraLocalPosition + adsCameraLocalOffset);
-                else
-                    player.Mover.ResetCameraToHipInstant();
-            }
-
-            if (treatSecondaryAsAim)
-                _weapon?.SecondaryAction();
-        }
-
-        private void UpdateAimFov(float deltaTime)
-        {
-            if (_owner is not Members.KYR._01_Scripts.PlayerAgent player || player.CinemachineCamera == null)
-                return;
-
-            if (!_fovInitialized)
-            {
-                _hipFov = player.CinemachineCamera.Lens.FieldOfView;
-                _currentFov = _hipFov;
-                _fovInitialized = true;
-            }
-
-            float targetFov = _isAiming ? aimFov : _hipFov;
-            _currentFov = Mathf.Lerp(_currentFov, targetFov, deltaTime * aimFovTransitionSpeed);
-            player.CinemachineCamera.Lens.FieldOfView = _currentFov;
         }
 
         public void SetHitboxActive(bool active)
@@ -220,90 +73,15 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(active);
         }
 
-        // ??? ?????? ????? ????? ??? ???? ?? ?????
-        public void SetSkillHitCallback(Action<IDamageable, bool> onHit)
-        {
-            weaponHitbox?.SetOverrideHandler(onHit);
-        }
-
-        public void ClearSkillHitCallback()
-        {
-            weaponHitbox?.ClearOverrideHandler();
-        }
-
-        // ??????? ???? - ??????
-        public void Anim_SkillHitboxOn()
-        {
-            weaponHitbox?.SetActive(true);
-        }
-
-        public void Anim_SkillHitboxOff()
-        {
-            weaponHitbox?.SetActive(false);
-        }
-
-        // Animator?? ???? ??????????? ???? ?????? ?????
         public void TriggerSkillOverlapHit()
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
                 player.SkillFsm.Anim_SkillOverlapHit();
         }
-        public void BeginSkillHitWindow(Action<IDamageable, bool> onHit)
-        {
-            weaponHitbox?.SetOverrideHandler(onHit);
-            weaponHitbox?.SetActive(true);
-        }
 
-        public void EndSkillHitWindow()
-        {
-            weaponHitbox?.SetActive(false);
-            weaponHitbox?.ClearOverrideHandler();
-        }
-
-        public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f)
-        {
-            if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
-            {
-                float multiplier = (player.MoveFsm != null && player.MoveFsm.Capabilities.IsCrouching)
-                    ? crouchRecoilMultiplier
-                    : 1f;
-                float recoilControl = _stats != null && _stats.Tree != null
-                    ? Mathf.Clamp01(_stats.Get(PlayerStatId.RecoilControl))
-                    : 0f;
-                multiplier *= 1f - recoilControl;
-
-                player.Mover.ApplyRecoilPitch(pitchDelta * multiplier);
-                if (!Mathf.Approximately(yawDelta, 0f))
-                    player.Mover.ApplyRecoilYaw(yawDelta * multiplier);
-
-                dutchImpulse *= multiplier;
-            }
-            _dutchVelocity += dutchImpulse;
-        }
-
-        private void HandleAttackTriggered(string animId)
-        {
-            Debug.Log($"[???????] {animId} at {Time.frameCount}");
-            OnWeaponFired?.Invoke(animId);
-
-            switch (animId)
-            {
-                case "Laser_EnergyBall":
-                    float chargeRatio = (_weapon as LaserDealerWeapon)?.LastFireChargeRatio ?? 1f;
-                    impulseSource?.GenerateImpulseWithForce(energyBallShakeForce * chargeRatio);
-                    break;
-                case "Sniper_Fire":
-                    if (_weapon is SniperSawedOffWeapon sniperShot)
-                        tracerVisual?.Fire(sniperShot.LastShotStart, sniperShot.LastShotEnd);
-                    impulseSource?.GenerateImpulseWithForce(gunShakeForce);
-                    break;
-            }
-        }
         public void Anim_MuzzleFlash()
         {
             _weapon?.ExecuteHit();
-            muzzleFlash?.Play();
-            impulseSource?.GenerateImpulseWithForce(gunShakeForce);
         }
     }
 }

@@ -12,38 +12,39 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float lookSensitivity = 0.12f;
         [SerializeField] private float minPitch = -80f;
         [SerializeField] private float maxPitch = 80f;
-        [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private float acceleration = 18f;
-        
+
+        [Header("쿼터뷰")]
+        [SerializeField] private bool quarterView = true;
+        [SerializeField] private float turnSpeed = 720f;
+        [SerializeField] private Vector3 quarterCameraOffset = new Vector3(0f, 14f, -10f);
+        [SerializeField] private Vector3 quarterCameraEuler = new Vector3(45f, 0f, 0f);
+        [SerializeField] private float quarterCameraFollow = 12f;
+        [SerializeField] private float dashSpeed = 18f;
+        [SerializeField] private float dashDuration = 0.18f;
+        [SerializeField] private float dashCooldown = 0.45f;
+
         [Header("스탯 풀백 모듈 없을 때만")]
         [SerializeField] private float walkSpeed = 4.5f;
         [SerializeField] private float runSpeed = 7.5f;
-        [SerializeField] private float crouchSpeed = 2.2f;
-        [SerializeField] private float jumpHeight = 1.2f;
-        [SerializeField] private float airControl = 0.7f;
-        
 
         private float _targetPlanarSpeed;
 
         private float _verticalVelocity;
-        private float _standingHeight;
-        private Vector3 _standingCenter;
         private float _pitch;
         private Vector2 _planarInput;
         private float _planarSpeed;
-        private Vector3 _hipCameraLocalPosition;
-        private bool _hipCameraPositionCaptured;
 
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;
+        private float _dashCooldownRemaining;
         private PlayerStatsModule _stats;
+
+        public bool IsQuarterView => quarterView;
 
         public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
         public float RunSpeed => GetStat(PlayerStatId.RunSpeed, runSpeed);
-        public float CrouchSpeed => GetStat(PlayerStatId.CrouchSpeed, crouchSpeed);
-        public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
-        public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public bool IsDashing => _dashTimeRemaining > 0f;
@@ -58,14 +59,8 @@ namespace Members.KYR._01_Scripts.Modules
 
             Debug.Assert(characterController != null, $"{owner.name}에는 CharacterController가 필요합니다.");
 
-            _standingHeight = characterController.height;
-            _standingCenter = characterController.center;
-
-            if (cameraPivot != null)
-            {
-                _hipCameraLocalPosition = cameraPivot.localPosition;
-                _hipCameraPositionCaptured = true;
-            }
+            if (cameraPivot != null && quarterView && cameraPivot.parent != null)
+                cameraPivot.SetParent(null, true);
         }
 
         public void SetOwnerSpeedMultiplier(float multiplier)
@@ -101,60 +96,9 @@ namespace Members.KYR._01_Scripts.Modules
             Physics.SyncTransforms();
         }
 
-        public void Jump()
-        {
-            _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * gravity);
-        }
-
-        public void SetCrouching(bool crouch)
-        {
-            if (characterController == null)
-                return;
-
-            float targetHeight = crouch ? crouchHeight : _standingHeight;
-            if (Mathf.Approximately(characterController.height, targetHeight))
-                return;
-
-            characterController.height = targetHeight;
-            float heightDelta = _standingHeight - targetHeight;
-            characterController.center = crouch
-                ? _standingCenter - new Vector3(0f, heightDelta * 0.5f, 0f)
-                : _standingCenter;
-        }
-
-        public void ApplyRecoilPitch(float pitchDelta)
-        {
-            if (cameraPivot == null)
-                return;
-
-            _pitch = Mathf.Clamp(_pitch - pitchDelta, minPitch, maxPitch);
-            cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
-        }
-
-        public void ApplyRecoilYaw(float yawDelta)
-        {
-            _owner.transform.Rotate(0f, yawDelta, 0f);
-        }
-
-        public Vector3 HipCameraLocalPosition => _hipCameraPositionCaptured ? _hipCameraLocalPosition : Vector3.zero;
-
-        public void SetCameraLocalPositionInstant(Vector3 localPosition)
-        {
-            if (cameraPivot == null)
-                return;
-            cameraPivot.localPosition = localPosition;
-        }
-
-        public void ResetCameraToHipInstant()
-        {
-            if (cameraPivot == null || !_hipCameraPositionCaptured)
-                return;
-            cameraPivot.localPosition = _hipCameraLocalPosition;
-        }
-
         public void TickLook(Vector2 lookDelta)
         {
-            if (cameraPivot == null)
+            if (quarterView || cameraPivot == null)
                 return;
 
             Transform root = _owner.transform;
@@ -169,7 +113,10 @@ namespace Members.KYR._01_Scripts.Modules
             if (characterController == null)
                 return;
 
-            _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime); // 추가
+            if (_dashCooldownRemaining > 0f)
+                _dashCooldownRemaining -= deltaTime;
+
+            _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime);
 
             if (IsGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;
@@ -181,6 +128,13 @@ namespace Members.KYR._01_Scripts.Modules
             {
                 planar = _dashDirection * _dashSpeed;
                 _dashTimeRemaining -= deltaTime;
+                FaceDirection(_dashDirection, deltaTime);
+            }
+            else if (quarterView)
+            {
+                planar = GetCameraPlanarDirection(_planarInput) * _planarSpeed;
+                if (planar.sqrMagnitude > 0.0001f)
+                    FaceDirection(planar, deltaTime);
             }
             else
             {
@@ -190,6 +144,59 @@ namespace Members.KYR._01_Scripts.Modules
 
             Vector3 motion = planar + Vector3.up * _verticalVelocity;
             characterController.Move(motion * deltaTime);
+
+            TickQuarterCamera(deltaTime);
+        }
+
+        public void TryDash(Vector2 moveInput)
+        {
+            if (!quarterView || _dashTimeRemaining > 0f || _dashCooldownRemaining > 0f)
+                return;
+
+            Vector3 direction = GetCameraPlanarDirection(moveInput);
+            Dash(direction, dashSpeed, dashDuration);
+            _dashCooldownRemaining = dashCooldown;
+        }
+
+        public Vector3 GetCameraPlanarDirection(Vector2 moveInput)
+        {
+            Transform basis = cameraPivot != null ? cameraPivot : _owner.transform;
+            Vector3 forward = Vector3.ProjectOnPlane(basis.forward, Vector3.up);
+            Vector3 right = Vector3.ProjectOnPlane(basis.right, Vector3.up);
+            if (forward.sqrMagnitude < 0.0001f)
+                forward = Vector3.forward;
+            if (right.sqrMagnitude < 0.0001f)
+                right = Vector3.right;
+
+            Vector3 direction = right.normalized * moveInput.x + forward.normalized * moveInput.y;
+            if (direction.sqrMagnitude < 0.0001f)
+                return Vector3.ProjectOnPlane(_owner.transform.forward, Vector3.up).normalized;
+
+            return direction.normalized;
+        }
+
+        private void FaceDirection(Vector3 direction, float deltaTime)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+
+            Quaternion target = Quaternion.LookRotation(direction.normalized, Vector3.up);
+            _owner.transform.rotation = Quaternion.RotateTowards(
+                _owner.transform.rotation,
+                target,
+                turnSpeed * deltaTime);
+        }
+
+        private void TickQuarterCamera(float deltaTime)
+        {
+            if (!quarterView || cameraPivot == null)
+                return;
+
+            Vector3 targetPosition = _owner.transform.position + quarterCameraOffset;
+            float t = 1f - Mathf.Exp(-quarterCameraFollow * deltaTime);
+            cameraPivot.position = Vector3.Lerp(cameraPivot.position, targetPosition, t);
+            cameraPivot.rotation = Quaternion.Euler(quarterCameraEuler);
         }
 
         public void Dash(Vector3 direction, float speed, float duration)

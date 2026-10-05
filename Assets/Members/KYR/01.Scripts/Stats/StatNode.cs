@@ -17,7 +17,6 @@ namespace Members.KYR._01_Scripts.Stats
         public PlayerStatId Id { get; }
         public float BaseValue { get; set; }
         public StatNode Parent { get; private set; }
-        public IReadOnlyList<StatNode> Children => _children;
 
         public StatNode(PlayerStatId id, float baseValue)
         {
