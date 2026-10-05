@@ -1,7 +1,6 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts.FSM.Core;
 using UnityEngine;
-using UnityEngine.AdaptivePerformance;
 
 namespace Members.KYR._01_Scripts.FSM.Weapon
 {
@@ -62,7 +61,7 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
                 return;
             }
 
-            bool wantAim = input.AimHeld && Player.MoveFsm.Capabilities.CanAim;
+            bool wantAim = input.AimHeld && Player.MoveFsm.Capabilities.CanAim && !Player.SkillFsm.IsAimingSkill;
 
             if (wantAim)
             {
@@ -75,7 +74,8 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
 
         private void TryFire()
         {
-            if (!Capabilities.AllowsFire || !Player.MoveFsm.Capabilities.CanFire || !Player.SkillFsm.Capabilities.AllowsFire)
+            if (!Capabilities.AllowsFire || !Player.MoveFsm.Capabilities.CanFire || !Player.SkillFsm.Capabilities.AllowsFire
+                || Player.SkillFsm.IsAimingSkill)
                 return;
 
             Player.Weapon.TryFire(Player.Input.FireHeld, Player.Input.FirePressed);

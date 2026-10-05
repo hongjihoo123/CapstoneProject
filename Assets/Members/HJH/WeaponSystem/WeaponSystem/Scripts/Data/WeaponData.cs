@@ -11,5 +11,6 @@ namespace RobotWeapons
         //public float cooldown = 0.5f;
         public float resourceMax = 100f;
         public float reloadDuration = 1.5f;
+        public float attackShakeForce = 0.3f;
     }
 }

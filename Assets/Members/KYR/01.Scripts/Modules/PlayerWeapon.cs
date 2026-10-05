@@ -4,7 +4,6 @@ using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
-using Assets.Members.HJH._02.Scripts.Char;
 
 namespace Members.KYR._01_Scripts.Modules
 {
@@ -15,26 +14,21 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox skillOverlapHitbox;
         [SerializeField] private bool treatSecondaryAsAim = true;
 
-        [Header("??? ???")]
         [SerializeField] private CinemachineImpulseSource impulseSource;
         [SerializeField] private float gunShakeForce = 0.3f;
-        [SerializeField] private float energyBallShakeForce = 1f;
 
-        [Header("??? ?????")]
         [SerializeField] private MuzzleFlash muzzleFlash;
         [SerializeField] private TracerVisual tracerVisual;
 
-        [Header("???")]
         [SerializeField] private float dutchSpringStrength = 400f;
         [SerializeField] private float dutchDamping = 4f;
         [SerializeField, Range(0f, 1f)] private float crouchRecoilMultiplier = 0.5f;
 
-        [Header("????")]
         [SerializeField] private Vector3 adsCameraLocalOffset = new Vector3(0f, 0f, 0.15f);
         [SerializeField] private float aimFov = 50f;
         [SerializeField] private float aimFovTransitionSpeed = 14f;
 
-        public event System.Action<string> OnWeaponFired;
+        public event System.Action<AttackFeedback> OnWeaponFired;
 
         private bool _isAiming;
         private float _currentFov;
@@ -53,19 +47,13 @@ namespace Members.KYR._01_Scripts.Modules
         public IWeapon Weapon => _weapon;
         public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
         public bool CanStartReload =>
-     _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
-     && !(_weapon is GunDealerWeapon gunBursting && gunBursting.IsBursting);
+            _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
+            && !(_weapon is IBurstWeapon { IsBursting: true });
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
             _stats = owner.GetModule<PlayerStatsModule>();
-
-            // 캐릭터 선택 화면에서 고른 캐릭터의 무기가 있으면 우선 적용하고,
-            // 없으면(예: 게임 씬을 바로 열어서 테스트할 때) 인스펙터에 넣어둔 기본 무기를 쓴다.
-            var selectedCharacter = CharacterSelectionContext.Selected;
-            if (selectedCharacter != null && selectedCharacter.weaponData != null)
-                equippedWeaponData = selectedCharacter.weaponData;
 
             _lastEquippedData = equippedWeaponData;
             if (equippedWeaponData == null)
@@ -89,15 +77,11 @@ namespace Members.KYR._01_Scripts.Modules
                 _weapon.OnAttackTriggered -= HandleAttackTriggered;
         }
 
-        public void ApplySelectedCharacter()
+        public void EquipData(WeaponData data)
         {
-            var selected = CharacterSelectionContext.Selected;
-            if (selected == null || selected.weaponData == null)
-                return;
-
-            equippedWeaponData = selected.weaponData;
-            _lastEquippedData = equippedWeaponData;
-            Equip(WeaponFactory.Create(equippedWeaponData));
+            equippedWeaponData = data;
+            _lastEquippedData = data;
+            Equip(data != null ? WeaponFactory.Create(data) : null);
         }
 
         public void Equip(IWeapon weapon)
@@ -131,24 +115,12 @@ namespace Members.KYR._01_Scripts.Modules
 
             float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
             float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
-            float damage = 1f;
 
-            var status = _owner?.GetModule<StatusEffectModule>();
-            if (status != null)
-            {
-                attackSpeed *= status.Get(BuffType.AttackSpeed);
-                reloadSpeed *= status.Get(BuffType.ReloadSpeed);
-                damage = status.Get(BuffType.Damage);
-            }
+            if (_weapon is IAttackSpeedScalable attackSpeedScalable)
+                attackSpeedScalable.AttackSpeedMultiplier = attackSpeed;
 
-            if (_weapon is GunDealerWeapon gunDealer)
-                gunDealer.AttackSpeedMultiplier = attackSpeed;
-
-            if (_weapon is WeaponBase weaponBase)
-            {
-                weaponBase.ReloadSpeedMultiplier = reloadSpeed;
-                weaponBase.DamageMultiplier = damage;
-            }
+            if (_weapon is IReloadSpeedScalable reloadSpeedScalable)
+                reloadSpeedScalable.ReloadSpeedMultiplier = reloadSpeed;
         }
 
         public void TryFire(bool fireHeld, bool firePressed)
@@ -230,7 +202,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(active);
         }
 
-        // ??? ?????? ????? ????? ??? ???? ?? ?????
         public void SetSkillHitCallback(Action<IDamageable, bool> onHit)
         {
             weaponHitbox?.SetOverrideHandler(onHit);
@@ -241,7 +212,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.ClearOverrideHandler();
         }
 
-        // ??????? ???? - ??????
         public void Anim_SkillHitboxOn()
         {
             weaponHitbox?.SetActive(true);
@@ -252,7 +222,6 @@ namespace Members.KYR._01_Scripts.Modules
             weaponHitbox?.SetActive(false);
         }
 
-        // Animator?? ???? ??????????? ???? ?????? ?????
         public void TriggerSkillOverlapHit()
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
@@ -293,22 +262,16 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
-            Debug.Log($"[???????] {animId} at {Time.frameCount}");
-            OnWeaponFired?.Invoke(animId);
+            AttackFeedback feedback = (_weapon as IAttackFeedbackSource)?.DescribeAttack(animId) ?? default;
 
-            switch (animId)
-            {
-                case "Laser_EnergyBall":
-                    float chargeRatio = (_weapon as LaserDealerWeapon)?.LastFireChargeRatio ?? 1f;
-                    impulseSource?.GenerateImpulseWithForce(energyBallShakeForce * chargeRatio);
-                    break;
-                case "Sniper_Fire":
-                    if (_weapon is SniperSawedOffWeapon sniperShot)
-                        tracerVisual?.Fire(sniperShot.LastShotStart, sniperShot.LastShotEnd);
-                    impulseSource?.GenerateImpulseWithForce(gunShakeForce);
-                    break;
-            }
+            if (feedback.ShakeForce > 0f)
+                impulseSource?.GenerateImpulseWithForce(feedback.ShakeForce);
+            if (feedback.HasTracer)
+                tracerVisual?.Fire(feedback.TracerStart, feedback.TracerEnd);
+
+            OnWeaponFired?.Invoke(feedback);
         }
+
         public void Anim_MuzzleFlash()
         {
             _weapon?.ExecuteHit();

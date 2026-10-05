@@ -1,9 +1,8 @@
-using RobotWeapons;
 using UnityEngine;
-using static UnityEngine.UI.GridLayoutGroup;
+
 namespace RobotWeapons
 {
-    public class GunDealerWeapon : WeaponBase
+    public class GunDealerWeapon : WeaponBase, IAmmoDisplay, IAttackFeedbackSource, IBurstWeapon, IAttackSpeedScalable, IUltimateWeapon
     {
         private readonly GunDealerData data;
         private float fireCooldown;
@@ -12,25 +11,30 @@ namespace RobotWeapons
 
         private int burstShotsRemaining;
         private float burstSafetyTimer;
-
-        public float AttackSpeedMultiplier = 1f;
-        public bool IsBursting => burstShotsRemaining > 0;
-
-        [Header("±Ã (¿¬»ç ¸ğµå)")]
-        public float ultimateFireRate = 10f;
         private float ultimateTimer;
+
+        public float AttackSpeedMultiplier { get; set; } = 1f;
+        public bool IsBursting => burstShotsRemaining > 0;
         public bool IsUltimateActive => ultimateTimer > 0f;
+
+        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto || IsUltimateActive;
+
+        public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
 
         public void ActivateUltimate(float duration)
         {
             ultimateTimer = duration;
-            burstShotsRemaining = 0; // ÁøÇà ÁßÀÌ´ø Á¡»ç Ãë¼ÒÇÏ°í Áï½Ã ¿¬»ç·Î ÀüÈ¯
+            burstShotsRemaining = 0;
         }
 
-        // Auto°Å³ª ±Ã È°¼º ÁßÀÌ¸é °è¼Ó ¹ß»ç
-        public override bool PrimaryIsHeld => data.fireMode == GunDealerData.FireMode.Auto || IsUltimateActive;
+        public bool TryGetAmmoText(out string text)
+        {
+            text = AmmoText.ForResource(this);
+            return true;
+        }
 
-        public GunDealerWeapon(GunDealerData d) : base(d) { data = d; currentSpread = d.baseSpreadAngle; }
+        public AttackFeedback DescribeAttack(string animId) =>
+            animId == "Gun_Fire" ? new AttackFeedback { IsFire = true } : default;
 
         public override void Tick(float dt)
         {
@@ -62,11 +66,9 @@ namespace RobotWeapons
             if (fireCooldown > 0f || owner == null || data.projectilePrefab == null) return;
             if (burstShotsRemaining > 0) return;
 
-            fireCooldown = (1f / data.fireRate) / AttackSpeedMultiplier;
-
             fireCooldown = (1f / (IsUltimateActive ? data.ultimateFireRate : data.fireRate)) / AttackSpeedMultiplier;
 
-            // ±Ã È°¼º Áß¿£ Burstµç ¹¹µç ÀüºÎ ´Ü¹ß ¿¬»ç·Î Ã³¸®
+            // ê¶ê·¹ê¸° ì¤‘ì—ëŠ” Burst ëª¨ë“œì—¬ë„ ì ì‚¬ ì—†ì´ ì—°ì‚¬ë¡œ ì²˜ë¦¬
             if (!IsUltimateActive && data.fireMode == GunDealerData.FireMode.Burst)
             {
                 burstShotsRemaining = data.burstCount;

@@ -1,8 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System;
+using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
@@ -20,13 +17,43 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
     {
         [SerializeField] private BuffEntry[] buffs;
 
-        public override void Execute(SkillStateModule owner)
+        public override void Execute(ISkillContext context)
         {
-            var status = owner.Player.GetModule<StatusEffectModule>();
-            if (status == null) return;
+            if (!context.StatsReady) return;
 
-            foreach (var buff in buffs)
-                status.Apply(buff.type, buff.multiplier, buff.duration);
+            context.RemoveStatModifiers(this);
+
+            foreach (BuffEntry buff in buffs)
+            {
+                if (!TryMap(buff.type, out PlayerStatId id))
+                    continue;
+
+                context.AddStatModifier(
+                    id,
+                    new StatModifier(this, StatModifierType.PercentAdd, buff.multiplier - 1f, buff.duration));
+            }
+        }
+
+        public static bool TryMap(BuffType type, out PlayerStatId id)
+        {
+            switch (type)
+            {
+                case BuffType.AttackSpeed:
+                    id = PlayerStatId.AttackSpeed;
+                    return true;
+                case BuffType.Damage:
+                    id = PlayerStatId.Damage;
+                    return true;
+                case BuffType.ReloadSpeed:
+                    id = PlayerStatId.ReloadSpeed;
+                    return true;
+                case BuffType.MoveSpeed:
+                    id = PlayerStatId.Mobility;
+                    return true;
+                default:
+                    id = default;
+                    return false;
+            }
         }
     }
 }

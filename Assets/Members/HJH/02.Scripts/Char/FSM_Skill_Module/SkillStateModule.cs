@@ -1,133 +1,216 @@
+using System;
+using System.Collections.Generic;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.FSM.Core;
-using System.Collections.Generic;
+using Members.KYR._01_Scripts.Modules;
+using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    public class SkillStateModule : Module, IAfterInitModule
+    public class SkillStateModule : Module, IAfterInitModule, ISkillHost
     {
+        [Serializable]
+        public struct SlotBinding
+        {
+            public SkillSlotId slot;
+            public SkillData data;
+        }
+
         private static readonly AllowAllSkillFallback Fallback = new();
 
-        [Header("ƒ≥∏Ø≈Õ∫∞ Ω∫≈≥/∆–Ω√∫Í µ•¿Ã≈Õ")]
-        [SerializeField] private SkillData qSkillData;
-        [SerializeField] private SkillData eSkillData;
-        [SerializeField] private SkillData xSkillData;
+        [SerializeField] private WeaponKitData kit;
+        [SerializeField] private SlotBinding[] initialSkills;
         [SerializeField] private PassiveData passiveData;
+        [SerializeField] private LayerMask skillTargetMask = ~0;
 
-        private GenericSkillState _qSkill;
-        private GenericSkillState _eSkill;
-        private GenericSkillState _xSkill;
-
+        private readonly Dictionary<SkillSlotId, GenericSkillState> _slots = new();
+        private PlayerSkillContext _context;
         private IdleSkillState _idleSkill;
+        private SkillSlotId? _aimingSlot;
 
-        private readonly HashSet<RobotWeapons.IDamageable> _hitThisActivation = new();
+        public bool IsAimingSkill => _aimingSlot != null;
+        public SkillSlotId? AimingSlot => _aimingSlot;
 
         public PlayerAgent Player { get; private set; }
         public StateMachine Machine { get; private set; }
+        public ISkillContext Context => _context;
         public ISkillCapabilities Capabilities => Machine?.Current as ISkillCapabilities ?? Fallback;
 
-        public int AnimBlendIndex
+        public int IdleBlendIndex => SkillSlots.Count;
+        public int AnimBlendIndex => Machine?.Current is GenericSkillState active ? (int)active.Slot : IdleBlendIndex;
+
+        public float CooldownReduction
         {
             get
             {
-                var current = Machine?.Current;
-                if (current == _qSkill) return 0;
-                if (current == _eSkill) return 1;
-                if (current == _xSkill) return 2;
-                return 3;
+                PlayerStatsModule stats = Player != null ? Player.Stats : null;
+                return stats != null && stats.Tree != null
+                    ? Mathf.Clamp01(stats.Get(PlayerStatId.SkillCooldownReduction))
+                    : 0f;
             }
         }
+
+        public event Action<SkillUsedInfo> SkillUsed;
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
             Player = owner as PlayerAgent;
-            Debug.Assert(Player != null, $"{owner.name}¿« SkillStateModule¿∫ PlayerAgent æ∆∑°ø©æﬂ «’¥œ¥Ÿ.");
+            Debug.Assert(Player != null, $"{owner.name}Ïùò SkillStateModuleÏùÄ PlayerAgent ÏïÑÎûòÏóêÏÑúÎßå ÏÇ¨Ïö©Ìï† Ïàò ÏûàÏäµÎãàÎã§.");
+            _context = new PlayerSkillContext(Player, skillTargetMask);
         }
 
         public void AfterInitalize()
         {
-            // ƒ≥∏Ø≈Õ º±≈√ »≠∏Èø°º≠ ∞Ì∏• ƒ≥∏Ø≈Õ¿« Ω∫≈≥/∆–Ω√∫Í∞° ¿÷¿∏∏È øÏº± ¿˚øÎ«œ∞Ì,
-            // æ¯¿∏∏È(øπ: ∞‘¿” æ¿¿ª πŸ∑Œ Ω««‡«ÿº≠ ≈◊Ω∫∆Æ«“ ∂ß) ¿ŒΩ∫∆Â≈Õø° ¡ˆ¡§µ» ±‚∫ª∞™¿ª ªÁøÎ«—¥Ÿ.
-            var selectedCharacter = CharacterSelectionContext.Selected;
-            if (selectedCharacter != null)
-            {
-                if (selectedCharacter.qSkillData != null) qSkillData = selectedCharacter.qSkillData;
-                if (selectedCharacter.eSkillData != null) eSkillData = selectedCharacter.eSkillData;
-                if (selectedCharacter.xSkillData != null) xSkillData = selectedCharacter.xSkillData;
-                if (selectedCharacter.passiveData != null) passiveData = selectedCharacter.passiveData;
-            }
-
             Machine = new StateMachine();
             _idleSkill = new IdleSkillState(this);
-
-            // Ω∫≈≥ µ•¿Ã≈Õ∞° æ∆¡˜ æ¯¥¬(¡¶¿€ ¡ﬂ¿Œ) ƒ≥∏Ø≈Õ¥¬ «ÿ¥Á Ω∫≈≥∏∏ ∫Ò»∞º∫»≠«œ∞Ì ≥—æÓ∞£¥Ÿ - ≈©∑°Ω√ πÊ¡ˆ
-            if (qSkillData != null) _qSkill = new GenericSkillState(this, qSkillData);
-            else Debug.LogWarning($"{name}¿« SkillStateModuleø° Q SkillData∞° ∫ÒæÓ¿÷Ω¿¥œ¥Ÿ. (Q Ω∫≈≥ ∫Ò»∞º∫»≠)");
-
-            if (eSkillData != null) _eSkill = new GenericSkillState(this, eSkillData);
-            else Debug.LogWarning($"{name}¿« SkillStateModuleø° E SkillData∞° ∫ÒæÓ¿÷Ω¿¥œ¥Ÿ. (E Ω∫≈≥ ∫Ò»∞º∫»≠)");
-
-            if (xSkillData != null) _xSkill = new GenericSkillState(this, xSkillData);
-            else Debug.LogWarning($"{name}¿« SkillStateModuleø° X SkillData∞° ∫ÒæÓ¿÷Ω¿¥œ¥Ÿ. (X Ω∫≈≥ ∫Ò»∞º∫»≠)");
-
             Machine.Register(_idleSkill);
+
+            if (kit != null)
+                EquipKit(kit);
+
+            if (initialSkills != null)
+            {
+                foreach (SlotBinding binding in initialSkills)
+                    Equip(binding.slot, binding.data);
+            }
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (!SkillSlots.IsFree(slot) && !_slots.ContainsKey(slot))
+                    Debug.LogWarning($"{name}Ïùò SkillStateModuleÏóê {slot} Ïä§ÌÇ¨Ïù¥ ÎπÑÏñ¥ÏûàÏäµÎãàÎã§.");
+            }
+
             Machine.ChangeState<IdleSkillState>();
         }
 
-        public void Tick(float deltaTime)
+        public void EquipKit(WeaponKitData newKit)
         {
-            Machine.Tick(deltaTime);
+            kit = newKit;
+            passiveData = newKit != null ? newKit.passive : null;
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (!SkillSlots.IsFree(slot))
+                    Equip(slot, newKit != null ? newKit.GetSkill(slot) : null);
+            }
         }
 
-        public void ApplySelectedCharacter()
+        public void Equip(SkillSlotId slot, SkillData data)
         {
-            if (Machine != null)
+            if (_aimingSlot == slot)
+                CancelAim();
+
+            if (_slots.TryGetValue(slot, out GenericSkillState previous) && Machine != null && ReferenceEquals(Machine.Current, previous))
                 ForceIdle();
-            AfterInitalize();
+
+            if (data == null)
+                _slots.Remove(slot);
+            else
+                _slots[slot] = new GenericSkillState(this, slot, data);
         }
 
-        public void ForceIdle()
+        public SkillData GetSkill(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.Data : null;
+
+        public float GetCooldownRemaining(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.CooldownRemaining : 0f;
+
+        public void Tick(float deltaTime) => Machine.Tick(deltaTime);
+
+        public void ForceIdle() => Machine.ChangeState<IdleSkillState>();
+
+        public void ResolveInput() => ResolveInput(Player.Input);
+
+        public void ResolveInput(ISkillInputSource input)
         {
+            if (Machine.Current is GenericSkillState running && !running.IsFinished)
+            {
+                if (running.Data.Cancelable && ShouldCancel(running, input))
+                    Machine.ChangeState<IdleSkillState>();
+                return;
+            }
+
             Machine.ChangeState<IdleSkillState>();
+
+            if (_aimingSlot == null)
+                TryBeginAim(input);
+
+            if (_aimingSlot == null)
+                return;
+
+            SkillSlotId slot = _aimingSlot.Value;
+            if (input.WasCancelPressed())
+            {
+                CancelAim();
+                return;
+            }
+
+            if (input.IsSkillHeld(slot) && !input.WasSkillReleased(slot))
+                return;
+
+            CancelAim();
+            if (_slots.TryGetValue(slot, out GenericSkillState state) && state.IsReady)
+            {
+                Machine.ChangeState(state);
+                SkillUsed?.Invoke(new SkillUsedInfo(slot, state.Data));
+            }
         }
 
-        public void ResetHitTracking() => _hitThisActivation.Clear();
+        public void CancelAim() => _aimingSlot = null;
 
-        // ¿ÃπÃ ∏¬¿∫ ¥ÎªÛ µ•πÃ¡ˆ Ω∫≈µ
-        public bool TryRegisterHit(RobotWeapons.IDamageable target) => _hitThisActivation.Add(target);
+        private bool ShouldCancel(GenericSkillState running, ISkillInputSource input)
+        {
+            if (input.WasJumpPressed() || input.WasSkillPressed(running.Slot))
+                return true;
 
-        // æ÷¥œ∏ﬁ¿Ãº« ¿Ã∫•∆Æø°º≠ ¡˜¡¢ »£√‚«œ¥¬ øÎµµ
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (slot != running.Slot && input.WasSkillPressed(slot) && _slots.TryGetValue(slot, out GenericSkillState other) && other.IsReady)
+                    return true;
+            }
+
+            return false;
+        }
+
+        public void DescribeAimPreview(ISkillPreview preview)
+        {
+            if (_aimingSlot != null && _slots.TryGetValue(_aimingSlot.Value, out GenericSkillState state))
+                state.Data.DescribePreview(_context, preview);
+        }
+
+        private void TryBeginAim(ISkillInputSource input)
+        {
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (!input.WasSkillPressed(slot) || !_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
+                    continue;
+
+                _aimingSlot = slot;
+                return;
+            }
+        }
+
+        public void Anim_SkillHitBegin() => SendAnimationEvent(SkillAnimationEvent.HitBegin);
+
+        public void Anim_SkillHitEnd() => SendAnimationEvent(SkillAnimationEvent.HitEnd);
+
+        private void SendAnimationEvent(SkillAnimationEvent animationEvent)
+        {
+            if (Machine.Current is GenericSkillState state)
+                state.SendAnimationEvent(animationEvent);
+        }
+
         public void Anim_SkillOverlapHit()
         {
             if (Machine.Current is SkillStateBase state)
                 state.OnAnimationHitEvent();
         }
 
-        public void ResolveInput()
-        {
-            if (Machine.Current is SkillStateBase skillState && !skillState.IsFinished)
-            {
-                return;
-            }
+        public void NotifyEnemyKilled() => passiveData?.OnEnemyKilled(_context);
 
-            PlayerInputState input = Player.Input;
+        void ISkillHost.OnSkillEntered() => _context.BeginActivation();
 
-            if (_qSkill != null && input.QPressed && _qSkill.IsReady) { Machine.ChangeState(_qSkill); return; }
-            if (_eSkill != null && input.EPressed && _eSkill.IsReady) { Machine.ChangeState(_eSkill); return; }
-            if (_xSkill != null && input.XPressed && _xSkill.IsReady) { Machine.ChangeState(_xSkill); return; }
-
-            if (!Machine.IsCurrent<IdleSkillState>())
-                Machine.ChangeState<IdleSkillState>();
-        }
-
-        public void NotifyEnemyKilled()
-        {
-            Debug.Log($"[∆–Ω√∫Í] ≈≥ ¿Ã∫•∆Æ ºˆΩ≈, passiveData null? {passiveData == null}");
-            passiveData?.OnEnemyKilled(this);
-        }
         private sealed class AllowAllSkillFallback : ISkillCapabilities
         {
             public bool AllowsMove => true;

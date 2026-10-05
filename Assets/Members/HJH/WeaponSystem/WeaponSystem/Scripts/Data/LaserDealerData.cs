@@ -23,5 +23,6 @@ namespace RobotWeapons
         public float energyBallSpeed = 20f;
         public float energyBallAimRange = 40f;
         public float energyBallCooldown = 1.5f;
+        public float energyBallShakeForce = 1f;
     }
 }

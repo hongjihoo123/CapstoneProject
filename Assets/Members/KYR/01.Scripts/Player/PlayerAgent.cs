@@ -2,13 +2,13 @@ using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
+using Assets.Members.HJH._02.Scripts.Char;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
 using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
-using Unity.Netcode;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -19,6 +19,7 @@ namespace Members.KYR._01_Scripts
     {
 
         [SerializeField] private PlayerInputSO playerInput;
+        [SerializeField] private WeaponKitData kit;
 
         [Header("총 관련")]
         [SerializeField] private Transform aimOrigin;
@@ -26,7 +27,6 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private Text ammoText;
         [Header("반동 관련")]
         [SerializeField] private CinemachineCamera cinemachineCamera;
-        private float currentFOV;
 
         [SerializeField] private bool lockCursor = true;
 
@@ -48,8 +48,6 @@ namespace Members.KYR._01_Scripts
         [SerializeField] private float aimEnterPulseDuration = 0.15f;
         [SerializeField] private float firePulseDuration = 0.15f;
 
-        private int _killCount;
-
         private bool wasAimingLastFrame;
         private float aimEnterPulseTimer;
         private float firePulseTimer;
@@ -66,19 +64,16 @@ namespace Members.KYR._01_Scripts
         public MoveStateModule MoveFsm { get; private set; }
         public WeaponStateModule WeaponFsm { get; private set; }
         public SkillStateModule SkillFsm { get; private set; }
+        public StatusEffectModule StatusEffects { get; private set; }
 
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
         public override bool IsAlive => Health != null && !Health.IsDead;
         public CinemachineCamera CinemachineCamera => cinemachineCamera;
 
-        private NetworkObject networkObject;
-
-        public event System.Action<bool> OnAimStateChanged;
         protected override void InitializeModules()
         {
             base.InitializeModules();
-            networkObject = GetComponent<NetworkObject>();
             AimUtility.IgnoreLayerMask = LayerMask.GetMask("Player");
 
             Mover = GetModule<PlayerMover>();
@@ -89,6 +84,7 @@ namespace Members.KYR._01_Scripts
             MoveFsm = GetModule<MoveStateModule>();
             WeaponFsm = GetModule<WeaponStateModule>();
             SkillFsm = GetModule<SkillStateModule>();
+            StatusEffects = GetModule<StatusEffectModule>();
 
             Debug.Assert(playerInput != null, $"{name}에는 PlayerInputSO가 필요합니다.");
             Debug.Assert(Mover != null, $"{name}에는 PlayerMover 모듈이 필요합니다.");
@@ -102,6 +98,26 @@ namespace Members.KYR._01_Scripts
 
             if (Weapon != null)
                 Weapon.OnWeaponFired += HandleWeaponFired;
+
+            if (kit != null)
+                EquipKit(kit);
+        }
+
+        public WeaponKitData Kit => kit;
+
+        private Vector3 _aimDirection;
+        public Vector3 AimDirection => _aimDirection.sqrMagnitude > 0.0001f ? _aimDirection : transform.forward;
+
+        public void SetAimDirection(Vector3 direction) => _aimDirection = direction;
+
+        public string GetSkillKeyLabel(SkillSlotId slot) =>
+            playerInput != null ? playerInput.GetSkillBindingLabel(slot) : string.Empty;
+
+        public void EquipKit(WeaponKitData newKit)
+        {
+            kit = newKit;
+            Weapon.EquipData(newKit != null ? newKit.weapon : null);
+            SkillFsm.EquipKit(newKit);
         }
 
         protected override void Start()
@@ -113,8 +129,6 @@ namespace Members.KYR._01_Scripts
 
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
-
-            if (cinemachineCamera != null) currentFOV = cinemachineCamera.Lens.FieldOfView;
         }
 
         private void Update()
@@ -142,9 +156,11 @@ namespace Members.KYR._01_Scripts
                 SkillFsm.ResolveInput();
                 SkillFsm.Tick(dt);
                 Weapon.Tick(dt);
+                StatusEffects?.Tick(dt);
             }
             else
             {
+                SkillFsm.CancelAim();
                 Mover.SetPlanarInput(Vector2.zero, 0f);
             }
 
@@ -156,31 +172,12 @@ namespace Members.KYR._01_Scripts
         {
             if (ammoText == null) return;
 
-            if (Weapon.Weapon is MeleeSawedOffWeapon melee)
-            {
-                ammoText.gameObject.SetActive(melee.IsShotgunMode);
-                if (melee.IsShotgunMode)
-                    ammoText.text = melee.ShotgunIsReloading ? "재장전 중..." : $"{melee.ShotgunCurrentAmmo} / {melee.ShotgunMaxAmmo}";
-                return;
-            }
+            string text = null;
+            bool showAmmo = Weapon.Weapon is IAmmoDisplay display && display.TryGetAmmoText(out text);
 
-            if (Weapon.Weapon is SniperSawedOffWeapon sniper)
-            {
-                ammoText.gameObject.SetActive(true);
-                if (sniper.IsShotgunMode)
-                    ammoText.text = sniper.ShotgunIsReloading ? "재장전 중..." : $"{sniper.ShotgunCurrentAmmo} / {sniper.ShotgunMaxAmmo}";
-                else
-                    ammoText.text = sniper.SniperIsReloading ? "재장전 중..." : $"{sniper.SniperCurrentAmmo} / {sniper.SniperMaxAmmo}";
-                return;
-            }
-
-            bool hasAmmo = Weapon.Weapon is GunDealerWeapon || Weapon.Weapon is LaserDealerWeapon;
-            ammoText.gameObject.SetActive(hasAmmo);
-            if (!hasAmmo) return;
-
-            ammoText.text = Weapon.Weapon.IsReloading
-                ? "재장전 중..."
-                : $"{Mathf.CeilToInt(Weapon.Weapon.CurrentResource)} / {Mathf.CeilToInt(Weapon.Weapon.MaxResource)}";
+            ammoText.gameObject.SetActive(showAmmo);
+            if (showAmmo)
+                ammoText.text = text;
         }
 
         public override void TakeDamage(float amount, GameObject source)
@@ -206,35 +203,42 @@ namespace Members.KYR._01_Scripts
             target?.Heal(amount);
         }
 
-        public void SetUiMode(bool uiOpen)
+        private void OnEnable()
         {
-            if (uiOpen)
+            UiFocusService.OnUiFocusChanged += HandleUiFocusChanged;
+        }
+
+        private void OnDisable()
+        {
+            UiFocusService.OnUiFocusChanged -= HandleUiFocusChanged;
+        }
+
+        private void HandleUiFocusChanged(bool uiFocused)
+        {
+            if (ControlFsm == null)
+                return;
+
+            if (uiFocused)
             {
                 ControlFsm.ChangeState<UiControlState>();
-                Cursor.lockState = CursorLockMode.None;
-                Cursor.visible = true;
                 return;
             }
 
             if (!Health.IsDead)
                 ControlFsm.ChangeState<AliveControlState>();
+        }
 
-            if (!lockCursor)
-                return;
-
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
+        public void SetUiMode(bool uiOpen)
+        {
+            if (uiOpen)
+                UiFocusService.Acquire(this);
+            else
+                UiFocusService.Release(this);
         }
 
         public void Teleport(Vector3 position, Quaternion? rotation = null)
         {
             Mover?.Teleport(position, rotation);
-        }
-
-        public void ApplySelectedCharacter()
-        {
-            Weapon?.ApplySelectedCharacter();
-            SkillFsm?.ApplySelectedCharacter();
         }
 
         public void SetMoveSpeedMultiplier(float multiplier)
@@ -251,7 +255,8 @@ namespace Members.KYR._01_Scripts
             SkillFsm.NotifyEnemyKilled();   
         }
 
-        // 애니메이션 이벤트에서 직접 호출하는 용도 (E스킬 콜라이더 on/off)
+        public void Anim_SkillHitBegin() => SkillFsm.Anim_SkillHitBegin();
+        public void Anim_SkillHitEnd() => SkillFsm.Anim_SkillHitEnd();
         public void Anim_SkillHitboxOn() => Weapon.Anim_SkillHitboxOn();
         public void Anim_SkillHitboxOff() => Weapon.Anim_SkillHitboxOff();
 
@@ -280,7 +285,7 @@ namespace Members.KYR._01_Scripts
             if (aimEnterPulseTimer > 0f) aimEnterPulseTimer -= Time.deltaTime;
             if (firePulseTimer > 0f) firePulseTimer -= Time.deltaTime;
 
-            bool isBursting = (Weapon.Weapon as GunDealerWeapon)?.IsBursting ?? false;
+            bool isBursting = Weapon.Weapon is IBurstWeapon { IsBursting: true };
 
             bool isAimPulseActive = aimEnterPulseTimer > 0f;
             bool isFirePulseActive = firePulseTimer > 0f || isBursting;
@@ -322,19 +327,13 @@ namespace Members.KYR._01_Scripts
             if (Weapon != null)
                 Weapon.OnWeaponFired -= HandleWeaponFired;
         }
-        private void HandleWeaponFired(string animId)
+        private void HandleWeaponFired(AttackFeedback feedback)
         {
-            switch (animId)
-            {
-                case "Gun_Fire":
-                case "Sniper_Fire":
-                case "SawedOff_FireLeft":
-                case "SawedOff_FireRight":
-                case "Laser_EnergyBall":
-                    firePulseTimer = firePulseDuration;
-                    lastFireWasAimed = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
-                    break;
-            }
+            if (!feedback.IsFire)
+                return;
+
+            firePulseTimer = firePulseDuration;
+            lastFireWasAimed = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
         }
     }
 }

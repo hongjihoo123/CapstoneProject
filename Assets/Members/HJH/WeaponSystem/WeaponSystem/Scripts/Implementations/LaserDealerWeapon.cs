@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    public class LaserDealerWeapon : WeaponBase
+    public class LaserDealerWeapon : WeaponBase, IAmmoDisplay, IAttackFeedbackSource
     {
         private readonly LaserDealerData data;
         private bool isFiring;
@@ -20,6 +20,17 @@ namespace RobotWeapons
         public float LastFireChargeRatio { get; private set; }
 
         public LaserDealerWeapon(LaserDealerData d) : base(d) { data = d; }
+
+        public bool TryGetAmmoText(out string text)
+        {
+            text = AmmoText.ForResource(this);
+            return true;
+        }
+
+        public AttackFeedback DescribeAttack(string animId) =>
+            animId == "Laser_EnergyBall"
+                ? new AttackFeedback { IsFire = true, ShakeForce = data.energyBallShakeForce * LastFireChargeRatio }
+                : default;
 
         // 누르고 있는 동안 매 프레임 호출됨 (PrimaryIsHeld = true)
         public override void PrimaryAttack()
