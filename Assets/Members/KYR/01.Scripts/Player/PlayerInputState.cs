@@ -5,7 +5,6 @@ namespace Members.KYR._01_Scripts
     public sealed class PlayerInputState
     {
         public Vector2 Move { get; private set; }
-        public Vector2 Look { get; private set; }
         public bool RunHeld { get; private set; }
         public bool DashPressed { get; private set; }
         public bool QPressed { get; private set; }
@@ -23,7 +22,6 @@ namespace Members.KYR._01_Scripts
             }
 
             Move = source.Move;
-            Look = source.Look;
             RunHeld = source.RunHeld;
             DashPressed = source.DashPressed;
             QPressed = source.QPressed;
@@ -34,7 +32,6 @@ namespace Members.KYR._01_Scripts
         public void Clear()
         {
             Move = Vector2.zero;
-            Look = Vector2.zero;
             RunHeld = false;
             DashPressed = false;
             QPressed = false;

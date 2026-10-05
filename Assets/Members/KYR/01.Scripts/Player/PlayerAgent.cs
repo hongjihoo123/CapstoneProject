@@ -6,7 +6,6 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts.Modules;
 using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
-using Unity.Cinemachine;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts
@@ -18,8 +17,6 @@ namespace Members.KYR._01_Scripts
 
         [SerializeField] private Transform aimOrigin;
         [SerializeField] private Transform muzzleOrigin;
-        [SerializeField] private CinemachineCamera cinemachineCamera;
-        [SerializeField] private bool lockCursor = true;
 
         [Header("Animator")]
         [SerializeField] private AnimParamSO idleParam;
@@ -44,7 +41,6 @@ namespace Members.KYR._01_Scripts
         protected override void InitializeModules()
         {
             base.InitializeModules();
-            AimUtility.IgnoreLayerMask = LayerMask.GetMask("Player");
 
             Mover = GetModule<PlayerMover>();
             Health = GetModule<PlayerHealth>();
@@ -64,24 +60,6 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(SkillFsm != null, $"{name}에는 SkillStateModule이 필요합니다.");
         }
 
-        protected override void Start()
-        {
-            base.Start();
-
-            if (Mover != null && Mover.IsQuarterView)
-            {
-                if (cinemachineCamera != null)
-                    cinemachineCamera.enabled = false;
-                return;
-            }
-
-            if (!lockCursor)
-                return;
-
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
-
         private void Update()
         {
             if (ControlFsm == null)
@@ -99,9 +77,7 @@ namespace Members.KYR._01_Scripts
 
             if (ControlFsm.IsGameplayAlive)
             {
-                if (!Mover.IsQuarterView)
-                    Mover.TickLook(Input.Look);
-                else if (Input.DashPressed)
+                if (Input.DashPressed)
                     Mover.TryDash(Input.Move);
 
                 MoveFsm.Tick(dt);
@@ -169,6 +145,11 @@ namespace Members.KYR._01_Scripts
         public void Teleport(Vector3 position, Quaternion? rotation = null)
         {
             Mover?.Teleport(position, rotation);
+        }
+
+        public void ApplySelectedCharacter()
+        {
+            Weapon?.ApplySelectedCharacter();
         }
 
         public void SetMoveSpeedMultiplier(float multiplier)

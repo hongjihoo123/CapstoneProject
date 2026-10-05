@@ -18,7 +18,6 @@ namespace Members.KYR._01_Scripts
         public bool XPressed { get; private set; }
 
         public Vector2 Move { get; private set; }
-        public Vector2 Look { get; private set; }
         public bool RunHeld { get; private set; }
         public bool DashPressed { get; private set; }
 
@@ -57,7 +56,6 @@ namespace Members.KYR._01_Scripts
             }
 
             Move = _controls.Player.Move.ReadValue<Vector2>();
-            Look = _controls.Player.Look.ReadValue<Vector2>();
             RunHeld = _controls.Player.Sprint.IsPressed();
             DashPressed = _dash != null && _dash.WasPressedThisFrame();
 

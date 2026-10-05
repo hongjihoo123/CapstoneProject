@@ -20,10 +20,6 @@ namespace Members.KYR._01_Scripts.Modules
         {
             base.Initialize(owner);
 
-            var selectedCharacter = CharacterSelectionContext.Selected;
-            if (selectedCharacter != null && selectedCharacter.weaponData != null)
-                equippedWeaponData = selectedCharacter.weaponData;
-
             _lastEquippedData = equippedWeaponData;
             if (equippedWeaponData == null)
                 return;
@@ -42,11 +38,9 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void ApplySelectedCharacter()
         {
-            var selected = CharacterSelectionContext.Selected;
-            if (selected == null || selected.weaponData == null)
+            if (equippedWeaponData == null)
                 return;
 
-            equippedWeaponData = selected.weaponData;
             _lastEquippedData = equippedWeaponData;
             Equip(WeaponFactory.Create(equippedWeaponData));
         }
