@@ -171,12 +171,6 @@ namespace Members.KYR._01_Scripts
             Mover?.Teleport(position, rotation);
         }
 
-        public void ApplySelectedCharacter()
-        {
-            Weapon?.ApplySelectedCharacter();
-            SkillFsm?.ApplySelectedCharacter();
-        }
-
         public void SetMoveSpeedMultiplier(float multiplier)
         {
             Mover.SetOwnerSpeedMultiplier(multiplier);

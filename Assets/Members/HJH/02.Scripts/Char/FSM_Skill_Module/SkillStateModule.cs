@@ -10,7 +10,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     {
         private static readonly AllowAllSkillFallback Fallback = new();
 
-        [Header("Ä³¸¯ÅÍº° ½ºÅ³/ÆĞ½Ãºê µ¥ÀÌÅÍ")]
         [SerializeField] private SkillData qSkillData;
         [SerializeField] private SkillData eSkillData;
         [SerializeField] private SkillData xSkillData;
@@ -44,34 +43,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             base.Initialize(owner);
             Player = owner as PlayerAgent;
-            Debug.Assert(Player != null, $"{owner.name}ÀÇ SkillStateModuleÀº PlayerAgent ¾Æ·¡¿©¾ß ÇÕ´Ï´Ù.");
+            Debug.Assert(Player != null, $"{owner.name}ì˜ SkillStateModuleì€ PlayerAgent ì•„ë˜ì—ì„œë§Œ ì‚¬ìš©í•  ìˆ˜ ìˆìŠµë‹ˆë‹¤.");
         }
 
         public void AfterInit()
         {
-            // Ä³¸¯ÅÍ ¼±ÅÃ È­¸é¿¡¼­ °í¸¥ Ä³¸¯ÅÍÀÇ ½ºÅ³/ÆĞ½Ãºê°¡ ÀÖÀ¸¸é ¿ì¼± Àû¿ëÇÏ°í,
-            // ¾øÀ¸¸é(¿¹: °ÔÀÓ ¾ÀÀ» ¹Ù·Î ½ÇÇàÇØ¼­ Å×½ºÆ®ÇÒ ¶§) ÀÎ½ºÆåÅÍ¿¡ ÁöÁ¤µÈ ±âº»°ªÀ» »ç¿ëÇÑ´Ù.
-            var selectedCharacter = CharacterSelectionContext.Selected;
-            if (selectedCharacter != null)
-            {
-                if (selectedCharacter.qSkillData != null) qSkillData = selectedCharacter.qSkillData;
-                if (selectedCharacter.eSkillData != null) eSkillData = selectedCharacter.eSkillData;
-                if (selectedCharacter.xSkillData != null) xSkillData = selectedCharacter.xSkillData;
-                if (selectedCharacter.passiveData != null) passiveData = selectedCharacter.passiveData;
-            }
-
             Machine = new StateMachine();
             _idleSkill = new IdleSkillState(this);
 
-            // ½ºÅ³ µ¥ÀÌÅÍ°¡ ¾ÆÁ÷ ¾ø´Â(Á¦ÀÛ ÁßÀÎ) Ä³¸¯ÅÍ´Â ÇØ´ç ½ºÅ³¸¸ ºñÈ°¼ºÈ­ÇÏ°í ³Ñ¾î°£´Ù - Å©·¡½Ã ¹æÁö
             if (qSkillData != null) _qSkill = new GenericSkillState(this, qSkillData);
-            else Debug.LogWarning($"{name}ÀÇ SkillStateModule¿¡ Q SkillData°¡ ºñ¾îÀÖ½À´Ï´Ù. (Q ½ºÅ³ ºñÈ°¼ºÈ­)");
+            else Debug.LogWarning($"{name}ì˜ SkillStateModuleì— Q SkillDataê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤. (Q ìŠ¤í‚¬ ë¹„í™œì„±í™”)");
 
             if (eSkillData != null) _eSkill = new GenericSkillState(this, eSkillData);
-            else Debug.LogWarning($"{name}ÀÇ SkillStateModule¿¡ E SkillData°¡ ºñ¾îÀÖ½À´Ï´Ù. (E ½ºÅ³ ºñÈ°¼ºÈ­)");
+            else Debug.LogWarning($"{name}ì˜ SkillStateModuleì— E SkillDataê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤. (E ìŠ¤í‚¬ ë¹„í™œì„±í™”)");
 
             if (xSkillData != null) _xSkill = new GenericSkillState(this, xSkillData);
-            else Debug.LogWarning($"{name}ÀÇ SkillStateModule¿¡ X SkillData°¡ ºñ¾îÀÖ½À´Ï´Ù. (X ½ºÅ³ ºñÈ°¼ºÈ­)");
+            else Debug.LogWarning($"{name}ì˜ SkillStateModuleì— X SkillDataê°€ ë¹„ì–´ìˆìŠµë‹ˆë‹¤. (X ìŠ¤í‚¬ ë¹„í™œì„±í™”)");
 
             Machine.Register(_idleSkill);
             Machine.ChangeState<IdleSkillState>();
@@ -82,13 +69,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Machine.Tick(deltaTime);
         }
 
-        public void ApplySelectedCharacter()
-        {
-            if (Machine != null)
-                ForceIdle();
-            AfterInit();
-        }
-
         public void ForceIdle()
         {
             Machine.ChangeState<IdleSkillState>();
@@ -96,10 +76,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void ResetHitTracking() => _hitThisActivation.Clear();
 
-        // ÀÌ¹Ì ¸ÂÀº ´ë»ó µ¥¹ÌÁö ½ºÅµ
         public bool TryRegisterHit(RobotWeapons.IDamageable target) => _hitThisActivation.Add(target);
 
-        // ¾Ö´Ï¸ŞÀÌ¼Ç ÀÌº¥Æ®¿¡¼­ Á÷Á¢ È£ÃâÇÏ´Â ¿ëµµ
         public void Anim_SkillOverlapHit()
         {
             if (Machine.Current is SkillStateBase state)
@@ -125,7 +103,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void NotifyEnemyKilled()
         {
-            Debug.Log($"[ÆĞ½Ãºê] Å³ ÀÌº¥Æ® ¼ö½Å, passiveData null? {passiveData == null}");
+            Debug.Log($"[íŒ¨ì‹œë¸Œ] í‚¬ ì´ë²¤íŠ¸ ìˆ˜ì‹ , passiveData null? {passiveData == null}");
             passiveData?.OnEnemyKilled(this);
         }
         private sealed class AllowAllSkillFallback : ISkillCapabilities
