@@ -20,7 +20,7 @@ namespace Members.KYR._01_Scripts.FSM.Move
             Debug.Assert(Player != null, $"{owner.name}의 MoveStateModule은 PlayerAgent 아래여야 합니다.");
         }
 
-        public void AfterInit()
+        public void AfterInitalize()
         {
             Machine = new StateMachine();
             Machine.Register(new IdleMoveState(this));

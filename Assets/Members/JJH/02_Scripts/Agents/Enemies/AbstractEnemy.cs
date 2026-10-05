@@ -66,6 +66,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         }
 
         public virtual void Attack() { }
+        public virtual void Protect() { }
 
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
             => target?.TakeDamage(amount, gameObject);

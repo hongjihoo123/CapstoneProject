@@ -58,7 +58,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             _context = new PlayerSkillContext(Player, skillTargetMask);
         }
 
-        public void AfterInit()
+        public void AfterInitalize()
         {
             Machine = new StateMachine();
             _idleSkill = new IdleSkillState(this);

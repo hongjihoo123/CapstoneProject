@@ -15,7 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         [SerializeReference] public BlackboardVariable<GameObject> Target;
 
         [Header("Chase Setting")]
-        [SerializeField] private float destinationUpdateDistance = 0.2f;
+        [SerializeReference] private BlackboardVariable<float> DestinationUpdateDistance = new(0.2f);
 
         private ISensor _sensor;
         private INavMesh _navMeshAgent;
@@ -28,9 +28,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Enemy.Value == null || Enemy.Value.Sensor == null ||
                 Enemy.Value.EnemyNavMeshAgent == null || Target.Value == null)
                 return Status.Failure;
-
-            if (Enemy.Value.IsAlive == false)
-                return Status.Success;
 
             _navMeshAgent = Enemy.Value.EnemyNavMeshAgent;
             _sensor = Enemy.Value.Sensor;
@@ -48,9 +45,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Target.Value == null)
                 return Status.Failure;
 
-            if (Enemy.Value.IsAlive == false)
-                return Status.Success;
-
             bool isInRadius = _sensor.IsTargetInRange(Enemy.Value.EnemyData.DetectRange, out Collider hitCollider);
 
             if (!isInRadius)
@@ -62,7 +56,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             direction.y = 0f;
 
             float distanceToTarget = direction.magnitude;
-            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange)
+            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange - 0.2f)
             {
                 _navMeshAgent.KeepChase(false);
 
@@ -72,7 +66,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                     Enemy.Value.transform.rotation =
                         Quaternion.RotateTowards(Enemy.Value.transform.rotation, targetRotation,
-                                                                   Enemy.Value.EnemyNavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
+                                                           Enemy.Value.EnemyNavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
                 }
 
                 float angle = Vector3.Angle(Enemy.Value.transform.forward, direction);
@@ -83,7 +77,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 return Status.Running;
             }
 
-            if (Vector3.Distance(_lastTargetPos, _targetPos) >= destinationUpdateDistance)
+            _navMeshAgent.KeepChase(true);
+            if (Vector3.Distance(_lastTargetPos, _targetPos) >= DestinationUpdateDistance)
             {
                 _lastTargetPos = _targetPos;
                 _navMeshAgent.MoveTo(_targetPos);

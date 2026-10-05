@@ -103,6 +103,8 @@ namespace Members.KYR._01_Scripts
                 EquipKit(kit);
         }
 
+        public WeaponKitData Kit => kit;
+
         public string GetSkillKeyLabel(SkillSlotId slot) =>
             playerInput != null ? playerInput.GetSkillBindingLabel(slot) : string.Empty;
 

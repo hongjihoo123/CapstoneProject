@@ -29,7 +29,7 @@ namespace Members.JJH._02_Scripts.Systems.ModuleSystem
         {
             foreach (IAfterInitModule module in _moduleDict.Values.OfType<IAfterInitModule>())
             {
-                module.AfterInit();
+                module.AfterInitalize();
             }
         }
 

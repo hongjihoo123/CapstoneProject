@@ -28,10 +28,11 @@ namespace Members.HJH.Test
             if (player == null || player.Weapon == null)
                 return;
 
-            float height = RowHeight * (SkillSlots.Count + 1) + 16f;
+            float height = RowHeight * (SkillSlots.Count + 2) + 16f;
             var panel = new Rect((Screen.width - PanelWidth) * 0.5f, Screen.height - height - 12f, PanelWidth, height);
 
             GUILayout.BeginArea(panel, GUI.skin.box);
+            GUILayout.Label(GetTypeInfo());
 
             GUILayout.BeginHorizontal();
             GUILayout.Label($"HP {player.Health.CurrentHealth:0}", GUILayout.Width(PanelWidth * 0.5f));
@@ -56,6 +57,13 @@ namespace Members.HJH.Test
             GUILayout.Label(player.GetSkillKeyLabel(slot), GUILayout.Width(60f));
             GUILayout.Label(data != null ? state : "-");
             GUILayout.EndHorizontal();
+        }
+
+        private string GetTypeInfo()
+        {
+            string kitName = player.Kit != null ? player.Kit.name : "-";
+            string weaponType = player.Weapon.Weapon != null ? player.Weapon.Weapon.Type.ToString() : "-";
+            return $"타입 {weaponType}  ({kitName})";
         }
 
         private string GetWeaponInfo()
