@@ -2,7 +2,7 @@ using System.Collections.Generic;
 
 namespace RobotWeapons
 {
-    public class MeleeSawedOffWeapon : WeaponBase
+    public class MeleeSawedOffWeapon : WeaponBase, IAmmoDisplay, IAttackFeedbackSource
     {
         private enum Mode { Melee, Shotgun }
 
@@ -26,6 +26,15 @@ namespace RobotWeapons
                 d.shotgunRange, d.shotgunMaxAmmo, d.shotgunReloadDuration, d.damageFalloffAtMaxRange,
                 d.bulletPrefab, d.bulletSpeed);
         }
+
+        public bool TryGetAmmoText(out string text)
+        {
+            text = IsShotgunMode ? AmmoText.Format(ShotgunCurrentAmmo, ShotgunMaxAmmo, ShotgunIsReloading) : null;
+            return IsShotgunMode;
+        }
+
+        public AttackFeedback DescribeAttack(string animId) =>
+            SawedOffShotgunModule.IsFireAnim(animId) ? new AttackFeedback { IsFire = true } : default;
 
         public override void SwapMode()
         {

@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+using System;
 using Members.KYR._01_Scripts.Stats;
+using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
 {
@@ -21,19 +17,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
     {
         [SerializeField] private BuffEntry[] buffs;
 
-        public override void Execute(SkillStateModule owner)
+        public override void Execute(ISkillContext context)
         {
-            var stats = owner.Player.Stats;
-            if (stats == null || stats.Tree == null) return;
+            if (!context.StatsReady) return;
 
-            stats.RemoveModifiers(this);
+            context.RemoveStatModifiers(this);
 
-            foreach (var buff in buffs)
+            foreach (BuffEntry buff in buffs)
             {
                 if (!TryMap(buff.type, out PlayerStatId id))
                     continue;
 
-                stats.AddModifier(
+                context.AddStatModifier(
                     id,
                     new StatModifier(this, StatModifierType.PercentAdd, buff.multiplier - 1f, buff.duration));
             }

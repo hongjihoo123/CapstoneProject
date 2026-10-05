@@ -1,8 +1,13 @@
+using System;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using UnityEngine;
+
 namespace Members.KYR._01_Scripts
 {
-    public sealed class PlayerInputState
+    public sealed class PlayerInputState : ISkillInputSource
     {
+        private readonly bool[] _skillPressed = new bool[SkillSlots.Count];
+
         public Vector2 Move { get; private set; }
         public Vector2 Look { get; private set; }
         public bool JumpPressed { get; private set; }
@@ -12,11 +17,11 @@ namespace Members.KYR._01_Scripts
         public bool FirePressed { get; private set; }
         public bool AimHeld { get; private set; }
         public bool ReloadPressed { get; private set; }
-        public bool QPressed { get; private set; }
-        public bool EPressed { get; private set; }
-        public bool XPressed { get; private set; }
         public float MoveSqrMagnitude => Move.sqrMagnitude;
         public bool HasMoveInput => MoveSqrMagnitude > 0.01f;
+
+        public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
+
         public void CopyFrom(PlayerInputSO source)
         {
             if (source == null)
@@ -33,10 +38,11 @@ namespace Members.KYR._01_Scripts
             FirePressed = source.FirePressed;
             AimHeld = source.AimHeld;
             ReloadPressed = source.ReloadPressed;
-            QPressed = source.QPressed;
-            EPressed = source.EPressed;
-            XPressed = source.XPressed;
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+                _skillPressed[(int)slot] = source.WasSkillPressed(slot);
         }
+
         public void Clear()
         {
             Move = Vector2.zero;
@@ -48,9 +54,7 @@ namespace Members.KYR._01_Scripts
             FirePressed = false;
             AimHeld = false;
             ReloadPressed = false;
-            QPressed = false;
-            EPressed = false;
-            XPressed = false;
+            Array.Clear(_skillPressed, 0, _skillPressed.Length);
         }
     }
 }

@@ -1,8 +1,3 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
@@ -11,12 +6,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
     public class DashSkillData : SkillData
     {
         [SerializeField] private float dashForce = 10f;
+        [SerializeField] private bool useMoveInputDirection = true;
+        [SerializeField] private bool reloadOnDash = true;
 
-        public override void Execute(SkillStateModule owner)
+        public override void Execute(ISkillContext context)
         {
-            Debug.Log("대쉬 실행");
-            owner.Player.Mover.Dash(owner.transform.forward, dashForce, Duration);
-            owner.Player.Weapon.Weapon?.InstantReload();
+            Vector3 direction = useMoveInputDirection && context.MoveInputDirection.sqrMagnitude > 0.0001f
+                ? context.MoveInputDirection
+                : context.Transform.forward;
+
+            context.Dash(direction, dashForce, Duration);
+
+            if (reloadOnDash)
+                context.Weapon?.InstantReload();
         }
     }
 }

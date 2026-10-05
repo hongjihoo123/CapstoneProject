@@ -45,6 +45,7 @@ namespace Members.KYR._01_Scripts.Modules
         public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
         public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
+        public Transform MoveReference { get; set; }
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public bool IsDashing => _dashTimeRemaining > 0f;
         public float PlanarSpeed => new Vector3(characterController.velocity.x, 0f, characterController.velocity.z).magnitude;
@@ -66,6 +67,14 @@ namespace Members.KYR._01_Scripts.Modules
                 _hipCameraLocalPosition = cameraPivot.localPosition;
                 _hipCameraPositionCaptured = true;
             }
+        }
+
+        public Vector3 ToWorldMove(Vector2 input)
+        {
+            if (MoveReference == null)
+                return _owner.transform.right * input.x + _owner.transform.forward * input.y;
+
+            return Quaternion.Euler(0f, MoveReference.eulerAngles.y, 0f) * new Vector3(input.x, 0f, input.y);
         }
 
         public void SetOwnerSpeedMultiplier(float multiplier)
@@ -184,8 +193,7 @@ namespace Members.KYR._01_Scripts.Modules
             }
             else
             {
-                planar = (_owner.transform.right * _planarInput.x + _owner.transform.forward * _planarInput.y)
-                         * _planarSpeed;
+                planar = ToWorldMove(_planarInput) * _planarSpeed;
             }
 
             Vector3 motion = planar + Vector3.up * _verticalVelocity;

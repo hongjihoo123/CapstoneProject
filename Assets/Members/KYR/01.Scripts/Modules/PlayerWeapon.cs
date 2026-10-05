@@ -16,7 +16,6 @@ namespace Members.KYR._01_Scripts.Modules
 
         [SerializeField] private CinemachineImpulseSource impulseSource;
         [SerializeField] private float gunShakeForce = 0.3f;
-        [SerializeField] private float energyBallShakeForce = 1f;
 
         [SerializeField] private MuzzleFlash muzzleFlash;
         [SerializeField] private TracerVisual tracerVisual;
@@ -29,7 +28,7 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float aimFov = 50f;
         [SerializeField] private float aimFovTransitionSpeed = 14f;
 
-        public event System.Action<string> OnWeaponFired;
+        public event System.Action<AttackFeedback> OnWeaponFired;
 
         private bool _isAiming;
         private float _currentFov;
@@ -48,8 +47,8 @@ namespace Members.KYR._01_Scripts.Modules
         public IWeapon Weapon => _weapon;
         public Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillOverlapHitbox SkillOverlapHitbox => skillOverlapHitbox;
         public bool CanStartReload =>
-     _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
-     && !(_weapon is GunDealerWeapon gunBursting && gunBursting.IsBursting);
+            _weapon != null && !_weapon.IsReloading && _weapon.CurrentResource < _weapon.MaxResource
+            && !(_weapon is IBurstWeapon { IsBursting: true });
 
         public override void Initialize(ModuleOwner owner)
         {
@@ -76,6 +75,13 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_weapon != null)
                 _weapon.OnAttackTriggered -= HandleAttackTriggered;
+        }
+
+        public void EquipData(WeaponData data)
+        {
+            equippedWeaponData = data;
+            _lastEquippedData = data;
+            Equip(data != null ? WeaponFactory.Create(data) : null);
         }
 
         public void Equip(IWeapon weapon)
@@ -110,14 +116,11 @@ namespace Members.KYR._01_Scripts.Modules
             float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
             float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
 
-            if (_weapon is GunDealerWeapon gunDealer)
-                gunDealer.AttackSpeedMultiplier = attackSpeed;
+            if (_weapon is IAttackSpeedScalable attackSpeedScalable)
+                attackSpeedScalable.AttackSpeedMultiplier = attackSpeed;
 
-            if (_weapon is WeaponBase weaponBase)
-            {
-                weaponBase.ReloadSpeedMultiplier = reloadSpeed;
-                weaponBase.DamageMultiplier = 1f;
-            }
+            if (_weapon is IReloadSpeedScalable reloadSpeedScalable)
+                reloadSpeedScalable.ReloadSpeedMultiplier = reloadSpeed;
         }
 
         public void TryFire(bool fireHeld, bool firePressed)
@@ -259,22 +262,16 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void HandleAttackTriggered(string animId)
         {
-            Debug.Log($"[PlayerWeapon] {animId} at {Time.frameCount}");
-            OnWeaponFired?.Invoke(animId);
+            AttackFeedback feedback = (_weapon as IAttackFeedbackSource)?.DescribeAttack(animId) ?? default;
 
-            switch (animId)
-            {
-                case "Laser_EnergyBall":
-                    float chargeRatio = (_weapon as LaserDealerWeapon)?.LastFireChargeRatio ?? 1f;
-                    impulseSource?.GenerateImpulseWithForce(energyBallShakeForce * chargeRatio);
-                    break;
-                case "Sniper_Fire":
-                    if (_weapon is SniperSawedOffWeapon sniperShot)
-                        tracerVisual?.Fire(sniperShot.LastShotStart, sniperShot.LastShotEnd);
-                    impulseSource?.GenerateImpulseWithForce(gunShakeForce);
-                    break;
-            }
+            if (feedback.ShakeForce > 0f)
+                impulseSource?.GenerateImpulseWithForce(feedback.ShakeForce);
+            if (feedback.HasTracer)
+                tracerVisual?.Fire(feedback.TracerStart, feedback.TracerEnd);
+
+            OnWeaponFired?.Invoke(feedback);
         }
+
         public void Anim_MuzzleFlash()
         {
             _weapon?.ExecuteHit();

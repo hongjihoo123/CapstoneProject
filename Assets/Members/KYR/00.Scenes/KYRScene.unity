@@ -461,9 +461,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fb7281d6176d478409d2073ae2d44462, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillStateModule
-  qSkillData: {fileID: 11400000, guid: 385cfe2710e6da74a91272e392dc602f, type: 2}
-  eSkillData: {fileID: 11400000, guid: 394f3fc0ada97304ab1d1e951084b7db, type: 2}
-  xSkillData: {fileID: 11400000, guid: d3aa1804c5f0d3a4ebc935f63d54999f, type: 2}
+  initialSkills:
+  - slot: 0
+    data: {fileID: 11400000, guid: 385cfe2710e6da74a91272e392dc602f, type: 2}
+  - slot: 1
+    data: {fileID: 11400000, guid: 394f3fc0ada97304ab1d1e951084b7db, type: 2}
+  - slot: 2
+    data: {fileID: 11400000, guid: d3aa1804c5f0d3a4ebc935f63d54999f, type: 2}
   passiveData: {fileID: 11400000, guid: fb815b65c7052674f82865792fd066dc, type: 2}
 --- !u!108 &276076962062340214
 Light:

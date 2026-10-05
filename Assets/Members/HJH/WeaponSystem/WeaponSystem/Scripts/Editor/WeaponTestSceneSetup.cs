@@ -11,7 +11,7 @@ namespace RobotWeapons.Editor
     {
         private enum Champion { Tanker, MainDealer_Laser, MainDealer_Gun, MainDealer_Bow, SubDealer_MeleeSawedOff, SubDealer_SniperSawedOff, Healer }
 
-        private const string GeneratedFolder = "Assets/RobotWeapons_Generated";
+        private const string GeneratedFolder = "Assets/Members/HJH/WeaponSystem/Data";
         private const string TestObjectPrefix = "[TEST] ";
 
         private Champion selectedChampion = Champion.Tanker;
@@ -217,8 +217,11 @@ namespace RobotWeapons.Editor
 
         private void EnsureFolder()
         {
-            if (!AssetDatabase.IsValidFolder(GeneratedFolder))
-                AssetDatabase.CreateFolder("Assets", "RobotWeapons_Generated");
+            if (AssetDatabase.IsValidFolder(GeneratedFolder))
+                return;
+
+            System.IO.Directory.CreateDirectory(GeneratedFolder);
+            AssetDatabase.Refresh();
         }
 
         private WeaponData GetOrCreateChampionData(Champion champion)

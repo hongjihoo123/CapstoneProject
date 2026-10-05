@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -6,17 +8,21 @@ namespace Members.KYR._01_Scripts
     [CreateAssetMenu(fileName = "PlayerInput", menuName = "SO/Player Input")]
     public class PlayerInputSO : ScriptableObject
     {
+        private static readonly (SkillSlotId slot, string binding)[] DefaultSkillBindings =
+        {
+            (SkillSlotId.Dash, "<Keyboard>/q"),
+            (SkillSlotId.Basic, "<Keyboard>/e"),
+            (SkillSlotId.Ultimate, "<Keyboard>/x"),
+            (SkillSlotId.Free1, "<Keyboard>/f"),
+            (SkillSlotId.Free2, "<Keyboard>/g"),
+        };
+
+        private readonly Dictionary<SkillSlotId, InputAction> _skillActions = new();
+        private readonly bool[] _skillPressed = new bool[SkillSlots.Count];
+
         private Controls _controls;
         private InputAction _aim;
         private InputAction _reload;
-
-        private InputAction _skillQ;
-        private InputAction _skillE;
-        private InputAction _skillX;
-
-        public bool QPressed { get; private set; }
-        public bool EPressed { get; private set; }
-        public bool XPressed { get; private set; }
 
         public Vector2 Move { get; private set; }
         public Vector2 Look { get; private set; }
@@ -27,6 +33,11 @@ namespace Members.KYR._01_Scripts
         public bool FirePressed { get; private set; }
         public bool AimHeld { get; private set; }
         public bool ReloadPressed { get; private set; }
+
+        public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
+
+        public string GetSkillBindingLabel(SkillSlotId slot) =>
+            _skillActions.TryGetValue(slot, out InputAction action) ? action.GetBindingDisplayString() : string.Empty;
 
         private void OnEnable()
         {
@@ -41,18 +52,18 @@ namespace Members.KYR._01_Scripts
             _aim?.Enable();
             _reload?.Enable();
 
-            _skillQ?.Enable();
-            _skillE?.Enable();
-            _skillX?.Enable();
+            foreach (InputAction action in _skillActions.Values)
+                action.Enable();
         }
 
         private void OnDisable()
         {
             _aim?.Disable();
             _reload?.Disable();
-            _skillQ?.Disable();
-            _skillE?.Disable();
-            _skillX?.Disable();
+
+            foreach (InputAction action in _skillActions.Values)
+                action.Disable();
+
             _controls?.Player.Disable();
         }
 
@@ -74,9 +85,9 @@ namespace Members.KYR._01_Scripts
             AimHeld = _aim != null && _aim.IsPressed();
             ReloadPressed = _reload != null && _reload.WasPressedThisFrame();
 
-            QPressed = _skillQ != null && _skillQ.WasPressedThisFrame();
-            EPressed = _skillE != null && _skillE.WasPressedThisFrame();
-            XPressed = _skillX != null && _skillX.WasPressedThisFrame();
+            foreach (SkillSlotId slot in SkillSlots.All)
+                _skillPressed[(int)slot] = _skillActions.TryGetValue(slot, out InputAction action) && action.WasPressedThisFrame();
+
             state.CopyFrom(this);
         }
 
@@ -104,26 +115,19 @@ namespace Members.KYR._01_Scripts
         private void BindSkillActions()
         {
             InputActionMap map = _controls.asset.FindActionMap("Player");
+            _skillActions.Clear();
 
-            _skillQ = map.FindAction("SkillQ");
-            if (_skillQ == null)
+            foreach ((SkillSlotId slot, string binding) in DefaultSkillBindings)
             {
-                _skillQ = new InputAction("SkillQ", InputActionType.Button);
-                _skillQ.AddBinding("<Keyboard>/q");
-            }
+                string actionName = $"Skill{slot}";
+                InputAction action = map.FindAction(actionName);
+                if (action == null)
+                {
+                    action = new InputAction(actionName, InputActionType.Button);
+                    action.AddBinding(binding);
+                }
 
-            _skillE = map.FindAction("SkillE");
-            if (_skillE == null)
-            {
-                _skillE = new InputAction("SkillE", InputActionType.Button);
-                _skillE.AddBinding("<Keyboard>/e");
-            }
-
-            _skillX = map.FindAction("SkillX");
-            if (_skillX == null)
-            {
-                _skillX = new InputAction("SkillX", InputActionType.Button);
-                _skillX.AddBinding("<Keyboard>/x");
+                _skillActions[slot] = action;
             }
         }
     }

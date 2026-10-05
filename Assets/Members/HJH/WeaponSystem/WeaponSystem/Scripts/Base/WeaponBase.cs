@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace RobotWeapons
 {
-    public abstract class WeaponBase : IWeapon
+    public abstract class WeaponBase : IWeapon, IReloadSpeedScalable
     {
         public WeaponType Type { get; protected set; }
         public float CurrentResource { get; protected set; }
@@ -11,7 +11,7 @@ namespace RobotWeapons
         public bool IsReloading { get; protected set; }
         protected float reloadTimer;
 
-        public float ReloadSpeedMultiplier = 1f;
+        public float ReloadSpeedMultiplier { get; set; } = 1f;
         public float DamageMultiplier = 1f;
 
         protected IWeaponOwner owner;
