@@ -126,7 +126,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             if (Machine.Current is GenericSkillState running && !running.IsFinished)
             {
-                if (running.Data.Cancelable && ShouldCancel(running, input))
+                if (running.Data.Cancelable && running.Elapsed >= running.Data.CancelStartTime && ShouldCancel(running, input))
                     Machine.ChangeState<IdleSkillState>();
                 return;
             }
@@ -161,7 +161,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private bool ShouldCancel(GenericSkillState running, ISkillInputSource input)
         {
-            if (input.WasJumpPressed() || input.WasSkillPressed(running.Slot))
+            if (input.WasJumpPressed() || input.WasCancelPressed() || input.WasSkillPressed(running.Slot))
                 return true;
 
             foreach (SkillSlotId slot in SkillSlots.All)

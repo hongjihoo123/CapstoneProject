@@ -13,14 +13,17 @@ MonoBehaviour:
   m_Name: ChainPullSpin
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain.ChainPullSpinSkillData
   cooldown: 12
-  duration: 3.3
+  duration: 3.2
   allowsMove: 0
   allowsFire: 0
   moveSpeedMultiplier: 1
   cancelable: 1
-  throwDistance: 8
-  throwDuration: 0.4
-  pullDuration: 0.35
+  cancelDelay: 0.5
+  maxRange: 8
+  minRange: 2
+  riseHeight: 6
+  riseDuration: 0.35
+  diveDuration: 0.3
   spinDuration: 2.5
   spinTickInterval: 0.25
   spinRadius: 3.2

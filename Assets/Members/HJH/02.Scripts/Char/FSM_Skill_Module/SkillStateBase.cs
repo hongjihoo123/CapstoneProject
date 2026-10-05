@@ -17,6 +17,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public virtual bool IsFinished => true;
         public abstract float Cooldown { get; }
         public bool IsReady => Time.time - _lastExitTime >= EffectiveCooldown;
+        public float Elapsed => Time.time - EnterTime;
         public float CooldownRemaining => Mathf.Max(0f, EffectiveCooldown - (Time.time - _lastExitTime));
 
         protected float EffectiveCooldown

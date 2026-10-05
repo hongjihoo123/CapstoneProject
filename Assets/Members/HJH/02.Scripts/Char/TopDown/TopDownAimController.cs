@@ -37,6 +37,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                 return;
 
             AimPoint = ray.GetPoint(distance);
+            player.SetAimPoint(AimPoint);
 
             Vector3 toAim = AimPoint - transform.position;
             toAim.y = 0f;

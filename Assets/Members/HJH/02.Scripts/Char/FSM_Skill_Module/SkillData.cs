@@ -10,6 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField] private bool allowsFire = true;
         [SerializeField] private float moveSpeedMultiplier = 1f;
         [SerializeField] private bool cancelable;
+        [SerializeField] private float cancelDelay;
 
         public float Cooldown => cooldown;
         public float Duration => duration;
@@ -17,6 +18,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public bool AllowsFire => allowsFire;
         public float MoveSpeedMultiplier => moveSpeedMultiplier;
         public bool Cancelable => cancelable;
+        public float CancelDelay => cancelDelay;
+        public virtual float CancelStartTime => cancelDelay;
 
         public virtual ISkillExecution Begin(ISkillContext context)
         {

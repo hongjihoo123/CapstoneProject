@@ -9,7 +9,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     {
         Vector3 MoveInputDirection { get; }
         Vector3 AimDirection { get; }
+        Vector3 AimPoint { get; }
+        bool IsDashing { get; }
         void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f);
+        void SetScriptedMotion(Vector3 velocity);
         void CancelDash();
     }
 

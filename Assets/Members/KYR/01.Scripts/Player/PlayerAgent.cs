@@ -110,6 +110,16 @@ namespace Members.KYR._01_Scripts
 
         public void SetAimDirection(Vector3 direction) => _aimDirection = direction;
 
+        private Vector3 _aimPoint;
+        private bool _hasAimPoint;
+        public Vector3 AimPoint => _hasAimPoint ? _aimPoint : transform.position + AimDirection * 1000f;
+
+        public void SetAimPoint(Vector3 point)
+        {
+            _aimPoint = point;
+            _hasAimPoint = true;
+        }
+
         public string GetSkillKeyLabel(SkillSlotId slot) =>
             playerInput != null ? playerInput.GetSkillBindingLabel(slot) : string.Empty;
 

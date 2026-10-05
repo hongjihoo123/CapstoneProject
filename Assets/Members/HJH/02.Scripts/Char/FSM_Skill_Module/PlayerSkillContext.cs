@@ -44,6 +44,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
+        public Vector3 AimPoint => _player.AimPoint;
+
+        public bool IsDashing => _player.Mover.IsDashing;
+
         public bool StatsReady => _player.Stats != null && _player.Stats.Tree != null;
 
         public void BeginActivation() => _hitThisActivation.Clear();
@@ -70,6 +74,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void FlashRange(float radius, float duration) =>
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, _player.transform.position + Vector3.up, radius, duration));
+
+        public void SetScriptedMotion(Vector3 velocity) => _player.Mover.SetScriptedMotion(velocity);
 
         public void CancelDash() => _player.Mover.CancelDash();
 

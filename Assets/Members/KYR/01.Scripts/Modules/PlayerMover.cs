@@ -38,6 +38,8 @@ namespace Members.KYR._01_Scripts.Modules
         private float _dashSpeed;
         private float _dashTimeRemaining;
         private float _dashTotalTime;
+        private Vector3 _scriptedVelocity;
+        private bool _hasScriptedMotion;
         private float _dashSlowFraction;
 
         private const float DashMinSpeedFactor = 0.35f;
@@ -184,6 +186,12 @@ namespace Members.KYR._01_Scripts.Modules
 
             _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime);
 
+            if (_hasScriptedMotion)
+            {
+                characterController.Move(_scriptedVelocity * deltaTime);
+                return;
+            }
+
             if (IsGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;
             else
@@ -204,7 +212,19 @@ namespace Members.KYR._01_Scripts.Modules
             characterController.Move(motion * deltaTime);
         }
 
-        public void CancelDash() => _dashTimeRemaining = 0f;
+        public void SetScriptedMotion(Vector3 velocity)
+        {
+            _scriptedVelocity = velocity;
+            _hasScriptedMotion = true;
+            _verticalVelocity = 0f;
+        }
+
+        public void CancelDash()
+        {
+            _dashTimeRemaining = 0f;
+            _hasScriptedMotion = false;
+            _verticalVelocity = 0f;
+        }
 
         public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f)
         {
