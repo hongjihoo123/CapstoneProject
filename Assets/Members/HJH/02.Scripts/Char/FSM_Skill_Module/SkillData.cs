@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
@@ -9,17 +9,28 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField] private bool allowsMove = true;
         [SerializeField] private bool allowsFire = true;
         [SerializeField] private float moveSpeedMultiplier = 1f;
+        [SerializeField] private bool cancelable;
+        [SerializeField] private float cancelDelay;
 
         public float Cooldown => cooldown;
         public float Duration => duration;
         public bool AllowsMove => allowsMove;
         public bool AllowsFire => allowsFire;
         public float MoveSpeedMultiplier => moveSpeedMultiplier;
+        public bool Cancelable => cancelable;
+        public float CancelDelay => cancelDelay;
+        public virtual float CancelStartTime => cancelDelay;
 
-        // 스킬 진입 시 실제로 뭘 할지 구현 싹싹
-        public abstract void Execute(SkillStateModule owner);
+        public virtual ISkillExecution Begin(ISkillContext context)
+        {
+            Execute(context);
+            return null;
+        }
 
-        // 애니메이션 이벤트 타이밍
-        public virtual void OnAnimationHitEvent(SkillStateModule owner) { }
+        public virtual void Execute(ISkillContext context) { }
+
+        public virtual void OnAnimationHitEvent(ISkillContext context) { }
+
+        public virtual void DescribePreview(ISkillContext context, ISkillPreview preview) { }
     }
 }

@@ -9,36 +9,52 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraPivot;
         [SerializeField] private float gravity = -25f;
+        [SerializeField] private float lookSensitivity = 0.12f;
+        [SerializeField] private float minPitch = -80f;
+        [SerializeField] private float maxPitch = 80f;
+        [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private float acceleration = 18f;
-        [SerializeField] private float turnSpeed = 720f;
-        [SerializeField] private Vector3 cameraOffset = new Vector3(0f, 14f, -10f);
-        [SerializeField] private Vector3 cameraEuler = new Vector3(45f, 0f, 0f);
-        [SerializeField] private float cameraFollow = 12f;
-        [SerializeField] private float dashSpeed = 18f;
-        [SerializeField] private float dashDuration = 0.18f;
-        [SerializeField] private float dashCooldown = 0.45f;
-
+        
         [Header("스탯 풀백 모듈 없을 때만")]
         [SerializeField] private float walkSpeed = 4.5f;
         [SerializeField] private float runSpeed = 7.5f;
+        [SerializeField] private float crouchSpeed = 2.2f;
+        [SerializeField] private float jumpHeight = 1.2f;
+        [SerializeField] private float airControl = 0.7f;
+        
 
         private float _targetPlanarSpeed;
+
         private float _verticalVelocity;
+        private float _standingHeight;
+        private Vector3 _standingCenter;
+        private float _pitch;
         private Vector2 _planarInput;
         private float _planarSpeed;
+        private Vector3 _hipCameraLocalPosition;
+        private bool _hipCameraPositionCaptured;
+
         private Vector3 _dashDirection;
         private float _dashSpeed;
         private float _dashTimeRemaining;
-        private float _dashCooldownRemaining;
+        private float _dashTotalTime;
+        private Vector3 _scriptedVelocity;
+        private bool _hasScriptedMotion;
+        private float _dashSlowFraction;
+
+        private const float DashMinSpeedFactor = 0.35f;
         private PlayerStatsModule _stats;
 
         public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
         public float RunSpeed => GetStat(PlayerStatId.RunSpeed, runSpeed);
+        public float CrouchSpeed => GetStat(PlayerStatId.CrouchSpeed, crouchSpeed);
+        public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
+        public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
+        public Transform MoveReference { get; set; }
         public bool IsGrounded => characterController != null && characterController.isGrounded;
         public bool IsDashing => _dashTimeRemaining > 0f;
         public float PlanarSpeed => new Vector3(characterController.velocity.x, 0f, characterController.velocity.z).magnitude;
-
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
@@ -49,8 +65,22 @@ namespace Members.KYR._01_Scripts.Modules
 
             Debug.Assert(characterController != null, $"{owner.name}에는 CharacterController가 필요합니다.");
 
-            if (cameraPivot != null && cameraPivot.parent != null)
-                cameraPivot.SetParent(null, true);
+            _standingHeight = characterController.height;
+            _standingCenter = characterController.center;
+
+            if (cameraPivot != null)
+            {
+                _hipCameraLocalPosition = cameraPivot.localPosition;
+                _hipCameraPositionCaptured = true;
+            }
+        }
+
+        public Vector3 ToWorldMove(Vector2 input)
+        {
+            if (MoveReference == null)
+                return _owner.transform.right * input.x + _owner.transform.forward * input.y;
+
+            return Quaternion.Euler(0f, MoveReference.eulerAngles.y, 0f) * new Vector3(input.x, 0f, input.y);
         }
 
         public void SetOwnerSpeedMultiplier(float multiplier)
@@ -86,15 +116,81 @@ namespace Members.KYR._01_Scripts.Modules
             Physics.SyncTransforms();
         }
 
+        public void Jump()
+        {
+            _verticalVelocity = Mathf.Sqrt(JumpHeight * -2f * gravity);
+        }
+
+        public void SetCrouching(bool crouch)
+        {
+            if (characterController == null)
+                return;
+
+            float targetHeight = crouch ? crouchHeight : _standingHeight;
+            if (Mathf.Approximately(characterController.height, targetHeight))
+                return;
+
+            characterController.height = targetHeight;
+            float heightDelta = _standingHeight - targetHeight;
+            characterController.center = crouch
+                ? _standingCenter - new Vector3(0f, heightDelta * 0.5f, 0f)
+                : _standingCenter;
+        }
+
+        public void ApplyRecoilPitch(float pitchDelta)
+        {
+            if (cameraPivot == null)
+                return;
+
+            _pitch = Mathf.Clamp(_pitch - pitchDelta, minPitch, maxPitch);
+            cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
+        public void ApplyRecoilYaw(float yawDelta)
+        {
+            _owner.transform.Rotate(0f, yawDelta, 0f);
+        }
+
+        public Vector3 HipCameraLocalPosition => _hipCameraPositionCaptured ? _hipCameraLocalPosition : Vector3.zero;
+
+        public void SetCameraLocalPositionInstant(Vector3 localPosition)
+        {
+            if (cameraPivot == null)
+                return;
+            cameraPivot.localPosition = localPosition;
+        }
+
+        public void ResetCameraToHipInstant()
+        {
+            if (cameraPivot == null || !_hipCameraPositionCaptured)
+                return;
+            cameraPivot.localPosition = _hipCameraLocalPosition;
+        }
+
+        public void TickLook(Vector2 lookDelta)
+        {
+            if (cameraPivot == null)
+                return;
+
+            Transform root = _owner.transform;
+            root.Rotate(0f, lookDelta.x * lookSensitivity, 0f);
+
+            _pitch = Mathf.Clamp(_pitch - lookDelta.y * lookSensitivity, minPitch, maxPitch);
+            cameraPivot.localRotation = Quaternion.Euler(_pitch, 0f, 0f);
+        }
+
         public void TickPhysics(float deltaTime)
         {
             if (characterController == null)
                 return;
 
-            if (_dashCooldownRemaining > 0f)
-                _dashCooldownRemaining -= deltaTime;
-
             _planarSpeed = Mathf.MoveTowards(_planarSpeed, _targetPlanarSpeed, acceleration * deltaTime);
+
+            if (_hasScriptedMotion)
+            {
+                characterController.Move(_scriptedVelocity * deltaTime);
+                return;
+            }
 
             if (IsGrounded && _verticalVelocity < 0f)
                 _verticalVelocity = -2f;
@@ -104,83 +200,55 @@ namespace Members.KYR._01_Scripts.Modules
             Vector3 planar;
             if (_dashTimeRemaining > 0f)
             {
-                planar = _dashDirection * _dashSpeed;
+                planar = _dashDirection * (_dashSpeed * DashSpeedFactor());
                 _dashTimeRemaining -= deltaTime;
-                FaceDirection(_dashDirection, deltaTime);
             }
             else
             {
-                planar = GetCameraPlanarDirection(_planarInput) * _planarSpeed;
-                if (planar.sqrMagnitude > 0.0001f)
-                    FaceDirection(planar, deltaTime);
+                planar = ToWorldMove(_planarInput) * _planarSpeed;
             }
 
             Vector3 motion = planar + Vector3.up * _verticalVelocity;
             characterController.Move(motion * deltaTime);
-
-            TickCamera(deltaTime);
         }
 
-        public void TryDash(Vector2 moveInput)
+        public void SetScriptedMotion(Vector3 velocity)
         {
-            if (_dashTimeRemaining > 0f || _dashCooldownRemaining > 0f)
-                return;
-
-            Vector3 direction = GetCameraPlanarDirection(moveInput);
-            Dash(direction, dashSpeed, dashDuration);
-            _dashCooldownRemaining = dashCooldown;
+            _scriptedVelocity = velocity;
+            _hasScriptedMotion = true;
+            _verticalVelocity = 0f;
         }
 
-        public Vector3 GetCameraPlanarDirection(Vector2 moveInput)
+        public void CancelDash()
         {
-            Transform basis = cameraPivot != null ? cameraPivot : _owner.transform;
-            Vector3 forward = Vector3.ProjectOnPlane(basis.forward, Vector3.up);
-            Vector3 right = Vector3.ProjectOnPlane(basis.right, Vector3.up);
-            if (forward.sqrMagnitude < 0.0001f)
-                forward = Vector3.forward;
-            if (right.sqrMagnitude < 0.0001f)
-                right = Vector3.right;
-
-            Vector3 direction = right.normalized * moveInput.x + forward.normalized * moveInput.y;
-            if (direction.sqrMagnitude < 0.0001f)
-                return Vector3.ProjectOnPlane(_owner.transform.forward, Vector3.up).normalized;
-
-            return direction.normalized;
+            _dashTimeRemaining = 0f;
+            _hasScriptedMotion = false;
+            _verticalVelocity = 0f;
         }
 
-        public void Dash(Vector3 direction, float speed, float duration)
+        public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f)
         {
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f)
                 direction = _owner.transform.forward;
 
+            float slowFraction = Mathf.Clamp01(endSlowdown);
+            float averageFactor = (1f - slowFraction) + slowFraction * (1f + DashMinSpeedFactor) * 0.5f;
+
             _dashDirection = direction.normalized;
-            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f);
-            _dashTimeRemaining = duration * GetStat(PlayerStatId.DashDuration, 1f);
+            _dashSpeed = speed * GetStat(PlayerStatId.DashSpeed, 1f) / averageFactor;
+            _dashTotalTime = duration * GetStat(PlayerStatId.DashDuration, 1f);
+            _dashTimeRemaining = _dashTotalTime;
+            _dashSlowFraction = slowFraction;
         }
 
-        private void FaceDirection(Vector3 direction, float deltaTime)
+        private float DashSpeedFactor()
         {
-            direction.y = 0f;
-            if (direction.sqrMagnitude < 0.0001f)
-                return;
+            float slowTime = _dashTotalTime * _dashSlowFraction;
+            if (slowTime <= 0f || _dashTimeRemaining >= slowTime)
+                return 1f;
 
-            Quaternion target = Quaternion.LookRotation(direction.normalized, Vector3.up);
-            _owner.transform.rotation = Quaternion.RotateTowards(
-                _owner.transform.rotation,
-                target,
-                turnSpeed * deltaTime);
-        }
-
-        private void TickCamera(float deltaTime)
-        {
-            if (cameraPivot == null)
-                return;
-
-            Vector3 targetPosition = _owner.transform.position + cameraOffset;
-            float t = 1f - Mathf.Exp(-cameraFollow * deltaTime);
-            cameraPivot.position = Vector3.Lerp(cameraPivot.position, targetPosition, t);
-            cameraPivot.rotation = Quaternion.Euler(cameraEuler);
+            return Mathf.Lerp(DashMinSpeedFactor, 1f, _dashTimeRemaining / slowTime);
         }
 
         private float GetStat(PlayerStatId id, float fallback)

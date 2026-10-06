@@ -16,6 +16,7 @@ namespace RobotWeapons
 
             WeaponBase weapon = data switch
             {
+                ChainWeaponData d => new ChainWeapon(d),
                 TankerWeaponData d => new TankerWeapon(d),
                 LaserDealerData d => new LaserDealerWeapon(d),
                 GunDealerData d => new GunDealerWeapon(d),

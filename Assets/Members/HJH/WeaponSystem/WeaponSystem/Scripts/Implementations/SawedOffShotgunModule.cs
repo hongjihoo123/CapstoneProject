@@ -58,6 +58,8 @@ namespace RobotWeapons
 
         public bool CanFire => !IsReloading && CurrentAmmo > 0;
 
+        public static bool IsFireAnim(string animId) => animId == "SawedOff_FireLeft" || animId == "SawedOff_FireRight";
+
         public void Fire(IWeaponOwner owner, float bonusDamage, System.Action<string> raiseAttackTriggered,
             GameObject defaultHitEffectPrefab = null)
         {

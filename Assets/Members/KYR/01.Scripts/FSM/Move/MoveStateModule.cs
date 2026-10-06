@@ -26,6 +26,8 @@ namespace Members.KYR._01_Scripts.FSM.Move
             Machine.Register(new IdleMoveState(this));
             Machine.Register(new WalkMoveState(this));
             Machine.Register(new RunMoveState(this));
+            Machine.Register(new JumpMoveState(this));
+            Machine.Register(new CrouchMoveState(this));
             Machine.ChangeState<IdleMoveState>();
         }
 
@@ -43,6 +45,7 @@ namespace Members.KYR._01_Scripts.FSM.Move
         public void ForceIdle()
         {
             ChangeState<IdleMoveState>();
+            Player.Mover.SetCrouching(false);
             Player.Mover.SetPlanarInput(Vector2.zero, 0f);
         }
 
@@ -50,7 +53,26 @@ namespace Members.KYR._01_Scripts.FSM.Move
         {
             PlayerInputState input = Player.Input;
 
-            if (input.HasMoveInput && input.RunHeld)
+            if (!Player.SkillFsm.Capabilities.AllowsMove)
+            {
+                ChangeState<IdleMoveState>();
+                return;
+            }
+
+            if (Player.Mover.IsGrounded && input.JumpPressed)
+            {
+                ChangeState<JumpMoveState>();
+                return;
+            }
+
+            if (input.CrouchHeld)
+            {
+                ChangeState<CrouchMoveState>();
+                return;
+            }
+
+            bool canSprint = input.HasMoveInput && input.RunHeld && !Player.WeaponFsm.Capabilities.LocksSprint;
+            if (canSprint)
             {
                 ChangeState<RunMoveState>();
                 return;
@@ -67,16 +89,24 @@ namespace Members.KYR._01_Scripts.FSM.Move
 
         private void ApplyMovement()
         {
-            float speed = Capabilities.PlanarSpeed * Player.SkillFsm.Capabilities.MoveSpeedMultiplier;
+            IMoveCapabilities capabilities = Capabilities;
+            float speed = capabilities.PlanarSpeed
+                * Player.WeaponFsm.Capabilities.MoveSpeedMultiplier
+                * Player.SkillFsm.Capabilities.MoveSpeedMultiplier;
 
             if (!Player.SkillFsm.Capabilities.AllowsMove)
                 speed = 0f;
 
+            Player.Mover.SetCrouching(capabilities.IsCrouching);
             Player.Mover.SetPlanarInput(Player.Input.Move, speed);
         }
 
         private sealed class AllowAllMoveFallback : IMoveCapabilities
         {
+            public bool CanAim => true;
+            public bool CanFire => true;
+            public bool IsCrouching => false;
+            public bool IsAirborne => false;
             public float PlanarSpeed => 0f;
         }
     }

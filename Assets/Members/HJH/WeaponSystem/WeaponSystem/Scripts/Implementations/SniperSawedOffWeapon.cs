@@ -2,7 +2,7 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    public class SniperSawedOffWeapon : WeaponBase
+    public class SniperSawedOffWeapon : WeaponBase, IAmmoDisplay, IAttackFeedbackSource
     {
         private enum Mode { Sniper, Shotgun }
 
@@ -41,6 +41,31 @@ namespace RobotWeapons
             shotgun = new SawedOffShotgunModule(d.pelletCount, d.spreadAngle, d.damagePerPellet,
                 d.shotgunRange, d.shotgunMaxAmmo, d.shotgunReloadDuration, d.damageFalloffAtMaxRange,
                 d.bulletPrefab, d.bulletSpeed);
+        }
+
+        public bool TryGetAmmoText(out string text)
+        {
+            text = IsShotgunMode
+                ? AmmoText.Format(ShotgunCurrentAmmo, ShotgunMaxAmmo, ShotgunIsReloading)
+                : AmmoText.Format(SniperCurrentAmmo, SniperMaxAmmo, SniperIsReloading);
+            return true;
+        }
+
+        public AttackFeedback DescribeAttack(string animId)
+        {
+            if (animId == "Sniper_Fire")
+            {
+                return new AttackFeedback
+                {
+                    IsFire = true,
+                    ShakeForce = data.attackShakeForce,
+                    HasTracer = true,
+                    TracerStart = LastShotStart,
+                    TracerEnd = LastShotEnd
+                };
+            }
+
+            return SawedOffShotgunModule.IsFireAnim(animId) ? new AttackFeedback { IsFire = true } : default;
         }
 
         public override void SwapMode()

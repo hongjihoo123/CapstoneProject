@@ -1,15 +1,14 @@
-﻿using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
     public abstract class SkillStateBase : ISkillState
     {
-        protected readonly SkillStateModule Owner;
+        protected readonly ISkillHost Host;
         protected float EnterTime;
         private float _lastExitTime = float.NegativeInfinity;
 
-        protected SkillStateBase(SkillStateModule owner) => Owner = owner;
+        protected SkillStateBase(ISkillHost host) => Host = host;
 
         public virtual bool AllowsMove => true;
         public virtual bool AllowsFire => true;
@@ -18,36 +17,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public virtual bool IsFinished => true;
         public abstract float Cooldown { get; }
         public bool IsReady => Time.time - _lastExitTime >= EffectiveCooldown;
+        public float Elapsed => Time.time - EnterTime;
+        public float CooldownRemaining => Mathf.Max(0f, EffectiveCooldown - (Time.time - _lastExitTime));
 
         protected float EffectiveCooldown
         {
             get
             {
                 float cooldown = Cooldown;
-                if (cooldown <= 0f)
-                    return 0f;
-
-                var stats = Owner.Player != null ? Owner.Player.Stats : null;
-                if (stats == null || stats.Tree == null)
-                    return cooldown;
-
-                float reduction = Mathf.Clamp01(stats.Get(PlayerStatId.SkillCooldownReduction));
-                return cooldown * (1f - reduction);
+                return cooldown <= 0f ? 0f : cooldown * (1f - Host.CooldownReduction);
             }
         }
 
         public virtual void Enter()
         {
             EnterTime = Time.time;
-            Owner.ResetHitTracking();
+            Host.OnSkillEntered();
         }
+
         public virtual void Exit() => _lastExitTime = Time.time;
         public virtual void Tick(float deltaTime) { }
-
         public virtual void OnAnimationHitEvent() { }
-
-        // 이거 임시로 둔거 ㅇㅇ, 버그 디버깅 때문에
-        public float DebugElapsed => Time.time - EnterTime;
-        public virtual float DebugDuration => 0f;
     }
 }
