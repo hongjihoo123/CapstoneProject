@@ -11,45 +11,30 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     public partial class AttackAction : Action
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
-        private float _elapsedTime;
-        private float _attackTime;
+
+        [SerializeReference] public BlackboardVariable<bool> IsMove;
+
+        private float _cooldownTimer = 0f;
 
         protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.EnemyData == null)
                 return Status.Failure;
 
-            if (Enemy.Value.IsAlive == false)
-                return Status.Success;
-
-            _elapsedTime = 0f;
-            _attackTime = Enemy.Value.EnemyData.AttackCooltime;
-
-            Enemy.Value.Attack();
-
-            if (_attackTime <= 0f)
-                return Status.Success;
-
             return Status.Running;
         }
 
         protected override Status OnUpdate()
         {
-            if (Enemy.Value.IsAlive == false)
-                return Status.Success;
+            if (Time.time < _cooldownTimer)
+                return Status.Running;
 
-            _elapsedTime += Time.deltaTime;
+            Enemy.Value.Attack();
+            IsMove.Value = false;
 
-            if (_elapsedTime >= _attackTime)
-                return Status.Success;
+            _cooldownTimer = Time.time + Enemy.Value.EnemyData.AttackCooltime;
 
-            return Status.Running;
-        }
-
-        protected override void OnEnd()
-        {
-            _elapsedTime = 0f;
-            _attackTime = 0f;
+            return Status.Success;
         }
     }
 }
