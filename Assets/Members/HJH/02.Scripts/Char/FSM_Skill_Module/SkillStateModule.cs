@@ -61,6 +61,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public event Action<SkillUsedInfo> SkillUsed;
         // Any slot's skill changed (skill swap, kit / character change). Once per EquipKit.
         public event Action LoadoutChanged;
+        // A key was pressed for an equipped skill that cannot be cast yet (cooldown, no charge, swap lock).
+        public event Action<SkillSlotId> SkillDenied;
+        // A skill became castable again: cooldown done (multi-charge: first charge back) or swap lock over.
+        public event Action<SkillSlotId> SkillReady;
+
+        private readonly Dictionary<SkillSlotId, bool> _wasReady = new();
 
         private bool _equippingKit;
 
@@ -123,6 +129,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (_slots.TryGetValue(slot, out GenericSkillState previous) && Machine != null && ReferenceEquals(Machine.Current, previous))
                 ForceIdle();
 
+            _wasReady.Remove(slot);
             if (data == null)
                 _slots.Remove(slot);
             else
@@ -167,6 +174,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             Machine.Tick(deltaTime);
             _passive?.Tick(deltaTime);
+            DetectReady();
+        }
+
+        // Edge detection lives here, not in the UI: views only hear "this slot is ready now".
+        // A freshly equipped skill has no history, so it is recorded first and never fires on equip.
+        private void DetectReady()
+        {
+            foreach (KeyValuePair<SkillSlotId, GenericSkillState> pair in _slots)
+            {
+                bool ready = pair.Value.IsReady;
+                if (_wasReady.TryGetValue(pair.Key, out bool was) && !was && ready)
+                    SkillReady?.Invoke(pair.Key);
+                _wasReady[pair.Key] = ready;
+            }
         }
 
         public void ForceIdle() => Machine.ChangeState<IdleSkillState>();
@@ -190,9 +211,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             {
                 if (running.Data.Cancelable && running.Elapsed >= running.Data.CancelStartTime && ShouldCancel(running, input))
                     Machine.ChangeState<IdleSkillState>();
+                else
+                    ReportDenied(input, running.Slot);
                 return;
             }
 
+            ReportDenied(input, null);
             Machine.ChangeState<IdleSkillState>();
 
             if (_aimingSlot == null)
@@ -244,6 +268,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
 
             return _interceptedInput;
+        }
+
+        // The running skill's own key is a cancel key, not a cast attempt, so it is never reported.
+        private void ReportDenied(ISkillInputSource input, SkillSlotId? except)
+        {
+            if (SkillDenied == null)
+                return;
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (slot != except && input.WasSkillPressed(slot)
+                    && _slots.TryGetValue(slot, out GenericSkillState state) && !state.IsReady)
+                    SkillDenied.Invoke(slot);
+            }
         }
 
         private ISkillInputInterceptor FindInterceptor(SkillSlotId slot)

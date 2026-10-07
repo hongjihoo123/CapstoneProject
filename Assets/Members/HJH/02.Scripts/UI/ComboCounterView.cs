@@ -1,4 +1,5 @@
 using Assets.Members.HJH._02.Scripts.Element;
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -15,11 +16,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Color gaugeColor = new Color(1f, 0.55f, 0.2f);
         [SerializeField] private float warnTime = 0.8f;
         [SerializeField] private float breakDuration = 0.4f;
+        [SerializeField] private float breakDrop = 20f;
 
         private RectTransform _rect;
         private CanvasGroup _group;
         private Vector2 _home;
-        private float _breakTime = -1f;
+        private Sequence _break;
 
         private void Awake()
         {
@@ -46,25 +48,32 @@ namespace Assets.Members.HJH._02.Scripts.UI
             chain.ChainBroken -= HandleChainBroken;
         }
 
-        private void HandleInputAdded(bool shifted) => _breakTime = -1f;
+        private void HandleInputAdded(bool shifted) => _break?.Kill();
 
-        private void HandleChainBroken(int finalCount) => _breakTime = 0f;
+        // Drops away and fades. While it plays the tween owns position and alpha.
+        private void HandleChainBroken(int finalCount)
+        {
+            _break?.Kill();
+            gaugeFill.fillAmount = 0f;
+            _break = DOTween.Sequence()
+                .Join(_rect.DOAnchorPosY(_home.y - breakDrop, breakDuration).SetEase(Ease.InQuad))
+                .Join(_group.DOFade(0f, breakDuration).SetEase(Ease.Linear))
+                .OnKill(() =>
+                {
+                    _break = null;
+                    if (_rect != null)
+                        _rect.anchoredPosition = _home;
+                })
+                .SetUpdate(true)
+                .SetLink(gameObject);
+        }
 
         private void LateUpdate()
         {
-            Vector2 offset = Vector2.zero;
+            if (_break != null)
+                return;
 
-            if (_breakTime >= 0f)
-            {
-                _breakTime += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(_breakTime / breakDuration);
-                offset = Vector2.down * (20f * t * t);
-                _group.alpha = 1f - t;
-                gaugeFill.fillAmount = 0f;
-                if (t >= 1f)
-                    _breakTime = -1f;
-            }
-            else if (chain.ChainCount > 0)
+            if (chain.ChainCount > 0)
             {
                 gaugeFill.fillAmount = Mathf.Clamp01(chain.Remaining / chain.ChainWindow);
                 _group.alpha = chain.Remaining < warnTime
@@ -75,8 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 _group.alpha = 0f;
             }
-
-            _rect.anchoredPosition = _home + offset;
         }
     }
 }

@@ -1,3 +1,4 @@
+using DG.Tweening;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -7,6 +8,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
     // One input of the combo trail, drawn like a fighting-game input: key cap in the element's color,
     // element name underneath. States: empty, filled (slams in), ghost (pulsing "press this next"),
     // and a gold flash when it was part of a combo that just landed.
+    //
+    // Final transform = trail pose (set every frame by ElementComboHud while it slides / breaks)
+    //                 x slam and flash multipliers (one-shot DOTween tweens on two floats).
     [RequireComponent(typeof(CanvasGroup))]
     public class ComboInputCell : MonoBehaviour
     {
@@ -27,9 +31,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private Vector2 _home;
         private Vector2 _offset;
         private float _poseScale = 1f;
-        private float _slamTime = -1f;
-        private float _flashTime = -1f;
-        private Color _flashColor;
+        private float _slamMul = 1f;
+        private float _flashMul = 1f;
+        private Tween _slam;
+        private Sequence _flash;
         private bool _ghost;
         private Color _ghostColor;
 
@@ -50,7 +55,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             badge.enabled = false;
             keyText.text = string.Empty;
             elementText.text = string.Empty;
-            ring.enabled = _flashTime >= 0f;
+            ring.enabled = _flash != null;
         }
 
         public void ShowInput(ElementPalette.Entry entry, string key, string elementName, bool slam)
@@ -58,10 +63,18 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _ghost = false;
             background.color = Frame(entry.color);
             SetContent(entry, key, elementName, 1f);
-            ring.enabled = _flashTime >= 0f;
+            ring.enabled = _flash != null;
 
-            if (slam)
-                _slamTime = 0f;
+            if (!slam)
+                return;
+
+            _slam?.Kill();
+            _slamMul = slamScale;
+            _slam = DOTween.To(() => _slamMul, value => _slamMul = value, 1f, slamDuration)
+                .SetEase(Ease.OutQuad)
+                .OnKill(() => _slamMul = 1f)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         public void ShowGhost(ElementPalette.Entry entry, string key, string elementName)
@@ -75,9 +88,22 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         public void Flash(Color color)
         {
-            _flashColor = color;
-            _flashTime = 0f;
+            _flash?.Kill();
             ring.enabled = true;
+            ring.color = new Color(color.r, color.g, color.b, 1f);
+            _flashMul = flashScale;
+            _flash = DOTween.Sequence()
+                .Join(DOTween.To(() => _flashMul, value => _flashMul = value, 1f, flashDuration))
+                .Join(ring.DOFade(0f, flashDuration))
+                .OnKill(() =>
+                {
+                    _flash = null;
+                    _flashMul = 1f;
+                    if (ring != null)
+                        ring.enabled = _ghost;
+                })
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         // Pose set by the trail (slide / break animations); slam and flash scale on top of it.
@@ -107,38 +133,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void LateUpdate()
         {
-            float dt = Time.unscaledDeltaTime;
-            float scale = _poseScale;
-
-            if (_slamTime >= 0f)
-            {
-                _slamTime += dt;
-                float t = Mathf.Clamp01(_slamTime / slamDuration);
-                scale *= Mathf.Lerp(slamScale, 1f, 1f - (1f - t) * (1f - t));
-                if (t >= 1f)
-                    _slamTime = -1f;
-            }
-
-            if (_flashTime >= 0f)
-            {
-                _flashTime += dt;
-                float t = Mathf.Clamp01(_flashTime / flashDuration);
-                scale *= Mathf.Lerp(flashScale, 1f, t);
-                ring.color = new Color(_flashColor.r, _flashColor.g, _flashColor.b, 1f - t);
-                if (t >= 1f)
-                {
-                    _flashTime = -1f;
-                    ring.enabled = _ghost;
-                }
-            }
-            else if (_ghost)
+            // The flash owns the ring while it plays; the ghost pulse is a continuous state.
+            if (_flash == null && _ghost)
             {
                 float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * ghostPulseSpeed);
                 ring.color = new Color(_ghostColor.r, _ghostColor.g, _ghostColor.b, Mathf.Lerp(0.3f, 0.95f, pulse));
             }
 
             _rect.anchoredPosition = _home + _offset;
-            _rect.localScale = Vector3.one * scale;
+            _rect.localScale = Vector3.one * (_poseScale * _slamMul * _flashMul);
         }
     }
 }

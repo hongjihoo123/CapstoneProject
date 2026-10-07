@@ -1,8 +1,11 @@
 using System;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.SkillSwap;
+using DG.Tweening;
+using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
@@ -29,6 +32,24 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("The box sits on the screen point this high above the orb (pivot bottom-center).")]
         private float worldHeight = 2.2f;
 
+        [Header("Swap flight")]
+        [SerializeField, Tooltip("Found in the scene when empty. The swapped-in icon flies into its slot.")]
+        private SkillBarView skillBar;
+        [SerializeField, Tooltip("Hidden Image on the HUD canvas root that carries the icon. Without it the slot just pops.")]
+        private Image flightIcon;
+        [SerializeField] private float flightDuration = 0.38f;
+        [SerializeField] private Ease flightEase = Ease.InOutCubic;
+        [SerializeField, Tooltip("Upward bulge of the flight path, in canvas units.")]
+        private float flightArc = 90f;
+        [SerializeField, Tooltip("Size relative to the card / slot it flies between.")]
+        private float flightIconScale = 0.8f;
+        [SerializeField, Tooltip("Extra size at the top of the arc.")]
+        private float flightSwell = 0.25f;
+        [SerializeField, Tooltip("Z tilt at the top of the arc, degrees.")]
+        private float flightTilt = -12f;
+
+        private Tween _flight;
+
         private SkillPickup _pickup;
         private Transform _follow;
         private SkillCardView _hovered;
@@ -39,7 +60,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (interactor == null)
                 interactor = FindFirstObjectByType<SkillSwapInteractor>();
             if (interactor != null)
+            {
                 interactor.ChoosingChanged += HandleChoosingChanged;
+                interactor.Swapped += HandleSwapped;
+            }
+            if (skillBar == null)
+                skillBar = FindFirstObjectByType<SkillBarView>();
 
             groundCard.SetKey("바닥");
             groundCard.Hovered += HandleHovered;
@@ -63,7 +89,68 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void OnDestroy()
         {
             if (interactor != null)
+            {
                 interactor.ChoosingChanged -= HandleChoosingChanged;
+                interactor.Swapped -= HandleSwapped;
+            }
+        }
+
+        // The ground card's icon flies into the skill bar slot it was swapped into, then the slot pops.
+        private void HandleSwapped(SkillSlotId slot, SkillData outgoing, SkillData incoming)
+        {
+            if (incoming == null || skillBar == null || !skillBar.TryGetView(slot, out SkillSlotView view))
+                return;
+
+            Color color = palette != null ? palette.NeutralColor : Color.white;
+            if (palette != null && incoming.TryGetElement(out ElementType element) && palette.TryGet(element, out ElementPalette.Entry entry))
+                color = entry.color;
+
+            if (incoming.Icon == null || flightIcon == null)
+            {
+                view.Punch(color);
+                return;
+            }
+
+            FlyIcon(incoming.Icon, groundCard.Rect, (RectTransform)view.transform, view, color);
+        }
+
+        // One reused Image on the HUD canvas (outside this panel, so the panel fading out does not hide it).
+        // The tween is linked to that Image: if anything disables it mid-flight the tween is killed and
+        // OnKill hides it, so no icon is ever left hanging on screen.
+        private void FlyIcon(Sprite sprite, RectTransform from, RectTransform to, SkillSlotView view, Color color)
+        {
+            _flight?.Kill(true);
+
+            RectTransform rect = flightIcon.rectTransform;
+            Canvas canvas = flightIcon.canvas;
+            float unit = canvas != null ? canvas.rootCanvas.scaleFactor : 1f;
+            flightIcon.sprite = sprite;
+            flightIcon.gameObject.SetActive(true);
+            rect.SetAsLastSibling();
+
+            Vector3 start = from.TransformPoint(from.rect.center);
+            Vector2 startSize = from.rect.size * flightIconScale;
+            Vector2 endSize = to.rect.size * flightIconScale;
+
+            _flight = DOVirtual.Float(0f, 1f, flightDuration, t =>
+                {
+                    float eased = DOVirtual.EasedValue(0f, 1f, t, flightEase);
+                    float bulge = Mathf.Sin(t * Mathf.PI);
+                    Vector3 end = to.TransformPoint(to.rect.center);
+                    rect.position = Vector3.LerpUnclamped(start, end, eased) + Vector3.up * (bulge * flightArc * unit);
+                    rect.sizeDelta = Vector2.LerpUnclamped(startSize, endSize, eased) * (1f + flightSwell * bulge);
+                    rect.localRotation = Quaternion.Euler(0f, 0f, bulge * flightTilt);
+                })
+                .SetEase(Ease.Linear)
+                .SetUpdate(true)
+                .SetLink(flightIcon.gameObject, LinkBehaviour.KillOnDisable)
+                .OnComplete(() => { if (view != null) view.Punch(color); })
+                .OnKill(() =>
+                {
+                    _flight = null;
+                    if (flightIcon != null)
+                        flightIcon.gameObject.SetActive(false);
+                });
         }
 
         private void HandleChoosingChanged(SkillPickup pickup)

@@ -42,10 +42,19 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         public IEnumerable<SlotBinding> Bindings => slots;
 
+        private SkillStateModule _subscribed;
+
         private void Start()
         {
             if (player == null)
                 return;
+
+            _subscribed = player.SkillFsm;
+            if (_subscribed != null)
+            {
+                _subscribed.SkillDenied += HandleSkillDenied;
+                _subscribed.SkillReady += HandleSkillReady;
+            }
 
             foreach (SlotBinding binding in slots)
             {
@@ -57,6 +66,27 @@ namespace Assets.Members.HJH._02.Scripts.UI
                         binding.view.SetKeyLabel(player.GetSkillKeyLabel(binding.slot));
                 }
             }
+        }
+
+        private void OnDestroy()
+        {
+            if (_subscribed != null)
+            {
+                _subscribed.SkillDenied -= HandleSkillDenied;
+                _subscribed.SkillReady -= HandleSkillReady;
+            }
+        }
+
+        private void HandleSkillDenied(SkillSlotId slot)
+        {
+            if (TryGetView(slot, out SkillSlotView view))
+                view.Deny();
+        }
+
+        private void HandleSkillReady(SkillSlotId slot)
+        {
+            if (TryGetView(slot, out SkillSlotView view))
+                view.PlayReady();
         }
 
         private void LateUpdate()

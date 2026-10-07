@@ -26,8 +26,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Tooltip("A jump longer than this in one frame (blink, scripted flight) draws a streak.")]
         private float teleportStreakDistance = 1.5f;
 
-        private IShotVisualSource _shots;
-        private ISwingVisualSource _swings;
+        private readonly WeaponVisualTracker _weapon = new();
         private CharacterSwitcher _switcher;
         private FxHandle _dashTrail;
         private Vector3 _lastPosition;
@@ -48,6 +47,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (player != null)
                 player.DamageDealt += HandleDamageDealt;
 
+            _weapon.ShotFired += HandleShot;
+            _weapon.ProjectileLaunched += HandleProjectileLaunched;
+            _weapon.Swung += HandleSwing;
+
             _switcher = FindFirstObjectByType<CharacterSwitcher>();
             if (_switcher != null)
             {
@@ -65,20 +68,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_switcher != null)
                 _switcher.CharacterChanged -= HandleCharacterChanged;
 
-            BindShots(null);
-            BindSwings(null);
+            _weapon.ShotFired -= HandleShot;
+            _weapon.ProjectileLaunched -= HandleProjectileLaunched;
+            _weapon.Swung -= HandleSwing;
+            _weapon.Clear();
             _dashTrail?.Kill();
             _dashTrail = null;
         }
 
         private void Update()
         {
-            IWeapon weapon = player != null && player.Weapon != null ? player.Weapon.Weapon : null;
-            if (!ReferenceEquals(weapon as IShotVisualSource, _shots))
-                BindShots(weapon as IShotVisualSource);
-            if (!ReferenceEquals(weapon as ISwingVisualSource, _swings))
-                BindSwings(weapon as ISwingVisualSource);
-
+            _weapon.Track(player);
             UpdateMovementTrails();
         }
 
@@ -215,31 +215,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _killBurst = character.KillBurst;
             _dashTrail?.SetTint(themeColor);
             Fx.CharacterSwap(transform.position, themeColor);
-        }
-
-        private void BindShots(IShotVisualSource source)
-        {
-            if (_shots != null)
-            {
-                _shots.ShotFired -= HandleShot;
-                _shots.ProjectileLaunched -= HandleProjectileLaunched;
-            }
-
-            _shots = source;
-            if (_shots != null)
-            {
-                _shots.ShotFired += HandleShot;
-                _shots.ProjectileLaunched += HandleProjectileLaunched;
-            }
-        }
-
-        private void BindSwings(ISwingVisualSource source)
-        {
-            if (_swings != null)
-                _swings.Swung -= HandleSwing;
-            _swings = source;
-            if (_swings != null)
-                _swings.Swung += HandleSwing;
         }
     }
 }

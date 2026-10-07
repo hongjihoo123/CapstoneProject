@@ -1,5 +1,6 @@
 using System;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using DG.Tweening;
 using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
@@ -23,8 +24,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Image hoverGlow;
         [SerializeField] private Color emptyColor = new Color(1f, 1f, 1f, 0.12f);
         [SerializeField] private float hoverScale = 1.07f;
+        [SerializeField] private float hoverDuration = 0.14f;
 
         private float _hover;
+        private Tween _hoverTween;
 
         public SkillData Data { get; private set; }
         public bool IsHovered { get; private set; }
@@ -97,18 +100,24 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             IsHovered = hovered;
             Hovered?.Invoke(this, hovered);
+
+            // Enter / exit tween the hover weight; Update turns the weight into scale and a pulsing glow.
+            _hoverTween?.Kill();
+            _hoverTween = DOTween.To(() => _hover, value => _hover = value, hovered ? 1f : 0f, hoverDuration)
+                .SetEase(hovered ? Ease.OutBack : Ease.OutQuad)
+                .OnKill(() => _hoverTween = null)
+                .SetUpdate(true)
+                .SetLink(gameObject);
         }
 
         private void Update()
         {
-            _hover = Mathf.MoveTowards(_hover, IsHovered ? 1f : 0f, Time.unscaledDeltaTime * 8f);
-            float eased = _hover * _hover * (3f - 2f * _hover);
-            transform.localScale = Vector3.one * Mathf.Lerp(1f, hoverScale, eased);
+            transform.localScale = Vector3.one * Mathf.LerpUnclamped(1f, hoverScale, _hover);
 
             if (hoverGlow != null)
             {
                 Color c = hoverGlow.color;
-                c.a = eased * (0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
+                c.a = Mathf.Clamp01(_hover) * (0.75f + 0.25f * Mathf.Sin(Time.unscaledTime * 6f));
                 hoverGlow.color = c;
                 hoverGlow.enabled = c.a > 0.01f;
             }

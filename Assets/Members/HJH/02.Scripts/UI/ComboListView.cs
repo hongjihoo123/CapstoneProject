@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Element;
+using DG.Tweening;
 using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
@@ -35,7 +36,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             public Image[] Steps;
             public TMP_Text[] StepKeys;
             public int Progress;
-            public float FlashTime = -1f;
+            public Tween Flash;
         }
 
         private readonly List<Row> _rows = new();
@@ -108,8 +109,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             foreach (Row row in _rows)
             {
-                if (row.Recipe.Name == recipe.Name)
-                    row.FlashTime = 0f;
+                if (row.Recipe.Name != recipe.Name)
+                    continue;
+
+                row.Flash?.Kill();
+                row.Background.color = flashRowColor;
+                row.Flash = row.Background.DOColor(idleRowColor, flashDuration)
+                    .SetEase(Ease.InQuad)
+                    .SetUpdate(true)
+                    .SetLink(row.Background.gameObject);
             }
         }
 
@@ -129,18 +137,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Keyboard keyboard = Keyboard.current;
             if (keyboard != null && keyboard[toggleKey].wasPressedThisFrame)
                 SetOpen(!_open);
-
-            foreach (Row row in _rows)
-            {
-                if (row.FlashTime < 0f)
-                    continue;
-
-                row.FlashTime += Time.unscaledDeltaTime;
-                float t = Mathf.Clamp01(row.FlashTime / flashDuration);
-                row.Background.color = Color.Lerp(flashRowColor, idleRowColor, t * t);
-                if (t >= 1f)
-                    row.FlashTime = -1f;
-            }
         }
 
         private Row CreateRow(ElementComboBook.Recipe recipe)
