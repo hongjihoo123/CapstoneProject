@@ -10,6 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public SkillData Data { get; }
 
         public override float Cooldown => Data.Cooldown;
+        public override int MaxCharges => Data.Charges;
         public override bool AllowsMove => Data.AllowsMove;
         public override bool AllowsFire => Data.AllowsFire;
         public override float MoveSpeedMultiplier => Data.MoveSpeedMultiplier;

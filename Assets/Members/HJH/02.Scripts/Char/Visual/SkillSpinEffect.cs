@@ -19,11 +19,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private GameObject _builtFrom;
         private float _builtRadius;
         private bool _playing;
+        private float _angle;
 
         private void Update()
         {
-            if (_playing)
-                _orbit.Rotate(0f, rotationSpeed * Time.deltaTime, 0f, Space.Self);
+            if (!_playing)
+                return;
+
+            // Set from an angle instead of Rotate(): Rotate() multiplies every frame and the quaternion
+            // drifts off unit length ("QuaternionToEuler: Input quaternion was not normalized").
+            _angle = Mathf.Repeat(_angle + rotationSpeed * Time.deltaTime, 360f);
+            _orbit.localRotation = Quaternion.Euler(0f, _angle, 0f);
         }
 
         public void Play(GameObject prefab, float radius)
@@ -31,7 +37,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (prefab == null)
                 return;
 
-            if (_builtFrom != prefab || !Mathf.Approximately(_builtRadius, radius))
+            if (_builtFrom != prefab || !Mathf.Approximately(_builtRadius, radius) || _instances.Exists(i => i == null) || _systems.Exists(s => s == null))
                 Rebuild(prefab, radius);
 
             foreach (GameObject instance in _instances)
@@ -46,17 +52,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _playing = true;
         }
 
+        // Cut at once when the skill ends; blades lingering after the spin read as the skill still going.
         public void Stop()
         {
             _playing = false;
             foreach (ParticleSystem system in _systems)
-                system.Stop(true, ParticleSystemStopBehavior.StopEmitting);
+                if (system != null)
+                    system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
         }
 
         private void Rebuild(GameObject prefab, float radius)
         {
             foreach (GameObject instance in _instances)
-                Destroy(instance);
+            {
+                if (instance != null)
+                    Destroy(instance);
+            }
 
             _instances.Clear();
             _systems.Clear();
@@ -91,6 +102,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             foreach (ParticleSystem system in instance.GetComponentsInChildren<ParticleSystem>(true))
             {
                 system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
+
+                // Batslash's root has Stop Action = Destroy, which would delete the reused blades after one play.
+                ParticleSystem.MainModule stopSettings = system.main;
+                stopSettings.stopAction = ParticleSystemStopAction.None;
 
                 if (System.Array.IndexOf(SlashSystemNames, system.name) < 0)
                 {

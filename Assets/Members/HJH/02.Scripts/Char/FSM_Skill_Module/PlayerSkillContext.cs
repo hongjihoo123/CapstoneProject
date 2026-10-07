@@ -4,6 +4,7 @@ using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.Stats;
 using RobotWeapons;
 using UnityEngine;
+using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
@@ -14,12 +15,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private readonly PlayerAgent _player;
         private readonly LayerMask _targetMask;
+        private readonly LayerMask _environmentMask;
         private readonly HashSet<IDamageable> _hitThisActivation = new();
 
-        public PlayerSkillContext(PlayerAgent player, LayerMask targetMask)
+        public PlayerSkillContext(PlayerAgent player, LayerMask targetMask, LayerMask environmentMask)
         {
             _player = player;
             _targetMask = targetMask;
+            _environmentMask = environmentMask;
         }
 
         public Transform Transform => _player.transform;
@@ -50,6 +53,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public bool StatsReady => _player.Stats != null && _player.Stats.Tree != null;
 
+        public IPassive Passive { get; set; }
+
         public void BeginActivation() => _hitThisActivation.Clear();
 
         public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f) =>
@@ -75,9 +80,133 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public void FlashRange(float radius, float duration) =>
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, _player.transform.position + Vector3.up, radius, duration));
 
+        public void Run(ISkillTimedEffect effect)
+        {
+            if (effect == null)
+                return;
+
+            if (!_player.TryGetComponent(out SkillEffectRunner runner))
+                runner = _player.gameObject.AddComponent<SkillEffectRunner>();
+
+            runner.Add(effect);
+        }
+
+        public void PlayHitFeel(float hitStop, float shake) => HitFeel.Play(hitStop, shake);
+
+        public void Heal(float amount)
+        {
+            if (amount > 0f)
+                _player.Heal(amount);
+        }
+
         public void SetScriptedMotion(Vector3 velocity) => _player.Mover.SetScriptedMotion(velocity);
 
+        public void SetScriptedPosition(Vector3 position) => _player.Mover.SetScriptedPosition(position);
+
         public void CancelDash() => _player.Mover.CancelDash();
+
+        // Capsule sweep against ground/walls only, so enemies and anything on other layers are ignored.
+        public bool SweepEnvironment(Vector3 from, Vector3 to)
+        {
+            Vector3 delta = to - from;
+            float distance = delta.magnitude;
+            if (distance < 0.0001f)
+                return false;
+
+            GetCapsule(from, out Vector3 bottom, out Vector3 top, out float radius);
+            return Physics.CapsuleCast(bottom, top, radius, delta / distance, distance, _environmentMask, QueryTriggerInteraction.Ignore);
+        }
+
+        public bool TryFindGround(Vector3 from, out Vector3 ground)
+        {
+            if (Physics.Raycast(from + Vector3.up * 0.5f, Vector3.down, out RaycastHit hit, 200f, _environmentMask, QueryTriggerInteraction.Ignore))
+            {
+                ground = hit.point;
+                return true;
+            }
+
+            ground = from;
+            return false;
+        }
+
+        public bool LineBlocked(Vector3 from, Vector3 to, out Vector3 hitPoint)
+        {
+            Vector3 delta = to - from;
+            float distance = delta.magnitude;
+            if (distance > 0.0001f
+                && Physics.Raycast(from, delta / distance, out RaycastHit hit, distance, _environmentMask, QueryTriggerInteraction.Ignore))
+            {
+                hitPoint = hit.point;
+                return true;
+            }
+
+            hitPoint = to;
+            return false;
+        }
+
+        public void PushAway(Vector3 center, float radius)
+        {
+            foreach (IDamageable target in OverlapSphere(center + Vector3.up, radius))
+            {
+                if (target is not Component component)
+                    continue;
+
+                Transform root = component.transform;
+                Vector3 offset = root.position - center;
+                offset.y = 0f;
+                float distance = offset.magnitude;
+                if (distance >= radius)
+                    continue;
+
+                Vector3 direction = distance > 0.0001f ? offset / distance : -_player.transform.forward;
+                MoveTarget(root, direction * (radius - distance));
+            }
+        }
+
+        // Drags enemies toward the center by up to maxDistance, stopping just short of it.
+        public void PullToward(Vector3 center, float radius, float maxDistance)
+        {
+            const float stopDistance = 0.8f;
+
+            foreach (IDamageable target in OverlapSphere(center + Vector3.up, radius))
+            {
+                if (target is not Component component)
+                    continue;
+
+                Transform root = component.transform;
+                Vector3 offset = center - root.position;
+                offset.y = 0f;
+                float distance = offset.magnitude;
+                if (distance <= stopDistance)
+                    continue;
+
+                MoveTarget(root, offset / distance * Mathf.Min(maxDistance, distance - stopDistance));
+            }
+        }
+
+        private static void MoveTarget(Transform root, Vector3 delta)
+        {
+            if (root.TryGetComponent(out NavMeshAgent agent) && agent.enabled && agent.isOnNavMesh)
+                agent.Move(delta);
+            else if (root.TryGetComponent(out CharacterController controller) && controller.enabled)
+                controller.Move(delta);
+            else if (root.TryGetComponent(out Rigidbody body) && !body.isKinematic)
+                body.MovePosition(body.position + delta);
+            else
+                root.position += delta;
+        }
+
+        private void GetCapsule(Vector3 position, out Vector3 bottom, out Vector3 top, out float radius)
+        {
+            CharacterController body = _player.Mover.Body;
+            radius = body.radius * 0.9f;
+            Vector3 center = position + body.center;
+            float half = Mathf.Max(0f, body.height * 0.5f - body.radius);
+
+            // Lifted slightly so standing on the ground at the destination does not count as a hit.
+            bottom = center - Vector3.up * half + Vector3.up * 0.05f;
+            top = center + Vector3.up * half;
+        }
 
         public bool TryRegisterHit(IDamageable target) => _hitThisActivation.Add(target);
 
@@ -101,12 +230,31 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             for (int i = 0; i < count; i++)
             {
                 IDamageable target = OverlapBuffer[i].GetComponentInParent<IDamageable>();
-                if (target != null && target.IsAlive && !results.Contains(target))
+                if (target != null && !ReferenceEquals(target, _player) && target.IsAlive && !results.Contains(target))
                     results.Add(target);
             }
 
             return results;
         }
+
+        public IReadOnlyList<IDamageable> OverlapCapsule(Vector3 from, Vector3 to, float radius)
+        {
+            var results = new List<IDamageable>();
+            int count = Physics.OverlapCapsuleNonAlloc(from, to, radius, OverlapBuffer, _targetMask, QueryTriggerInteraction.Collide);
+
+            for (int i = 0; i < count; i++)
+            {
+                IDamageable target = OverlapBuffer[i].GetComponentInParent<IDamageable>();
+                if (target != null && !ReferenceEquals(target, _player) && target.IsAlive && !results.Contains(target))
+                    results.Add(target);
+            }
+
+            results.Sort((a, b) => DistanceFrom(from, a).CompareTo(DistanceFrom(from, b)));
+            return results;
+        }
+
+        private static float DistanceFrom(Vector3 point, IDamageable target) =>
+            target is Component component ? (component.transform.position - point).sqrMagnitude : float.MaxValue;
 
         public void DealDamage(IDamageable target, float amount, bool isWeakpoint = false) =>
             _player.ApplyDamageTo(target, amount, isWeakpoint);

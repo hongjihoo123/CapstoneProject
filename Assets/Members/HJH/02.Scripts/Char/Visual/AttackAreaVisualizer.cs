@@ -11,6 +11,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private const int CircleSegments = 40;
 
         private static readonly Color PreviewColor = new Color(0.4f, 0.9f, 1f, 0.95f);
+        private static readonly Color GuideColor = new Color(0.4f, 0.9f, 1f, 0.45f);
         private static readonly Color WindupColor = new Color(1f, 0.65f, 0.2f, 0.5f);
         private static readonly Color WeaponHitColor = new Color(1f, 0.2f, 0.2f, 0.95f);
         private static readonly Color SkillHitColor = new Color(1f, 0.5f, 0f, 0.95f);
@@ -18,9 +19,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private struct Shape
         {
             public bool IsCircle;
+            public bool IsSegment;  // open two-point line
+            public bool IsThin;     // drawn with guideLineWidth instead of lineWidth
             public Vector3 Center;
             public float Yaw;
             public Vector3 Size;
+            public Vector3 End;     // segment end (segment starts at Center)
             public Color Color;
         }
 
@@ -35,6 +39,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private PlayerAgent player;
         [SerializeField] private float groundOffset = 0.06f;
         [SerializeField] private float lineWidth = 0.08f;
+        [SerializeField] private float guideLineWidth = 0.03f;
+        [SerializeField, Tooltip("Debug: draw weapon/skill hit areas. F1 toggles in play mode. Aim previews are always drawn.")]
+        private bool showHitAreas;
 
         private readonly List<TimedShape> _timed = new();
         private readonly List<Shape> _frame = new();
@@ -49,6 +56,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             AttackAreaBus.Raised -= OnAreaRaised;
             _timed.Clear();
             HideUnused(0);
+        }
+
+        private void Update()
+        {
+            UnityEngine.InputSystem.Keyboard keyboard = UnityEngine.InputSystem.Keyboard.current;
+            if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
+            {
+                showHitAreas = !showHitAreas;
+                _timed.Clear();
+            }
         }
 
         private void LateUpdate()
@@ -75,6 +92,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void OnAreaRaised(AttackArea area)
         {
+            if (!showHitAreas)
+                return;
+
             if (area.Kind != AttackAreaKind.Skill)
                 _timed.RemoveAll(timed => timed.Kind == area.Kind);
             else
@@ -116,6 +136,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             });
         }
 
+        void ISkillPreview.RangeCircle(Vector3 center, float radius) =>
+            _frame.Add(new Shape { IsCircle = true, IsThin = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = GuideColor });
+
+        void ISkillPreview.DirectionLine(Vector3 from, Vector3 to) =>
+            _frame.Add(new Shape { IsSegment = true, IsThin = true, Center = from, End = to, Color = GuideColor });
+
         private static Color GetColor(AttackAreaKind kind)
         {
             switch (kind)
@@ -134,7 +160,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             LineRenderer line = Rent();
             float y = GroundY(shape);
 
-            if (shape.IsCircle)
+            line.widthMultiplier = shape.IsThin ? guideLineWidth : lineWidth;
+            line.loop = !shape.IsSegment;
+
+            if (shape.IsSegment)
+            {
+                line.positionCount = 2;
+                line.SetPosition(0, new Vector3(shape.Center.x, y, shape.Center.z));
+                line.SetPosition(1, new Vector3(shape.End.x, y, shape.End.z));
+            }
+            else if (shape.IsCircle)
             {
                 line.positionCount = CircleSegments;
                 for (int i = 0; i < CircleSegments; i++)
@@ -208,6 +243,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Gizmos.color = shape.Color;
                 float y = GroundY(shape);
                 var center = new Vector3(shape.Center.x, y, shape.Center.z);
+
+                if (shape.IsSegment)
+                {
+                    Gizmos.DrawLine(center, new Vector3(shape.End.x, y, shape.End.z));
+                    continue;
+                }
 
                 if (shape.IsCircle)
                 {

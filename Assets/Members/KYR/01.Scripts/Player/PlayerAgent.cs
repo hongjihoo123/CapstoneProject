@@ -205,8 +205,19 @@ namespace Members.KYR._01_Scripts
             float multiplier = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
             if (isWeakpoint && Stats != null)
                 multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
-            target?.TakeDamage(amount * multiplier, gameObject);
+            if (target == null)
+                return;
+
+            // Hits on already-dead targets are not reported (no lifesteal, no hit effects on corpses).
+            bool wasAlive = target.IsAlive;
+            float dealt = amount * multiplier;
+            target.TakeDamage(dealt, gameObject);
+            if (wasAlive)
+                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, isWeakpoint, !target.IsAlive));
         }
+
+        // Every damage the player deals (weapon, skills, DoT) passes through ApplyDamageTo.
+        public event System.Action<DamageDealtInfo> DamageDealt;
 
         public void ApplyHealTo(IHealable target, float amount)
         {

@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
@@ -14,7 +15,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
         [SerializeField] private float spinTickInterval = 0.25f;
         [SerializeField] private float spinRadius = 3.2f;
         [SerializeField] private float spinDamagePerTick = 15f;
+        [SerializeField, Tooltip("Enemies closer than this are pushed out on landing so the player never ends up inside one.")]
+        private float landingPushRadius = 1.2f;
         [SerializeField] private GameObject spinEffectPrefab;
+
+        protected override Color DefaultFxColor => new(1f, 0.5f, 0.2f);
 
         public override float CancelStartTime => riseDuration + diveDuration + CancelDelay;
 
@@ -27,20 +32,31 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             Vector3 start = context.Transform.position;
             Vector3 destination = start + direction * distance;
 
+            preview.RangeCircle(start, maxRange);
+            preview.DirectionLine(start, start + direction * maxRange);
             preview.Path(start, destination, 0.6f);
             preview.Circle(destination, spinRadius);
         }
 
+        // Flight: Rise -> Dive -> (Drop if ground/wall blocks the path) -> Landed -> Spin.
+        // Flight moves ignore collisions, so enemies and props are passed through;
+        // only the environment layers (ground/walls) are checked with a sweep.
+        // Landing always happens at riseDuration + diveDuration, so cancel and spin timing stay fixed.
         private sealed class Execution : ISkillExecution
         {
+            private enum Phase { Rise, Dive, Drop, Landed }
+
             private readonly ChainPullSpinSkillData _data;
             private readonly ISkillContext _context;
             private readonly Vector3 _origin;
-            private bool _diving;
-            private bool _landed;
-            private bool _spinning;
+            private Phase _phase = Phase.Rise;
             private Vector3 _diveStart;
             private Vector3 _destination;
+            private Vector3 _dropStart;
+            private Vector3 _dropEnd;
+            private float _dropStartTime;
+            private bool _spinning;
+            private int _slashes;
             private float _nextTick;
 
             public Execution(ChainPullSpinSkillData data, ISkillContext context)
@@ -48,21 +64,27 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 _data = data;
                 _context = context;
                 _origin = context.Transform.position;
-                _nextTick = data.riseDuration + data.diveDuration;
+
+                // Lock the landing point to the cursor at cast time; moving the mouse or camera mid-air must not change it.
+                Vector3 direction = SkillAim.Resolve(context, data.minRange, data.maxRange, out float distance);
+                Vector3 flat = _origin + direction * distance;
+                _destination = context.TryFindGround(flat + Vector3.up * data.riseHeight, out Vector3 ground) ? ground : flat;
+                _nextTick = LandTime;
             }
+
+            private float LandTime => _data.riseDuration + _data.diveDuration;
 
             public void Tick(float elapsed)
             {
-                float diveEnd = _data.riseDuration + _data.diveDuration;
+                if (_phase != Phase.Landed)
+                {
+                    if (elapsed >= LandTime)
+                        Land();
+                    else
+                        Fly(elapsed);
+                }
 
-                if (elapsed < _data.riseDuration)
-                    Rise(elapsed / _data.riseDuration);
-                else if (elapsed < diveEnd)
-                    Dive((elapsed - _data.riseDuration) / _data.diveDuration);
-                else if (!_landed)
-                    Land();
-
-                UpdateSpin(elapsed, diveEnd);
+                UpdateSpin(elapsed, LandTime);
             }
 
             public void OnAnimationEvent(SkillAnimationEvent animationEvent) { }
@@ -73,41 +95,76 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 _context.CancelDash();
             }
 
-            private void Rise(float t)
+            private void Fly(float elapsed)
             {
-                float eased = 1f - (1f - t) * (1f - t);
-                MoveTo(new Vector3(_origin.x, _origin.y + _data.riseHeight * eased, _origin.z));
-            }
+                Vector3 current = _context.Transform.position;
 
-            private void Dive(float t)
-            {
-                if (!_diving)
+                if (_phase == Phase.Drop)
                 {
-                    _diving = true;
-                    _diveStart = _context.Transform.position;
-
-                    Vector3 direction = SkillAim.Resolve(_context, _data.minRange, _data.maxRange, out float distance);
-                    _destination = new Vector3(_origin.x, _origin.y, _origin.z) + direction * distance;
+                    float t = Mathf.InverseLerp(_dropStartTime, LandTime, elapsed);
+                    _context.SetScriptedPosition(Vector3.Lerp(_dropStart, _dropEnd, t * t));
+                    return;
                 }
 
-                MoveTo(Vector3.Lerp(_diveStart, _destination, t * t));
+                Vector3 target = elapsed < _data.riseDuration
+                    ? RisePoint(elapsed / _data.riseDuration)
+                    : DivePoint((elapsed - _data.riseDuration) / _data.diveDuration);
+
+                // Hit ground or a wall: stop where we are and fall straight down for the rest of the flight.
+                if (_context.SweepEnvironment(current, target))
+                {
+                    BeginDrop(current, elapsed);
+                    target = current;
+                }
+
+                _context.SetScriptedPosition(target);
+            }
+
+            private Vector3 RisePoint(float t)
+            {
+                float eased = 1f - (1f - t) * (1f - t);
+                return _origin + Vector3.up * (_data.riseHeight * eased);
+            }
+
+            private Vector3 DivePoint(float t)
+            {
+                if (_phase != Phase.Dive)
+                {
+                    _phase = Phase.Dive;
+                    _diveStart = _context.Transform.position;
+                }
+
+                return Vector3.Lerp(_diveStart, _destination, t * t);
+            }
+
+            private void BeginDrop(Vector3 from, float elapsed)
+            {
+                _phase = Phase.Drop;
+                _dropStart = from;
+                _dropStartTime = elapsed;
+                _context.TryFindGround(from, out _dropEnd);
             }
 
             private void Land()
             {
-                _landed = true;
+                Vector3 landing = _phase switch
+                {
+                    Phase.Drop => _dropEnd,
+                    Phase.Dive => _destination,
+                    _ => _context.TryFindGround(_context.Transform.position, out Vector3 ground) ? ground : _origin
+                };
 
-                if (!_diving)
-                    return;
-
-                MoveTo(_destination);
+                _phase = Phase.Landed;
+                _context.SetScriptedPosition(landing);
                 _context.CancelDash();
-            }
+                _context.PushAway(landing, _data.landingPushRadius);
 
-            private void MoveTo(Vector3 target)
-            {
-                Vector3 delta = target - _context.Transform.position;
-                _context.SetScriptedMotion(delta / Mathf.Max(Time.deltaTime, 0.0001f));
+                // Landing: a big blade X cutting through the landing point.
+                Vector3 forward = _destination - _origin;
+                Vector3 chest = landing + Vector3.up * 0.9f;
+                Fx.Slash(chest, forward, _data.spinRadius * 1.3f, false, 30f, 1.8f);
+                Fx.Slash(chest, forward, _data.spinRadius * 1.3f, true, -30f, 1.8f);
+                _context.PlayHitFeel(0.08f, 0.5f);
             }
 
             private void UpdateSpin(float elapsed, float spinStart)
@@ -143,6 +200,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
 
             private void SpinTick()
             {
+                // A blade flurry on top of the spinning blades: each tick cuts at a new angle.
+                float yaw = _slashes * 137.5f;
+                Vector3 direction = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
+                Fx.Slash(_context.Transform.position + Vector3.up * 0.9f, direction, _data.spinRadius, _slashes++ % 2 == 1, (_slashes % 3 - 1) * 20f, 3f);
                 Vector3 center = _context.Transform.position + Vector3.up;
                 foreach (var target in _context.OverlapSphere(center, _data.spinRadius))
                     _context.DealDamage(target, _data.spinDamagePerTick);

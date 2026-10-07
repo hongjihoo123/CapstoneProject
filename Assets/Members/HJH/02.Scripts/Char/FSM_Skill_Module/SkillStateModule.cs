@@ -5,11 +5,12 @@ using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.FSM.Core;
 using Members.KYR._01_Scripts.Modules;
 using Members.KYR._01_Scripts.Stats;
+using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    public class SkillStateModule : Module, IAfterInitModule, ISkillHost
+    public class SkillStateModule : Module, IAfterInitModule, ISkillHost, IPassiveHost
     {
         [Serializable]
         public struct SlotBinding
@@ -24,9 +25,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField] private SlotBinding[] initialSkills;
         [SerializeField] private PassiveData passiveData;
         [SerializeField] private LayerMask skillTargetMask = ~0;
+        [SerializeField, Tooltip("Ground and walls. Skills that fly pass through everything else.")]
+        private LayerMask environmentMask = 1;
 
         private readonly Dictionary<SkillSlotId, GenericSkillState> _slots = new();
         private PlayerSkillContext _context;
+        private IPassive _passive;
         private IdleSkillState _idleSkill;
         private SkillSlotId? _aimingSlot;
 
@@ -59,7 +63,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             base.Initialize(owner);
             Player = owner as PlayerAgent;
             Debug.Assert(Player != null, $"{owner.name}의 SkillStateModule은 PlayerAgent 아래에서만 사용할 수 있습니다.");
-            _context = new PlayerSkillContext(Player, skillTargetMask);
+            _context = new PlayerSkillContext(Player, skillTargetMask, environmentMask);
+            Player.DamageDealt += HandleDamageDealt;
         }
 
         public void AfterInitalize()
@@ -70,6 +75,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             if (kit != null)
                 EquipKit(kit);
+            else if (passiveData != null)
+                SetPassive(passiveData);
 
             if (initialSkills != null)
             {
@@ -79,7 +86,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             foreach (SkillSlotId slot in SkillSlots.All)
             {
-                if (!SkillSlots.IsFree(slot) && !_slots.ContainsKey(slot))
+                if (SkillSlots.IsKitSlot(slot) && !_slots.ContainsKey(slot))
                     Debug.LogWarning($"{name}의 SkillStateModule에 {slot} 스킬이 비어있습니다.");
             }
 
@@ -89,11 +96,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public void EquipKit(WeaponKitData newKit)
         {
             kit = newKit;
-            passiveData = newKit != null ? newKit.passive : null;
+            SetPassive(newKit != null ? newKit.passive : null);
 
             foreach (SkillSlotId slot in SkillSlots.All)
             {
-                if (!SkillSlots.IsFree(slot))
+                if (SkillSlots.IsKitSlot(slot))
                     Equip(slot, newKit != null ? newKit.GetSkill(slot) : null);
             }
         }
@@ -114,9 +121,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public SkillData GetSkill(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.Data : null;
 
+        public float GetCooldownDuration(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.CooldownDuration : 0f;
+
+        public PassiveData Passive => passiveData;
+
         public float GetCooldownRemaining(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.CooldownRemaining : 0f;
 
-        public void Tick(float deltaTime) => Machine.Tick(deltaTime);
+        public int GetCharges(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.Charges : 0;
+
+        public int GetMaxCharges(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.MaxCharges : 0;
+
+        public void Tick(float deltaTime)
+        {
+            Machine.Tick(deltaTime);
+            _passive?.Tick(deltaTime);
+        }
 
         public void ForceIdle() => Machine.ChangeState<IdleSkillState>();
 
@@ -134,11 +153,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Machine.ChangeState<IdleSkillState>();
 
             if (_aimingSlot == null)
+            {
+                if (TryCastOnPress(input))
+                    return;
+
                 TryBeginAim(input);
+            }
 
             if (_aimingSlot == null)
                 return;
 
+            // While a skill is held, the cancel key (right click) only cancels; it does not dash.
             SkillSlotId slot = _aimingSlot.Value;
             if (input.WasCancelPressed())
             {
@@ -150,11 +175,30 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 return;
 
             CancelAim();
-            if (_slots.TryGetValue(slot, out GenericSkillState state) && state.IsReady)
+            Cast(slot);
+        }
+
+        private bool TryCastOnPress(ISkillInputSource input)
+        {
+            foreach (SkillSlotId slot in SkillSlots.All)
             {
-                Machine.ChangeState(state);
-                SkillUsed?.Invoke(new SkillUsedInfo(slot, state.Data));
+                if (SkillSlots.CastsOnPress(slot) && input.WasSkillPressed(slot) && Cast(slot))
+                    return true;
             }
+
+            return false;
+        }
+
+        private bool Cast(SkillSlotId slot)
+        {
+            if (!_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
+                return false;
+
+            Machine.ChangeState(state);
+            var info = new SkillUsedInfo(slot, state.Data);
+            _passive?.OnSkillUsed(info);
+            SkillUsed?.Invoke(info);
+            return true;
         }
 
         public void CancelAim() => _aimingSlot = null;
@@ -183,7 +227,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             foreach (SkillSlotId slot in SkillSlots.All)
             {
-                if (!input.WasSkillPressed(slot) || !_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
+                if (SkillSlots.CastsOnPress(slot) || !input.WasSkillPressed(slot)
+                    || !_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
                     continue;
 
                 _aimingSlot = slot;
@@ -207,7 +252,33 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 state.OnAnimationHitEvent();
         }
 
-        public void NotifyEnemyKilled() => passiveData?.OnEnemyKilled(_context);
+        public void NotifyEnemyKilled() => _passive?.OnEnemyKilled();
+
+        public void ReduceCooldown(SkillSlotId slot, float seconds)
+        {
+            if (_slots.TryGetValue(slot, out GenericSkillState state))
+                state.ReduceCooldown(seconds);
+        }
+
+        private void SetPassive(PassiveData data)
+        {
+            _passive?.Dispose();
+            passiveData = data;
+            _passive = data != null && _context != null ? data.CreateRuntime(this) : null;
+            if (_context != null)
+                _context.Passive = _passive;
+        }
+
+        private void HandleDamageDealt(DamageDealtInfo info) => _passive?.OnDamageDealt(info);
+
+        private void OnDestroy()
+        {
+            if (Player != null)
+                Player.DamageDealt -= HandleDamageDealt;
+
+            _passive?.Dispose();
+            _passive = null;
+        }
 
         void ISkillHost.OnSkillEntered() => _context.BeginActivation();
 

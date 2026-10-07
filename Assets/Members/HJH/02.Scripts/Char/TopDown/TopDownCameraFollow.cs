@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.TopDown
@@ -11,11 +12,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
         [SerializeField] private float smoothTime = 0.12f;
 
         private Vector3 _velocity;
+        private Vector3 _followPosition;
 
         private void OnEnable()
         {
-            if (target != null)
-                transform.SetPositionAndRotation(DesiredPosition(), Quaternion.Euler(pitch, yaw, 0f));
+            if (target == null)
+                return;
+
+            _followPosition = DesiredPosition();
+            transform.SetPositionAndRotation(_followPosition, Quaternion.Euler(pitch, yaw, 0f));
         }
 
         private void LateUpdate()
@@ -23,8 +28,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             if (target == null)
                 return;
 
+            // Follow is smoothed on its own position so the shake offset never feeds back into it.
+            _followPosition = Vector3.SmoothDamp(_followPosition, DesiredPosition(), ref _velocity, smoothTime);
+
             transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
-            transform.position = Vector3.SmoothDamp(transform.position, DesiredPosition(), ref _velocity, smoothTime);
+            transform.position = _followPosition + ShakeOffset();
+        }
+
+        private Vector3 ShakeOffset()
+        {
+            float amplitude = HitFeel.CurrentShake;
+            if (amplitude <= 0f)
+                return Vector3.zero;
+
+            Vector2 jitter = Random.insideUnitCircle * amplitude;
+            return transform.right * jitter.x + transform.up * jitter.y;
         }
 
         private Vector3 DesiredPosition() =>
