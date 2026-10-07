@@ -1,8 +1,21 @@
+using System.Collections.Generic;
 using Members.JJH._02_Scripts.ElementsSystem;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    public readonly struct SkillStat
+    {
+        public readonly string Label;
+        public readonly string Value;
+
+        public SkillStat(string label, string value)
+        {
+            Label = label;
+            Value = value;
+        }
+    }
+
     public abstract class SkillData : ScriptableObject
     {
         [SerializeField] private float cooldown;
@@ -55,5 +68,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public virtual void OnAnimationHitEvent(ISkillContext context) { }
 
         public virtual void DescribePreview(ISkillContext context, ISkillPreview preview) { }
+
+        // Numbers shown in tooltips. Override to add skill specific ones (damage, range, ...) after base.
+        public virtual void DescribeStats(List<SkillStat> stats)
+        {
+            if (cooldown > 0f)
+                stats.Add(new SkillStat("재사용 대기시간", $"{cooldown:0.#}초"));
+            if (Charges > 1)
+                stats.Add(new SkillStat("충전", $"{Charges}회"));
+            if (duration > 0.05f)
+                stats.Add(new SkillStat("지속 시간", $"{duration:0.##}초"));
+            if (!allowsMove)
+                stats.Add(new SkillStat("이동", "불가"));
+            else if (!Mathf.Approximately(moveSpeedMultiplier, 1f))
+                stats.Add(new SkillStat("이동 속도", $"{moveSpeedMultiplier * 100f:0}%"));
+        }
     }
 }

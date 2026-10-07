@@ -17,6 +17,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         [SerializeField] private float shake = 0.22f;
         [SerializeField, Tooltip("Kick back on fire.")] private float recoilDistance = 0.7f;
 
+        [Header("Camera")]
+        [SerializeField, Tooltip("Rumble while charging, grows to this.")] private float chargeRumble = 0.08f;
+        [SerializeField, Tooltip("Shake on fire, hit or miss.")] private float fireShake = 0.3f;
+        [SerializeField] private float fireShakeDuration = 0.25f;
+        [SerializeField, Tooltip("Camera pushed opposite the beam (world units).")] private float cameraKick = 0.45f;
+
         protected override Color DefaultFxColor => new(0.3f, 1f, 0.85f);
 
         public override ISkillExecution Begin(ISkillContext context) => new Execution(this, context);
@@ -61,6 +67,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                     _charge.MoveTo(start);
                     _charge.SetValue(elapsed / _data.windup);
                     _aimLine.SetPoints(start, end);
+                    _context.PlayShake(_data.chargeRumble * (elapsed / _data.windup), 0.06f);
                     return;
                 }
 
@@ -100,6 +107,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 }
 
                 _context.Dash(-_direction, _data.recoilDistance / 0.08f, 0.08f);
+                _context.PlayShake(_data.fireShake, _data.fireShakeDuration);
+                _context.PlayCameraKick(-_direction * _data.cameraKick);
                 _context.PlayHitFeel(hits > 0 ? _data.hitStop : 0f, _data.shake);
             }
         }

@@ -17,6 +17,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static float ShakeAmplitude { get; private set; }
         private static float _shakeEndTime;
         private static float _shakeDuration;
+        private static Vector3 _kick;
+        private static float _kickStart;
+        private static float _kickDuration;
 
         public static void Play(float hitStop, float shake)
         {
@@ -36,6 +39,35 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             ShakeAmplitude = amplitude;
             _shakeDuration = duration;
             _shakeEndTime = Time.unscaledTime + duration;
+        }
+
+        // Directional punch: the camera snaps by offset (world units) and eases back over duration.
+        // Used for recoil (offset opposite the shot) and slams (offset down). Stronger wins, like Shake.
+        public static void Kick(Vector3 offset, float duration = 0.22f)
+        {
+            if (duration <= 0f || offset.sqrMagnitude < CurrentKick.sqrMagnitude)
+                return;
+
+            _kick = offset;
+            _kickStart = Time.unscaledTime;
+            _kickDuration = duration;
+        }
+
+        public static Vector3 CurrentKick
+        {
+            get
+            {
+                if (_kickDuration <= 0f)
+                    return Vector3.zero;
+
+                float t = (Time.unscaledTime - _kickStart) / _kickDuration;
+                if (t >= 1f)
+                    return Vector3.zero;
+
+                // 15% snap out, then smooth return.
+                float k = t < 0.15f ? t / 0.15f : 1f - Mathf.SmoothStep(0f, 1f, (t - 0.15f) / 0.85f);
+                return _kick * k;
+            }
         }
 
         // Linearly fading amplitude; read by the camera every frame.
@@ -92,6 +124,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             ShakeAmplitude = 0f;
             _shakeEndTime = 0f;
             _shakeDuration = 0f;
+            _kick = Vector3.zero;
+            _kickStart = 0f;
+            _kickDuration = 0f;
         }
     }
 }

@@ -32,7 +32,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             _followPosition = Vector3.SmoothDamp(_followPosition, DesiredPosition(), ref _velocity, smoothTime);
 
             transform.rotation = Quaternion.Euler(pitch, yaw, 0f);
-            transform.position = _followPosition + ShakeOffset();
+            transform.position = _followPosition + ShakeOffset() + HitFeel.CurrentKick;
         }
 
         private Vector3 ShakeOffset()

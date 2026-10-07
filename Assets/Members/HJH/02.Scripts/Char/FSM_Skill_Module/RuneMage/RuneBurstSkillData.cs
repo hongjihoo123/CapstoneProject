@@ -21,6 +21,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
         [SerializeField] private float hitStop = 0.04f;
         [SerializeField] private float shake = 0.18f;
 
+        [Header("Camera")]
+        [SerializeField, Tooltip("Shake when the volley leaves (grows a little with rune count).")] private float castShake = 0.2f;
+        [SerializeField, Tooltip("Camera pushed opposite the volley (world units).")] private float cameraKick = 0.3f;
+        [SerializeField, Tooltip("Floor for each rune blast's shake, so misses still thump.")] private float blastShakeMin = 0.16f;
+
         protected override Color DefaultFxColor => new(0.7f, 0.4f, 1f);
 
         public override ISkillExecution Begin(ISkillContext context)
@@ -32,6 +37,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
             int count = Mathf.Max(minimumRunes, stored);
             Color color = FxColor;
             Fx.RuneCast(origin + direction * 0.6f, direction, color, count);
+            context.PlayShake(castShake * (1f + 0.1f * (count - 1)), 0.2f);
+            context.PlayCameraKick(-direction * cameraKick, 0.18f);
+            float blastShake = Mathf.Max(shake, blastShakeMin);
 
             for (int i = 0; i < count; i++)
             {
@@ -48,7 +56,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 
                 context.Run(new SkillProjectile(context, origin, Quaternion.Euler(0f, angle, 0f) * direction, settings,
                     onHit: null,
-                    onFinish: point => SkillBlast.Explode(context, point, blastRadius, blastDamage, color, hitStop, shake)));
+                    onFinish: point => SkillBlast.Explode(context, point, blastRadius, blastDamage, color, hitStop, blastShake)));
             }
 
             return null;

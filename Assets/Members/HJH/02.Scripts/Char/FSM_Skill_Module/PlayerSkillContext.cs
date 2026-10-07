@@ -93,6 +93,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void PlayHitFeel(float hitStop, float shake) => HitFeel.Play(hitStop, shake);
 
+        public void PlayShake(float amplitude, float duration) => HitFeel.Shake(amplitude, duration);
+
+        public void PlayCameraKick(Vector3 offset, float duration = 0.22f) => HitFeel.Kick(offset, duration);
+
         public void Heal(float amount)
         {
             if (amount > 0f)

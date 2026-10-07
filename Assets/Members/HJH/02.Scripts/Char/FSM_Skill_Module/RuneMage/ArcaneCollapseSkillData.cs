@@ -22,6 +22,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
         [SerializeField] private float hitStop = 0.05f;
         [SerializeField] private float shake = 0.3f;
 
+        [Header("Camera")]
+        [SerializeField, Tooltip("Shake when blinking into the circle.")] private float blinkShake = 0.22f;
+        [SerializeField, Tooltip("Rumble that builds up until the last blast.")] private float buildRumble = 0.12f;
+        [SerializeField, Tooltip("Minimum shake of the last blast, hit or miss.")] private float finalShake = 0.7f;
+        [SerializeField, Tooltip("Camera slammed down on each blast (world units); the last one doubles.")] private float blastKick = 0.35f;
+
         protected override Color DefaultFxColor => new(0.65f, 0.3f, 1f);
 
         public override ISkillExecution Begin(ISkillContext context) => new Execution(this, context);
@@ -80,7 +86,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                     _context.SetScriptedPosition(_center);
                     _context.CancelDash();
                     Fx.BlinkIn(_center, Vector3.zero, _data.FxColor);
+                    _context.PlayShake(_data.blinkShake, 0.2f);
                 }
+
+                if (_blastsDone < _data.blastCount)
+                    _context.PlayShake(_data.buildRumble * fill * fill, 0.06f);
 
                 while (_blastsDone < _data.blastCount && elapsed >= _data.firstBlastTime + _blastsDone * _data.blastInterval)
                     Blast();
@@ -106,8 +116,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                 SkillBlast.Explode(_context, _center, _data.radius * (last ? 1f : 0.75f), _data.blastDamage * strength,
                     _data.FxColor, _data.hitStop * strength, _data.shake * strength, last ? 2.5f : 1.2f);
 
+                _context.PlayCameraKick(Vector3.down * _data.blastKick * (last ? 2f : 1f), last ? 0.35f : 0.2f);
+
                 if (last)
                 {
+                    _context.PlayShake(_data.finalShake, 0.4f);
                     _circle.Kill();
                     _pull.Kill();
                 }

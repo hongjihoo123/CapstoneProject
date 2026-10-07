@@ -40,6 +40,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         [Header("Feel")]
         [SerializeField] private float hitStop = 0.12f;
         [SerializeField] private float shake = 0.55f;
+        [SerializeField, Tooltip("Rumble while the barrel charges, grows to this.")] private float chargeRumble = 0.16f;
+        [SerializeField, Tooltip("Shake when the shell leaves the barrel.")] private float fireShake = 0.5f;
+        [SerializeField] private float fireShakeDuration = 0.32f;
+        [SerializeField, Tooltip("Camera pushed opposite the shot (world units).")] private float cameraKick = 0.9f;
+        [SerializeField, Tooltip("Shake when the shell bursts without hitting anyone.")] private float missShake = 0.3f;
 
         protected override Color DefaultFxColor => new(1f, 0.55f, 0.15f);
 
@@ -75,6 +80,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                     float charge = elapsed / _data.chargeTime;
                     _barrel.SetPoints(start, tip);
                     _barrel.SetValue(Mathf.Lerp(0.35f, 1f, charge));
+                    _context.PlayShake(_data.chargeRumble * charge * charge, 0.06f);
                     return;
                 }
 
@@ -113,13 +119,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 ShockCannonSkillData data = _data;
                 context.Run(new SkillProjectile(context, tip, direction, settings,
                     (target, point) => data.OnShellHit(context, target, point),
-                    point => Fx.ProjectileImpact(point, direction, color, 0.7f, false)));
+                    point =>
+                    {
+                        Fx.ProjectileImpact(point, direction, color, 0.7f, false);
+                        context.PlayShake(data.missShake, 0.2f);
+                    }));
 
                 Fx.CannonMuzzle(tip, direction, color);
                 Fx.Shockwave(context.Transform.position, color, 2.2f);
 
                 context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration);
-                context.PlayHitFeel(0.03f, data.shake * 0.5f);
+                context.PlayHitFeel(0.04f, 0f);
+                context.PlayShake(data.fireShake, data.fireShakeDuration);
+                context.PlayCameraKick(-direction * data.cameraKick, 0.3f);
             }
         }
 
@@ -134,6 +146,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             Color color = FxColor;
             context.DealDamage(target, shellDamage);
             context.PlayHitFeel(hitStop, shake);
+            context.PlayCameraKick(Vector3.down * 0.5f, 0.25f);
 
             Vector3 ground = point - Vector3.up;
             Fx.Explosion(ground, 3.5f, color, 2f);

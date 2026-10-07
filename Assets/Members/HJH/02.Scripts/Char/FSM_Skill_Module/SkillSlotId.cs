@@ -22,6 +22,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public static bool IsKitSlot(SkillSlotId slot) =>
             slot == SkillSlotId.Dash || slot == SkillSlotId.Weapon || slot == SkillSlotId.Ultimate;
 
+        // Element skills that can be swapped for skills found in the stage (Q/E).
+        public static bool IsSwappable(SkillSlotId slot) => !IsKitSlot(slot);
+
         // Cast immediately on press, without aiming or a range preview.
         public static bool CastsOnPress(SkillSlotId slot) =>
             slot == SkillSlotId.Dash || slot == SkillSlotId.Basic1 || slot == SkillSlotId.Basic2;

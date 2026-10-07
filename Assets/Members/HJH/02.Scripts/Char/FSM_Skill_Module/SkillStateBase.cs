@@ -11,6 +11,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private int _spentCharges;
         private bool _recharging;
         private float _rechargeEndTime;
+        private float _lockedUntil;
 
         protected SkillStateBase(ISkillHost host) => Host = host;
 
@@ -33,7 +34,34 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
-        public bool IsReady => Charges > 0;
+        public bool IsReady => Charges > 0 && Time.time >= _lockedUntil;
+
+        // Short block on top of the cooldown (e.g. right after the skill was swapped in).
+        public float LockRemaining => Mathf.Max(0f, _lockedUntil - Time.time);
+        public float LockDuration { get; private set; }
+
+        public void Lock(float seconds)
+        {
+            if (seconds <= 0f)
+                return;
+
+            LockDuration = seconds;
+            _lockedUntil = Mathf.Max(_lockedUntil, Time.time + seconds);
+        }
+
+        public SkillCooldownState CaptureCooldown()
+        {
+            Refresh();
+            return new SkillCooldownState(_spentCharges, _recharging, _rechargeEndTime);
+        }
+
+        public void RestoreCooldown(SkillCooldownState state)
+        {
+            _spentCharges = Mathf.Clamp(state.SpentCharges, 0, MaxCharges);
+            _recharging = state.Recharging && _spentCharges > 0;
+            _rechargeEndTime = state.RechargeEndTime;
+            Refresh();
+        }
 
         // Time until the next charge comes back (0 when every charge is available).
         public float CooldownRemaining

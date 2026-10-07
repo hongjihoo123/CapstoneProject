@@ -13,13 +13,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
         [SerializeField] private float trapDelay = 1f;
         [SerializeField] private float trapRadius = 2.5f;
         [SerializeField] private float trapDamage = 20f;
+        [SerializeField, Tooltip("While moving, blink the full distance toward WASD. Standing still: toward the cursor.")]
+        private bool useMoveInputDirection = true;
 
         protected override Color DefaultFxColor => new(0.55f, 0.75f, 1f);
 
         public override void Execute(ISkillContext context)
         {
             Vector3 origin = context.Transform.position;
-            Vector3 direction = SkillAim.Resolve(context, 0f, maxDistance, out float distance);
+            Vector3 direction;
+            float distance;
+            if (useMoveInputDirection && SkillAim.TryMoveDirection(context, out direction))
+                distance = maxDistance;
+            else
+                direction = SkillAim.Resolve(context, 0f, maxDistance, out distance);
+
             Vector3 destination = FindReachable(context, origin, direction, distance);
 
             if (context.TryFindGround(destination + Vector3.up * 2f, out Vector3 ground))

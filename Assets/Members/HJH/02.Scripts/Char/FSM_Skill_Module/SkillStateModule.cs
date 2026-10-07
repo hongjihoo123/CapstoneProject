@@ -33,6 +33,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private IPassive _passive;
         private IdleSkillState _idleSkill;
         private SkillSlotId? _aimingSlot;
+        private readonly List<ISkillInputInterceptor> _interceptors = new();
+        private InterceptedInput _interceptedInput;
 
         public bool IsAimingSkill => _aimingSlot != null;
         public SkillSlotId? AimingSlot => _aimingSlot;
@@ -57,6 +59,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
 
         public event Action<SkillUsedInfo> SkillUsed;
+        // Any slot's skill changed (skill swap, kit / character change). Once per EquipKit.
+        public event Action LoadoutChanged;
+
+        private bool _equippingKit;
 
         public override void Initialize(ModuleOwner owner)
         {
@@ -98,11 +104,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             kit = newKit;
             SetPassive(newKit != null ? newKit.passive : null);
 
+            _equippingKit = true;
             foreach (SkillSlotId slot in SkillSlots.All)
             {
                 if (SkillSlots.IsKitSlot(slot))
                     Equip(slot, newKit != null ? newKit.GetSkill(slot) : null);
             }
+            _equippingKit = false;
+
+            LoadoutChanged?.Invoke();
         }
 
         public void Equip(SkillSlotId slot, SkillData data)
@@ -117,9 +127,31 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 _slots.Remove(slot);
             else
                 _slots[slot] = new GenericSkillState(this, slot, data);
+
+            if (!_equippingKit)
+                LoadoutChanged?.Invoke();
         }
 
-        public SkillData GetSkill(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.Data : null;
+        // Equips and carries a cooldown over (a skill picked back up resumes where it was),
+        // then blocks the slot for lockSeconds so swapping cannot be used to skip cooldowns.
+        public void Equip(SkillSlotId slot, SkillData data, SkillCooldownState cooldown, float lockSeconds)
+        {
+            Equip(slot, data);
+            if (!_slots.TryGetValue(slot, out GenericSkillState state))
+                return;
+
+            state.RestoreCooldown(cooldown);
+            state.Lock(lockSeconds);
+        }
+
+        public SkillCooldownState GetCooldownState(SkillSlotId slot) =>
+            _slots.TryGetValue(slot, out GenericSkillState state) ? state.CaptureCooldown() : default;
+
+        public float GetLockRemaining(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.LockRemaining : 0f;
+
+        public float GetLockDuration(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.LockDuration : 0f;
+
+        public SkillData GetSkill(SkillSlotId slot) =>_slots.TryGetValue(slot, out GenericSkillState state) ? state.Data : null;
 
         public float GetCooldownDuration(SkillSlotId slot) => _slots.TryGetValue(slot, out GenericSkillState state) ? state.CooldownDuration : 0f;
 
@@ -141,8 +173,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void ResolveInput() => ResolveInput(Player.Input);
 
+        public void AddInputInterceptor(ISkillInputInterceptor interceptor)
+        {
+            if (interceptor != null && !_interceptors.Contains(interceptor))
+                _interceptors.Add(interceptor);
+        }
+
+        public void RemoveInputInterceptor(ISkillInputInterceptor interceptor) => _interceptors.Remove(interceptor);
+
         public void ResolveInput(ISkillInputSource input)
         {
+            if (_interceptors.Count > 0)
+                input = Intercept(input);
+
             if (Machine.Current is GenericSkillState running && !running.IsFinished)
             {
                 if (running.Data.Cancelable && running.Elapsed >= running.Data.CancelStartTime && ShouldCancel(running, input))
@@ -176,6 +219,42 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             CancelAim();
             Cast(slot);
+        }
+
+        // Hands intercepted presses to their owner and hides those keys from the rest of ResolveInput.
+        // A handed-off press stays hidden for this frame even if the interceptor lets go of the key in
+        // OnInterceptedPress (otherwise the swap key would also cast the skill it just equipped).
+        private ISkillInputSource Intercept(ISkillInputSource input)
+        {
+            _interceptedInput ??= new InterceptedInput(this);
+            _interceptedInput.Source = input;
+            _interceptedInput.ClearConsumed();
+
+            foreach (SkillSlotId slot in SkillSlots.All)
+            {
+                if (!input.WasSkillPressed(slot))
+                    continue;
+
+                ISkillInputInterceptor owner = FindInterceptor(slot);
+                if (owner == null)
+                    continue;
+
+                _interceptedInput.Consume(slot);
+                owner.OnInterceptedPress(slot);
+            }
+
+            return _interceptedInput;
+        }
+
+        private ISkillInputInterceptor FindInterceptor(SkillSlotId slot)
+        {
+            foreach (ISkillInputInterceptor interceptor in _interceptors)
+            {
+                if (interceptor.Intercepts(slot))
+                    return interceptor;
+            }
+
+            return null;
         }
 
         private bool TryCastOnPress(ISkillInputSource input)
@@ -281,6 +360,28 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
 
         void ISkillHost.OnSkillEntered() => _context.BeginActivation();
+
+        // Same input, with intercepted keys reading as "not pressed / not held".
+        private sealed class InterceptedInput : ISkillInputSource
+        {
+            private readonly SkillStateModule _owner;
+            private readonly bool[] _consumed = new bool[SkillSlots.Count];
+            public ISkillInputSource Source;
+
+            public InterceptedInput(SkillStateModule owner) => _owner = owner;
+
+            public void ClearConsumed() => Array.Clear(_consumed, 0, _consumed.Length);
+
+            public void Consume(SkillSlotId slot) => _consumed[(int)slot] = true;
+
+            private bool Blocked(SkillSlotId slot) => _consumed[(int)slot] || _owner.FindInterceptor(slot) != null;
+
+            public bool WasSkillPressed(SkillSlotId slot) => !Blocked(slot) && Source.WasSkillPressed(slot);
+            public bool IsSkillHeld(SkillSlotId slot) => !Blocked(slot) && Source.IsSkillHeld(slot);
+            public bool WasSkillReleased(SkillSlotId slot) => !Blocked(slot) && Source.WasSkillReleased(slot);
+            public bool WasCancelPressed() => Source.WasCancelPressed();
+            public bool WasJumpPressed() => Source.WasJumpPressed();
+        }
 
         private sealed class AllowAllSkillFallback : ISkillCapabilities
         {

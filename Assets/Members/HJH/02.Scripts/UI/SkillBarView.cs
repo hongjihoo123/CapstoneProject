@@ -71,8 +71,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     continue;
 
                 binding.view.Bind(skills.GetSkill(binding.slot), palette);
-                binding.view.SetCooldown(skills.GetCooldownRemaining(binding.slot), skills.GetCooldownDuration(binding.slot),
-                    skills.GetCharges(binding.slot), skills.GetMaxCharges(binding.slot));
+
+                float remaining = skills.GetCooldownRemaining(binding.slot);
+                int charges = skills.GetCharges(binding.slot);
+                float lockLeft = skills.GetLockRemaining(binding.slot);
+                // A swap lock reads like a short cooldown whenever it is what actually blocks the skill.
+                if (lockLeft > 0f && (charges > 0 || lockLeft >= remaining))
+                    binding.view.SetCooldown(lockLeft, skills.GetLockDuration(binding.slot), 0, 1);
+                else
+                    binding.view.SetCooldown(remaining, skills.GetCooldownDuration(binding.slot), charges, skills.GetMaxCharges(binding.slot));
             }
 
             if (passiveIcon != null)

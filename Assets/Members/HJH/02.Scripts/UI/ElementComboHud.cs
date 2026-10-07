@@ -60,7 +60,20 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 comboList.Build(chain.Book, palette);
             bracket.gameObject.SetActive(false);
             Render(slamLast: false);
+
+            // Keys shown for each element depend on what is equipped: redraw after a skill swap or a character change.
+            // Subscribed here, not in OnEnable, because the player's SkillFsm is only set in its Awake.
+            if (player != null && player.SkillFsm != null)
+                player.SkillFsm.LoadoutChanged += HandleLoadoutChanged;
         }
+
+        private void OnDestroy()
+        {
+            if (player != null && player.SkillFsm != null)
+                player.SkillFsm.LoadoutChanged -= HandleLoadoutChanged;
+        }
+
+        private void HandleLoadoutChanged() => Render(slamLast: false);
 
         private void OnEnable()
         {

@@ -29,6 +29,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         // Keeps running after the skill state ends (projectiles, delayed blasts, ...).
         void Run(ISkillTimedEffect effect);
         void PlayHitFeel(float hitStop, float shake);
+        // Camera only, no hit stop: shake for a set time (charge rumbles, cast feel).
+        void PlayShake(float amplitude, float duration);
+        // Camera snaps by offset (world) and eases back: recoil = opposite the shot, slam = down.
+        void PlayCameraKick(Vector3 offset, float duration = 0.22f);
     }
 
     public interface ISkillCombatant
