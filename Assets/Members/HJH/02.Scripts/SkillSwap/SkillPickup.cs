@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Element;
-using Assets.Members.HJH._02.Scripts.UI;
 using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
@@ -106,11 +105,12 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
 
         public Color ElementColor()
         {
+            ElementPalette colors = palette != null ? palette : ElementPalette.Default;
             if (skill != null && skill.TryGetElement(out ElementType element)
-                && palette != null && palette.TryGet(element, out ElementPalette.Entry entry))
+                && colors != null && colors.TryGet(element, out ElementPalette.Entry entry))
                 return entry.color;
 
-            return palette != null ? palette.NeutralColor : Color.gray;
+            return colors != null ? colors.NeutralColor : Color.gray;
         }
 
         private void Refresh()

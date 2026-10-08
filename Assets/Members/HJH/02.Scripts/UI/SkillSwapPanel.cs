@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Element;
 using System;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.SkillSwap;

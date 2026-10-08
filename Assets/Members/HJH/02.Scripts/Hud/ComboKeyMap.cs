@@ -3,7 +3,7 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01_Scripts;
 
-namespace Assets.Members.HJH._02.Scripts.UI
+namespace Assets.Members.HJH._02.Scripts.Hud
 {
     // Which key casts which element with the kit equipped right now ("Q", or "Q/E" when two skills share it).
     // Combos are written in elements; players press keys, so the combo UI shows keys.

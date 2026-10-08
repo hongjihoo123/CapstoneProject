@@ -43,6 +43,11 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             }
         };
 
+        // Read-only view of the combo table for other systems (HJH combo chain / combo UI).
+        public int ComboCount => combos != null ? combos.Length : 0;
+        public string GetComboName(int index) => combos[index].name;
+        public IReadOnlyList<ElementType> GetComboSequence(int index) => combos[index].sequence;
+
         private readonly int[] _counts = new int[Enum.GetValues(typeof(ElementType)).Length];
 
         private void OnEnable()

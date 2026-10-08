@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Hud;
 using System.Collections.Generic;
 using System.Text;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
