@@ -20,7 +20,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         public bool TryPush(ElementType type)
         {
             if (IsFull)
-                return false;
+                _stacks.RemoveAt(0);
 
             _stacks.Add(type);
 
