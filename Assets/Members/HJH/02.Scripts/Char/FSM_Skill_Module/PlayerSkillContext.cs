@@ -8,6 +8,7 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // ISkillContext for the player: adapts PlayerAgent / PlayerMover / weapon / stats / HitFeel to the skill API.
     public sealed class PlayerSkillContext : ISkillContext
     {
         private static readonly IReadOnlyList<IDamageable> NoTargets = new List<IDamageable>();

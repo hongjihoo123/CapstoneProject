@@ -1,13 +1,11 @@
-using System;
 using System.Collections.Generic;
-using System.Reflection;
 using Members.JJH._02_Scripts.ElementsSystem;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
     // Read-only view of JJH's combo table (ElementBuffController.combos), shared by the combo chain and the HUD.
-    // The table is private on JJH's side, so it is read by reflection once instead of copied:
+    // Read through the controller's public accessors once instead of copied:
     // whatever is set in that controller's Inspector is exactly what the game uses.
     public class ElementComboBook
     {
@@ -65,20 +63,16 @@ namespace Assets.Members.HJH._02.Scripts.Element
             if (controller == null)
                 return book;
 
-            FieldInfo combosField = typeof(ElementBuffController).GetField("combos", BindingFlags.Instance | BindingFlags.NonPublic);
-            if (combosField?.GetValue(controller) is not Array combos)
+            for (int i = 0; i < controller.ComboCount; i++)
             {
-                Debug.LogWarning("[ElementComboBook] ElementBuffController.combos 를 읽지 못했습니다. 필드 이름이 바뀌었는지 확인하세요.");
-                return book;
-            }
-
-            foreach (object combo in combos)
-            {
-                Type type = combo.GetType();
-                var name = type.GetField("name")?.GetValue(combo) as string;
-                var sequence = type.GetField("sequence")?.GetValue(combo) as ElementType[];
-                if (sequence == null || sequence.Length == 0)
+                string name = controller.GetComboName(i);
+                IReadOnlyList<ElementType> source = controller.GetComboSequence(i);
+                if (source == null || source.Count == 0)
                     continue;
+
+                var sequence = new ElementType[source.Count];
+                for (int k = 0; k < sequence.Length; k++)
+                    sequence[k] = source[k];
 
                 book._recipes.Add(new Recipe(string.IsNullOrEmpty(name) ? string.Join("-", sequence) : name, sequence));
                 book.LongestLength = Mathf.Max(book.LongestLength, sequence.Length);

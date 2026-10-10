@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
@@ -52,6 +53,12 @@ namespace Assets.Members.HJH._02.Scripts.Element
         private float chainWindow = 3f;
         [SerializeField, Min(1)] private int maxStock = 3;
         [SerializeField] private SkillSlotId finisherSlot = SkillSlotId.Ultimate;
+        [Header("Feel")]
+        [SerializeField, Tooltip("Hit stop + camera shake when a combo lands / the finisher fires (game feel, not UI).")]
+        private float comboHitStop = 0.03f;
+        [SerializeField] private float comboShake = 0.12f;
+        [SerializeField] private float finisherHitStop = 0.08f;
+        [SerializeField] private float finisherShake = 0.35f;
         [SerializeField, Tooltip("On chain break, send the leftover inputs to JJH as plain per-element buffs (JJH's old fallback).")]
         private bool buffLeftoverOnBreak;
 
@@ -148,6 +155,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 return;
 
             Debug.Log($"[ComboChain] 콤보: {combo.Name} ({string.Join(" → ", combo.Sequence)}) / 체인 {ChainCount}");
+            HitFeel.Play(comboHitStop, comboShake);
             ComboLanded?.Invoke(new LandedCombo(combo, _inputs.Count - combo.Length));
             systemChannel.RaiseEvent(SystemEvents.ElementBuffTriggeredEvent.Init(combo.Sequence));
             AddToStock(combo);
@@ -172,6 +180,8 @@ namespace Assets.Members.HJH._02.Scripts.Element
             foreach (ElementComboBook.Recipe combo in released)
                 names.Add(combo.Name);
             Debug.Log($"[ComboChain] 피니시 x{released.Count} (강화): {string.Join(", ", names)}");
+
+            HitFeel.Play(finisherHitStop, finisherShake);
 
             FinisherReleased?.Invoke(released);
             foreach (ElementComboBook.Recipe combo in released)

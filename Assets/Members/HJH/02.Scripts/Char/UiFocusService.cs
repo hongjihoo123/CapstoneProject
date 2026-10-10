@@ -57,7 +57,7 @@ public static class UiFocusService
     private static void Apply(bool focused)
     {
         Cursor.lockState = focused ? CursorLockMode.None : CursorLockMode.Locked;
-        Cursor.visible = focused;
+        CursorService.Refresh();
         OnUiFocusChanged?.Invoke(focused);
     }
 

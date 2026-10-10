@@ -3,6 +3,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 {
+    // Quarter-view follow camera (fixed pitch / yaw, smoothed follow) plus HitFeel shake and kick offsets.
     public class TopDownCameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;

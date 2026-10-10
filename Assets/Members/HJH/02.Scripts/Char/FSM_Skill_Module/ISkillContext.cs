@@ -5,6 +5,8 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // Everything a skill may do to the world, split by concern. Skills only see these interfaces,
+    // never PlayerAgent, so a skill asset works for any owner that implements ISkillContext.
     public interface ISkillMover
     {
         Vector3 MoveInputDirection { get; }

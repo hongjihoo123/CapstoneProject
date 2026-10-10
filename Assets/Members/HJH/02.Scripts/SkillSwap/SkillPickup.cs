@@ -1,16 +1,14 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Element;
-using Assets.Members.HJH._02.Scripts.UI;
 using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.SkillSwap
 {
-    // A skill lying in the stage (Shape of Dreams "memory"), drawn like a LoL glowing orb: a soft glow,
-    // a spinning ring and the skill icon as one flat billboard that always faces the camera, over a
-    // rune circle on the ground. SkillSwapInteractor trades it with one of the player's Q/E skills,
+    // A skill lying in the stage (Shape of Dreams "memory"): the skill icon in a soft element-colored glow,
+    // one flat billboard that always faces the camera, plus a small point light on the floor. SkillSwapInteractor trades it with one of the player's Q/E skills,
     // so after a swap it holds the player's old skill (and that skill's cooldown keeps running here).
     public class SkillPickup : MonoBehaviour
     {
@@ -22,26 +20,21 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
         [SerializeField] private ElementPalette palette;
 
         [Header("Visual")]
-        [SerializeField, Tooltip("Faces the camera every frame (glow, ring, icon).")]
+        [SerializeField, Tooltip("Faces the camera every frame (glow, icon).")]
         private Transform billboard;
         [SerializeField] private Renderer icon;
         [SerializeField] private Renderer glow;
-        [SerializeField] private Renderer ring;
-        [SerializeField] private Renderer groundCircle;
         [SerializeField] private TMP_Text label;
         [SerializeField, Tooltip("Optional point light tinted with the element.")] private Light glowLight;
         [SerializeField] private float glowIntensity = 1f;
-        [SerializeField, Range(0f, 1f)] private float circleStrength = 0.45f;
         [SerializeField] private float bobHeight = 0.12f;
         [SerializeField] private float bobSpeed = 2.2f;
-        [SerializeField] private float ringSpinSpeed = 70f;
         [SerializeField] private float pulseSpeed = 3f;
         [SerializeField] private float highlightScale = 1.18f;
 
         private MaterialPropertyBlock _block;
         private Vector3 _billboardRest;
         private Vector3 _billboardScale;
-        private float _ringAngle;
         private float _scale = 1f;
         private bool _highlighted;
         private string _prompt;
@@ -106,11 +99,12 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
 
         public Color ElementColor()
         {
+            ElementPalette colors = palette != null ? palette : ElementPalette.Default;
             if (skill != null && skill.TryGetElement(out ElementType element)
-                && palette != null && palette.TryGet(element, out ElementPalette.Entry entry))
+                && colors != null && colors.TryGet(element, out ElementPalette.Entry entry))
                 return entry.color;
 
-            return palette != null ? palette.NeutralColor : Color.gray;
+            return colors != null ? colors.NeutralColor : Color.gray;
         }
 
         private void Refresh()
@@ -119,8 +113,6 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
 
             Color color = ElementColor();
             Tint(glow, color * glowIntensity);
-            Tint(ring, color);
-            Tint(groundCircle, color * circleStrength);
             if (glowLight != null)
                 glowLight.color = color;
 
@@ -186,12 +178,6 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
                 billboard.localScale = _billboardScale * (_scale * pulse);
                 if (cam != null)
                     billboard.rotation = cam.transform.rotation;
-            }
-
-            if (ring != null)
-            {
-                _ringAngle += ringSpinSpeed * Time.deltaTime;
-                ring.transform.localRotation = Quaternion.Euler(0f, 0f, _ringAngle);
             }
 
             // Billboard: the label faces the top-down camera.

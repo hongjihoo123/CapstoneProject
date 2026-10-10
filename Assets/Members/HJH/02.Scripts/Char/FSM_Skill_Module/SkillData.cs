@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // One "label: value" row for tooltips (see SkillData.DescribeStats).
     public readonly struct SkillStat
     {
         public readonly string Label;
@@ -16,6 +17,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
     }
 
+    // Base ScriptableObject of every skill: timing, charges, element, icon, text. A concrete skill overrides
+    // Begin (returns an ISkillExecution for multi-frame skills) or Execute (one-shot), plus DescribePreview / DescribeStats.
     public abstract class SkillData : ScriptableObject
     {
         [SerializeField] private float cooldown;
