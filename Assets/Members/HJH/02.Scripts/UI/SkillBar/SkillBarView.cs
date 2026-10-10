@@ -8,8 +8,8 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // Bottom skill bar: passive + one SkillSlotView per bound slot. Reads the player's
-    // SkillStateModule every frame, so re-equipping a kit or skill updates the bar by itself.
+    // 아래 스킬바임. 패시브 + 슬롯마다 SkillSlotView 하나씩
+    // 매 프레임 스킬 상태 읽어서 그려서, 스킬이나 캐릭터 바뀌어도 알아서 따라감
     public class SkillBarView : MonoBehaviour
     {
         [Serializable]
@@ -106,7 +106,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 float remaining = skills.GetCooldownRemaining(binding.slot);
                 int charges = skills.GetCharges(binding.slot);
                 float lockLeft = skills.GetLockRemaining(binding.slot);
-                // A swap lock reads like a short cooldown whenever it is what actually blocks the skill.
+                // 교체 직후 잠금이 실제로 막고 있을 땐 그것도 쿨타임처럼 보여줌
                 if (lockLeft > 0f && (charges > 0 || lockLeft >= remaining))
                     binding.view.SetCooldown(lockLeft, skills.GetLockDuration(binding.slot), 0, 1);
                 else

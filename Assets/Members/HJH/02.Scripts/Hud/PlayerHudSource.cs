@@ -22,7 +22,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
     //             LoadoutChanged, SkillUsed, SkillDenied, SkillReady, CharacterChanged
     //   Combo     HasCombo, ComboInputs, ComboList, ComboStock, MaxComboStock, ComboTimeLeft, ComboWindow,
     //             FinisherKey, TryGetNextCombo(...), KeyFor(element)
-    //             ComboChanged (redraw the trail), ComboLanded, ComboBroken, FinisherReleased
+    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken, FinisherReleased
     //   Swap      SwapPickup (null = closed), InteractKey, SwapChanged, Swapped
     //   Elements  Palette, ColorOf(element / skill), ElementName(element)
     [DisallowMultipleComponent]
@@ -99,6 +99,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action<SkillSlotId> SkillReady;
         public event Action<CharacterData> CharacterChanged;
 
+        // A skill just added an input to the combo trail (ComboChanged follows right after).
+        public event Action ComboInputAdded;
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
@@ -299,7 +301,11 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         private void HandleSkillReady(SkillSlotId slot) => SkillReady?.Invoke(slot);
         private void HandleCharacterChanged(CharacterData character) => CharacterChanged?.Invoke(character);
 
-        private void HandleComboInput(bool shifted) => ComboChanged?.Invoke();
+        private void HandleComboInput(bool shifted)
+        {
+            ComboInputAdded?.Invoke();
+            ComboChanged?.Invoke();
+        }
         private void HandleComboChanged() => ComboChanged?.Invoke();
         private void HandleComboLanded(ElementComboChain.LandedCombo landed) => ComboLanded?.Invoke(landed.Combo);
 

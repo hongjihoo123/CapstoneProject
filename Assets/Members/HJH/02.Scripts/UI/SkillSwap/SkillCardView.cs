@@ -10,8 +10,8 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // One skill card in the swap panel: element frame, icon with cooldown wedge, key tag, name.
-    // Grows and glows while hovered; the panel listens to Hovered to show the tooltip.
+    // 교체 창의 스킬 카드 한 장. 속성 색 테두리, 아이콘(+쿨타임), 키 표시, 이름
+    // 마우스 올리면 커지고 빛남, 툴팁 띄우는 건 패널이 Hovered 이벤트 듣고 함
     public class SkillCardView : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField] private Image frame;
@@ -102,7 +102,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             IsHovered = hovered;
             Hovered?.Invoke(this, hovered);
 
-            // Enter / exit tween the hover weight; Update turns the weight into scale and a pulsing glow.
+            // 마우스 들어오고 나갈 때 hover 값만 바꾸고, 그걸 Update 에서 크기랑 빛으로 바꿔줌
             _hoverTween?.Kill();
             _hoverTween = DOTween.To(() => _hover, value => _hover = value, hovered ? 1f : 0f, hoverDuration)
                 .SetEase(hovered ? Ease.OutBack : Ease.OutQuad)

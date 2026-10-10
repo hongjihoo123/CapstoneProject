@@ -10,6 +10,10 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // Player skill system entry point (a KYR Module on PlayerAgent). Holds one GenericSkillState per slot,
+    // resolves input every frame (press / hold-aim / release / cancel), runs the active skill through a StateMachine
+    // and raises events for everything else: SkillUsed, LoadoutChanged, SkillDenied, SkillReady.
+    // Swap / UI / combo code only talk to it through Equip(...), the Get* queries and those events.
     public class SkillStateModule : Module, IAfterInitModule, ISkillHost, IPassiveHost
     {
         [Serializable]

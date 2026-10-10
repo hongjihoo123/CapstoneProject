@@ -11,20 +11,20 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // Top-down crosshair (prefab Data/UI/AimCursor, placed in the scene, wired to the player).
-    //  - normal: thin ring + 4 ticks; ticks kick out on every real shot / swing / skill cast
-    //  - aiming a skill: gold and wider; dimmed red past the skill's max range (it lands at the edge)
-    //  - hitmarker X on every hit, bigger and red on a kill
-    // The system cursor comes back over UI (swap cards, tooltips); CursorService owns its visibility.
+    // 마우스 조준 커서임 (프리팹 Data/UI/AimCursor, 씬에 놓여 있고 플레이어랑 연결돼 있음)
+    //  - 평소: 얇은 링 + 눈금 4개, 총 쏘거나 휘두르거나 스킬 쓰면 눈금이 탁 벌어짐
+    //  - 스킬 조준 중: 금색으로 넓어짐, 최대 사거리 넘어가면 빨갛게 흐려짐 (스킬은 사거리 끝에 떨어짐)
+    //  - 맞추면 X 표시, 죽이면 더 크고 빨간 X
+    // 교체 카드나 툴팁 같은 UI 위로 가면 원래 마우스 커서가 다시 보임 (그건 CursorService 가 관리함)
     //
-    // Colour and tick spread follow the current state every frame (Lerp toward a moving target);
-    // kicks and hitmarkers are one-shot DOTween tweens.
+    // 색이랑 눈금 벌어짐은 매 프레임 목표값 쪽으로 천천히 따라가고,
+    // 반동이랑 X 표시는 DOTween 으로 한 번씩 재생하는 거임
     public class AimCursorView : MonoBehaviour
     {
         [SerializeField] private PlayerAgent player;
         [SerializeField] private TopDownAimController aimController;
 
-        [Header("Parts")]
+        [Header("부품")]
         [SerializeField] private RectTransform crosshair;
         [SerializeField] private Image ring;
         [SerializeField] private Image dot;
@@ -33,7 +33,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private RectTransform hitMarker;
         [SerializeField] private Image[] hitMarks;
 
-        [Header("Look")]
+        [Header("모양")]
         [SerializeField] private float ringSize = 30f;
         [SerializeField] private float aimingRingGrow = 8f;
         [SerializeField] private float tickLength = 8f;
@@ -45,14 +45,14 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Color outOfRangeColor = new Color(1f, 0.42f, 0.35f, 0.55f);
         [SerializeField, Range(0f, 1f)] private float idleRingAlpha = 0.45f;
 
-        [Header("Kick")]
+        [Header("반동")]
         [SerializeField] private float shotKick = 6f;
         [SerializeField] private float swingKick = 4f;
         [SerializeField] private float skillKick = 12f;
         [SerializeField] private float kickRecover = 0.18f;
         [SerializeField] private Ease kickEase = Ease.OutQuad;
 
-        [Header("Hitmarker")]
+        [Header("맞춤 표시")]
         [SerializeField] private float hitDuration = 0.14f;
         [SerializeField] private float killDuration = 0.3f;
         [SerializeField] private float hitStartScale = 1.25f;
@@ -92,7 +92,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void Start()
         {
-            // SkillFsm is created in PlayerAgent.Awake, so it is ready by Start.
+            // SkillFsm 은 PlayerAgent.Awake 에서 만들어져서 Start 때는 이미 있음
             _skills = player != null ? player.SkillFsm : null;
             if (_skills != null)
                 _skills.SkillUsed += HandleSkillUsed;
@@ -118,7 +118,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void HandleSwing(SwingVisual swing) => Kick(swingKick);
         private void HandleSkillUsed(SkillUsedInfo info) => Kick(skillKick);
 
-        // Kicks never stack past the strongest one in flight; each new kick restarts the recovery.
+        // 반동은 겹쳐서 계속 커지진 않음, 새로 쏘면 회복만 처음부터 다시 시작
         private void Kick(float amount)
         {
             _kickTween?.Kill();
@@ -133,7 +133,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             if (hitMarker == null)
                 return;
-            // A kill marker is not overwritten by the plain hits that land in the same moment.
+            // 죽였을 때 X 는 같은 순간 들어온 일반 타격 X 로 안 덮어씀
             if (_hitTween != null && _hitIsKill && !info.Killed)
                 return;
 
@@ -207,7 +207,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             CursorService.SetHidden(this, shown);
         }
 
-        // The aim preview reports the skill's max range; past it the skill is clamped to the edge.
+        // 조준 미리보기가 스킬 최대 사거리를 알려줌, 그 밖이면 스킬은 사거리 끝에 떨어짐
         private bool IsPastRange()
         {
             _probe.Reset();
@@ -228,7 +228,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _ => Vector2.left,
         };
 
-        // Records only the range circle; every other preview call is ignored.
+        // 사거리 원만 기록하고 나머지 미리보기 호출은 무시함
         private sealed class RangeProbe : ISkillPreview
         {
             public bool HasRange { get; private set; }

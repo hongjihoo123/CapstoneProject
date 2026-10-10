@@ -6,8 +6,8 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // Top-left character plate: the current character's name in its theme color over an ornament line,
-    // with the control hint underneath. Swapping characters slides the name in.
+    // 왼쪽 위 캐릭터 이름판. 지금 캐릭터 이름을 그 캐릭터 색으로 + 밑에 조작 안내
+    // 캐릭터 바꾸면(1/2/3) 이름이 옆에서 스르륵 들어옴
     public class CharacterNameView : MonoBehaviour
     {
         [SerializeField] private CharacterSwitcher switcher;
@@ -26,7 +26,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void OnDisable() => switcher.CharacterChanged -= HandleChanged;
 
-        // The switcher picks its first character in Start, possibly before this subscribed.
+        // CharacterSwitcher 가 Start 에서 첫 캐릭터를 고르는데, 그게 여기 구독보다 먼저일 수도 있어서
         private void Start()
         {
             if (switcher.Current != null)
@@ -44,7 +44,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (hintText != null)
                 hintText.text = $"[1~{switcher.Roster.Length}] 캐릭터 변경   [T] 더미 리셋";
 
-            // Slides in from the left while fading in.
+            // 왼쪽에서 밀려 들어오면서 서서히 나타남
             _swap?.Kill();
             RectTransform rect = nameText.rectTransform;
             rect.anchoredPosition = _nameHome;

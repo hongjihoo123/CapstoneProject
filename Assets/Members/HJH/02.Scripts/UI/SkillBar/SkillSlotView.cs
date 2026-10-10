@@ -8,15 +8,14 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // One skill icon: element-colored frame, element badge (bottom-left), key (bottom-right) and a
-    // LoL-style cooldown:
-    //   cooling  - icon darkened, dark wedge unwinding from 12 o'clock with a bright sweep edge, seconds left
-    //   ready    - white flash over the icon + a light ring expanding off the frame (the slot itself never moves)
-    //   denied   - content shakes sideways, wedge and number flash red
-    // Combo glow (proc-style): pulses while this skill is the next combo input, bursts when a combo lands.
+    // 스킬 아이콘 한 칸. 속성 색 테두리, 왼쪽 아래 속성 뱃지, 오른쪽 아래 키, 롤 같은 쿨타임 표시
+    //   쿨타임 중 - 아이콘 어두워지고 12시부터 어두운 부채꼴이 풀림 + 밝은 선 + 남은 초
+    //   쿨 끝남   - 아이콘 위로 하얗게 번쩍 + 테두리에서 링 퍼짐 (칸 자체는 안 움직임)
+    //   못 쓸 때  - 내용물이 옆으로 흔들리고 부채꼴/숫자가 빨갛게 번쩍
+    // 스킬 교체로 새 스킬 들어오면 속성 색으로 번쩍 + 아이콘 톡 튐
     //
-    // Continuous, state-driven values (wedge, sweep edge, hint pulse) are set every frame.
-    // One-shot reactions (ready, denied, burst, swap punch) are DOTween tweens linked to this object.
+    // 부채꼴처럼 계속 바뀌는 건 매 프레임 갱신,
+    // 번쩍/흔들림 같은 한 번짜리는 DOTween 으로 재생
     public class SkillSlotView : MonoBehaviour
     {
         [SerializeField] private Image frame;
@@ -28,7 +27,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Image keyIcon;
         [SerializeField] private Color emptyIconColor = new Color(1f, 1f, 1f, 0.15f);
 
-        [Header("Parts (built by HJH > UI > Upgrade Skill Slots)")]
+        [Header("부품")]
         [SerializeField, Tooltip("Everything that shakes. The slot root stays where the layout put it.")]
         private RectTransform content;
         [SerializeField, Tooltip("Thin bright line on the moving edge of the cooldown wedge.")]
@@ -39,24 +38,23 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private Image readyRing;
         [SerializeField] private Image comboGlow;
 
-        [Header("Cooldown")]
+        [Header("쿨타임")]
         [SerializeField] private Color cooldownIconTint = new Color(0.42f, 0.42f, 0.46f, 1f);
 
-        [Header("Ready")]
+        [Header("쿨 끝남")]
         [SerializeField] private Color readyColor = new Color(1f, 0.96f, 0.82f, 1f);
         [SerializeField] private float flashAlpha = 0.85f;
         [SerializeField] private float flashDuration = 0.3f;
         [SerializeField] private float ringDuration = 0.45f;
         [SerializeField] private float ringScale = 1.35f;
 
-        [Header("Denied")]
+        [Header("못 쓸 때")]
         [SerializeField] private Color deniedColor = new Color(1f, 0.25f, 0.2f, 1f);
         [SerializeField] private float deniedDuration = 0.3f;
         [SerializeField] private float deniedShake = 7f;
         [SerializeField] private int deniedVibrato = 18;
 
-        [Header("Combo")]
-        [SerializeField] private float glowPulseSpeed = 6f;
+        [Header("번쩍 (스킬 교체 때)")]
         [SerializeField] private float burstDuration = 0.5f;
         [SerializeField] private float burstScale = 1.25f;
         [SerializeField, Tooltip("Icon pop when a swapped-in skill lands in the slot.")]
@@ -64,8 +62,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private SkillData _bound;
         private bool _hasBound;
-        private bool _hinted;
-        private Color _hintColor;
         private bool _blocked;
         private Color _iconColor = Color.white;
         private Color _overlayColor;
@@ -90,12 +86,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 cooldownEdge.enabled = false;
         }
 
-        public void SetComboHint(bool on, Color color)
-        {
-            _hinted = on;
-            _hintColor = color;
-        }
-
         public void ComboBurst(Color color)
         {
             if (comboGlow == null)
@@ -109,15 +99,20 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _burstTween = DOTween.Sequence()
                 .Join(rect.DOScale(1f, burstDuration).SetEase(Ease.OutQuad))
                 .Join(comboGlow.DOFade(0f, burstDuration).SetEase(Ease.InQuad))
-                .OnKill(() => _burstTween = null)
+                .OnKill(() =>
+                {
+                    _burstTween = null;
+                    if (comboGlow != null)
+                        comboGlow.enabled = false;
+                })
                 .SetUpdate(true)
                 .SetLink(gameObject);
         }
 
-        // Skill came off cooldown (SkillStateModule.SkillReady).
+        // 쿨 끝났을 때 (SkillStateModule.SkillReady)
         public void PlayReady() => PlayReady(readyColor);
 
-        // Key pressed while the skill cannot be cast (SkillStateModule.SkillDenied).
+        // 쿨 중에 키 눌렀을 때 (SkillStateModule.SkillDenied)
         public void Deny()
         {
             _deniedTween?.Kill(true);
@@ -140,7 +135,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _deniedTween.OnKill(() => _deniedTween = null).SetUpdate(true).SetLink(gameObject);
         }
 
-        // A new skill landed in this slot (skill swap): ready flash in its element color + icon pop.
+        // 스킬 교체로 이 칸에 새 스킬 들어왔을 때: 속성 색으로 번쩍 + 아이콘 톡
         public void Punch(Color color)
         {
             PlayReady(color);
@@ -189,25 +184,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 .SetLink(gameObject);
         }
 
-        private void LateUpdate()
-        {
-            // A one-shot burst owns the glow until it finishes; the hint pulse resumes afterwards.
-            if (comboGlow == null || _burstTween != null)
-                return;
-
-            if (!_hinted)
-            {
-                comboGlow.enabled = false;
-                return;
-            }
-
-            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * glowPulseSpeed);
-            comboGlow.enabled = true;
-            comboGlow.color = new Color(_hintColor.r, _hintColor.g, _hintColor.b, Mathf.Lerp(0.35f, 1f, pulse));
-            comboGlow.rectTransform.localScale = Vector3.one * Mathf.Lerp(1f, 1.06f, pulse);
-        }
-
-        // Labels like "RMB" must stay on one line: shrink to fit instead of wrapping letter by letter.
+        // "RMB" 같은 키 글자는 한 줄로 유지, 줄바꿈 대신 글자 크기를 줄임
         public void SetKeyLabel(string label)
         {
             if (keyText == null)
@@ -220,7 +197,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             keyText.text = label;
         }
 
-        // Keys too wide for a text label (Space) are shown as an icon instead.
+        // Space 처럼 글자로 넣기 긴 키는 아이콘으로 보여줌
         public void SetKeyIcon(Sprite sprite)
         {
             if (keyText != null)
@@ -257,8 +234,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // Multi-charge skills stay usable while recharging: the wedge only covers the icon when
-        // no charge is left, and the text shows the stored charge count instead of seconds.
+        // 충전 여러 개인 스킬은 충전이 남아 있으면 계속 쓸 수 있어서, 다 썼을 때만 부채꼴로 덮고
+        // 숫자도 남은 초 대신 남은 충전 개수 보여줌
         public void SetCooldown(float remaining, float duration, int charges = 0, int maxCharges = 1)
         {
             bool cooling = remaining > 0f && duration > 0f;
@@ -293,8 +270,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 icon.color = _blocked ? _iconColor * cooldownIconTint : _iconColor;
         }
 
-        // The line sits on the wedge boundary: pivot at the icon center, rotated with the fill, and
-        // stretched so it always reaches the square's edge (longer toward the corners).
+        // 부채꼴 경계에 붙는 밝은 선. 아이콘 가운데 기준으로 같이 돌고,
+        // 모서리 쪽으로 갈수록 길어져서 항상 네모 끝까지 닿게 늘려줌
         private void UpdateSweepEdge(bool blocked, float fill)
         {
             if (cooldownEdge == null)

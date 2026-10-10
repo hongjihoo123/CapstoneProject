@@ -10,8 +10,8 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // Opens while SkillSwapInteractor is choosing (after F): the skill on the ground on the left,
-    // the player's swappable skills (Q/E) on the right. Hovering any card shows its tooltip.
+    // F 눌러서 교체 고를 때 뜨는 창. 왼쪽에 바닥 스킬, 오른쪽에 바꿀 수 있는 내 스킬(Q/E)
+    // 카드에 마우스 올리면 툴팁 뜸
     public class SkillSwapPanel : MonoBehaviour
     {
         [Serializable]
@@ -33,7 +33,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("The box sits on the screen point this high above the orb (pivot bottom-center).")]
         private float worldHeight = 2.2f;
 
-        [Header("Swap flight")]
+        [Header("교체 때 날아가는 아이콘")]
         [SerializeField, Tooltip("Found in the scene when empty. The swapped-in icon flies into its slot.")]
         private SkillBarView skillBar;
         [SerializeField, Tooltip("Hidden Image on the HUD canvas root that carries the icon. Without it the slot just pops.")]
@@ -96,7 +96,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // The ground card's icon flies into the skill bar slot it was swapped into, then the slot pops.
+        // 바닥 카드 아이콘이 교체된 스킬바 칸으로 날아가고, 도착하면 칸이 톡 튐
         private void HandleSwapped(SkillSlotId slot, SkillData outgoing, SkillData incoming)
         {
             if (incoming == null || skillBar == null || !skillBar.TryGetView(slot, out SkillSlotView view))
@@ -115,9 +115,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             FlyIcon(incoming.Icon, groundCard.Rect, (RectTransform)view.transform, view, color);
         }
 
-        // One reused Image on the HUD canvas (outside this panel, so the panel fading out does not hide it).
-        // The tween is linked to that Image: if anything disables it mid-flight the tween is killed and
-        // OnKill hides it, so no icon is ever left hanging on screen.
+        // HUD 캔버스에 있는 이미지 하나 돌려 씀 (패널 밖에 둬서 패널이 사라져도 같이 안 숨게)
+        // 트윈이 그 이미지에 묶여 있어서 중간에 꺼지면 트윈도 같이 죽고 OnKill 에서 숨겨줌,
+        // 그래서 아이콘이 화면에 둥둥 떠 있는 일은 없음
         private void FlyIcon(Sprite sprite, RectTransform from, RectTransform to, SkillSlotView view, Color color)
         {
             _flight?.Kill(true);
@@ -233,7 +233,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return default;
         }
 
-        // Keeps the box over the orb (screen-space overlay canvas), inside the screen.
+        // 창을 구슬 위에 붙여둠 (화면 밖으로는 안 나가게)
         private void FollowOrb()
         {
             Camera cam = Camera.main;
@@ -254,7 +254,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             rect.position = screen;
         }
 
-        // 0 = closed, 1 = open: fade plus a small pop and rise.
+        // 0 = 닫힘, 1 = 열림. 서서히 나타나면서 살짝 커지고 위로 올라옴
         private void Apply(float t)
         {
             float eased = 1f - (1f - t) * (1f - t);
