@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents;
+using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
@@ -195,18 +196,45 @@ namespace Members.KYR._01_Scripts
             Health.TakeDamage(amount);
         }
 
+        public void TakeDamage(float amount, GameObject source, ElementType element)
+        {
+            Health.TakeDamage(amount, element);
+        }
+
         public void Heal(float amount)
         {
             Health.Heal(amount);
         }
 
+        public void AddShield(float amount)
+        {
+            Health.AddShield(amount);
+        }
+
+        public void ClearShield()
+        {
+            Health.ClearShield();
+        }
+
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
-            float multiplier = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
-            if (isWeakpoint && Stats != null)
-                multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
+            ApplyDamageTo(target, amount, isWeakpoint, null);
+        }
+
+        public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint, ElementType? element)
+        {
             if (target == null)
                 return;
+
+            float multiplier = 1f;
+            if (Stats != null)
+            {
+                multiplier = Stats.Get(PlayerStatId.Damage);
+                if (element.HasValue)
+                    multiplier *= Stats.Get(PlayerElementStats.DamageStat(element.Value));
+                if (isWeakpoint)
+                    multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
+            }
 
             // Hits on already-dead targets are not reported (no lifesteal, no hit effects on corpses).
             bool wasAlive = target.IsAlive;

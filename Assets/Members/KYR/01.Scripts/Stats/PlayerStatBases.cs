@@ -13,5 +13,15 @@ namespace Members.KYR._01_Scripts.Stats
         public float AttackSpeed;
         public float WeakpointMultiplier;
         public float SkillCooldownReduction;
+        public float FireDamage;
+        public float WaterDamage;
+        public float WindDamage;
+        public float ElectricDamage;
+        public float EarthDamage;
+        public float FireDefense;
+        public float WaterDefense;
+        public float WindDefense;
+        public float ElectricDefense;
+        public float EarthDefense;
     }
 }

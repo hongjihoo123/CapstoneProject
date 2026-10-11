@@ -17,6 +17,11 @@ namespace Members.KYR._01_Scripts.Stats
             Add(PlayerStatId.MaxHp, bases.MaxHp, survival);
             Add(PlayerStatId.Defense, bases.Defense, survival);
             Add(PlayerStatId.HealReceived, bases.HealReceived, survival);
+            Add(PlayerStatId.FireDefense, bases.FireDefense, survival);
+            Add(PlayerStatId.WaterDefense, bases.WaterDefense, survival);
+            Add(PlayerStatId.WindDefense, bases.WindDefense, survival);
+            Add(PlayerStatId.ElectricDefense, bases.ElectricDefense, survival);
+            Add(PlayerStatId.EarthDefense, bases.EarthDefense, survival);
 
             StatNode mobility = Add(PlayerStatId.Mobility, 0f, Root);
             Add(PlayerStatId.WalkSpeed, bases.WalkSpeed, mobility);
@@ -31,6 +36,13 @@ namespace Members.KYR._01_Scripts.Stats
 
             StatNode skill = Add(PlayerStatId.Skill, 0f, Root);
             Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, skill);
+
+            StatNode element = Add(PlayerStatId.Element, 0f, Root);
+            Add(PlayerStatId.FireDamage, bases.FireDamage, element);
+            Add(PlayerStatId.WaterDamage, bases.WaterDamage, element);
+            Add(PlayerStatId.WindDamage, bases.WindDamage, element);
+            Add(PlayerStatId.ElectricDamage, bases.ElectricDamage, element);
+            Add(PlayerStatId.EarthDamage, bases.EarthDamage, element);
         }
 
         public float Get(PlayerStatId id)

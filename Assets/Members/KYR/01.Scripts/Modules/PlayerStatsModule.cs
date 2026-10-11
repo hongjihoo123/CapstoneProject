@@ -25,6 +25,20 @@ namespace Members.KYR._01_Scripts.Modules
         [Header("Skill")]
         [SerializeField] private float skillCooldownReduction;
 
+        [Header("Element Attack")]
+        [SerializeField] private float fireDamage = 1f;
+        [SerializeField] private float waterDamage = 1f;
+        [SerializeField] private float windDamage = 1f;
+        [SerializeField] private float electricDamage = 1f;
+        [SerializeField] private float earthDamage = 1f;
+
+        [Header("Element Defense")]
+        [SerializeField] private float fireDefense;
+        [SerializeField] private float waterDefense;
+        [SerializeField] private float windDefense;
+        [SerializeField] private float electricDefense;
+        [SerializeField] private float earthDefense;
+
         public PlayerStatTree Tree { get; private set; }
 
         public override void Initialize(ModuleOwner owner)
@@ -42,7 +56,17 @@ namespace Members.KYR._01_Scripts.Modules
                 Damage = damage,
                 AttackSpeed = attackSpeed,
                 WeakpointMultiplier = weakpointMultiplier,
-                SkillCooldownReduction = skillCooldownReduction
+                SkillCooldownReduction = skillCooldownReduction,
+                FireDamage = fireDamage,
+                WaterDamage = waterDamage,
+                WindDamage = windDamage,
+                ElectricDamage = electricDamage,
+                EarthDamage = earthDamage,
+                FireDefense = fireDefense,
+                WaterDefense = waterDefense,
+                WindDefense = windDefense,
+                ElectricDefense = electricDefense,
+                EarthDefense = earthDefense
             });
         }
 
@@ -82,7 +106,13 @@ namespace Members.KYR._01_Scripts.Modules
                 $"Dash={Get(PlayerStatId.DashSpeed):0.##}/{Get(PlayerStatId.DashDuration):0.##} " +
                 $"Dmg={Get(PlayerStatId.Damage):0.##} AtkSpd={Get(PlayerStatId.AttackSpeed):0.##} " +
                 $"Weak={Get(PlayerStatId.WeakpointMultiplier):0.##} " +
-                $"Cdr={Get(PlayerStatId.SkillCooldownReduction):0.##}",
+                $"Cdr={Get(PlayerStatId.SkillCooldownReduction):0.##} " +
+                $"FireAtk={Get(PlayerStatId.FireDamage):0.##} WaterAtk={Get(PlayerStatId.WaterDamage):0.##} " +
+                $"WindAtk={Get(PlayerStatId.WindDamage):0.##} ElecAtk={Get(PlayerStatId.ElectricDamage):0.##} " +
+                $"EarthAtk={Get(PlayerStatId.EarthDamage):0.##} " +
+                $"FireDef={Get(PlayerStatId.FireDefense):0.##} WaterDef={Get(PlayerStatId.WaterDefense):0.##} " +
+                $"WindDef={Get(PlayerStatId.WindDefense):0.##} ElecDef={Get(PlayerStatId.ElectricDefense):0.##} " +
+                $"EarthDef={Get(PlayerStatId.EarthDefense):0.##}",
                 this);
         }
     }
