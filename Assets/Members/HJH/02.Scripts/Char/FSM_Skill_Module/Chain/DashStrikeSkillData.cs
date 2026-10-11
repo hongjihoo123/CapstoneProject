@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -17,6 +18,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
         [SerializeField] private float rangeFlashDuration = 0.2f;
         [SerializeField] private GameObject spinEffectPrefab;
 
+        protected override Color DefaultFxColor => new(1f, 0.55f, 0.25f);
+
         public override ISkillExecution Begin(ISkillContext context) => new Execution(this, context);
 
         public override void DescribePreview(ISkillContext context, ISkillPreview preview)
@@ -24,6 +27,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             Vector3 direction = SkillAim.Resolve(context, minRange, maxRange, out float distance);
             Vector3 start = context.Transform.position;
             Vector3 end = start + direction * distance;
+
+            preview.RangeCircle(start, maxRange);
+            preview.DirectionLine(start, start + direction * maxRange);
 
             // The hit area follows the player, so the path is as wide as the strike circle.
             preview.Path(start, end, strikeRadius * 2f);
@@ -36,12 +42,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             private readonly ISkillContext _context;
             private int _dashTicksDone;
             private bool _landed;
+            private Vector3 _direction;
+            private int _slashes;
 
             public Execution(DashStrikeSkillData data, ISkillContext context)
             {
                 _data = data;
                 _context = context;
                 Vector3 direction = SkillAim.Resolve(context, data.minRange, data.maxRange, out float distance);
+                _direction = direction;
                 context.Dash(direction, distance / data.dashDuration, data.dashDuration, data.endSlowdown);
                 context.SetSpinEffect(data.spinEffectPrefab, true, data.strikeRadius);
             }
@@ -78,6 +87,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
 
                 _landed = true;
                 DamageTick();
+
+                // Landing: two blades crossing in an X.
+                Vector3 landing = _context.Transform.position;
+                Vector3 chest = landing + Vector3.up * 0.9f;
+                Fx.Slash(chest, _direction, _data.strikeRadius * 1.2f, false, 25f, 2.2f);
+                Fx.Slash(chest, _direction, _data.strikeRadius * 1.2f, true, -25f, 2.2f);
+                _context.PlayHitFeel(0.04f, 0.25f);
                 _context.SetSpinEffect(_data.spinEffectPrefab, false, _data.strikeRadius);
             }
 
@@ -86,6 +102,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             private void DamageTick()
             {
                 _context.FlashRange(_data.strikeRadius, _data.rangeFlashDuration);
+                // A quick blade along the dash, alternating sides each tick.
+                Fx.Slash(_context.Transform.position + Vector3.up * 0.9f, _direction, _data.strikeRadius, _slashes++ % 2 == 1, 0f, 2.6f);
 
                 Vector3 center = _context.Transform.position + Vector3.up;
                 foreach (var target in _context.OverlapSphere(center, _data.strikeRadius))

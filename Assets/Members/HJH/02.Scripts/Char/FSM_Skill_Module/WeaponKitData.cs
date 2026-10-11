@@ -1,4 +1,5 @@
 using RobotWeapons;
+using UnityEngine.Serialization;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
@@ -8,7 +9,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     {
         public WeaponData weapon;
         public SkillData dash;
-        public SkillData basic;
+        [FormerlySerializedAs("basic")] public SkillData weaponSkill;
         public SkillData ultimate;
         public PassiveData passive;
 
@@ -17,7 +18,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             switch (slot)
             {
                 case SkillSlotId.Dash: return dash;
-                case SkillSlotId.Basic: return basic;
+                case SkillSlotId.Weapon: return weaponSkill;
                 case SkillSlotId.Ultimate: return ultimate;
                 default: return null;
             }

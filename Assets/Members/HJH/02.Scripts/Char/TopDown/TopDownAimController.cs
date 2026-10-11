@@ -5,7 +5,7 @@ using UnityEngine.InputSystem;
 namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 {
     [DefaultExecutionOrder(-50)]
-    public class TopDownAimController : MonoBehaviour
+    public class TopDownAimController : MonoBehaviour, RobotWeapons.IAimPointProvider
     {
         [SerializeField] private PlayerAgent player;
         [SerializeField] private Camera viewCamera;
@@ -47,7 +47,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             player.SetAimDirection(toAim.normalized);
 
             Quaternion target = Quaternion.LookRotation(toAim);
-            transform.rotation = Quaternion.RotateTowards(transform.rotation, target, turnSpeed * Time.deltaTime);
+            // Normalize: RotateTowards fed its own output every frame drifts off unit length, which the
+            // Inspector reports as "QuaternionToEuler: Input quaternion was not normalized".
+            transform.rotation = Quaternion.Normalize(Quaternion.RotateTowards(transform.rotation, target, turnSpeed * Time.deltaTime));
         }
     }
 }

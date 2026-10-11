@@ -6,7 +6,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
     public class DashSkillData : SkillData
     {
         [SerializeField] private float dashForce = 10f;
-        [SerializeField] private bool useMoveInputDirection;
+        [SerializeField, Tooltip("Dash toward WASD while moving (aim direction when standing still).")]
+        private bool useMoveInputDirection = true;
         [SerializeField] private bool reloadOnDash = true;
 
         public override void Execute(ISkillContext context)
@@ -25,8 +26,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
 
         private Vector3 ResolveDirection(ISkillContext context)
         {
-            Vector3 input = context.MoveInputDirection;
-            return useMoveInputDirection && input.sqrMagnitude > 0.0001f ? input : context.AimDirection;
+            if (!useMoveInputDirection)
+                return context.AimDirection;
+
+            SkillAim.TryMoveDirection(context, out Vector3 direction);
+            return direction;
         }
     }
 }

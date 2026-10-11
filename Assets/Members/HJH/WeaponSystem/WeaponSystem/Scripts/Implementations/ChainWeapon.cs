@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    public class ChainWeapon : WeaponBase, IAttackFeedbackSource, IComboWeapon
+    public class ChainWeapon : WeaponBase, IAttackFeedbackSource, IComboWeapon, IAttackSpeedScalable, ISwingVisualSource
     {
         private static readonly int WeakpointLayer = LayerMask.NameToLayer("Weakpoint");
 
@@ -17,6 +17,11 @@ namespace RobotWeapons
         private bool queuedNext;
 
         public override bool PrimaryIsHeld => true;
+
+        // Scales the whole swing (windup, hit window, recovery); the animator gets the same value.
+        public float AttackSpeedMultiplier { get; set; } = 1f;
+
+        public event System.Action<SwingVisual> Swung;
 
         public int ComboIndex => activeStep >= 0 ? activeStep : nextStep;
         public int ComboCount => data.steps.Length;
@@ -59,7 +64,7 @@ namespace RobotWeapons
             if (activeStep >= 0)
             {
                 ChainWeaponData.ComboStep step = data.steps[activeStep];
-                stepTimer += dt;
+                stepTimer += dt * Mathf.Max(0.01f, AttackSpeedMultiplier);
 
                 bool inHitWindow = stepTimer >= step.hitStart && stepTimer <= step.hitEnd;
                 if (stepTimer <= step.hitEnd)
@@ -89,6 +94,20 @@ namespace RobotWeapons
 
             SetMoveMultiplier(step.moveSpeedMultiplier);
             RaiseAttackTriggered(step.animId);
+
+            float speed = Mathf.Max(0.01f, AttackSpeedMultiplier);
+            SwingShape shape = step.swingFx ?? new SwingShape();
+            Swung?.Invoke(new SwingVisual
+            {
+                Origin = owner.AimOrigin,
+                Reach = shape.radius > 0f ? shape.radius : step.hitCenter.z + step.hitSize.z * 0.5f,
+                Step = index,
+                StepCount = data.steps.Length,
+                Delay = Mathf.Max(0f, step.hitStart + shape.delayOffset) / speed,
+                Duration = Mathf.Max(0.05f, step.hitEnd - step.hitStart) * Mathf.Max(0.05f, shape.durationScale) / speed,
+                Color = data.swingColor,
+                Shape = shape
+            });
         }
 
         private void FinishStep()

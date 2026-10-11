@@ -20,6 +20,7 @@ namespace RobotWeapons
                 TankerWeaponData d => new TankerWeapon(d),
                 LaserDealerData d => new LaserDealerWeapon(d),
                 GunDealerData d => new GunDealerWeapon(d),
+                HitscanGunData d => new HitscanGunWeapon(d),
                 BowData d => new BowWeapon(d),
                 MeleeSawedOffData d => new MeleeSawedOffWeapon(d),
                 SniperSawedOffData d => new SniperSawedOffWeapon(d),

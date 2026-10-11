@@ -10,11 +10,11 @@ namespace Members.KYR._01_Scripts
     {
         private static readonly (SkillSlotId slot, string binding)[] DefaultSkillBindings =
         {
-            (SkillSlotId.Dash, "<Keyboard>/q"),
-            (SkillSlotId.Basic, "<Keyboard>/e"),
-            (SkillSlotId.Ultimate, "<Keyboard>/x"),
-            (SkillSlotId.Free1, "<Keyboard>/f"),
-            (SkillSlotId.Free2, "<Keyboard>/g"),
+            (SkillSlotId.Dash, "<Keyboard>/space"),
+            (SkillSlotId.Weapon, "<Mouse>/rightButton"),
+            (SkillSlotId.Ultimate, "<Keyboard>/r"),
+            (SkillSlotId.Basic1, "<Keyboard>/q"),
+            (SkillSlotId.Basic2, "<Keyboard>/e"),
         };
 
         private readonly Dictionary<SkillSlotId, InputAction> _skillActions = new();
@@ -120,6 +120,21 @@ namespace Members.KYR._01_Scripts
                 _reload = new InputAction("Reload", InputActionType.Button);
                 _reload.AddBinding("<Keyboard>/r");
                 _reload.AddBinding("<Gamepad>/leftShoulder");
+            }
+
+            // Top-down layout: Space = dash (also cancels aiming), right click = weapon skill, R = ultimate.
+            // Weapon aim loses right click, jump loses Space, and manual reload is removed (dash reloads instantly).
+            DisableBinding(_aim, "<Mouse>/rightButton");
+            DisableBinding(map.FindAction("Jump"), "<Keyboard>/space");
+            _reload = null;
+        }
+
+        private static void DisableBinding(InputAction action, string path)
+        {
+            for (int i = 0; i < action.bindings.Count; i++)
+            {
+                if (action.bindings[i].path == path)
+                    action.ApplyBindingOverride(i, string.Empty);
             }
         }
 
