@@ -5,9 +5,11 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
 {
     public static class SystemEvents
     {
-        public static readonly UseSkillEvent UseSkillEvent = new UseSkillEvent();
-        public static readonly ElementStackChangedEvent ElementStackChangedEvent = new ElementStackChangedEvent();
-        public static readonly ElementBuffTriggeredEvent ElementBuffTriggeredEvent = new ElementBuffTriggeredEvent();
+        public static readonly UseSkillEvent UseSkillEvent = new();
+        public static readonly ElementStackChangedEvent ElementStackChangedEvent = new();
+        public static readonly ElementBuffTriggeredEvent ElementBuffTriggeredEvent = new();
+        public static readonly ElementComboNextEvent ElementComboNextEvent = new();
+        public static readonly ElementComboCompleteEvent ElementComboCompleteEvent = new();
     }
 
     #region Element System Events
@@ -52,6 +54,36 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         public ElementBuffTriggeredEvent Init(IReadOnlyList<ElementType> stacks)
         {
             Stacks = stacks;
+            return this;
+        }
+    }
+
+    public class ElementComboNextEvent : GameEvent
+    {
+        public ElementType NextElement { get; private set; }
+        public string ComboName { get; private set; }
+        public int Progress { get; private set; }
+        public int ComboLength { get; private set; }
+
+        public ElementComboNextEvent Init(ElementType nextElement, string comboName, int progress, int comboLength)
+        {
+            NextElement = nextElement;
+            ComboName = comboName;
+            Progress = progress;
+            ComboLength = comboLength;
+            return this;
+        }
+    }
+
+    public class ElementComboCompleteEvent : GameEvent
+    {
+        public string ComboName { get; private set; }
+        public IReadOnlyList<ElementType> Sequence { get; private set; }
+
+        public ElementComboCompleteEvent Init(string comboName, IReadOnlyList<ElementType> sequence)
+        {
+            ComboName = comboName;
+            Sequence = sequence;
             return this;
         }
     }
