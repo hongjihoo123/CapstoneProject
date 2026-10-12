@@ -143,3 +143,13 @@
 ```
 
 <!-- 여기 아래에 추가 -->
+
+### 2026-10-12  총 쏘는 기준점(AimOrigin)을 어떻게 총에 붙였나?
+답: 유니티 오브젝트는 부모-자식(Transform 계층)으로 묶여 있고, 자식은 부모가 움직이면 같이 움직인다.
+그래서 플레이어의 AimOrigin 을 모델의 "총 뼈" 밑 자식으로 옮기면(SetParent), 애니메이션이 뼈를 움직일 때 AimOrigin 도 같이 움직인다.
+- 모델 안에 "AimOrigin" 이라는 빈 오브젝트(표시)를 총 뼈 밑에 미리 넣어두고, 캐릭터가 바뀔 때 CharacterModel 이 이름으로 찾아서 그 밑으로 옮김
+- 옮기기 전에 원래 부모/로컬 위치/로컬 회전을 기억해두고, 캐릭터를 바꿔서 모델을 지우기 "전에" 원래 자리로 돌려놓음 (안 그러면 자식이라 모델이랑 같이 삭제됨)
+- AimOrigin 이 없어서 플레이어 자신(transform)을 대신 쓰는 경우엔 옮기지 않음 (플레이어 몸통을 모델 밑으로 넣어버리는 사고 방지)
+- 총 데이터의 총구 기준점(muzzleIds)을 비우고 옆 간격 0 → 총알이 정확히 AimOrigin 위치에서 나감
+핵심 개념: Transform 계층, 로컬 좌표 vs 월드 좌표, SetParent(parent, worldPositionStays:false), 상태 복구(되돌리기)
+관련: ../Assets/Members/HJH/02.Scripts/Char/Character/CharacterModel.cs (AttachAimOrigin / ReturnAimOrigin), 02_Unity기초.md

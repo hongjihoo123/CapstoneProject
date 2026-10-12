@@ -58,8 +58,23 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void BeginActivation() => _hitThisActivation.Clear();
 
-        public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f) =>
+        private Vector3 _dashFacing;
+        private bool _faceDash;
+
+        public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f, bool faceDirection = true)
+        {
             _player.Mover.Dash(direction, speed, duration, endSlowdown);
+            direction.y = 0f;
+            _faceDash = faceDirection && direction.sqrMagnitude > 0.0001f;
+            if (_faceDash)
+                _dashFacing = direction.normalized;
+        }
+
+        public bool TryGetDashFacing(out Vector3 direction)
+        {
+            direction = _dashFacing;
+            return _faceDash && _player.Mover.IsDashing;
+        }
 
         public void SetSpinEffect(GameObject prefab, bool active, float radius)
         {
@@ -187,6 +202,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
                 MoveTarget(root, offset / distance * Mathf.Min(maxDistance, distance - stopDistance));
             }
+        }
+
+        public void Knockback(IDamageable target, Vector3 direction, float distance)
+        {
+            if (target is not Component component || distance <= 0f)
+                return;
+
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+
+            MoveTarget(component.transform, direction.normalized * distance);
         }
 
         private static void MoveTarget(Transform root, Vector3 delta)

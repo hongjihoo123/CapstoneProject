@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Hud;
 using Assets.Members.HJH._02.Scripts.Element;
 using System;
 using System.Collections.Generic;
@@ -118,7 +119,57 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Sprite sprite = skills.Passive != null ? skills.Passive.Icon : null;
                 passiveIcon.sprite = sprite;
                 passiveIcon.enabled = sprite != null;
+                DrawPassiveGauge(sprite);
             }
+        }
+
+        // 게이지 있는 패시브(건슬링어 충전 충격포 등)면 패시브 칸이 아래서부터 차오름.
+        // 뒤에 흐린 아이콘 하나 깔고, 앞 아이콘을 게이지만큼만 보여주는 방식. 꽉 차면 금색으로 깜빡임
+        private Image _passiveBack;
+
+        private void DrawPassiveGauge(Sprite sprite)
+        {
+            PlayerHudSource hud = PlayerHudSource.Instance;
+            float fill = 0f;
+            bool full = false;
+            bool hasGauge = hud != null && hud.TryGetPassiveGauge(out fill, out full);
+
+            if (!hasGauge)
+            {
+                passiveIcon.type = Image.Type.Simple;
+                passiveIcon.color = Color.white;
+                if (_passiveBack != null)
+                    _passiveBack.enabled = false;
+                return;
+            }
+
+            if (_passiveBack == null)
+            {
+                var back = new GameObject("PassiveGaugeBack", typeof(RectTransform), typeof(Image));
+                var rect = (RectTransform)back.transform;
+                RectTransform icon = passiveIcon.rectTransform;
+                rect.SetParent(icon.parent, false);
+                rect.anchorMin = icon.anchorMin;
+                rect.anchorMax = icon.anchorMax;
+                rect.pivot = icon.pivot;
+                rect.anchoredPosition = icon.anchoredPosition;
+                rect.sizeDelta = icon.sizeDelta;
+                rect.SetSiblingIndex(icon.GetSiblingIndex());   // 아이콘 바로 뒤
+                _passiveBack = back.GetComponent<Image>();
+                _passiveBack.raycastTarget = false;
+                _passiveBack.preserveAspect = passiveIcon.preserveAspect;
+            }
+
+            _passiveBack.sprite = sprite;
+            _passiveBack.enabled = sprite != null;
+            _passiveBack.color = new Color(1f, 1f, 1f, 0.25f);
+
+            passiveIcon.type = Image.Type.Filled;
+            passiveIcon.fillMethod = Image.FillMethod.Vertical;
+            passiveIcon.fillOrigin = (int)Image.OriginVertical.Bottom;
+            passiveIcon.fillAmount = full ? 1f : fill;
+            float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 8f);
+            passiveIcon.color = full ? Color.Lerp(Color.white, new Color(1f, 0.83f, 0.3f), pulse) : Color.white;
         }
     }
 }

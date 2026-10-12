@@ -12,6 +12,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     {
         [SerializeField] private PlayerAgent player;
         [SerializeField] private Color themeColor = new(1f, 0.7f, 0.3f);
+        private Color _hitColor = new(1f, 0.7f, 0.3f);   // 맞았을 때 색 (캐릭터별, 없으면 테마색)
 
         [Header("Damage numbers")]
         [SerializeField] private float bigHitThreshold = 30f;
@@ -23,6 +24,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private float shotShake = 0.025f;
         [SerializeField] private float killHitStop = 0.05f;
         [SerializeField] private float killShake = 0.3f;
+        [SerializeField, Tooltip("근접 평타가 맞았을 때 멈추는 시간 (마지막 타는 finisherHitStop)")]
+        private float swingHitStop = 0.04f;
+        [SerializeField] private float finisherHitStop = 0.08f;
         [SerializeField, Tooltip("A jump longer than this in one frame (blink, scripted flight) draws a streak.")]
         private float teleportStreakDistance = 1.5f;
 
@@ -38,6 +42,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             if (player == null)
                 player = GetComponent<PlayerAgent>();
+            _hitColor = themeColor;   // 캐릭터 교체기가 없는 씬에서도 테마색으로 시작
 
             _lastPosition = transform.position;
         }
@@ -50,6 +55,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _weapon.ShotFired += HandleShot;
             _weapon.ProjectileLaunched += HandleProjectileLaunched;
             _weapon.Swung += HandleSwing;
+            _weapon.SwingHit += HandleSwingHit;
 
             _switcher = FindFirstObjectByType<CharacterSwitcher>();
             if (_switcher != null)
@@ -71,6 +77,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _weapon.ShotFired -= HandleShot;
             _weapon.ProjectileLaunched -= HandleProjectileLaunched;
             _weapon.Swung -= HandleSwing;
+            _weapon.SwingHit -= HandleSwingHit;
             _weapon.Clear();
             _dashTrail?.Kill();
             _dashTrail = null;
@@ -81,8 +88,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _weapon.Track(player);
             UpdateMovementTrails();
         }
-
-        // ------------------------------------------------------------- hits
 
         private void HandleDamageDealt(DamageDealtInfo info)
         {
@@ -107,7 +112,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Fx.DamageNumber(body + Vector3.up * 0.7f, info.Amount, numberColor, big || info.Killed ? 1.35f : 1f);
 
             if (_hitParticles)
-                Fx.Hit(impact, direction, themeColor, big);
+                Fx.Hit(impact, direction, _hitColor, big);
             Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f));
 
             if (Time.unscaledTime - _lastHitShakeTime > 0.04f)
@@ -119,12 +124,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (info.Killed)
             {
                 if (_killBurst)
-                    Fx.Explosion(target.position, 1.6f, themeColor, 1.3f);
+                    Fx.Explosion(target.position, 1.6f, _hitColor, 1.3f);
                 HitFeel.Play(killHitStop, killShake);
             }
         }
-
-        // ------------------------------------------------------------- weapon
 
         private void HandleShot(ShotVisual shot)
         {
@@ -177,19 +180,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        private void HandleSwing(SwingVisual swing)
+        private static void HandleSwing(SwingVisual swing)
         {
-            bool finisher = swing.Step == swing.StepCount - 1;
             SwingShape shape = swing.Shape ?? new SwingShape();
-
             Fx.Swipe(swing.Origin, swing.Reach, shape, swing.Color, swing.Delay, swing.Duration);
-
-            // The finisher is the same blade, bigger; only the camera kicks a little harder.
-            if (finisher)
-                Fx.After(swing.Delay + swing.Duration * 0.5f, () => HitFeel.Shake(0.16f, 0.15f));
         }
 
-        // ------------------------------------------------------------- movement
+        // 허공에 휘두르면 아무것도 없고, 맞았을 때만 멈칫 + 흔들림. 마지막 타는 더 세게
+        private void HandleSwingHit(SwingHitVisual hit)
+        {
+            bool finisher = hit.Step == hit.StepCount - 1;
+            float shake = hit.ShakeForce * (finisher ? 0.7f : 0.4f);
+            HitFeel.Play(finisher ? finisherHitStop : swingHitStop, shake);
+        }
 
         private void UpdateMovementTrails()
         {
@@ -211,6 +214,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void HandleCharacterChanged(CharacterData character)
         {
             themeColor = character.ThemeColor;
+            _hitColor = character.HitColor;
             _hitParticles = character.HitParticles;
             _killBurst = character.KillBurst;
             _dashTrail?.SetTint(themeColor);

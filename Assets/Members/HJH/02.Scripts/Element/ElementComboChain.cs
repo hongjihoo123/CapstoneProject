@@ -16,7 +16,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
     //  - every landed combo is also stocked (unique, up to maxStock); casting finisherSlot releases the
     //    whole stock at once, empowered (finisher), after its own input has been counted.
     // Landed combos are sent to JJH as ElementBuffTriggeredEvent(combo inputs), so ElementBuffController
-    // resolves them exactly like before. Effects are still Debug.Log there.
+    // resolves them exactly like before.
     public class ElementComboChain : MonoBehaviour
     {
         public readonly struct ComboInput

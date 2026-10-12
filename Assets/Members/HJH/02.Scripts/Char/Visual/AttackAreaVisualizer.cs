@@ -21,6 +21,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public bool IsCircle;
             public bool IsSegment;  // open two-point line
             public bool IsThin;     // drawn with guideLineWidth instead of lineWidth
+            public bool IsCone;     // Center = apex, Yaw = facing, Size.x = radius, Size.y = full angle
             public Vector3 Center;
             public float Yaw;
             public Vector3 Size;
@@ -108,6 +109,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Shape = new Shape
                 {
                     IsCircle = area.Shape == AttackAreaShape.Circle,
+                    IsCone = area.Shape == AttackAreaShape.Cone,
                     Center = area.Center,
                     Yaw = area.Rotation.eulerAngles.y,
                     Size = area.Size,
@@ -139,6 +141,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         void ISkillPreview.RangeCircle(Vector3 center, float radius) =>
             _frame.Add(new Shape { IsCircle = true, IsThin = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = GuideColor });
 
+        void ISkillPreview.Cone(Vector3 apex, Vector3 direction, float radius, float angle)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+
+            _frame.Add(new Shape
+            {
+                IsCone = true,
+                Center = apex,
+                Yaw = Quaternion.LookRotation(direction.normalized).eulerAngles.y,
+                Size = new Vector3(radius, angle, 0f),
+                Color = PreviewColor
+            });
+        }
+
         void ISkillPreview.DirectionLine(Vector3 from, Vector3 to) =>
             _frame.Add(new Shape { IsSegment = true, IsThin = true, Center = from, End = to, Color = GuideColor });
 
@@ -168,6 +186,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 line.positionCount = 2;
                 line.SetPosition(0, new Vector3(shape.Center.x, y, shape.Center.z));
                 line.SetPosition(1, new Vector3(shape.End.x, y, shape.End.z));
+            }
+            else if (shape.IsCone)
+            {
+                // 꼭짓점 -> 호(arc) 따라 쭉 -> 다시 꼭짓점 (loop 라서 마지막 변은 자동으로 닫힘)
+                const int arcSegments = 24;
+                Vector3 apex = new Vector3(shape.Center.x, y, shape.Center.z);
+                float half = shape.Size.y * 0.5f;
+                line.positionCount = arcSegments + 2;
+                line.SetPosition(0, apex);
+                for (int i = 0; i <= arcSegments; i++)
+                {
+                    float yaw = shape.Yaw - half + shape.Size.y * i / arcSegments;
+                    line.SetPosition(i + 1, apex + Quaternion.Euler(0f, yaw, 0f) * Vector3.forward * shape.Size.x);
+                }
             }
             else if (shape.IsCircle)
             {
@@ -253,6 +285,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 if (shape.IsCircle)
                 {
                     Gizmos.DrawWireSphere(center, shape.Size.x);
+                    continue;
+                }
+
+                if (shape.IsCone)
+                {
+                    float half = shape.Size.y * 0.5f;
+                    Gizmos.DrawLine(center, center + Quaternion.Euler(0f, shape.Yaw - half, 0f) * Vector3.forward * shape.Size.x);
+                    Gizmos.DrawLine(center, center + Quaternion.Euler(0f, shape.Yaw + half, 0f) * Vector3.forward * shape.Size.x);
                     continue;
                 }
 
