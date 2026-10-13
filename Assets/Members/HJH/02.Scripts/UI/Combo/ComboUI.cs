@@ -13,7 +13,7 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 콤보 UI 전부 여기 한 파일임. 예전에 7개로 쪼개져 있던 거 합친 거여, 여기서 건들면 됨
+    // 콤보 UI 전부 여기 한 파일임, 여기서 건들면 됨
     //  - 아래 입력 칸: 스킬 쓸 때마다 속성/키가 왼쪽부터 쌓임 + 다음에 뭐 누르면 콤보인지(NEXT) + 안내 문구
     //  - 콤보 완성: 가운데 COMBO! 문구, 쓰인 칸들 튕기고 밑에 콤보 이름, 맨 아래 스킬바에서 그 콤보에 쓴 스킬 칸도 튕김
     //  - 남은 시간 게이지: 이거 다 떨어지면 콤보 끊김
@@ -461,7 +461,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             target.DOPunchScale(Vector3.one * amount, 0.3f).SetUpdate(true);
         }
 
-        // 이제 Q/E 말고 우클릭, R, 대쉬도 속성이 있어서 다 콤보에 들어갈 수 있음
+        // Q/E 말고 우클릭, R, 대쉬도 속성이 있어서 다 콤보에 들어감
         private RectTransform IconOf(SkillSlotId slot) => slot switch
         {
             SkillSlotId.Basic1 => qIcon,

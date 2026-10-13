@@ -247,6 +247,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             public void Circle(Vector3 center, float radius) { }
             public void Path(Vector3 from, Vector3 to, float width) { }
             public void DirectionLine(Vector3 from, Vector3 to) { }
+            public void Cone(Vector3 apex, Vector3 direction, float radius, float angle) { }
         }
     }
 }

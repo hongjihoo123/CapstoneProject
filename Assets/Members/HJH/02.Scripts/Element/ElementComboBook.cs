@@ -119,7 +119,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
             ElementType.Fire => "불",
             ElementType.Water => "물",
             ElementType.Wind => "바람",
-            ElementType.Electric => "전기",
+            ElementType.Electric => "번개",
             ElementType.Earth => "땅",
             _ => element.ToString()
         };

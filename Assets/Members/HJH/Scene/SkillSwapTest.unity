@@ -459,7 +459,7 @@ Transform:
   m_GameObject: {fileID: 10013}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 1, z: 0}
+  m_LocalPosition: {x: 0, y: 0.83, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -10707,7 +10707,6 @@ MonoBehaviour:
   deniedDuration: 0.3
   deniedShake: 7
   deniedVibrato: 18
-  glowPulseSpeed: 6
   burstDuration: 0.5
   burstScale: 1.25
   swapPunch: 0.18
@@ -10933,17 +10932,14 @@ MonoBehaviour:
   billboard: {fileID: 588583915}
   icon: {fileID: 454340713}
   glow: {fileID: 2014190820}
-  ring: {fileID: 0}
-  groundCircle: {fileID: 0}
   label: {fileID: 562585139}
   glowLight: {fileID: 137379628}
   glowIntensity: 0.75
-  circleStrength: 0.45
   bobHeight: 0.12
   bobSpeed: 2.2
-  ringSpinSpeed: 70
   pulseSpeed: 3
   highlightScale: 1.18
+  iconCircle: 0.47
 --- !u!1 &753313723
 GameObject:
   m_ObjectHideFlags: 0
@@ -11682,21 +11678,53 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: EventChannelSystem::Members.JJH._02_Scripts.ElementsSystem.ElementStackView
   systemChannel: {fileID: 11400000, guid: 123febfd2e83c574ca22809ac5f871fa, type: 2}
+  buffController: {fileID: 0}
   slotImages:
   - {fileID: 1327157429}
   - {fileID: 570945834}
   - {fileID: 1862617910}
   - {fileID: 1689911553}
   timerSlider: {fileID: 1565082886}
-  elementColors:
-  - {r: 1, g: 0.35, b: 0.2, a: 1}
-  - {r: 0.25, g: 0.55, b: 1, a: 1}
-  - {r: 0.5, g: 1, b: 0.7, a: 1}
-  - {r: 1, g: 0.9, b: 0.2, a: 1}
-  - {r: 0.6, g: 0.4, b: 0.2, a: 1}
+  nextSlotImage: {fileID: 0}
+  nextSlotRing: {fileID: 0}
+  hintText: {fileID: 0}
+  banner: {fileID: 0}
+  bannerGroup: {fileID: 0}
+  bannerBar: {fileID: 0}
+  bannerHeader: {fileID: 0}
+  bannerTitle: {fileID: 0}
+  bannerDetail: {fileID: 0}
+  bracket: {fileID: 0}
+  bracketGroup: {fileID: 0}
+  bracketLabel: {fileID: 0}
+  screenFlash: {fileID: 0}
+  stockPips: []
+  stockNames: []
+  finisherKey: {fileID: 0}
+  readyLabel: {fileID: 0}
+  maxFinisherStock: 3
+  listRowTemplate: {fileID: 0}
+  listRowParent: {fileID: 0}
+  listBody: {fileID: 0}
+  listTitle: {fileID: 0}
+  listClosedTab: {fileID: 0}
+  elementSprites: []
   emptyColor: {r: 1, g: 1, b: 1, a: 0.15}
+  gold: {r: 1, g: 0.83, b: 0.3, a: 1}
+  comboBarColor: {r: 0.42, g: 0.28, b: 0.03, a: 0.92}
+  finisherBarColor: {r: 0.55, g: 0.07, b: 0.1, a: 0.95}
+  pipOn: {r: 1, g: 0.83, b: 0.3, a: 1}
+  pipOff: {r: 1, g: 1, b: 1, a: 0.18}
+  listRowColor: {r: 0.55, g: 0.48, b: 0.32, a: 0.75}
+  elementNames:
+  - "\uBD88"
+  - "\uBB3C"
+  - "\uBC14\uB78C"
+  - "\uC804\uAE30"
+  - "\uB545"
   clearDelay: 0.35
   clearScale: 1.1
+  bounceScale: 0.25
 --- !u!1 &879606456
 GameObject:
   m_ObjectHideFlags: 0
@@ -11880,14 +11908,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: EventChannelSystem::Members.JJH._02_Scripts.ElementsSystem.ElementBuffController
   systemChannel: {fileID: 11400000, guid: 123febfd2e83c574ca22809ac5f871fa, type: 2}
   combos:
-  - name: "\uBD88-\uBB3C-\uBC14\uB78C-\uC804\uAE30"
-    sequence: 00000000010000000200000003000000
-  - name: "\uC804\uAE30-\uC804\uAE30-\uBD88"
-    sequence: 030000000300000000000000
-  - name: "\uBB3C-\uB545"
-    sequence: 0100000004000000
+  - name: "\uBD88"
+    sequence: 00000000
+    effect: "\uBD88 \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBB3C"
+    sequence: 01000000
+    effect: "\uBB3C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
   - name: "\uBC14\uB78C"
     sequence: 02000000
+    effect: "\uBC14\uB78C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uB545"
+    sequence: 04000000
+    effect: "\uB545 \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBC88\uAC1C"
+    sequence: 03000000
+    effect: "\uBC88\uAC1C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBD88-\uBC88\uAC1C"
+    sequence: 0000000003000000
+    effect: "\uACF5\uACA9 \uC99D\uAC00 10%"
+    duration: 10
+  - name: "\uBB3C-\uBB3C"
+    sequence: 0100000001000000
+    effect: "\uCCB4\uB825 \uD68C\uBCF5 8%"
+    duration: 10
+  - name: "\uB545-\uBB3C"
+    sequence: 0400000001000000
+    effect: "\uC274\uB4DC 20"
+    duration: 20
+  - name: "\uBC88\uAC1C-\uBC88\uAC1C"
+    sequence: 0300000003000000
+    effect: "\uACF5\uACA9 \uC18D\uB3C4 \uC99D\uAC00 20%"
+    duration: 15
 --- !u!114 &890177566
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11937,6 +11993,10 @@ MonoBehaviour:
   chainWindow: 3
   maxStock: 3
   finisherSlot: 2
+  comboHitStop: 0.03
+  comboShake: 0.12
+  finisherHitStop: 0.08
+  finisherShake: 0.35
   buffLeftoverOnBreak: 0
 --- !u!1 &897872554
 GameObject:
@@ -12330,7 +12390,6 @@ MonoBehaviour:
   deniedDuration: 0.3
   deniedShake: 7
   deniedVibrato: 18
-  glowPulseSpeed: 6
   burstDuration: 0.5
   burstScale: 1.25
   swapPunch: 0.18
@@ -12683,7 +12742,6 @@ MonoBehaviour:
   deniedDuration: 0.3
   deniedShake: 7
   deniedVibrato: 18
-  glowPulseSpeed: 6
   burstDuration: 0.5
   burstScale: 1.25
   swapPunch: 0.18
@@ -14290,17 +14348,14 @@ MonoBehaviour:
   billboard: {fileID: 1842145656}
   icon: {fileID: 561296611}
   glow: {fileID: 1596815213}
-  ring: {fileID: 0}
-  groundCircle: {fileID: 0}
   label: {fileID: 1881264342}
   glowLight: {fileID: 1563321752}
   glowIntensity: 0.75
-  circleStrength: 0.45
   bobHeight: 0.12
   bobSpeed: 2.2
-  ringSpinSpeed: 70
   pulseSpeed: 3
   highlightScale: 1.18
+  iconCircle: 0.47
 --- !u!1 &1160574065
 GameObject:
   m_ObjectHideFlags: 0
@@ -15605,7 +15660,6 @@ MonoBehaviour:
   deniedDuration: 0.3
   deniedShake: 7
   deniedVibrato: 18
-  glowPulseSpeed: 6
   burstDuration: 0.5
   burstScale: 1.25
   swapPunch: 0.18
@@ -18321,6 +18375,13 @@ MonoBehaviour:
   rmbIcon: {fileID: 367151686}
   rIcon: {fileID: 1793840830}
   spaceIcon: {fileID: 1165286998}
+  gold: {r: 1, g: 0.83, b: 0.3, a: 1}
+  emptyCellColor: {r: 1, g: 1, b: 1, a: 0.22}
+  comboBarColor: {r: 0.42, g: 0.28, b: 0.03, a: 0.92}
+  finisherBarColor: {r: 0.55, g: 0.07, b: 0.1, a: 0.95}
+  pipOn: {r: 1, g: 0.83, b: 0.3, a: 1}
+  pipOff: {r: 1, g: 1, b: 1, a: 0.18}
+  listRowColor: {r: 0.55, g: 0.48, b: 0.32, a: 0.75}
 --- !u!1 &1582667470
 GameObject:
   m_ObjectHideFlags: 0
@@ -19812,17 +19873,14 @@ MonoBehaviour:
   billboard: {fileID: 396180961}
   icon: {fileID: 272668374}
   glow: {fileID: 1628854481}
-  ring: {fileID: 0}
-  groundCircle: {fileID: 0}
   label: {fileID: 352103290}
   glowLight: {fileID: 396133925}
   glowIntensity: 0.75
-  circleStrength: 0.45
   bobHeight: 0.12
   bobSpeed: 2.2
-  ringSpinSpeed: 70
   pulseSpeed: 3
   highlightScale: 1.18
+  iconCircle: 0.47
 --- !u!1 &1694326845
 GameObject:
   m_ObjectHideFlags: 0
@@ -23675,7 +23733,6 @@ MonoBehaviour:
   deniedDuration: 0.3
   deniedShake: 7
   deniedVibrato: 18
-  glowPulseSpeed: 6
   burstDuration: 0.5
   burstScale: 1.25
   swapPunch: 0.18

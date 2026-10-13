@@ -11880,14 +11880,42 @@ MonoBehaviour:
   m_EditorClassIdentifier: EventChannelSystem::Members.JJH._02_Scripts.ElementsSystem.ElementBuffController
   systemChannel: {fileID: 11400000, guid: 123febfd2e83c574ca22809ac5f871fa, type: 2}
   combos:
-  - name: "\uBD88-\uBB3C-\uBC14\uB78C-\uC804\uAE30"
-    sequence: 00000000010000000200000003000000
-  - name: "\uC804\uAE30-\uC804\uAE30-\uBD88"
-    sequence: 030000000300000000000000
-  - name: "\uBB3C-\uB545"
-    sequence: 0100000004000000
+  - name: "\uBD88"
+    sequence: 00000000
+    effect: "\uBD88 \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBB3C"
+    sequence: 01000000
+    effect: "\uBB3C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
   - name: "\uBC14\uB78C"
     sequence: 02000000
+    effect: "\uBC14\uB78C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uB545"
+    sequence: 04000000
+    effect: "\uB545 \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBC88\uAC1C"
+    sequence: 03000000
+    effect: "\uBC88\uAC1C \uC18D\uC131 \uD53C\uD574 \uC99D\uAC00 3%"
+    duration: 30
+  - name: "\uBD88-\uBC88\uAC1C"
+    sequence: 0000000003000000
+    effect: "\uACF5\uACA9 \uC99D\uAC00 10%"
+    duration: 10
+  - name: "\uBB3C-\uBB3C"
+    sequence: 0100000001000000
+    effect: "\uCCB4\uB825 \uD68C\uBCF5 8%"
+    duration: 10
+  - name: "\uB545-\uBB3C"
+    sequence: 0400000001000000
+    effect: "\uC274\uB4DC 20"
+    duration: 20
+  - name: "\uBC88\uAC1C-\uBC88\uAC1C"
+    sequence: 0300000003000000
+    effect: "\uACF5\uACA9 \uC18D\uB3C4 \uC99D\uAC00 20%"
+    duration: 15
 --- !u!114 &890177566
 MonoBehaviour:
   m_ObjectHideFlags: 0

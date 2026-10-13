@@ -11,8 +11,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     {
         private static FxLibrary Library => FxLibrary.Loaded;
 
-        // ------------------------------------------------------------- combat
-
         public static void Hit(Vector3 position, Vector3 direction, Color color, bool big) =>
             Play(Library?.hit, position, Facing(direction), big ? 1.5f : 1f, color);
 
@@ -34,8 +32,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public static void CharacterSwap(Vector3 center, Color color) =>
             Play(Library?.characterSwap, center, Quaternion.identity, 1f, color);
-
-        // ------------------------------------------------------------- weapons and projectiles
 
         public static void Tracer(Vector3 from, Vector3 to, Color color, float width, float duration = 0.07f) =>
             Play(Library?.tracer, from, Quaternion.identity, 1f, color, new FxParams { Start = from, End = to, Width = width, Duration = duration });
@@ -62,8 +58,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void ProjectileImpact(Vector3 position, Vector3 direction, Color color, float size, bool hit) =>
             Play(Library?.projectileImpact, position, Facing(-direction), size * (hit ? 1.4f : 0.8f), color);
 
-        // ------------------------------------------------------------- movement
-
         // Value 1 = drawing, 0 = paused.
         public static FxHandle DashTrail(Transform target, Color color) =>
             Hold(Library?.dashTrail, target.position, Quaternion.identity, 1f, color,
@@ -77,8 +71,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void BlinkIn(Vector3 position, Vector3 direction, Color color) =>
             Play(Library?.blinkIn, position, Facing(direction), 1f, color);
 
-        // ------------------------------------------------------------- skills
-
         // Held charge-up at a point. SetValue(0..1) as it charges, MoveTo to follow the muzzle.
         public static FxHandle Charge(Vector3 position, Color color) =>
             Hold(Library?.charge, position, Quaternion.identity, 1f, color);
@@ -89,6 +81,47 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         // Held energy barrel (gunner R). SetPoints to follow, SetValue(0..1) as it charges, Kill when it fires.
         public static FxHandle EnergyCannon(Vector3 start, Vector3 tip, Color color, float width) =>
             Hold(Library?.energyCannon, start, Quaternion.identity, 1f, color, new FxParams { Start = start, End = tip, Width = width, Duration = 0f, Value = 0.35f });
+
+        // 부채꼴 충격포: 총구 섬광 + 부채꼴로 퍼지는 에너지 줄기들 + 끝에 초승달 모양 파동 + 불꽃.
+        // apex 는 바닥 높이, 이펙트는 허리 높이(1m)에 그림. 프리팹 풀 한도(12) 안 넘게 개수 정해둠
+        public static void ConeBlast(Vector3 apex, Vector3 direction, float radius, float angle, Color color)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                return;
+            direction.Normalize();
+
+            Vector3 origin = apex + Vector3.up;
+            float half = angle * 0.5f;
+            Vector3 Edge(float yaw, float distance) => origin + Quaternion.Euler(0f, yaw, 0f) * direction * distance;
+
+            CannonMuzzle(origin + direction * 0.6f, direction, color);
+            Shockwave(apex + direction * 0.8f, color, 1.6f);
+
+            // 부채꼴 안을 고르게 훑는 줄기 7개
+            const int rays = 7;
+            for (int i = 0; i < rays; i++)
+            {
+                float yaw = -half + angle * i / (rays - 1);
+                Beam(Edge(yaw, 0.8f), Edge(yaw, radius * 0.95f), color, 0.22f, 0.16f);
+            }
+
+            // 끝쪽 호를 따라 두꺼운 선 10조각 = 초승달 파동
+            const int arc = 10;
+            for (int i = 0; i < arc; i++)
+            {
+                float a = -half + angle * i / arc;
+                float b = -half + angle * (i + 1) / arc;
+                Tracer(Edge(a, radius), Edge(b, radius), color, 0.4f, 0.2f);
+            }
+
+            // 호 위 몇 군데 불꽃
+            for (int i = 0; i < 5; i++)
+            {
+                float yaw = -half + angle * (i + 0.5f) / 5f;
+                Hit(Edge(yaw, radius * 0.9f), Quaternion.Euler(0f, yaw, 0f) * direction, color, false);
+            }
+        }
 
         public static void CannonMuzzle(Vector3 position, Vector3 direction, Color color) =>
             Play(Library?.cannonMuzzle, position, Facing(direction), 1f, color);
@@ -108,8 +141,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public static void RuneGain(Vector3 position, Color color) => Play(Library?.runeGain, position, Quaternion.identity, 1f, color);
 
-        // ------------------------------------------------------------- passives
-
         public static void Lifesteal(Vector3 from, Vector3 to, Color color) =>
             Play(Library?.lifesteal, from, Facing(to - from), 1f, color, new FxParams { Start = from, End = to });
 
@@ -120,14 +151,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static FxHandle FrenzyAura(Transform target, Color color, int stacks) =>
             Hold(Library?.frenzyAura, target.position, Quaternion.identity, 1f, color, new FxParams { Follow = target, Value = stacks });
 
-        // ------------------------------------------------------------- not effects, but timing helpers
-
         public static void Punch(Transform target, Vector3 direction, float strength) => PunchFx.Play(target, direction, strength);
 
         // Runs an action after a delay on scaled time (frozen during hit stop like the effects).
         public static void After(float delay, Action action) => FxRunner.Instance.Add(new DelayFx(delay, action));
-
-        // ------------------------------------------------------------- plumbing
 
         private static void Play(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color, FxParams parameters = default)
         {

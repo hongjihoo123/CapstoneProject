@@ -126,7 +126,71 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
                     _block.SetTexture(MainTexId, texture);
                 icon.SetPropertyBlock(_block);
                 icon.enabled = texture != null;
+                if (texture != null)
+                    FitIconToSprite(skill.Icon);
             }
+        }
+
+        // 아이콘을 사각형 판 대신 "원판"에 그려서 구슬처럼 동그랗게 보이게 함. 텍스처는 안 건드리고 그리는 모양만 바꾸는 거임.
+        //  - 원판 = 가운데 점 1개 + 둘레 점 여러 개로 만든 부채꼴 조각들 (피자 조각 모양 삼각형들)
+        //  - 둘레 점마다 "그림의 어느 부분을 찍어 올지(UV)"를 원 모양으로 정해줘서, 그림의 원 바깥(사각형 모서리)은 아예 안 그려짐
+        //  - 스프라이트가 큰 이미지 일부만 쓰는 경우(JJH 아이콘: 1920x1080 중 가운데)도 그 영역 안에서만 찍어옴
+        //  - 원판 메쉬는 구슬마다 따로 만들어서 다른 구슬엔 영향 없음
+        [SerializeField, Range(0.3f, 0.5f), Tooltip("그림에서 잘라 쓸 원의 반지름 (0.5 = 사각형에 딱 맞는 원)")]
+        private float iconCircle = 0.47f;
+
+        private const int CircleSegments = 48;
+        private Mesh _disc;
+
+        private void FitIconToSprite(Sprite sprite)
+        {
+            if (!icon.TryGetComponent(out MeshFilter filter))
+                return;
+
+            Rect r = sprite.textureRect;
+            float w = sprite.texture.width;
+            float h = sprite.texture.height;
+            // 스프라이트 영역의 가운데와 크기 (UV 0~1 기준)
+            var uvCenter = new Vector2(r.center.x / w, r.center.y / h);
+            var uvSize = new Vector2(r.width / w, r.height / h);
+
+            var vertices = new Vector3[CircleSegments + 1];
+            var uvs = new Vector2[CircleSegments + 1];
+            var colors = new Color[CircleSegments + 1];
+            var triangles = new int[CircleSegments * 3];
+
+            vertices[0] = Vector3.zero;          // 가운데
+            uvs[0] = uvCenter;
+            colors[0] = Color.white;
+            for (int i = 0; i < CircleSegments; i++)
+            {
+                float angle = i * Mathf.PI * 2f / CircleSegments;
+                var dir = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle));
+                vertices[i + 1] = new Vector3(dir.x, dir.y, 0f) * 0.5f;                       // 판 크기는 기존 사각형(1x1)과 같게
+                uvs[i + 1] = uvCenter + Vector2.Scale(dir * iconCircle, uvSize);           // 그림에서 원 모양으로 찍어옴
+                colors[i + 1] = Color.white;                                                // 이펙트 셰이더가 정점 색을 곱해서 흰색 필요
+
+                // 카메라 쪽(-Z)에서 앞면이 보이게 시계방향으로 이음: 가운데 -> 다음 점 -> 이번 점
+                triangles[i * 3] = 0;
+                triangles[i * 3 + 1] = (i + 1) % CircleSegments + 1;
+                triangles[i * 3 + 2] = i + 1;
+            }
+
+            if (_disc == null)
+                _disc = new Mesh { name = "PickupIconDisc" };
+            _disc.Clear();
+            _disc.vertices = vertices;
+            _disc.uv = uvs;
+            _disc.colors = colors;
+            _disc.triangles = triangles;
+            _disc.RecalculateBounds();
+            filter.sharedMesh = _disc;
+        }
+
+        private void OnDestroy()
+        {
+            if (_disc != null)
+                Destroy(_disc);
         }
 
         private void Tint(Renderer target, Color color)

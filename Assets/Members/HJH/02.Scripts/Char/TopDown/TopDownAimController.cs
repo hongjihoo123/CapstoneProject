@@ -11,6 +11,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
         [SerializeField] private Camera viewCamera;
         [SerializeField] private float aimPlaneHeight = 1f;
         [SerializeField] private float turnSpeed = 1080f;
+        [SerializeField, Tooltip("대쉬 중 몸 돌리는 속도 배수 (짧은 대쉬에도 바로 날아가는 방향을 보게)")]
+        private float dashTurnMultiplier = 3f;
 
         public Vector3 AimPoint { get; private set; }
 
@@ -46,10 +48,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
             player.SetAimDirection(toAim.normalized);
 
-            Quaternion target = Quaternion.LookRotation(toAim);
+            // 대쉬 중엔 날아가는 방향을 봄 (더 빨리 돌아서 짧은 대쉬에도 바로 향함). 끝나면 다시 마우스 쪽.
+            // 쏘는 방향(AimDirection)은 그대로 마우스라 대쉬 중에 쏴도 마우스 쪽으로 나감
+            Vector3 facing = toAim;
+            float speed = turnSpeed;
+            if (player.SkillFsm != null && player.SkillFsm.Context != null && player.SkillFsm.Context.TryGetDashFacing(out Vector3 dash))
+            {
+                facing = dash;
+                speed = turnSpeed * dashTurnMultiplier;
+            }
+
+            Quaternion target = Quaternion.LookRotation(facing);
             // Normalize: RotateTowards fed its own output every frame drifts off unit length, which the
             // Inspector reports as "QuaternionToEuler: Input quaternion was not normalized".
-            transform.rotation = Quaternion.Normalize(Quaternion.RotateTowards(transform.rotation, target, turnSpeed * Time.deltaTime));
+            transform.rotation = Quaternion.Normalize(Quaternion.RotateTowards(transform.rotation, target, speed * Time.deltaTime));
         }
     }
 }

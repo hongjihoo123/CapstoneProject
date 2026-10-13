@@ -1,0 +1,39 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d00972b37de0af1439f413f33d919f23, type: 3}
+  m_Name: Gunner_Gun
+  m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.HitscanGunData
+  weaponName: "권총"
+  type: 1
+  description: "총 한 자루. 빠른 연사, 낮은 한 발 피해. 탄창이 비면 자동 재장전."
+  resourceMax: 12
+  reloadDuration: 1
+  attackShakeForce: 0.3
+  damagePerShot: 8
+  fireRate: 8
+  range: 14
+  shotRadius: 0.25
+  hitMask:
+    serializedVersion: 2
+    m_Bits: 1536
+  muzzleIds: []
+  muzzleSideOffsets:
+  - 0
+  fireAnimIds:
+  - Pistol_FireR
+  tracerWidth: 0.08
+  empoweredTracerWidth: 0.3
+  tracerDuration: 0.05
+  fxColor: {r: 1, g: 0.8, b: 0.35, a: 1}
+  empoweredFxColor: {r: 0.3, g: 1, b: 0.85, a: 1}
+  projectileSpeed: 0
+  projectileSize: 0.45

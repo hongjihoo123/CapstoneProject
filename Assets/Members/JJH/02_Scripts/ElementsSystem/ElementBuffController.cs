@@ -13,6 +13,10 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         {
             public string name;
             public ElementType[] sequence;
+            [Tooltip("효과 설명 (아직 실제 효과는 안 걸림, 글자만)")]
+            public string effect;
+            [Tooltip("지속 시간(초). 같은 콤보를 다시 터뜨리면 시간만 처음부터 다시")]
+            public float duration;
         }
 
         [Header("Event")]
@@ -22,45 +26,22 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [SerializeField]
         private List<ElementCombo> combos = new()
         {
-            new ElementCombo
-            {
-                name = "불-물-바람-전기",
-                sequence = new[]
-                {
-                    ElementType.Fire,
-                    ElementType.Water,
-                    ElementType.Wind,
-                    ElementType.Electric
-                }
-            },
-            new ElementCombo
-            {
-                name = "전기-전기-불",
-                sequence = new[]
-                {
-                    ElementType.Electric,
-                    ElementType.Electric,
-                    ElementType.Fire
-                }
-            },
-            new ElementCombo
-            {
-                name = "물-땅",
-                sequence = new[]
-                {
-                    ElementType.Water,
-                    ElementType.Earth
-                }
-            },
-            new ElementCombo
-            {
-                name = "바람",
-                sequence = new[]
-                {
-                    ElementType.Wind
-                }
-            }
+            // 단일 속성 (해당 속성 스킬 쓸 때마다 터짐)
+            new ElementCombo { name = "불", sequence = new[] { ElementType.Fire }, effect = "불 속성 피해 증가 3%", duration = 30f },
+            new ElementCombo { name = "물", sequence = new[] { ElementType.Water }, effect = "물 속성 피해 증가 3%", duration = 30f },
+            new ElementCombo { name = "바람", sequence = new[] { ElementType.Wind }, effect = "바람 속성 피해 증가 3%", duration = 30f },
+            new ElementCombo { name = "땅", sequence = new[] { ElementType.Earth }, effect = "땅 속성 피해 증가 3%", duration = 30f },
+            new ElementCombo { name = "번개", sequence = new[] { ElementType.Electric }, effect = "번개 속성 피해 증가 3%", duration = 30f },
+
+            // 2개 조합 (마지막 입력들이 맞으면 터짐, 길이가 긴 콤보가 단일 콤보보다 우선)
+            new ElementCombo { name = "불-번개", sequence = new[] { ElementType.Fire, ElementType.Electric }, effect = "공격 증가 10%", duration = 10f },
+            new ElementCombo { name = "물-물", sequence = new[] { ElementType.Water, ElementType.Water }, effect = "체력 회복 8%", duration = 10f },
+            new ElementCombo { name = "땅-물", sequence = new[] { ElementType.Earth, ElementType.Water }, effect = "쉴드 20", duration = 20f },
+            new ElementCombo { name = "번개-번개", sequence = new[] { ElementType.Electric, ElementType.Electric }, effect = "공격 속도 증가 20%", duration = 15f },
         };
+
+        // 지금 켜져 있는 콤보와 남은 시간 (효과는 아직 없고 시간만 관리)
+        private readonly Dictionary<string, float> _active = new();
 
         private int[] _counts;
 
@@ -287,10 +268,47 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             return false;
         }
 
+        // 콤보 효과는 아직 안 만듦. 지속 시간만 관리함:
+        // 처음 터지면 시간 시작, 이미 켜져 있는 콤보가 또 터지면 겹치지 않고 시간만 처음부터 다시
         private void ApplyCombo(ElementCombo combo)
         {
-            Debug.Log($"[ElementBuff] Combo: {combo.name}");
+            bool refreshed = _active.ContainsKey(combo.name);
+            _active[combo.name] = combo.duration;
+
+            Debug.Log(refreshed
+                ? $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시간 초기화 -> {combo.duration}초"
+                : $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시작, {combo.duration}초");
         }
+
+        private readonly List<string> _ended = new();
+        private readonly List<string> _names = new();
+
+        private void Update()
+        {
+            if (_active.Count == 0)
+                return;
+
+            _ended.Clear();
+            _names.Clear();
+            _names.AddRange(_active.Keys);   // 돌면서 값 바꿔야 해서 이름만 따로 복사
+            foreach (string name in _names)
+            {
+                float left = _active[name] - Time.deltaTime;
+                if (left > 0f)
+                    _active[name] = left;
+                else
+                    _ended.Add(name);
+            }
+
+            foreach (string name in _ended)
+            {
+                _active.Remove(name);
+                Debug.Log($"[ElementBuff] Combo: {name} 끝");
+            }
+        }
+
+        // 남은 시간 (UI 에서 쓰려고). 꺼져 있으면 false
+        public bool TryGetRemaining(string comboName, out float seconds) => _active.TryGetValue(comboName, out seconds);
 
         private void ApplyElement(ElementType type, int count)
         {
