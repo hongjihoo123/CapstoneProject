@@ -56,6 +56,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IPassive Passive { get; set; }
 
+        public SkillData ActiveSkill { get; set; }
+
         public void BeginActivation() => _hitThisActivation.Clear();
 
         public void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f) =>
@@ -262,7 +264,23 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             target is Component component ? (component.transform.position - point).sqrMagnitude : float.MaxValue;
 
         public void DealDamage(IDamageable target, float amount, bool isWeakpoint = false) =>
-            _player.ApplyDamageTo(target, amount, isWeakpoint);
+            DealDamage(target, amount, ActiveSkill);
+
+        public void DealDamage(IDamageable target, float amount, SkillData skill)
+        {
+            if (skill == null)
+            {
+                _player.ApplyDamageTo(target, amount);
+                return;
+            }
+
+            _player.ApplyDamageTo(
+                target,
+                amount,
+                skill.Element,
+                skill.AttackCoefficient,
+                skill.ElementCoefficient);
+        }
 
         public void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration)
         {

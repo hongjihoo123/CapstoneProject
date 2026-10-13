@@ -32,7 +32,6 @@ namespace Members.KYR._01_Scripts.Stats
             StatNode combat = Add(PlayerStatId.Combat, 0f, Root);
             Add(PlayerStatId.Damage, bases.Damage, combat);
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, combat);
-            Add(PlayerStatId.WeakpointMultiplier, bases.WeakpointMultiplier, combat);
 
             StatNode skill = Add(PlayerStatId.Skill, 0f, Root);
             Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, skill);

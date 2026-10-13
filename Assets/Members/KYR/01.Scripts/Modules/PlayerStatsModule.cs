@@ -20,7 +20,6 @@ namespace Members.KYR._01_Scripts.Modules
         [Header("Combat")]
         [SerializeField] private float damage = 1f;
         [SerializeField] private float attackSpeed = 1f;
-        [SerializeField] private float weakpointMultiplier = 1f;
 
         [Header("Skill")]
         [SerializeField] private float skillCooldownReduction;
@@ -55,7 +54,6 @@ namespace Members.KYR._01_Scripts.Modules
                 DashDuration = dashDuration,
                 Damage = damage,
                 AttackSpeed = attackSpeed,
-                WeakpointMultiplier = weakpointMultiplier,
                 SkillCooldownReduction = skillCooldownReduction,
                 FireDamage = fireDamage,
                 WaterDamage = waterDamage,
@@ -105,7 +103,6 @@ namespace Members.KYR._01_Scripts.Modules
                 $"Walk={Get(PlayerStatId.WalkSpeed):0.##} Run={Get(PlayerStatId.RunSpeed):0.##} " +
                 $"Dash={Get(PlayerStatId.DashSpeed):0.##}/{Get(PlayerStatId.DashDuration):0.##} " +
                 $"Dmg={Get(PlayerStatId.Damage):0.##} AtkSpd={Get(PlayerStatId.AttackSpeed):0.##} " +
-                $"Weak={Get(PlayerStatId.WeakpointMultiplier):0.##} " +
                 $"Cdr={Get(PlayerStatId.SkillCooldownReduction):0.##} " +
                 $"FireAtk={Get(PlayerStatId.FireDamage):0.##} WaterAtk={Get(PlayerStatId.WaterDamage):0.##} " +
                 $"WindAtk={Get(PlayerStatId.WindDamage):0.##} ElecAtk={Get(PlayerStatId.ElectricDamage):0.##} " +

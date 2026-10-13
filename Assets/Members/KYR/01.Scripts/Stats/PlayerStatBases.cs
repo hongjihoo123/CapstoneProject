@@ -11,7 +11,6 @@ namespace Members.KYR._01_Scripts.Stats
         public float DashDuration;
         public float Damage;
         public float AttackSpeed;
-        public float WeakpointMultiplier;
         public float SkillCooldownReduction;
         public float FireDamage;
         public float WaterDamage;

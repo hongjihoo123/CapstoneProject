@@ -218,30 +218,39 @@ namespace Members.KYR._01_Scripts
 
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
-            ApplyDamageTo(target, amount, isWeakpoint, null);
+            ApplyScaledDamage(target, amount, 1f, null, 0f);
         }
 
-        public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint, ElementType? element)
+        public void ApplyDamageTo(IDamageable target, float amount, ElementType element, float attackCoeff, float elementCoeff)
+        {
+            ApplyScaledDamage(target, amount, attackCoeff, element, elementCoeff);
+        }
+
+        public void ApplyFireDamage(IDamageable target, float amount, float attackCoeff, float fireCoeff)
+        {
+            ApplyDamageTo(target, amount, ElementType.Fire, attackCoeff, fireCoeff);
+        }
+
+        private void ApplyScaledDamage(IDamageable target, float amount, float attackCoeff, ElementType? element, float elementCoeff)
         {
             if (target == null)
                 return;
 
-            float multiplier = 1f;
-            if (Stats != null)
+            float attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
+            float scale = attackCoeff * attack;
+            if (element.HasValue)
             {
-                multiplier = Stats.Get(PlayerStatId.Damage);
-                if (element.HasValue)
-                    multiplier *= Stats.Get(PlayerElementStats.DamageStat(element.Value));
-                if (isWeakpoint)
-                    multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
+                float elemental = Stats != null
+                    ? Stats.Get(PlayerElementStats.DamageStat(element.Value))
+                    : 1f;
+                scale += elementCoeff * elemental;
             }
 
-            // Hits on already-dead targets are not reported (no lifesteal, no hit effects on corpses).
             bool wasAlive = target.IsAlive;
-            float dealt = amount * multiplier;
+            float dealt = amount * Mathf.Max(0f, scale);
             target.TakeDamage(dealt, gameObject);
             if (wasAlive)
-                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, isWeakpoint, !target.IsAlive));
+                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }
 
         // Every damage the player deals (weapon, skills, DoT) passes through ApplyDamageTo.

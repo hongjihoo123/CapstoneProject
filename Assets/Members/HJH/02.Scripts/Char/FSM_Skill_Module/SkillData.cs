@@ -33,6 +33,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField, Tooltip("Off for skills that should not add an element stack.")]
         private bool grantsElement = true;
         [SerializeField] private ElementType element;
+        [SerializeField, Tooltip("Skill number * (this * Damage + Element Coefficient * element damage).")]
+        private float attackCoefficient = 1f;
+        [SerializeField, Tooltip("0 = no elemental damage. 1.5 = 1.5 * FireDamage when Element is Fire.")]
+        private float elementCoefficient;
         [SerializeField] private Sprite icon;
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
@@ -53,6 +57,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public bool Cancelable => cancelable;
         public float CancelDelay => cancelDelay;
         public virtual float CancelStartTime => cancelDelay;
+
+        public ElementType Element => element;
+        public float AttackCoefficient => attackCoefficient;
+        public float ElementCoefficient => elementCoefficient;
 
         public bool TryGetElement(out ElementType result)
         {
@@ -81,6 +89,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 stats.Add(new SkillStat("충전", $"{Charges}회"));
             if (duration > 0.05f)
                 stats.Add(new SkillStat("지속 시간", $"{duration:0.##}초"));
+            if (!Mathf.Approximately(attackCoefficient, 1f) || elementCoefficient > 0f)
+                stats.Add(new SkillStat("공격력 계수", $"{attackCoefficient:0.##}"));
+            if (elementCoefficient > 0f)
+                stats.Add(new SkillStat("속성 계수", $"{elementCoefficient:0.##}"));
             if (!allowsMove)
                 stats.Add(new SkillStat("이동", "불가"));
             else if (!Mathf.Approximately(moveSpeedMultiplier, 1f))
