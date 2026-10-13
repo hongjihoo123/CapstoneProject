@@ -205,6 +205,7 @@ GameObject:
   - component: {fileID: 44921973}
   - component: {fileID: 44921975}
   - component: {fileID: 44921976}
+  - component: {fileID: 44921978}
   - component: {fileID: 44921977}
   m_Layer: 5
   m_Name: Slot 2
@@ -291,6 +292,19 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
+--- !u!114 &44921978
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 44921972}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 31a19414c41e5ae4aae2af33fee712f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Mask
+  m_ShowMaskGraphic: 1
 --- !u!1 &190533841
 GameObject:
   m_ObjectHideFlags: 0
@@ -3749,6 +3763,7 @@ GameObject:
   - component: {fileID: 1346907576}
   - component: {fileID: 1346907578}
   - component: {fileID: 1346907579}
+  - component: {fileID: 1346907581}
   - component: {fileID: 1346907580}
   m_Layer: 5
   m_Name: Slot 1
@@ -3814,6 +3829,29 @@ MonoBehaviour:
   m_GameObject: {fileID: 1346907575}
   m_Enabled: 1
   m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9db20d3516b336c4abe7eed50756ee02, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.UI.PolygonMask
+  skillIcon: {fileID: 1897788792}
+  polygonPoints:
+  - {x: 29.4, y: 29.8}
+  - {x: 29.4, y: -28.9}
+  - {x: -29.4, y: -28.9}
+  - {x: -29.4, y: 29.8}
+  - {x: -13.9, y: 29.8}
+  - {x: 0, y: 13.7}
+  - {x: 13.9, y: 29.8}
+  showGizmo: 1
+  gizmoColor: {r: 0, g: 1, b: 0, a: 0.8}
+--- !u!114 &1346907581
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1346907575}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
@@ -3825,9 +3863,9 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 21300000, guid: 8b24ea8538f59d24d807f767a81fc4f7, type: 3}
-  m_Type: 1
-  m_PreserveAspect: 0
+  m_Sprite: {fileID: 672401898, guid: 56355bada8018724d96c075c58ab8ed3, type: 3}
+  m_Type: 0
+  m_PreserveAspect: 1
   m_FillCenter: 1
   m_FillMethod: 4
   m_FillAmount: 1
@@ -5151,7 +5189,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
+  m_Sprite: {fileID: 21300000, guid: b37c2377a314abf4baeb8de5d325dc0e, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1

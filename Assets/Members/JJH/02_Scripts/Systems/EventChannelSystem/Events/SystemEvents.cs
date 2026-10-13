@@ -8,7 +8,7 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         public static readonly UseSkillEvent UseSkillEvent = new();
         public static readonly ElementStackChangedEvent ElementStackChangedEvent = new();
         public static readonly ElementBuffTriggeredEvent ElementBuffTriggeredEvent = new();
-        public static readonly ElementComboNextEvent ElementComboNextEvent = new();
+        public static readonly ElementComboNextEvent ElementComboNextEvent  = new();
         public static readonly ElementComboCompleteEvent ElementComboCompleteEvent = new();
     }
 
