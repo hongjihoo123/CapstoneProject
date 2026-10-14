@@ -5,11 +5,9 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 {
-    // Character 1 R: an energy barrel forms in front of the pistols and charges (effect only - the pistols
-    // never transform, so no extra animation or model is needed), then fires one heavy shell from its tip.
-    // On the first enemy it hits the shell deals big damage, then bursts into shrapnel flying out in every
-    // direction (the first target is not hit again). Firing kicks the player a short step back.
-    // The skill's Duration must be longer than chargeTime.
+    // 건슬링어 궁극기(R) 화염포: 총구 앞에 포신이 충전됐다가 일직선으로 큰 탄을 쏨.
+    // 첫 적한테 맞으면 큰 피해 + 사방으로 파편이 퍼지고, 파편이 주변 적한테 맞으면 그 자리에서 또 터짐(추가 폭발).
+    // 쏘면 반동으로 플레이어가 살짝 뒤로 밀림. 스킬 Duration 은 chargeTime 보다 길어야 함
     [CreateAssetMenu(menuName = "Skill/Gunner/Shock Cannon")]
     public class ShockCannonSkillData : SkillData
     {
@@ -32,6 +30,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         [SerializeField] private float shrapnelRange = 7f;
         [SerializeField] private float shrapnelRadius = 0.35f;
         [SerializeField] private float shrapnelDamage = 30f;
+        [SerializeField, Tooltip("파편이 적한테 맞으면 그 자리에서 작게 한 번 더 터짐")] private float shrapnelBlastRadius = 1.6f;
+        [SerializeField] private float shrapnelBlastDamage = 15f;
 
         [Header("Recoil step")]
         [SerializeField] private float recoilDistance = 2.5f;
@@ -128,7 +128,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 Fx.CannonMuzzle(tip, direction, color);
                 Fx.Shockwave(context.Transform.position, color, 2.2f);
 
-                context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration);
+                context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration, 0f, faceDirection: false);   // 반동이라 조준 방향 유지
                 context.PlayHitFeel(0.04f, 0f);
                 context.PlayShake(data.fireShake, data.fireShakeDuration);
                 context.PlayCameraKick(-direction * data.cameraKick, 0.3f);
@@ -166,7 +166,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             {
                 Vector3 direction = Quaternion.Euler(0f, 360f * i / shrapnelCount, 0f) * Vector3.forward;
                 context.Run(new SkillProjectile(context, point, direction, settings,
-                    (hit, _) => context.DealDamage(hit, shrapnelDamage)));
+                    (hit, hitPoint) =>
+                    {
+                        context.DealDamage(hit, shrapnelDamage);
+                        SkillBlast.Explode(context, hitPoint, shrapnelBlastRadius, shrapnelBlastDamage, color, 0.02f, 0.15f, 0.8f);
+                    }));
             }
         }
     }

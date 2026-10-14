@@ -2,6 +2,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // Shared aiming helpers: cursor direction + clamped distance, and WASD-or-aim direction for dashes.
     public static class SkillAim
     {
         public static Vector3 Resolve(ISkillContext context, float minRange, float maxRange, out float distance)

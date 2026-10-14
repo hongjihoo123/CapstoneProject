@@ -4,6 +4,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 {
+    // One-shot circular blast: damage everything in the radius once, play the explosion and the hit feel.
     public static class SkillBlast
     {
         // Damages everything in the circle once and plays the explosion. Returns the number of targets hit.

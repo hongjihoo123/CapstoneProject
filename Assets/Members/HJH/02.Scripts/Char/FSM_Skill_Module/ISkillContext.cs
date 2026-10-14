@@ -5,13 +5,18 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // Everything a skill may do to the world, split by concern. Skills only see these interfaces,
+    // never PlayerAgent, so a skill asset works for any owner that implements ISkillContext.
     public interface ISkillMover
     {
         Vector3 MoveInputDirection { get; }
         Vector3 AimDirection { get; }
         Vector3 AimPoint { get; }
         bool IsDashing { get; }
-        void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f);
+        // faceDirection: 대쉬하는 동안 몸을 날아가는 방향으로 돌림. 반동(뒤로 밀리기)처럼 조준 방향을 유지해야 하면 false
+        void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f, bool faceDirection = true);
+        // 지금 대쉬 중이고 날아가는 방향을 봐야 하면 true (조준 컨트롤러가 이걸 보고 몸을 돌림)
+        bool TryGetDashFacing(out Vector3 direction);
         void SetScriptedMotion(Vector3 velocity);
         // Moves through enemies/props; ends with CancelDash.
         void SetScriptedPosition(Vector3 position);
@@ -44,6 +49,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         IReadOnlyList<IDamageable> OverlapCapsule(Vector3 from, Vector3 to, float radius);
         void PushAway(Vector3 center, float radius);
         void PullToward(Vector3 center, float radius, float maxDistance);
+        // Pushes one target along direction (flattened) by distance.
+        void Knockback(IDamageable target, Vector3 direction, float distance);
         void DealDamage(IDamageable target, float amount, bool isWeakpoint = false);
         void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration);
     }

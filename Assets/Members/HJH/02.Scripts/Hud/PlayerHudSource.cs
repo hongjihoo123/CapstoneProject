@@ -18,11 +18,11 @@ namespace Assets.Members.HJH._02.Scripts.Hud
     // No wiring needed: PlayerHudSource.Instance finds (or adds) it on the player, and every reference
     // below is found automatically. Features missing from a scene just never raise their events.
     //
-    //   Skills    GetSlot(slot) -> SlotInfo, Passive, Character, KeyLabel(slot)
+    //   Skills    GetSlot(slot) -> SlotInfo, Passive, TryGetPassiveGauge(...), Character, KeyLabel(slot)
     //             LoadoutChanged, SkillUsed, SkillDenied, SkillReady, CharacterChanged
     //   Combo     HasCombo, ComboInputs, ComboList, ComboStock, MaxComboStock, ComboTimeLeft, ComboWindow,
     //             FinisherKey, TryGetNextCombo(...), KeyFor(element)
-    //             ComboChanged (redraw the trail), ComboLanded, ComboBroken, FinisherReleased
+    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken, FinisherReleased
     //   Swap      SwapPickup (null = closed), InteractKey, SwapChanged, Swapped
     //   Elements  Palette, ColorOf(element / skill), ElementName(element)
     [DisallowMultipleComponent]
@@ -91,14 +91,14 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             }
         }
 
-        // ---------------------------------------------------------------- events
-
         public event Action LoadoutChanged;
         public event Action<SkillSlotId, SkillData> SkillUsed;
         public event Action<SkillSlotId> SkillDenied;
         public event Action<SkillSlotId> SkillReady;
         public event Action<CharacterData> CharacterChanged;
 
+        // A skill just added an input to the combo trail (ComboChanged follows right after).
+        public event Action ComboInputAdded;
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
@@ -108,10 +108,23 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         // slot, skill that went to the floor, skill that came in
         public event Action<SkillSlotId, SkillData, SkillData> Swapped;
 
-        // ---------------------------------------------------------------- skills
-
         public PassiveData Passive => Skills != null ? Skills.Passive : null;
         public CharacterData Character => characterSwitcher != null ? characterSwitcher.Current : null;
+
+        // Passive with a gauge (e.g. the gunner's charged shot). False when the current passive has none.
+        public bool TryGetPassiveGauge(out float fill, out bool full)
+        {
+            if (Skills != null && Skills.Context?.Passive is IPassiveGauge gauge)
+            {
+                fill = gauge.Fill;
+                full = gauge.IsFull;
+                return true;
+            }
+
+            fill = 0f;
+            full = false;
+            return false;
+        }
 
         public string KeyLabel(SkillSlotId slot) => ComboKeyMap.Key(Player, slot);
 
@@ -140,8 +153,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             return new SlotInfo(slot, skill, KeyLabel(slot), remaining, duration, charges, skills.GetMaxCharges(slot), ColorOf(skill));
         }
 
-        // ---------------------------------------------------------------- combo
-
         public bool HasCombo => comboChain != null;
         public IReadOnlyList<ElementComboChain.ComboInput> ComboInputs => comboChain != null ? comboChain.Inputs : Array.Empty<ElementComboChain.ComboInput>();
         public IReadOnlyList<ElementComboBook.Recipe> ComboList => comboChain != null ? comboChain.Book.Recipes : Array.Empty<ElementComboBook.Recipe>();
@@ -166,12 +177,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         // Key(s) that cast this element with the current loadout: "Q", "Q/E", or "-" when none does.
         public string KeyFor(ElementType element) => ComboKeyMap.KeyFor(_elementKeys, element);
 
-        // ---------------------------------------------------------------- swap
-
         public SkillPickup SwapPickup => swapInteractor != null ? swapInteractor.Choosing : null;
         public string InteractKey => swapInteractor != null ? swapInteractor.InteractKeyLabel : string.Empty;
-
-        // ---------------------------------------------------------------- elements
 
         public ElementPalette Palette => palette;
         public Color NeutralColor => palette != null ? palette.NeutralColor : Color.gray;
@@ -179,8 +186,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public Color ColorOf(SkillData skill) =>
             skill != null && skill.TryGetElement(out ElementType element) ? ColorOf(element) : NeutralColor;
         public string ElementName(ElementType element) => ElementComboBook.KoreanName(element);
-
-        // ---------------------------------------------------------------- wiring
 
         private PlayerAgent Player
         {
@@ -299,7 +304,11 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         private void HandleSkillReady(SkillSlotId slot) => SkillReady?.Invoke(slot);
         private void HandleCharacterChanged(CharacterData character) => CharacterChanged?.Invoke(character);
 
-        private void HandleComboInput(bool shifted) => ComboChanged?.Invoke();
+        private void HandleComboInput(bool shifted)
+        {
+            ComboInputAdded?.Invoke();
+            ComboChanged?.Invoke();
+        }
         private void HandleComboChanged() => ComboChanged?.Invoke();
         private void HandleComboLanded(ElementComboChain.LandedCombo landed) => ComboLanded?.Invoke(landed.Combo);
 

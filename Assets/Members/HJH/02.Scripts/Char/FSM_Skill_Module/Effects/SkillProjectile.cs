@@ -7,7 +7,6 @@ using UnityEngine;
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 {
     // Code-only projectile for skills: flies flat, hits damageables (once each), stops on walls.
-    // Drawn through AttackAreaBus until real VFX exist. Run it with ISkillContext.Run.
     public sealed class SkillProjectile : ISkillTimedEffect
     {
         public struct Settings

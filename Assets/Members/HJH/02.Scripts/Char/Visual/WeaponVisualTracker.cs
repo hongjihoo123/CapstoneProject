@@ -15,6 +15,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public event Action<ShotVisual> ShotFired;
         public event Action<ShotProjectile> ProjectileLaunched;
         public event Action<SwingVisual> Swung;
+        public event Action<SwingHitVisual> SwingHit;
 
         public void Track(PlayerAgent player)
         {
@@ -50,14 +51,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void BindSwings(ISwingVisualSource source)
         {
             if (_swings != null)
+            {
                 _swings.Swung -= RaiseSwing;
+                _swings.SwingHit -= RaiseSwingHit;
+            }
+
             _swings = source;
             if (_swings != null)
+            {
                 _swings.Swung += RaiseSwing;
+                _swings.SwingHit += RaiseSwingHit;
+            }
         }
 
         private void RaiseShot(ShotVisual shot) => ShotFired?.Invoke(shot);
         private void RaiseProjectile(ShotProjectile projectile) => ProjectileLaunched?.Invoke(projectile);
         private void RaiseSwing(SwingVisual swing) => Swung?.Invoke(swing);
+        private void RaiseSwingHit(SwingHitVisual hit) => SwingHit?.Invoke(hit);
     }
 }

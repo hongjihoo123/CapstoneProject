@@ -6,8 +6,8 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Character
 {
-    // Swaps the player's character at runtime: kit (weapon, dash/Q/R, passive) and stat bonuses.
-    // Number keys 1..N pick from the roster. E/F (free skills) are kept across switches.
+    // Swaps the player's character at runtime: kit (weapon, dash/RMB/R, passive) and stat bonuses.
+    // Number keys 1..N pick from the roster. Q/E (swappable skills) are kept across switches.
     [DefaultExecutionOrder(-40)]
     public class CharacterSwitcher : MonoBehaviour
     {
@@ -65,6 +65,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
             CharacterData next = roster[index];
             player.EquipKit(next.Kit);
             ApplyBonuses(next);
+            CharacterModel.For(player).Show(next);
 
             CharacterChanged?.Invoke(next);
         }

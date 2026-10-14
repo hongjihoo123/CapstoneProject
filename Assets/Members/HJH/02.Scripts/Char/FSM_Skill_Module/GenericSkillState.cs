@@ -2,6 +2,8 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
+    // State-machine state that runs one SkillData in one slot: Enter starts the skill's execution, Tick drives it,
+    // Exit ends it. Cooldown / charges / swap lock come from SkillStateBase.
     public class GenericSkillState : SkillStateBase
     {
         private ISkillExecution _execution;
