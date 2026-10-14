@@ -333,8 +333,8 @@ namespace Members.KYR._01_Scripts
         {
             if (Renderer == null) return;
 
-            bool isAimingNow = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
-            bool isReloadingNow = WeaponFsm.Machine.IsCurrent<ReloadWeaponState>();
+            bool isAimingNow = SkillFsm != null && SkillFsm.IsAimingSkill;
+            bool isReloadingNow = Weapon.Weapon != null && Weapon.Weapon.IsReloading;
 
             if (isAimingNow && !wasAimingLastFrame)
                 aimEnterPulseTimer = aimEnterPulseDuration;
@@ -367,8 +367,8 @@ namespace Members.KYR._01_Scripts
 
             wasReloadingLastFrame = isReloadingNow;
             if (groundedParam != null) Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
-            if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
-            if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
+            if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, false);
+            if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, !Mover.IsGrounded);
             if (isAimParam != null) Renderer.SetBool(isAimParam.HashValue, isAimPulseActive);
             if (aimIdleParam != null) Renderer.SetBool(aimIdleParam.HashValue, isAimIdleNow);
             if (isFireParam != null) Renderer.SetBool(isFireParam.HashValue, isFireNow);
@@ -391,7 +391,7 @@ namespace Members.KYR._01_Scripts
                 return;
 
             firePulseTimer = firePulseDuration;
-            lastFireWasAimed = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
+            lastFireWasAimed = false;
         }
     }
 }

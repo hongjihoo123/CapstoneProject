@@ -114,7 +114,7 @@ namespace Members.KYR._01_Scripts.Modules
             if (_weapon == null) return;
 
             float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
-            float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
+            float reloadSpeed = 1f;
 
             if (_weapon is IAttackSpeedScalable attackSpeedScalable)
                 attackSpeedScalable.AttackSpeedMultiplier = attackSpeed;
@@ -243,12 +243,8 @@ namespace Members.KYR._01_Scripts.Modules
         {
             if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
             {
-                float multiplier = (player.MoveFsm != null && player.MoveFsm.Capabilities.IsCrouching)
-                    ? crouchRecoilMultiplier
-                    : 1f;
-                float recoilControl = _stats != null && _stats.Tree != null
-                    ? Mathf.Clamp01(_stats.Get(PlayerStatId.RecoilControl))
-                    : 0f;
+                float multiplier = 1f;
+                float recoilControl = 0f;
                 multiplier *= 1f - recoilControl;
 
                 player.Mover.ApplyRecoilPitch(pitchDelta * multiplier);
