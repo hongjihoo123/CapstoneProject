@@ -22,8 +22,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         [Header("Next")]
         [SerializeField] private Image nextSlotImage;
-        [SerializeField] private Image nextSlotRing;
-        [SerializeField] private TextMeshProUGUI hintText;
 
         [Header("Combo Banner")]
         [SerializeField] private RectTransform banner;
@@ -100,6 +98,10 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         private Vector2 _bannerHome;
         private bool _listOpen;
 
+        private bool _hasPendingCombo;
+        private string _pendingComboName;
+        private int _pendingComboLength;
+
         private void Awake()
         {
             if (banner != null)
@@ -167,6 +169,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 screenFlash.enabled = false;
             }
 
+            _hasPendingCombo = false;
+
             ResetSlotScale();
             HideBanner();
         }
@@ -178,9 +182,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 _remaining -= Time.deltaTime;
                 SetTimer(_remaining);
             }
-
-            if (nextSlotRing != null && nextSlotRing.enabled)
-                nextSlotRing.color = WithAlpha(nextSlotRing.color, 0.3f + 0.65f * Pulse(6f));
 
             if (readyLabel != null)
             {
@@ -194,6 +195,32 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
             if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
                 SetListOpen(!_listOpen);
+        }
+
+        private void LateUpdate()
+        {
+            if (!_hasPendingCombo)
+                return;
+
+            _hasPendingCombo = false;
+
+            if (_filledCount <= 0)
+                return;
+
+            int first = Mathf.Max(0, _filledCount - _pendingComboLength);
+            int last = _filledCount - 1;
+
+            ResetSlotScale();
+            ShowBracket(first, last, _pendingComboName);
+
+            for (int i = first; i <= last; i++)
+            {
+                if (i >= slotImages.Length)
+                    continue;
+
+                Bounce(slotImages[i].rectTransform);
+                FlashRing(slotImages[i]);
+            }
         }
 
         private void HandleStackChanged(ElementStackChangedEvent evt)
@@ -243,15 +270,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 nextSlotImage.color = Color.white;
             }
 
-            if (nextSlotRing != null)
-            {
-                nextSlotRing.enabled = true;
-                nextSlotRing.color = ElementColor(evt.NextElement);
-            }
-
-            if (hintText != null)
-                hintText.text = $"<color=#{Hex(gold)}>{evt.ComboName}</color>  {evt.Progress}/{evt.ComboLength}   다음 {ElementText(evt.NextElement)}";
-
             RefreshComboList(evt.ComboName, evt.Progress);
         }
 
@@ -263,30 +281,15 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
             ShowBanner("COMBO!", evt.ComboName, ElementSequenceText(evt.Sequence), comboBarColor);
 
-            int first = Mathf.Max(0, _filledCount - evt.Sequence.Count);
-            int last = _filledCount - 1;
+            _pendingComboName = evt.ComboName;
+            _pendingComboLength = evt.Sequence.Count;
+            _hasPendingCombo = true;
 
-            for (int i = first; i <= last; i++)
-            {
-                if (i >= slotImages.Length)
-                    continue;
-
-                Bounce(slotImages[i].rectTransform);
-                FlashRing(slotImages[i]);
-            }
-
-            ShowBracket(first, last, evt.ComboName);
             AddFinisherStock(evt.ComboName, evt.Sequence);
             FlashComboList(evt.ComboName);
 
             if (nextSlotImage != null)
                 nextSlotImage.enabled = false;
-
-            if (nextSlotRing != null)
-                nextSlotRing.enabled = false;
-
-            if (hintText != null)
-                hintText.text = $"<color=#{Hex(gold)}>{evt.ComboName}</color> 발동!";
         }
 
         private void AddFinisherStock(string name, IReadOnlyList<ElementType> sequence)
@@ -504,26 +507,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             if (nextSlotImage != null)
                 nextSlotImage.enabled = false;
 
-            if (nextSlotRing != null)
-                nextSlotRing.enabled = false;
-
             if (bracket != null)
                 bracket.gameObject.SetActive(false);
-
-            if (hintText != null)
-                hintText.text = "<color=#8A8A96>스킬을 이어 써서 콤보</color>";
-        }
-
-        private void PlayClearEffect()
-        {
-            for (int i = 0; i < _filledCount; i++)
-            {
-                RectTransform rt = slotImages[i].rectTransform;
-
-                rt.DOKill();
-                rt.localScale = Vector3.one;
-                rt.DOScale(clearScale, clearDelay).SetEase(Ease.OutQuad);
-            }
         }
 
         private IEnumerator ClearAfterDelay()
