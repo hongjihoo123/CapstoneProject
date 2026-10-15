@@ -3,10 +3,6 @@ using UnityEngine.UI;
 
 namespace Members.JJH._02_Scripts.UI
 {
-    /// <summary>
-    /// 부모(스킬 슬롯 배경)에 붙여서 사용.
-    /// 지정한 다각형 구역 안에서만 자식 스킬 아이콘 Image가 보이도록 메시를 잘라낸다.
-    /// </summary>
     [DisallowMultipleComponent]
     [RequireComponent(typeof(RectTransform))]
     public class SlotIconClipper : MonoBehaviour
@@ -15,7 +11,8 @@ namespace Members.JJH._02_Scripts.UI
         [SerializeField] private Image skillIcon;
 
         [Header("보여줄 구역 - 다각형 (부모 Rect 중앙 기준 로컬 좌표, 3개 이상)")]
-        [SerializeField] private Vector2[] polygonPoints =
+        [SerializeField]
+        private Vector2[] polygonPoints =
         {
             new Vector2(0f, 60f),
             new Vector2(60f, 0f),
@@ -51,13 +48,12 @@ namespace Members.JJH._02_Scripts.UI
             _effect.Setup((RectTransform)transform, polygonPoints);
         }
 
-        /// <summary>구역을 코드에서 바꾸고 싶을 때 호출</summary>
         public void SetPolygon(Vector2[] points)
-        { 
+        {
             polygonPoints = points;
             if (_effect != null) _effect.Setup((RectTransform)transform, polygonPoints);
-        }    
-           
+        }
+
 #if UNITY_EDITOR
         private void OnValidate()
         {
@@ -79,8 +75,8 @@ namespace Members.JJH._02_Scripts.UI
                 Vector3 a = rt.TransformPoint(center + polygonPoints[i]);
                 Vector3 b = rt.TransformPoint(center + polygonPoints[(i + 1) % polygonPoints.Length]);
                 Gizmos.DrawLine(a, b);
-            } 
-        } 
+            }
+        }
 #endif
     }
 }
