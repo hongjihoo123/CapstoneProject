@@ -27,6 +27,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public override void Enter()
         {
             base.Enter();
+            Host.Context.ActiveSkill = Data;
             _execution = Data.Begin(Host.Context);
         }
 
@@ -36,6 +37,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             _execution?.End();
             _execution = null;
+            if (Host.Context.ActiveSkill == Data)
+                Host.Context.ActiveSkill = null;
             base.Exit();
         }
 

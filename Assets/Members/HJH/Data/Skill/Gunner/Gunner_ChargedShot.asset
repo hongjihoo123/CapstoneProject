@@ -12,6 +12,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e73c30ee58e3dd848afd3db734effb5b, type: 3}
   m_Name: Gunner_ChargedShot
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner.ChargedShotPassiveData
-  icon: {fileID: 21300000, guid: 531e1c192be133440be730f1e58d7a16, type: 3}
-  displayName: "충전 충격포"
-  description: "총을 쏠 때마다 게이지가 찬다. 꽉 차면 다음 평타가 적을 꿰뚫고 밀어내는 충전 관통 충격포로 나간다."
+  icon: {fileID: 21300000, guid: 95a06c4749fd7614aa0d5988cc5a1194, type: 3}
+  displayName: "\uCDA9\uC804 \uCDA9\uACA9\uD3EC"
+  description: "\uCD1D\uC744 \uC3E0 \uB54C\uB9C8\uB2E4 \uAC8C\uC774\uC9C0\uAC00 \uCC2C\uB2E4.
+    \uAF49 \uCC28\uBA74 \uB2E4\uC74C \uD3C9\uD0C0\uAC00 \uC801\uC744 \uAFF0\uB6AB\uACE0
+    \uBC00\uC5B4\uB0B4\uB294 \uCDA9\uC804 \uAD00\uD1B5 \uCDA9\uACA9\uD3EC\uB85C \uB098\uAC04\uB2E4."
+  shotsToFill: 10
+  shot:
+    range: 16
+    width: 1.2
+    windup: 0.12
+    damage: 45
+    knockback: 1.5
+    recoil: 0.7
+    hitStop: 0.06
+    chargeRumble: 0.08
+    fireShake: 0.3
+    cameraKick: 0.45
+    color: {r: 0.3, g: 1, b: 0.85, a: 1}

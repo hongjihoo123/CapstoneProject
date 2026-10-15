@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents;
+using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
@@ -195,25 +196,61 @@ namespace Members.KYR._01_Scripts
             Health.TakeDamage(amount);
         }
 
+        public void TakeDamage(float amount, GameObject source, ElementType element)
+        {
+            Health.TakeDamage(amount, element);
+        }
+
         public void Heal(float amount)
         {
             Health.Heal(amount);
         }
 
+        public void AddShield(float amount)
+        {
+            Health.AddShield(amount);
+        }
+
+        public void ClearShield()
+        {
+            Health.ClearShield();
+        }
+
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
-            float multiplier = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
-            if (isWeakpoint && Stats != null)
-                multiplier *= Stats.Get(PlayerStatId.WeakpointMultiplier);
+            ApplyScaledDamage(target, amount, 1f, null, 0f);
+        }
+
+        public void ApplyDamageTo(IDamageable target, float amount, ElementType element, float attackCoeff, float elementCoeff)
+        {
+            ApplyScaledDamage(target, amount, attackCoeff, element, elementCoeff);
+        }
+
+        public void ApplyFireDamage(IDamageable target, float amount, float attackCoeff, float fireCoeff)
+        {
+            ApplyDamageTo(target, amount, ElementType.Fire, attackCoeff, fireCoeff);
+        }
+
+        private void ApplyScaledDamage(IDamageable target, float amount, float attackCoeff, ElementType? element, float elementCoeff)
+        {
             if (target == null)
                 return;
 
-            // Hits on already-dead targets are not reported (no lifesteal, no hit effects on corpses).
+            float attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
+            float scale = attackCoeff * attack;
+            if (element.HasValue)
+            {
+                float elemental = Stats != null
+                    ? Stats.Get(PlayerElementStats.DamageStat(element.Value))
+                    : 1f;
+                scale += elementCoeff * elemental;
+            }
+
             bool wasAlive = target.IsAlive;
-            float dealt = amount * multiplier;
+            float dealt = amount * Mathf.Max(0f, scale);
             target.TakeDamage(dealt, gameObject);
             if (wasAlive)
-                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, isWeakpoint, !target.IsAlive));
+                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }
 
         // Every damage the player deals (weapon, skills, DoT) passes through ApplyDamageTo.
@@ -296,8 +333,8 @@ namespace Members.KYR._01_Scripts
         {
             if (Renderer == null) return;
 
-            bool isAimingNow = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
-            bool isReloadingNow = WeaponFsm.Machine.IsCurrent<ReloadWeaponState>();
+            bool isAimingNow = SkillFsm != null && SkillFsm.IsAimingSkill;
+            bool isReloadingNow = Weapon.Weapon != null && Weapon.Weapon.IsReloading;
 
             if (isAimingNow && !wasAimingLastFrame)
                 aimEnterPulseTimer = aimEnterPulseDuration;
@@ -330,8 +367,8 @@ namespace Members.KYR._01_Scripts
 
             wasReloadingLastFrame = isReloadingNow;
             if (groundedParam != null) Renderer.SetBool(groundedParam.HashValue, Mover.IsGrounded);
-            if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, MoveFsm.Capabilities.IsCrouching);
-            if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, MoveFsm.Capabilities.IsAirborne);
+            if (crouchParam != null) Renderer.SetBool(crouchParam.HashValue, false);
+            if (airborneParam != null) Renderer.SetBool(airborneParam.HashValue, !Mover.IsGrounded);
             if (isAimParam != null) Renderer.SetBool(isAimParam.HashValue, isAimPulseActive);
             if (aimIdleParam != null) Renderer.SetBool(aimIdleParam.HashValue, isAimIdleNow);
             if (isFireParam != null) Renderer.SetBool(isFireParam.HashValue, isFireNow);
@@ -354,7 +391,7 @@ namespace Members.KYR._01_Scripts
                 return;
 
             firePulseTimer = firePulseDuration;
-            lastFireWasAimed = WeaponFsm.Machine.IsCurrent<AimWeaponState>();
+            lastFireWasAimed = false;
         }
     }
 }

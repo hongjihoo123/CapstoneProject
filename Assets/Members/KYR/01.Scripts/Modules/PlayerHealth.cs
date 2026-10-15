@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
@@ -14,9 +15,11 @@ namespace Members.KYR._01_Scripts.Modules
 
         private PlayerStatsModule _stats;
         private float _hp;
+        private float _shield;
         private float _stunRemaining;
 
         public float CurrentHealth => _hp;
+        public float CurrentShield => _shield;
         public float MaxHealth => MaxHp;
         public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
         public bool IsDead => _hp <= 0f;
@@ -27,23 +30,31 @@ namespace Members.KYR._01_Scripts.Modules
             base.Initialize(owner);
             _stats = owner.GetModule<PlayerStatsModule>();
             _hp = maxHp;
+            _shield = 0f;
             _stunRemaining = 0f;
         }
 
         public void AfterInitalize()
         {
             _hp = MaxHp;
+            _shield = 0f;
         }
 
         public void InitHealth(float maxHealth)
         {
             maxHp = maxHealth;
             _hp = MaxHp;
+            _shield = 0f;
         }
 
         public void Tick(float deltaTime)
         {
             ClampHpToMax();
+
+            if (IsDead)
+                _shield = 0f;
+            else if (_shield > 0f)
+                _shield = Mathf.Max(0f, _shield - Mathf.Max(0f, deltaTime));
 
             if (_stunRemaining <= 0f)
                 return;
@@ -55,18 +66,57 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void TakeDamage(float amount)
         {
+            TakeDamage(amount, null);
+        }
+
+        public void TakeDamage(float amount, ElementType? element)
+        {
             ClampHpToMax();
             if (IsDead || amount <= 0f)
                 return;
+
+            if (_shield > 0f)
+            {
+                float absorbed = Mathf.Min(_shield, amount);
+                _shield -= absorbed;
+                amount -= absorbed;
+                if (amount <= 0f)
+                    return;
+            }
+
+            if (element.HasValue && _stats != null && _stats.Tree != null)
+                amount *= 1f - Mathf.Clamp01(_stats.Get(PlayerElementStats.DefenseStat(element.Value)));
 
             float defense = _stats != null && _stats.Tree != null
                 ? Mathf.Clamp01(_stats.Get(PlayerStatId.Defense))
                 : 0f;
             amount *= 1f - defense;
 
+            if (amount <= 0f)
+                return;
+
             _hp = Mathf.Max(0f, _hp - amount);
-            if (!IsDead && stunOnHitDuration > 0f)
+            if (IsDead)
+            {
+                _shield = 0f;
+                return;
+            }
+
+            if (stunOnHitDuration > 0f)
                 ApplyStun(stunOnHitDuration);
+        }
+
+        public void AddShield(float amount)
+        {
+            if (IsDead || amount <= 0f)
+                return;
+
+            _shield += amount;
+        }
+
+        public void ClearShield()
+        {
+            _shield = 0f;
         }
 
         public void Heal(float amount)

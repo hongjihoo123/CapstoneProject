@@ -194,8 +194,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
                 if (current.sequence.Length > stacks.Count)
                 {
-                    int start = 0;
-
                     if (stacks.Count > current.sequence.Length)
                         continue;
 
