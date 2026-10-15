@@ -36,7 +36,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [Header("Finisher")]
         [SerializeField] private Image screenFlash;
         [SerializeField] private Image[] stockPips;
-        [SerializeField] private TextMeshProUGUI finisherKey;
         [SerializeField] private TextMeshProUGUI readyLabel;
         [SerializeField] private int maxFinisherStock = 3;
 
@@ -50,14 +49,14 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [Header("Sprites")]
         [Tooltip("ElementType 순서: Fire, Water, Wind, Electric, Earth")]
         [SerializeField] private Sprite[] elementSprites;
+        [Tooltip("0: 꺼짐, 1: 켜짐")]
+        [SerializeField] private Sprite[] finisherStackSprites;
 
         [Header("Color")]
         [SerializeField] private Color emptyColor = new Color(1f, 1f, 1f, 0.15f);
         [SerializeField] private Color gold = new Color(1f, 0.83f, 0.3f);
         [SerializeField] private Color comboBarColor = new Color(0.42f, 0.28f, 0.03f, 0.92f);
         [SerializeField] private Color finisherBarColor = new Color(0.55f, 0.07f, 0.1f, 0.95f);
-        [SerializeField] private Color pipOn = new Color(1f, 0.83f, 0.3f);
-        [SerializeField] private Color pipOff = new Color(1f, 1f, 1f, 0.18f);
         [SerializeField] private Color listRowColor = new Color(0.55f, 0.48f, 0.32f, 0.75f);
 
         [Tooltip("ElementType 순서: Fire, Water, Wind, Electric, Earth")]
@@ -74,7 +73,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             public ElementType[] sequence;
             public Image background;
             public Image[] steps;
-            public TextMeshProUGUI[] stepTexts;
             public int progress;
         }
 
@@ -373,10 +371,9 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 rowRoot.gameObject.SetActive(true);
                 rowRoot.name = $"Row_{comboName}";
 
-                TextMeshProUGUI nameText = rowRoot.Find("Name")?.GetComponent<TextMeshProUGUI>();
-
-                if (nameText != null)
-                    nameText.text = comboName;
+                //TextMeshProUGUI nameText = rowRoot.Find("Name")?.GetComponent<TextMeshProUGUI>();
+                /* if (nameText != null)
+                     nameText.text = comboName;*/
 
                 Transform stepsRoot = rowRoot.Find("Steps");
 
@@ -394,7 +391,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                     sequence = new ElementType[source.Count],
                     background = rowRoot.GetComponent<Image>(),
                     steps = new Image[source.Count],
-                    stepTexts = new TextMeshProUGUI[source.Count]
                 };
 
                 for (int k = 0; k < source.Count; k++)
@@ -408,17 +404,12 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                     Transform step = k == 0 ? firstStep : Instantiate(firstStep, stepsRoot);
 
                     row.steps[k] = step.GetComponent<Image>();
-                    row.stepTexts[k] = step.GetComponentInChildren<TextMeshProUGUI>();
 
                     if (row.steps[k] != null)
                     {
                         row.steps[k].sprite = elementSprites[(int)source[k]];
                         row.steps[k].enabled = true;
-                        row.steps[k].color = ElementColor(source[k]);
                     }
-
-                    if (row.stepTexts[k] != null)
-                        row.stepTexts[k].text = ElementText(source[k]);
                 }
 
                 _rows.Add(row);
@@ -479,19 +470,10 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 {
                     if (row.steps[i] != null)
                     {
-                        Color color = ElementColor(row.sequence[i]);
                         float progressAlpha = row.progress > 0 && i >= row.progress ? 0.35f : 1f;
                         float finalAlpha = alpha * progressAlpha;
 
-                        row.steps[i].color = new Color(color.r, color.g, color.b, finalAlpha);
-                    }
-
-                    if (row.stepTexts[i] != null)
-                    {
-                        Color color = row.stepTexts[i].color;
-                        color.a = alpha;
-                        row.stepTexts[i].color = color;
-                        row.stepTexts[i].text = ElementText(row.sequence[i]);
+                        row.steps[i].color = new Color(255, 255, 255, finalAlpha);
                     }
                 }
             }
@@ -708,11 +690,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 bool active = i < _finisherStock.Count;
 
                 stockPips[i].enabled = true;
-                stockPips[i].color = active ? pipOn : pipOff;
+                stockPips[i].sprite = active ? finisherStackSprites[1] : finisherStackSprites[0];
             }
-
-            if (finisherKey != null)
-                finisherKey.text = _finisherStock.Count > 0 ? "F" : "";
 
             if (readyLabel != null)
             {
