@@ -20,11 +20,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [SerializeField] private Image[] slotImages;
         [SerializeField] private Slider timerSlider;
 
-        [Header("Next")]
-        [SerializeField] private Image nextSlotImage;
-        [SerializeField] private Image nextSlotRing;
-        [SerializeField] private TextMeshProUGUI hintText;
-
         [Header("Combo Banner")]
         [SerializeField] private RectTransform banner;
         [SerializeField] private CanvasGroup bannerGroup;
@@ -41,7 +36,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [Header("Finisher")]
         [SerializeField] private Image screenFlash;
         [SerializeField] private Image[] stockPips;
-        [SerializeField] private TextMeshProUGUI[] stockNames;
         [SerializeField] private TextMeshProUGUI finisherKey;
         [SerializeField] private TextMeshProUGUI readyLabel;
         [SerializeField] private int maxFinisherStock = 3;
@@ -92,6 +86,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private readonly List<ListRow> _rows = new();
         private readonly List<FinisherStock> _finisherStock = new();
+        private readonly List<ElementType> _currentStacks = new();
 
         private float _duration;
         private float _remaining;
@@ -99,6 +94,10 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         private Coroutine _clearRoutine;
         private Vector2 _bannerHome;
         private bool _listOpen;
+
+        private bool _hasPendingCombo;
+        private string _pendingComboName;
+        private int _pendingComboLength;
 
         private void Awake()
         {
@@ -167,6 +166,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 screenFlash.enabled = false;
             }
 
+            _hasPendingCombo = false;
+
             ResetSlotScale();
             HideBanner();
         }
@@ -179,9 +180,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 SetTimer(_remaining);
             }
 
-            if (nextSlotRing != null && nextSlotRing.enabled)
-                nextSlotRing.color = WithAlpha(nextSlotRing.color, 0.3f + 0.65f * Pulse(6f));
-
             if (readyLabel != null)
             {
                 bool hasStock = _finisherStock.Count > 0;
@@ -192,79 +190,28 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 readyLabel.alpha = 0.45f + 0.55f * Pulse(full ? 10f : 4f);
             }
 
-            if (Keyboard.current != null && Keyboard.current.tabKey.wasPressedThisFrame)
+            if (Keyboard.current.tabKey.wasPressedThisFrame)
                 SetListOpen(!_listOpen);
+
+            if (Keyboard.current.fKey.wasPressedThisFrame)
+                PlayFinisher();
         }
 
-        private void HandleStackChanged(ElementStackChangedEvent evt)
+        private void LateUpdate()
         {
-            if (evt.Stacks == null || evt.Stacks.Count == 0)
-            {
-                _duration = 0f;
-                _remaining = 0f;
-                SetTimer(0f);
-
-                if (_clearRoutine == null)
-                    _clearRoutine = StartCoroutine(ClearAfterDelay());
-
+            if (!_hasPendingCombo)
                 return;
-            }
 
-            if (_clearRoutine != null)
-            {
-                StopCoroutine(_clearRoutine);
-                _clearRoutine = null;
-            }
+            _hasPendingCombo = false;
 
-            Render(evt.Stacks);
+            if (_filledCount <= 0)
+                return;
 
-            _filledCount = Mathf.Min(evt.Stacks.Count, slotImages.Length);
-
-            int lastIndex = _filledCount - 1;
-
-            if (lastIndex >= 0)
-                Bounce(slotImages[lastIndex].rectTransform);
-
-            _duration = evt.TimerDuration;
-            _remaining = evt.TimerDuration;
-
-            if (timerSlider != null)
-                timerSlider.maxValue = _duration;
-
-            SetTimer(_remaining);
-        }
-
-        private void HandleComboNext(ElementComboNextEvent evt)
-        {
-            if (nextSlotImage != null)
-            {
-                nextSlotImage.sprite = elementSprites[(int)evt.NextElement];
-                nextSlotImage.enabled = true;
-                nextSlotImage.color = Color.white;
-            }
-
-            if (nextSlotRing != null)
-            {
-                nextSlotRing.enabled = true;
-                nextSlotRing.color = ElementColor(evt.NextElement);
-            }
-
-            if (hintText != null)
-                hintText.text = $"<color=#{Hex(gold)}>{evt.ComboName}</color>  {evt.Progress}/{evt.ComboLength}   다음 {ElementText(evt.NextElement)}";
-
-            RefreshComboList(evt.ComboName, evt.Progress);
-        }
-
-        private void HandleComboComplete(ElementComboCompleteEvent evt)
-        {
-            _duration = 0f;
-            _remaining = 0f;
-            SetTimer(0f);
-
-            ShowBanner("COMBO!", evt.ComboName, ElementSequenceText(evt.Sequence), comboBarColor);
-
-            int first = Mathf.Max(0, _filledCount - evt.Sequence.Count);
+            int first = Mathf.Max(0, _filledCount - _pendingComboLength);
             int last = _filledCount - 1;
+
+            ResetSlotScale();
+            ShowBracket(first, last, _pendingComboName);
 
             for (int i = first; i <= last; i++)
             {
@@ -274,55 +221,113 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 Bounce(slotImages[i].rectTransform);
                 FlashRing(slotImages[i]);
             }
+        }
 
-            ShowBracket(first, last, evt.ComboName);
+        private void HandleStackChanged(ElementStackChangedEvent evt)
+        {
+            _currentStacks.Clear();
+
+            if (evt.Stacks == null || evt.Stacks.Count == 0)
+            {
+                _duration = 0f;
+                _remaining = 0f;
+                SetTimer(0f);
+                UpdateComboListDisplay();
+
+                if (_clearRoutine == null)
+                    _clearRoutine = StartCoroutine(ClearAfterDelay());
+
+                return;
+            }
+
+            _currentStacks.AddRange(evt.Stacks);
+
+            if (_clearRoutine != null)
+            {
+                StopCoroutine(_clearRoutine);
+                _clearRoutine = null;
+            }
+
+            Render(evt.Stacks);
+            _filledCount = Mathf.Min(evt.Stacks.Count, slotImages.Length);
+
+            int lastIndex = _filledCount - 1;
+            if (lastIndex >= 0) Bounce(slotImages[lastIndex].rectTransform);
+
+            _duration = evt.TimerDuration;
+            _remaining = evt.TimerDuration;
+
+            if (timerSlider != null) timerSlider.maxValue = _duration;
+
+            SetTimer(_remaining);
+            UpdateComboListDisplay();
+        }
+
+        private void HandleComboNext(ElementComboNextEvent evt)
+        {
+            RefreshComboList(evt.ComboName, evt.Progress);
+        }
+
+        private void HandleComboComplete(ElementComboCompleteEvent evt)
+        {
+            ShowBanner("COMBO!", evt.ComboName, ElementSequenceText(evt.Sequence), comboBarColor);
+
+            _pendingComboName = evt.ComboName;
+            _pendingComboLength = evt.Sequence.Count;
+            _hasPendingCombo = true;
+
             AddFinisherStock(evt.ComboName, evt.Sequence);
             FlashComboList(evt.ComboName);
-
-            if (nextSlotImage != null)
-                nextSlotImage.enabled = false;
-
-            if (nextSlotRing != null)
-                nextSlotRing.enabled = false;
-
-            if (hintText != null)
-                hintText.text = $"<color=#{Hex(gold)}>{evt.ComboName}</color> 발동!";
         }
 
         private void AddFinisherStock(string name, IReadOnlyList<ElementType> sequence)
         {
-            if (_finisherStock.Count >= maxFinisherStock)
-                return;
+            foreach (FinisherStock stock in _finisherStock)
+            {
+                if (stock.Name == name) return;
+                if (stock.Sequence.Length != sequence.Count) continue;
 
-            var stock = new FinisherStock
+                bool sameSequence = true;
+
+                for (int i = 0; i < sequence.Count; i++)
+                {
+                    if (stock.Sequence[i] == sequence[i]) continue;
+
+                    sameSequence = false;
+                    break;
+                }
+
+                if (sameSequence) return;
+            }
+
+            if (_finisherStock.Count >= maxFinisherStock) return;
+
+            var stockData = new FinisherStock
             {
                 Name = name,
                 Sequence = new ElementType[sequence.Count]
             };
 
             for (int i = 0; i < sequence.Count; i++)
-                stock.Sequence[i] = sequence[i];
+                stockData.Sequence[i] = sequence[i];
 
-            _finisherStock.Add(stock);
+            _finisherStock.Add(stockData);
             DrawFinisherStock();
         }
 
         public void PlayFinisher()
         {
-            if (_finisherStock.Count == 0)
-                return;
+            if (_finisherStock.Count == 0) return;
 
             StringBuilder names = new StringBuilder();
 
             foreach (FinisherStock stock in _finisherStock)
             {
-                if (names.Length > 0)
-                    names.Append("  +  ");
-
+                if (names.Length > 0) names.Append("  +  ");
                 names.Append(stock.Name);
             }
 
-            ShowBanner($"FINISH  x{_finisherStock.Count}", "피니시", names.ToString(), finisherBarColor);
+            ShowBanner("FINISHER", "피니쉬 스킬 발동", names.ToString(), finisherBarColor);
             PlayScreenFlash();
 
             _finisherStock.Clear();
@@ -354,6 +359,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
             _rows.Clear();
             listRowTemplate.gameObject.SetActive(false);
+            UpdateComboListDisplay();
 
             for (int i = 0; i < buffController.ComboCount; i++)
             {
@@ -424,23 +430,102 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         private void RefreshComboList(string comboName, int progress)
         {
             foreach (ListRow row in _rows)
-            {
                 row.progress = row.name == comboName ? progress : 0;
+
+            UpdateComboListDisplay();
+        }
+
+        private void UpdateComboListDisplay()
+        {
+            _rows.Sort((a, b) =>
+            {
+                bool aAvailable = IsComboAvailable(a);
+                bool bAvailable = IsComboAvailable(b);
+
+                if (_currentStacks.Count > 0 && aAvailable != bAvailable)
+                    return aAvailable ? -1 : 1;
+
+                int lengthCompare = b.sequence.Length.CompareTo(a.sequence.Length);
+                if (lengthCompare != 0) return lengthCompare;
+
+                for (int i = 0; i < a.sequence.Length; i++)
+                {
+                    int elementCompare = ((int)a.sequence[i]).CompareTo((int)b.sequence[i]);
+                    if (elementCompare != 0) return elementCompare;
+                }
+
+                return string.Compare(a.name, b.name, System.StringComparison.Ordinal);
+            });
+
+            for (int rowIndex = 0; rowIndex < _rows.Count; rowIndex++)
+            {
+                ListRow row = _rows[rowIndex];
+                RectTransform rowRoot = row.background != null ? row.background.rectTransform : null;
+
+                if (rowRoot != null)
+                    rowRoot.SetSiblingIndex(rowIndex);
+
+                bool available = _currentStacks.Count == 0 || IsComboAvailable(row);
+                float alpha = available ? 1f : 0.25f;
+
+                if (row.background != null)
+                {
+                    Color color = row.background.color;
+                    color.a = available ? listRowColor.a : 0.25f;
+                    row.background.color = color;
+                }
 
                 for (int i = 0; i < row.steps.Length; i++)
                 {
-                    Color color = ElementColor(row.sequence[i]);
-                    float alpha = row.progress == 0 || i < row.progress ? 1f : 0.35f;
+                    if (row.steps[i] != null)
+                    {
+                        Color color = ElementColor(row.sequence[i]);
+                        float progressAlpha = row.progress > 0 && i >= row.progress ? 0.35f : 1f;
+                        float finalAlpha = alpha * progressAlpha;
 
-                    row.steps[i].color = new Color(color.r * 0.6f, color.g * 0.6f, color.b * 0.6f, alpha);
+                        row.steps[i].color = new Color(color.r, color.g, color.b, finalAlpha);
+                    }
 
                     if (row.stepTexts[i] != null)
+                    {
+                        Color color = row.stepTexts[i].color;
+                        color.a = alpha;
+                        row.stepTexts[i].color = color;
                         row.stepTexts[i].text = ElementText(row.sequence[i]);
+                    }
                 }
             }
 
             if (listTitle != null)
                 listTitle.text = "콤보 리스트";
+        }
+
+        private bool IsComboAvailable(ListRow row)
+        {
+            if (_currentStacks.Count == 0 || row.sequence.Length <= 1)
+                return false;
+
+            int maxProgress = Mathf.Min(_currentStacks.Count, row.sequence.Length - 1);
+
+            for (int progress = maxProgress; progress > 0; progress--)
+            {
+                int start = _currentStacks.Count - progress;
+                bool matched = true;
+
+                for (int i = 0; i < progress; i++)
+                {
+                    if (_currentStacks[start + i] == row.sequence[i])
+                        continue;
+
+                    matched = false;
+                    break;
+                }
+
+                if (matched)
+                    return true;
+            }
+
+            return false;
         }
 
         private void FlashComboList(string comboName)
@@ -501,29 +586,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 slot.enabled = false;
             }
 
-            if (nextSlotImage != null)
-                nextSlotImage.enabled = false;
-
-            if (nextSlotRing != null)
-                nextSlotRing.enabled = false;
-
             if (bracket != null)
                 bracket.gameObject.SetActive(false);
-
-            if (hintText != null)
-                hintText.text = "<color=#8A8A96>스킬을 이어 써서 콤보</color>";
-        }
-
-        private void PlayClearEffect()
-        {
-            for (int i = 0; i < _filledCount; i++)
-            {
-                RectTransform rt = slotImages[i].rectTransform;
-
-                rt.DOKill();
-                rt.localScale = Vector3.one;
-                rt.DOScale(clearScale, clearDelay).SetEase(Ease.OutQuad);
-            }
         }
 
         private IEnumerator ClearAfterDelay()
@@ -645,9 +709,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
                 stockPips[i].enabled = true;
                 stockPips[i].color = active ? pipOn : pipOff;
-
-                if (stockNames != null && i < stockNames.Length && stockNames[i] != null)
-                    stockNames[i].text = active ? _finisherStock[i].Name : "";
             }
 
             if (finisherKey != null)
