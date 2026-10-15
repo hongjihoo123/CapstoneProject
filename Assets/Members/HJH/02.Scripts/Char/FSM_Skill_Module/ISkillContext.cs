@@ -52,6 +52,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         // Pushes one target along direction (flattened) by distance.
         void Knockback(IDamageable target, Vector3 direction, float distance);
         void DealDamage(IDamageable target, float amount, bool isWeakpoint = false);
+        void DealDamage(IDamageable target, float amount, SkillData skill);
         void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration);
     }
 
@@ -75,6 +76,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     public interface ISkillContext : ISkillMover, ISkillCombatant, ISkillStats, ISkillVitals, ISkillWeapon, ISkillEffects
     {
         Transform Transform { get; }
+        SkillData ActiveSkill { get; set; }
         // The equipped kit's passive runtime. Skills that share a resource with it (e.g. runes)
         // cast this to a small interface instead of knowing the concrete passive.
         IPassive Passive { get; }

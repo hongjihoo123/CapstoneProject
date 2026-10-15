@@ -11,7 +11,7 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
         public PlayerAgent Player { get; private set; }
         public StateMachine Machine { get; private set; }
 
-        public IWeaponCapabilities Capabilities => Machine?.Current as IWeaponCapabilities ?? Fallback;
+        public IWeaponCapabilities Capabilities => Fallback;
 
         public override void Initialize(ModuleOwner owner)
         {
@@ -23,9 +23,7 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
         public void AfterInitalize()
         {
             Machine = new StateMachine();
-            Machine.Register(new IdleWeaponState(this));
-            Machine.Register(new AimWeaponState(this));
-            Machine.Register(new ReloadWeaponState(this));
+            Machine.Register(new IdleWeaponState());
             Machine.ChangeState<IdleWeaponState>();
         }
 
@@ -45,36 +43,12 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
             ChangeState<IdleWeaponState>();
         }
 
-        public void ResolveReady()
-        {
-            PlayerInputState input = Player.Input;
-
-            if (Player.Weapon.Weapon != null && Player.Weapon.Weapon.IsReloading)
-            {
-                ChangeState<ReloadWeaponState>();
-                return;
-            }
-
-            if (input.ReloadPressed && Player.Weapon.CanStartReload && Player.SkillFsm.Capabilities.AllowsReload)
-            {
-                ChangeState<ReloadWeaponState>();
-                return;
-            }
-
-            bool wantAim = input.AimHeld && Player.MoveFsm.Capabilities.CanAim && !Player.SkillFsm.IsAimingSkill;
-
-            if (wantAim)
-            {
-                ChangeState<AimWeaponState>();
-                return;
-            }
-
-            ChangeState<IdleWeaponState>();
-        }
-
         private void TryFire()
         {
-            if (!Capabilities.AllowsFire || !Player.MoveFsm.Capabilities.CanFire || !Player.SkillFsm.Capabilities.AllowsFire
+            if (Player.SkillFsm == null || Player.MoveFsm == null)
+                return;
+
+            if (!Capabilities.AllowsFire || !Player.SkillFsm.Capabilities.AllowsFire
                 || Player.SkillFsm.IsAimingSkill)
                 return;
 
@@ -83,10 +57,19 @@ namespace Members.KYR._01_Scripts.FSM.Weapon
 
         private sealed class ReadyWeaponFallback : IWeaponCapabilities
         {
-            public bool AllowsFire => false;
+            public bool AllowsFire => true;
             public bool AllowsAim => true;
             public bool LocksSprint => false;
             public float MoveSpeedMultiplier => 1f;
         }
+    }
+
+    public sealed class IdleWeaponState : IState
+    {
+        public void Enter() { }
+
+        public void Exit() { }
+
+        public void Tick(float deltaTime) { }
     }
 }

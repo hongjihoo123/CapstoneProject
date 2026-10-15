@@ -9,15 +9,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
     {
         // Damages everything in the circle once and plays the explosion. Returns the number of targets hit.
         public static int Explode(ISkillContext context, Vector3 center, float radius, float damage, Color color,
-            float hitStop = 0f, float shake = 0f, float power = 1f)
+            float hitStop = 0f, float shake = 0f, float power = 1f, SkillData skill = null)
         {
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, center, radius, 0.2f));
             Fx.Explosion(GroundOf(context, center), radius, color, power);
 
+            SkillData source = skill ?? context.ActiveSkill;
             int hits = 0;
             foreach (IDamageable target in context.OverlapSphere(center + Vector3.up * 0.5f, radius))
             {
-                context.DealDamage(target, damage);
+                context.DealDamage(target, damage, source);
                 hits++;
             }
 
@@ -41,6 +42,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
         private readonly Color _color;
         private readonly float _hitStop;
         private readonly float _shake;
+        private readonly SkillData _skill;
         private readonly FxHandle _circle;
         private float _elapsed;
 
@@ -55,6 +57,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
             _color = color;
             _hitStop = hitStop;
             _shake = shake;
+            _skill = context.ActiveSkill;
             _circle = Fx.MagicCircle(center, radius, color);
             _circle.SetSpeed(160f);
         }
@@ -70,7 +73,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
             }
 
             _circle.Kill();
-            SkillBlast.Explode(_context, _center, _radius, _damage, _color, _hitStop, _shake);
+            SkillBlast.Explode(_context, _center, _radius, _damage, _color, _hitStop, _shake, skill: _skill);
             return false;
         }
     }

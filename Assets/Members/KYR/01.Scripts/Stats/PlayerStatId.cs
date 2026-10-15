@@ -24,6 +24,17 @@ namespace Members.KYR._01_Scripts.Stats
         RecoilControl,
         WeakpointMultiplier,
         Skill,
-        SkillCooldownReduction
+        SkillCooldownReduction,
+        Element,
+        FireDamage,
+        WaterDamage,
+        WindDamage,
+        ElectricDamage,
+        EarthDamage,
+        FireDefense,
+        WaterDefense,
+        WindDefense,
+        ElectricDefense,
+        EarthDefense
     }
 }
