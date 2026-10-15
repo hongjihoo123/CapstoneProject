@@ -23,7 +23,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         }
 
         [SerializeField] private Entry[] entries;
-        [SerializeField] private Color neutralColor = new Color(0.71f, 0.7f, 0.66f);
+        [SerializeField] private Color neutralColor = new Color(255f, 255f, 255f);
 
         public Color NeutralColor => neutralColor;
 
