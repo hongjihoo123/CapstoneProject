@@ -41,6 +41,18 @@ namespace Members.KYR._01.Scripts.Enchant
             return _selected.TryGetValue(fragment.FragmentId, out int index) ? index : -1;
         }
 
+        public bool Activate(EnchantFragment fragment)
+        {
+            if (!Contains(fragment) || string.IsNullOrEmpty(fragment.FragmentId))
+                return false;
+            if (_unlocked.Contains(fragment.FragmentId))
+                return false;
+
+            _unlocked.Add(fragment.FragmentId);
+            FragmentUnlocked?.Invoke(fragment);
+            return true;
+        }
+
         public bool TryUnlock(EnchantFragment fragment)
         {
             if (!Contains(fragment) || string.IsNullOrEmpty(fragment.FragmentId))
