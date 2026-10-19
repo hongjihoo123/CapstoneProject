@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Enemies.BT;
+using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
 using System.Collections.Generic;
@@ -21,6 +22,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         protected BehaviorGraphAgent BehaviorAgent { get; private set; }
 
         private IReadOnlyDictionary<string, SerializableGUID> _guids;
+        private BlackboardVariable<StateChannel> _stateChannel;
 
         protected override void InitializeModules()
         {
@@ -41,11 +43,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
                 _guids = btTableSO.Map;
             }
 
+            GetBTVariable(BTVars.StateChannel, out _stateChannel);
             SetBTVariable(BTVars.Enemy, this);
 
             Health.InitHealth(EnemyData.Health);
             NavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.AngularSpeed,
                                                                  EnemyData.Acceleration);
+        }
+
+        public void HandleOnDead()
+        {
+            _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
         }
 
         public virtual void Attack() { }
