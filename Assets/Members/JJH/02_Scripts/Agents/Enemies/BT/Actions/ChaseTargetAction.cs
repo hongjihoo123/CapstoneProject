@@ -26,10 +26,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.Sensor == null ||
-                Enemy.Value.EnemyNavMeshAgent == null || Target.Value == null)
+                Enemy.Value.NavMeshAgent == null || Target.Value == null)
                 return Status.Failure;
 
-            _navMeshAgent = Enemy.Value.EnemyNavMeshAgent;
+            _navMeshAgent = Enemy.Value.NavMeshAgent;
             _sensor = Enemy.Value.Sensor;
 
             _targetPos = Target.Value.transform.position;
@@ -66,7 +66,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                     Enemy.Value.transform.rotation =
                         Quaternion.RotateTowards(Enemy.Value.transform.rotation, targetRotation,
-                                                           Enemy.Value.EnemyNavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
+                                                           Enemy.Value.NavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
                 }
 
                 float angle = Vector3.Angle(Enemy.Value.transform.forward, direction);
