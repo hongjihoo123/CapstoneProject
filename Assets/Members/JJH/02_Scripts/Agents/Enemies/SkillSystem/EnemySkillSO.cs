@@ -8,6 +8,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
     [CreateAssetMenu(fileName = "Enemy Skill", menuName = "SO/Enemy/Enemy Skill", order = 1)]
     public class EnemySkillSO : ScriptableObject
     {
+        [field: SerializeField] public float SkillCooltime { get; private set; }
+        [field: SerializeField] public float SkillRange { get; private set; }
+
+
         [SerializeField] private MonoScript skillScript;
 
         public Type SkillType => skillScript != null ? skillScript.GetClass() : null;

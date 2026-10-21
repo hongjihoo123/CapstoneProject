@@ -1,3 +1,4 @@
+using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
 using System;
 using Unity.Behavior;
@@ -19,6 +20,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         private ISensor _sensor;
         private INavMesh _navMeshAgent;
+        private IEnemySkillModule _skillModule;
 
         private Vector3 _targetPos;
         private Vector3 _lastTargetPos;
@@ -29,8 +31,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 Enemy.Value.NavMeshAgent == null || Target.Value == null)
                 return Status.Failure;
 
-            _navMeshAgent = Enemy.Value.NavMeshAgent;
             _sensor = Enemy.Value.Sensor;
+            _navMeshAgent = Enemy.Value.NavMeshAgent;
+            _skillModule = Enemy.Value.SkillModule;
 
             _targetPos = Target.Value.transform.position;
             _lastTargetPos = _targetPos;
@@ -56,7 +59,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             direction.y = 0f;
 
             float distanceToTarget = direction.magnitude;
-            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange - 0.2f)
+            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange && Enemy.Value.EnemyData.CanNormalAttack ||
+                    _skillModule.HasAvailableSkill(distanceToTarget))
             {
                 _navMeshAgent.KeepChase(false);
 

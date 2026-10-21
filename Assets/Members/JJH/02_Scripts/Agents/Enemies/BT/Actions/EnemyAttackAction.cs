@@ -7,10 +7,10 @@ using Action = Unity.Behavior.Action;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "Enemy Attack", story: "[Enemy] Attack", category: "Action/Combat", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
-    public partial class AttackAction : Action
+    [NodeDescription(name: "Enemy NormalAttack", story: "[Enemy] NormalAttack", category: "Action/Combat", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
+    public partial class EnemyNormalAttackAction : Action
     {
-    [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
+        [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
         [SerializeReference] public BlackboardVariable<bool> IsMove;
 
         private float _cooldownTimer = 0f;
@@ -28,7 +28,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Time.time < _cooldownTimer)
                 return Status.Running;
 
-            Enemy.Value.Attack();
+            Enemy.Value.NormalAttack();
             IsMove.Value = false;
 
             _cooldownTimer = Time.time + Enemy.Value.EnemyData.AttackCooltime;

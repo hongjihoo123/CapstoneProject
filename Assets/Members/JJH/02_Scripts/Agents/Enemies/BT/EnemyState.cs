@@ -7,7 +7,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT
     {
         IDLE,
         CHASE,
-        ATTACK,
+        NormalATTACK,
+        SKILL,
         STUNNED,
         DEAD
     }

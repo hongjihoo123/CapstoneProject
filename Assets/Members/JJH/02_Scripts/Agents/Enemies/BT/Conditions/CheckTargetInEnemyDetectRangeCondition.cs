@@ -5,7 +5,7 @@ using UnityEngine;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Conditions
 {
     [Serializable, Unity.Properties.GeneratePropertyBag]
-    [Condition(name: "check Target in Enemy DetectRange", story: "check [Target] in [Enemy] DetectRange", category: "Conditions", id: "a3e1fd31e1f1e1462d0263b14d7aeb7b")]
+    [Condition(name: "Check Target in Enemy DetectRange", story: "Check [Target] in [Enemy] DetectRange", category: "Conditions", id: "a3e1fd31e1f1e1462d0263b14d7aeb7b")]
     public partial class CheckTargetInEnemyDetectRangeCondition : Condition
     {
         [SerializeReference] public BlackboardVariable<GameObject> Target;
