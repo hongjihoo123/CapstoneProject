@@ -5,6 +5,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT
     [BlackboardEnum]
     public enum EnemyState
     {
+        IDLE,
         CHASE,
         ATTACK,
         STUNNED,

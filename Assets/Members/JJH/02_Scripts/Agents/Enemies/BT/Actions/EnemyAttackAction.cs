@@ -7,11 +7,10 @@ using Action = Unity.Behavior.Action;
 namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 {
     [Serializable, GeneratePropertyBag]
-    [NodeDescription(name: "Enemy Attack", story: "[Enemy] Attack", category: "Action", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
+    [NodeDescription(name: "Enemy Attack", story: "[Enemy] Attack", category: "Action/Combat", id: "6af70a90fb7425aeb4805e1b7a3bfb46")]
     public partial class AttackAction : Action
     {
-        [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
-
+    [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
         [SerializeReference] public BlackboardVariable<bool> IsMove;
 
         private float _cooldownTimer = 0f;

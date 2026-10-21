@@ -15,7 +15,6 @@ namespace Members.JJH._02_Scripts.Systems.ModuleSystem
             InitializeModules();
             AfterInitializeModules();
         }
-        protected virtual void Start() { }
 
         protected virtual void InitializeModules()
         {
