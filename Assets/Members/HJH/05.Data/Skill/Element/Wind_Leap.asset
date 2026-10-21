@@ -1,0 +1,58 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4378bb54dc56ec842f6480fb9ceeb279, type: 3}
+  m_Name: Wind_Leap
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.DashSkill
+  cooldown: 7
+  charges: 1
+  duration: 0.45
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 06413ae447231a5458506ec4231e0b85, type: 3}
+  displayName: "도약"
+  description: "커서 위치로 뛰어올라 착지하며 주변 적을 살짝 밀어낸다."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 25
+    duration: 0
+  - kind: 5
+    value: 1.5
+    duration: 0
+  scaling: 0
+  hitStop: 0.08
+  shake: 0.35
+  castFx:
+    prefab: {fileID: 6628770054992934325, guid: ff9f9267e1fb4a440a4c7a8d8ecc907f, type: 3}
+    tint: 1
+  impactFx:
+    prefab: {fileID: 2396812295139480018, guid: b630cc046c8d2b042868288392904c64, type: 3}
+    tint: 1
+  impactStyle: 3
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: 10fe665d12d7d1d40aee38efe7f573ad, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  distance: 6
+  blink: 0
+  dashTime: 0.3
+  pathRadius: 0
+  landRadius: 2.5

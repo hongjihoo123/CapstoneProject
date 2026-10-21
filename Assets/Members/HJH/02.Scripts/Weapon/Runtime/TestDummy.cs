@@ -10,6 +10,12 @@ namespace RobotWeapons
         [SerializeField, Tooltip("Seconds until the dummy revives by itself. 0 = only by ResetDummy (T).")]
         private float respawnDelay = 3f;
 
+        [Header("CC 걸린 동안 색 (여러 개면 위에 있는 게 우선)")]
+        [SerializeField] private Color stunColor = new Color(1f, 0.85f, 0.1f);    // 기절: 노랑
+        [SerializeField] private Color rootColor = new Color(0.2f, 0.9f, 0.4f);   // 속박: 초록
+        [SerializeField] private Color knockbackColor = Color.white;              // 밀치기: 흰색
+        [SerializeField] private Color slowColor = new Color(0.3f, 0.6f, 1f);     // 둔화: 파랑
+
         public GameObject HitEffectPrefab => hitEffectPrefab;
 
         private float currentHP;
@@ -17,6 +23,7 @@ namespace RobotWeapons
         private Color originalColor;
         private float flashTimer;
         private float respawnTimer;
+        private CrowdControlReceiver cc;
 
         public bool IsAlive => currentHP > 0f;
 
@@ -25,6 +32,10 @@ namespace RobotWeapons
             currentHP = maxHP;
             rend = GetComponent<Renderer>();
             if (rend != null) originalColor = rend.material.color;
+
+            // 첫 CC 맞을 때 자동으로 붙긴 하지만, 테스트할 땐 처음부터 보이게 미리 붙여 둠
+            if (!TryGetComponent(out cc))
+                cc = gameObject.AddComponent<CrowdControlReceiver>();
         }
 
         public void Heal(float amount)
@@ -69,17 +80,30 @@ namespace RobotWeapons
                 return;
             }
 
-            if (flashTimer <= 0f) return;
+            // 맞은 빨간 깜빡임이 먼저, 끝나면 CC 색 (없으면 원래 색)
+            if (flashTimer > 0f)
+            {
+                flashTimer -= Time.deltaTime;
+                if (flashTimer > 0f) return;
+            }
 
-            flashTimer -= Time.deltaTime;
-            if (flashTimer <= 0f && rend != null)
-                rend.material.color = originalColor;
+            if (rend != null) rend.material.color = IdleColor();
+        }
+
+        private Color IdleColor()
+        {
+            if (cc == null) return originalColor;
+            if (cc.Has(CrowdControlType.Stun)) return stunColor;
+            if (cc.Has(CrowdControlType.Root)) return rootColor;
+            if (cc.Has(CrowdControlType.Knockback)) return knockbackColor;
+            if (cc.Has(CrowdControlType.Slow)) return slowColor;
+            return originalColor;
         }
 
         public void ResetDummy()
         {
             currentHP = maxHP;
-            if (rend != null) rend.material.color = originalColor;
+            if (rend != null) rend.material.color = IdleColor();
         }
     }
 }

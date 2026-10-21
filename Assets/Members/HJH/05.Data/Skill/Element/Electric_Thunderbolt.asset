@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185e328ef8d6cff3b442dc23b8da974d, type: 3}
+  m_Name: Electric_Thunderbolt
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.CircleSkill
+  cooldown: 5
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 3
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: f9442cd9f8b142a4ebb61e879d522880, type: 3}
+  displayName: "낙뢰"
+  description: "커서 위치에 번개가 빠르게 떨어진다."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 40
+    duration: 0
+  - kind: 4
+    value: 0
+    duration: 0.3
+  scaling: 1
+  hitStop: 0.08
+  shake: 0.35
+  castFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 8341635943236292181, guid: 752989b5a54aff84e822a850edd561b1, type: 3}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: 10fe665d12d7d1d40aee38efe7f573ad, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 4602855379771542814, guid: c78480bf915b08844a691aa02655d07a, type: 3}
+    tint: 0
+  aroundSelf: 0
+  range: 9
+  radius: 1.6
+  delay: 0.25
+  windupFx:
+    prefab: {fileID: 5205979673360283496, guid: 9e9a73713f2c5864cb1af81691303af2, type: 3}
+    tint: 0
