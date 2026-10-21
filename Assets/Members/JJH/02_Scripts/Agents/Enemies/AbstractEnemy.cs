@@ -47,7 +47,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             SetBTVariable(BTVars.Enemy, this);
 
             Health.InitHealth(EnemyData.Health);
-            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.AngularSpeed,
+            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed,
                                                                  EnemyData.Acceleration);
         }
 

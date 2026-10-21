@@ -13,6 +13,7 @@ namespace Members.JJH._02_Scripts.Agents
             base.Initialize(owner);
 
             Animator = GetComponent<Animator>();
+            Debug.Assert(Animator != null, $"{gameObject.name} : AgentRenderer에는 Animator 컴포넌트가 필요합니다.");
         }
 
         public void SetVisualPos(Vector3 fixedPos)
@@ -22,6 +23,12 @@ namespace Members.JJH._02_Scripts.Agents
 
         public void PlayClip(int clipHash, float normalizedTime, float crossFadeDuration, int layerIndex = 0)
         {
+            if (!Animator.HasState(layerIndex, clipHash))
+            {
+                Debug.LogWarning("현재 애니메이터가 없어 애니메이션 작동이 불가능합니다.");
+                return;
+            }
+
             if (crossFadeDuration <= 0f)
                 Animator.PlayInFixedTime(clipHash, layerIndex, normalizedTime);
             else

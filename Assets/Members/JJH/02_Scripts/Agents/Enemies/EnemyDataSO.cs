@@ -11,7 +11,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         [Header("NavMesh")]
         [field: SerializeField] public float Speed { get; private set; }
-        [field: SerializeField] public float AngularSpeed { get; private set; }
         [field: SerializeField] public float Acceleration { get; private set; }
 
         [Header("Combat")]
