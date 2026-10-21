@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
+using System.Collections.Generic;
+using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies
 {
@@ -18,5 +20,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         [field: SerializeField] public float DetectRange { get; private set; }
         [field: SerializeField] public float AttackRange { get; private set; }
         [field: SerializeField] public float AttackCooltime { get; private set; }
+        [field: SerializeField] public List<EnemySkillSO> EnemySkills { get; private set; }
     }
 }

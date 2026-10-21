@@ -2,6 +2,8 @@
 {
     public interface IEnemySkill
     {
+        bool IsUsing { get; }
+
         void Initialize(AbstractEnemy owner);
         void UseSkill();
     }

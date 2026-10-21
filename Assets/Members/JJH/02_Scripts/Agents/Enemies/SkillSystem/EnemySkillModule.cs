@@ -20,6 +20,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             _skillDict = GetComponentsInChildren<IEnemySkill>().ToDictionary(module => module.GetType());
         }
 
+        #region Skill Initialize
+
         public void AfterInitalize()
         {
             InitializeComponents();
@@ -42,23 +44,24 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             }
         }
 
+        #endregion
+
         public IEnemySkill GetSkill<T>() where T : IEnemySkill
         {
             _skillDict.TryGetValue(typeof(T), out IEnemySkill skill);
             return skill;
         }
 
-        public void UseSkill<T>() where T : IEnemySkill
+        public void UseSkill(Type skillType)
         {
-            if (_skillDict.TryGetValue(typeof(T), out IEnemySkill skill))
-            {
-                skill.UseSkill();
-                return;
-            }
+            IEnemySkill skill = _skillDict.Values.FirstOrDefault(skill => skill.GetType() == skillType);
 
-            IEnemySkill findSkill = _skillDict.Values.FirstOrDefault(skillType => skillType is T);
-            if (findSkill != null)
-                findSkill.UseSkill();
+            skill?.UseSkill();
+        }
+
+        public bool IsSkillUsing()
+        {
+            return _skillDict.Values.Any(skill => skill.IsUsing);
         }
     }
 }
