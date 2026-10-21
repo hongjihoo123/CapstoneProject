@@ -726,6 +726,43 @@ Transform:
   m_Children: []
   m_Father: {fileID: 976029476}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1892195948 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 6977966061365344412, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+  m_PrefabInstance: {fileID: 1816271127603219735}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &1892195954
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1892195948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cf07b06f334428e88f9240ec5592c79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.AttackAreaVisualizer
+  player: {fileID: 0}
+  groundOffset: 0.06
+  lineWidth: 0.08
+  guideLineWidth: 0.03
+  showHitAreas: 0
+--- !u!114 &1892195955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1892195948}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d33707b04a411bb1ed28486801e66360, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.CrowdControlReceiver
+  tier: 0
+  stunImmunity: 1
+  knockbackTime: 0.15
 --- !u!1001 &1816271127603219735
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -790,6 +827,12 @@ PrefabInstance:
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
     m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 6977966061365344412, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1892195955}
+    - targetCorrespondingSourceObject: {fileID: 6977966061365344412, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 1892195954}
     - targetCorrespondingSourceObject: {fileID: 5511463501763685207, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
       insertIndex: -1
       addedObject: {fileID: 1288944446}

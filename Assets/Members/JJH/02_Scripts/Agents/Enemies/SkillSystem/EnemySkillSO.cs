@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
-    [CreateAssetMenu(fileName = "Enemy Skill", menuName = "SO/Skill/Enemy Skill", order = 1)]
+    [CreateAssetMenu(fileName = "Enemy Skill", menuName = "SO/Enemy/Enemy Skill", order = 1)]
     public class EnemySkillSO : ScriptableObject
     {
         [SerializeField] private MonoScript skillScript;
