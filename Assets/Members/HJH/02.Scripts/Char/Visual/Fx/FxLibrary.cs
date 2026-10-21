@@ -51,11 +51,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private static FxLibrary _loaded;
         private static bool _searched;
+        private static FxLibrary _override;
+
+        // A scene can play a different library (FxLibraryOverride) without touching the one in Resources.
+        public static void SetOverride(FxLibrary library) => _override = library;
+
+        public static FxLibrary Override => _override;
 
         public static FxLibrary Loaded
         {
             get
             {
+                if (_override != null)
+                    return _override;
+
                 if (!_searched)
                 {
                     _searched = true;
@@ -73,6 +82,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             _loaded = null;
             _searched = false;
+            _override = null;
         }
     }
 }

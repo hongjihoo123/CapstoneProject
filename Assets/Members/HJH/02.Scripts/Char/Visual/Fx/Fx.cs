@@ -153,6 +153,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public static void Punch(Transform target, Vector3 direction, float strength) => PunchFx.Play(target, direction, strength);
 
+        // 라이브러리에 없는 프리팹 아무거나 (스킬마다 따로 정한 이펙트). 풀링은 똑같이 됨. 색 그대로 쓰려면 Color.white
+        public static void Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>
+            Play(prefab, position, rotation, scale, color);
+
+        public static FxHandle HoldPrefab(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>
+            Hold(prefab, position, rotation, scale, color);
+
+        // 붙잡아둔 이펙트를 대상 따라 seconds 동안 움직이다가 끔 (CC 걸린 적 머리 위 같은 거)
+        public static void FollowFor(FxHandle handle, Transform target, Vector3 offset, float seconds) =>
+            FxRunner.Instance.Add(new FollowFx(handle, target, offset, seconds));
+
         // Runs an action after a delay on scaled time (frozen during hit stop like the effects).
         public static void After(float delay, Action action) => FxRunner.Instance.Add(new DelayFx(delay, action));
 
@@ -174,6 +185,35 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private static Quaternion Facing(Vector3 direction) =>
             direction.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(direction) : Quaternion.identity;
+
+        private sealed class FollowFx : FxInstance
+        {
+            private readonly FxHandle _handle;
+            private readonly Transform _target;
+            private readonly Vector3 _offset;
+            private float _remaining;
+
+            public FollowFx(FxHandle handle, Transform target, Vector3 offset, float seconds)
+            {
+                _handle = handle;
+                _target = target;
+                _offset = offset;
+                _remaining = seconds;
+            }
+
+            public override bool Tick(float deltaTime)
+            {
+                _remaining -= deltaTime;
+                if (_target == null || !_target.gameObject.activeInHierarchy || _remaining <= 0f)
+                {
+                    _handle.Kill();
+                    return false;
+                }
+
+                _handle.MoveTo(_target.position + _offset);
+                return true;
+            }
+        }
 
         private sealed class DelayFx : FxInstance
         {

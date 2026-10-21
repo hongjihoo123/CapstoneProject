@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ffae363b0932b1531026d0f71ac73, type: 3}
+  m_Name: Water_BubblePrison
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ProjectileSkill
+  cooldown: 9
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 1
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: f4fa106de075c7b4089f4f9048841da4, type: 3}
+  displayName: "물방울 감옥"
+  description: "물방울을 날려 처음 맞은 적을 가둔다."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 10
+    duration: 0
+  - kind: 3
+    value: 0
+    duration: 1.5
+  scaling: 1
+  hitStop: 0.05
+  shake: 0.18
+  castFx:
+    prefab: {fileID: 7500293517542061902, guid: 9d3198536799bbd448aa8068e94753e4, type: 3}
+    tint: 1
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 1
+  hitFx:
+    prefab: {fileID: 5392717422280855860, guid: 2faa3fadd561cfb4788296f00ed132cb, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 4903573274240235035, guid: df627672e6ce9fc43b0a0c549b352b17, type: 3}
+    tint: 0
+  range: 9
+  speed: 14
+  radius: 0.4
+  count: 1
+  spread: 60
+  pierce: 0
+  explodeRadius: 0
+  travelFx:
+    prefab: {fileID: 1734521472082207558, guid: 6f16fb9e94f14d74788c04fe8e32e933, type: 3}
+    tint: 0
