@@ -6,7 +6,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
     public class EnemyDashSkill : AbstractEnemySkill, IEnemySkill
     {
-        [SerializeField] private float prepareTime = 1f;
         [SerializeField] private float dashDistance = 10f;
         [SerializeField] private float dashDuration = 0.2f;
 
@@ -27,9 +26,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                             AttackArea.Box(AttackAreaKind.EnemyWarning,
                                                      _enemy.transform.position + _enemy.transform.forward * (dashDistance * 0.5f),
                                                      _enemy.transform.rotation, new Vector3(2f, 0f, dashDistance),
-                                                     prepareTime));
+                                                     SkillSO.SkillPrepareTime));
 
-            yield return new WaitForSeconds(prepareTime);
+            yield return new WaitForSeconds(SkillSO.SkillPrepareTime);
 
             Vector3 startPosition = _enemy.transform.position;
             Vector3 direction = _enemy.transform.forward;
