@@ -213,7 +213,7 @@ namespace Members.KYR._01_Scripts
         {
             Health.ClearShield();
         }
-//test
+
         public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
         {
             ApplyScaledDamage(target, amount, 1f, null, 0f);
