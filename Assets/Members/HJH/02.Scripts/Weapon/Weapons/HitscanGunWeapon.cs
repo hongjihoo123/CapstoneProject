@@ -5,7 +5,7 @@ using UnityEngine;
 namespace RobotWeapons
 {
     public class HitscanGunWeapon : WeaponBase, IAttackSpeedScalable, IAmmoDisplay, IAttackFeedbackSource,
-        IEmpowerableShots, IShotHitSource, IShotVisualSource, IShotInterceptable, IMuzzleSource, IAnimationTimedShots
+        IEmpowerableShots, IShotHitSource, IShotVisualSource, IShotInterceptable, IMuzzleSource
     {
         private static readonly RaycastHit[] HitBuffer = new RaycastHit[32];
         private static readonly int WeakpointLayer = LayerMask.NameToLayer("Weakpoint");
@@ -19,15 +19,6 @@ namespace RobotWeapons
         private readonly List<ShotProjectile> inFlight = new();
         private IAimPointProvider aimSource;
 
-        // A shot that already spent its ammo and waits for the fire clip's Anim_Fire event.
-        private bool shotQueued;
-        private bool queuedEmpowered;
-        private float queuedTimer;
-
-        // A passive replaced the bullet and waits for its own clip's Anim_Fire: no new shots until then.
-        private bool interceptHeld;
-        private float interceptTimer;
-
         public float AttackSpeedMultiplier { get; set; } = 1f;
         public int EmpoweredShots { get; private set; }
         public override bool PrimaryIsHeld => true;
@@ -36,10 +27,6 @@ namespace RobotWeapons
         public event Action<ShotVisual> ShotFired;
         public event Action<ShotProjectile> ProjectileLaunched;
         public event Action ShotIntercepted;
-        public event Action ShotQueued;
-        public event Action FireFrame;
-
-        public bool WaitsForAnimation => data.fireOnAnimationEvent;
 
         public Func<Vector3, Vector3, bool> ShotInterceptor { get; set; }
 
@@ -52,7 +39,11 @@ namespace RobotWeapons
                     return Vector3.zero;
 
                 Transform origin = owner.AimOrigin;
-                return MuzzlePosition(origin, Facing(origin), muzzleIndex % MuzzleCount);
+                Vector3 facing = origin.forward;
+                facing.y = 0f;
+                facing = facing.sqrMagnitude > 0.0001f ? facing.normalized : Vector3.forward;
+                int muzzleCount = Mathf.Max(1, Mathf.Max(data.muzzleIds.Length, data.muzzleSideOffsets.Length));
+                return MuzzlePosition(origin, facing, muzzleIndex % muzzleCount);
             }
         }
 
@@ -76,14 +67,13 @@ namespace RobotWeapons
         public override void Tick(float dt)
         {
             fireCooldown -= dt;
-            TickQueuedShot(dt);
             TickReload(dt);
             TickProjectiles(dt);
         }
 
         public override void PrimaryAttack()
         {
-            if (owner == null || IsReloading || fireCooldown > 0f || interceptHeld)
+            if (owner == null || IsReloading || fireCooldown > 0f)
                 return;
 
             if (CurrentResource <= 0f)
@@ -95,115 +85,37 @@ namespace RobotWeapons
             fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier));
             CurrentResource -= 1f;
 
-            // A shot still waiting for its animation goes out before the next one is queued.
-            ReleaseShot();
-
             bool empowered = EmpoweredShots > 0;
             if (empowered)
                 EmpoweredShots--;
 
-            if (WaitsForAnimation)
-                QueueShot(empowered);
-            else
-                Fire(empowered, canIntercept: true);
+            Fire(empowered);
 
             // No reload key in the top-down build: an empty magazine reloads by itself.
             if (CurrentResource <= 0f)
                 Reload();
         }
 
-        // Called by the fire clip's Anim_Fire event (normal fire clip or the passive's clip).
-        public void OnFireFrame()
-        {
-            interceptHeld = false;
-            FireFrame?.Invoke();
-            ReleaseShot();
-        }
-
-        // Sends out the queued bullet: on the fire frame, or as a fallback on timeout / the next trigger pull.
-        private void ReleaseShot()
-        {
-            if (!shotQueued)
-                return;
-
-            shotQueued = false;
-            if (owner != null)
-                Fire(queuedEmpowered, canIntercept: false);
-        }
-
-        private void QueueShot(bool empowered)
-        {
-            // The passive decides right at the trigger, so its own clip (PassiveShot) plays instead of the normal fire clip.
-            Aim(muzzleIndex % MuzzleCount, out Vector3 start, out Vector3 direction);
-            if (TryIntercept(start, direction))
-            {
-                muzzleIndex = (muzzleIndex + 1) % MuzzleCount;
-                interceptHeld = true;
-                interceptTimer = Mathf.Max(0f, data.interceptedShotTimeout);
-                return;
-            }
-
-            shotQueued = true;
-            queuedEmpowered = empowered;
-            queuedTimer = Mathf.Max(0f, data.animationEventTimeout);
-            ShotQueued?.Invoke();
-        }
-
-        private void TickQueuedShot(float dt)
-        {
-            // The passive's clip never reached Anim_Fire (interrupted, missing event): send the frame ourselves.
-            if (interceptHeld)
-            {
-                interceptTimer -= dt;
-                if (interceptTimer <= 0f)
-                    OnFireFrame();
-            }
-
-            if (!shotQueued)
-                return;
-
-            queuedTimer -= dt;
-            if (queuedTimer <= 0f)
-                ReleaseShot();
-        }
-
-        private bool TryIntercept(Vector3 start, Vector3 direction)
-        {
-            // A passive can replace this shot with its own (e.g. the gunner's charged piercing shot).
-            if (ShotInterceptor == null || !ShotInterceptor(start, direction))
-                return false;
-
-            ShotIntercepted?.Invoke();
-            return true;
-        }
-
-        private int MuzzleCount => Mathf.Max(1, Mathf.Max(data.muzzleIds.Length, data.muzzleSideOffsets.Length));
-
-        private static Vector3 Facing(Transform origin)
-        {
-            Vector3 facing = origin.forward;
-            facing.y = 0f;
-            return facing.sqrMagnitude > 0.0001f ? facing.normalized : Vector3.forward;
-        }
-
-        // Muzzle position and flat aim direction for the given muzzle, read from the model right now.
-        private void Aim(int muzzle, out Vector3 start, out Vector3 direction)
+        private void Fire(bool empowered)
         {
             Transform origin = owner.AimOrigin;
-            Vector3 facing = Facing(origin);
-            start = MuzzlePosition(origin, facing, muzzle);
-            direction = AimDirection(start, facing);
-        }
+            Vector3 facing = origin.forward;
+            facing.y = 0f;
+            facing = facing.sqrMagnitude > 0.0001f ? facing.normalized : Vector3.forward;
 
-        // canIntercept is false for a queued shot: the passive already had its say when the trigger was pulled.
-        private void Fire(bool empowered, bool canIntercept)
-        {
-            int muzzle = muzzleIndex % MuzzleCount;
-            muzzleIndex = (muzzleIndex + 1) % MuzzleCount;
+            int muzzleCount = Mathf.Max(1, Mathf.Max(data.muzzleIds.Length, data.muzzleSideOffsets.Length));
+            int muzzle = muzzleIndex % muzzleCount;
+            muzzleIndex = (muzzleIndex + 1) % muzzleCount;
 
-            Aim(muzzle, out Vector3 start, out Vector3 direction);
-            if (canIntercept && TryIntercept(start, direction))
+            Vector3 start = MuzzlePosition(origin, facing, muzzle);
+            Vector3 direction = AimDirection(start, facing);
+
+            // A passive can replace this shot with its own (e.g. the gunner's charged piercing shot).
+            if (ShotInterceptor != null && ShotInterceptor(start, direction))
+            {
+                ShotIntercepted?.Invoke();
                 return;
+            }
 
             Color color = empowered ? data.empoweredFxColor : data.fxColor;
 
@@ -333,8 +245,6 @@ namespace RobotWeapons
 
         public override void Unequip()
         {
-            shotQueued = false;
-            interceptHeld = false;
             foreach (ShotProjectile projectile in inFlight)
                 projectile.Alive = false;
             inFlight.Clear();

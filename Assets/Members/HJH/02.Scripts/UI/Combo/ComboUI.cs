@@ -128,8 +128,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.ComboLanded += OnComboLanded;
             _hud.ComboBroken += OnComboBroken;
             _hud.FinisherReleased += OnFinisher;
-            _hud.FinisherArmed += OnFinisherArmed;
-            _hud.FinisherExpired += OnFinisherExpired;
             _hud.LoadoutChanged += Redraw;   // 스킬 바꾸거나 캐릭터 바꾸면 칸에 적힌 키도 바뀌어야 해서
             Redraw();
         }
@@ -144,8 +142,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.ComboLanded -= OnComboLanded;
             _hud.ComboBroken -= OnComboBroken;
             _hud.FinisherReleased -= OnFinisher;
-            _hud.FinisherArmed -= OnFinisherArmed;
-            _hud.FinisherExpired -= OnFinisherExpired;
             _hud.LoadoutChanged -= Redraw;
         }
 
@@ -169,19 +165,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 int stock = _hud.ComboStock.Count;
                 bool full = stock >= _hud.MaxComboStock;
-                // 준비 중이면 "다음 스킬 ×1.6  3.2초", 아니면 C 누르면 몇 배인지 (꽉 차면 MAX)
-                if (_hud.FinisherReady)
-                {
-                    readyLabel.enabled = true;
-                    readyLabel.text = $"다음 스킬 ×{_hud.FinisherScale:0.0#}  {_hud.FinisherTimeLeft:0.0}초";
-                    readyLabel.alpha = 0.6f + 0.4f * Pulse(12f);
-                }
-                else
-                {
-                    readyLabel.enabled = stock > 0;
-                    readyLabel.text = $"{(full ? "MAX" : "READY")} ×{_hud.FinisherScaleFor(stock):0.0#}";
-                    readyLabel.alpha = 0.45f + 0.55f * Pulse(full ? 10f : 4f);
-                }
+                readyLabel.enabled = stock > 0;
+                readyLabel.text = full ? "MAX" : "READY";
+                readyLabel.alpha = 0.45f + 0.55f * Pulse(full ? 10f : 4f);
             }
         }
 
@@ -310,7 +296,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
 
             if (finisherKey != null)
-                finisherKey.text = $"[{_hud.FinisherKey}] 피니시";
+                finisherKey.text = $"[{_hud.FinisherKey}] FINISH";
         }
 
         // ------------------------------------------------------------ 이벤트 (입력, 완성, 끊김, 피니시)
@@ -352,19 +338,17 @@ namespace Assets.Members.HJH._02.Scripts.UI
             FlashListRow(combo);
         }
 
-        // 강화된 스킬이 나감: 배율 + 같이 터진 피니시 스킬 이름
-        private void OnFinisher(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        private void OnFinisher(IReadOnlyList<ElementComboBook.Recipe> combos)
         {
             var names = new StringBuilder();
-            foreach (FinisherBook.Entry finisher in fired)
+            foreach (ElementComboBook.Recipe combo in combos)
             {
                 if (names.Length > 0)
                     names.Append("  +  ");
-                names.Append(finisher.name);
+                names.Append(combo.Name);
             }
 
-            ShowBanner($"FINISH  ×{scale:0.0#}", "피니시", names.Length > 0 ? names.ToString() : "피해 강화", finisherBarColor);
-            Bounce(IconOf(slot), 0.4f);
+            ShowBanner($"FINISH  x{combos.Count}", "피니시", names.ToString(), finisherBarColor);
 
             if (screenFlash != null)
             {
@@ -374,18 +358,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 screenFlash.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() => screenFlash.enabled = false);
             }
         }
-
-        // C 눌러서 준비됨
-        private void OnFinisherArmed(int stacks, float scale)
-        {
-            int count = _hud.ArmedFinishers.Count;
-            string detail = count > 0 ? $"다음 스킬 ×{scale:0.0#}  +  피니시 스킬 {count}개" : $"다음 스킬 ×{scale:0.0#}";
-            ShowBanner("READY", "피니시 준비", detail, finisherBarColor);
-            foreach (SkillSlotId slot in new[] { SkillSlotId.Basic1, SkillSlotId.Basic2, SkillSlotId.Weapon, SkillSlotId.Ultimate })
-                Bounce(IconOf(slot), 0.2f);
-        }
-
-        private void OnFinisherExpired() => ShowBanner("MISS", "피니시 시간 끝", string.Empty, comboBarColor);
 
         // 시간 다 돼서 콤보 끊기면 칸들이 스르륵 사라졌다가 빈 칸으로 돌아옴
         private void OnComboBroken()

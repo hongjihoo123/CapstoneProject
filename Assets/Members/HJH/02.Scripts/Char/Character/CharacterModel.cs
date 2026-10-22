@@ -55,10 +55,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
             if (character.AnimatorController != null)
                 Animator.runtimeAnimatorController = character.AnimatorController;
 
-            // 애니 이벤트(Anim_Fire 등)는 Animator 오브젝트로 오니까 거기서 플레이어로 넘겨주는 애 붙임
-            if (!Animator.TryGetComponent(out PlayerAnimationEventRelay _))
-                Animator.gameObject.AddComponent<PlayerAnimationEventRelay>();
-
             AttachAimOrigin();
         }
 

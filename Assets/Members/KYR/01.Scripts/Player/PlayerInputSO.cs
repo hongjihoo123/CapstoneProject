@@ -126,7 +126,6 @@ namespace Members.KYR._01_Scripts
             // Weapon aim loses right click, jump loses Space, and manual reload is removed (dash reloads instantly).
             DisableBinding(_aim, "<Mouse>/rightButton");
             DisableBinding(map.FindAction("Jump"), "<Keyboard>/space");
-            DisableBinding(map.FindAction("Crouch"), "<Keyboard>/c");   // C = 피니시 (ElementComboChain)
             _reload = null;
         }
 

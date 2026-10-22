@@ -191,21 +191,13 @@ namespace Members.KYR._01_Scripts
 
         public override void TakeDamage(float amount, GameObject source)
         {
-            amount *= IncomingDamageScale;
             Health.TakeDamage(amount);
-            DamageTaken?.Invoke(amount, source);
         }
 
         public void TakeDamage(float amount, GameObject source, ElementType element)
         {
-            amount *= IncomingDamageScale;
             Health.TakeDamage(amount, element);
-            DamageTaken?.Invoke(amount, source);
         }
-
-        // (HJH) 받는 피해 배율 (스킬 버프/디버프용, 1 = 그대로). 나를 때린 쪽 알림 (source 는 null 일 수 있음)
-        public float IncomingDamageScale { get; set; } = 1f;
-        public event System.Action<float, GameObject> DamageTaken;
 
         public void Heal(float amount)
         {

@@ -30,14 +30,6 @@ namespace RobotWeapons
         public Color fxColor = new Color(1f, 0.8f, 0.35f);
         public Color empoweredFxColor = new Color(0.3f, 1f, 0.85f);
 
-        [Header("Animation Sync")]
-        [Tooltip("On: the bullet leaves on the fire clip's Anim_Fire event instead of the moment the trigger is pulled.")]
-        public bool fireOnAnimationEvent;
-        [Tooltip("If Anim_Fire hasn't arrived after this many seconds, fire anyway (no model, skill clip playing, missing event).")]
-        public float animationEventTimeout = 0.2f;
-        [Tooltip("A passive replaced the bullet (its own clip plays): the gun holds the trigger until that clip's Anim_Fire, at most this long.")]
-        public float interceptedShotTimeout = 0.6f;
-
         [Header("Projectile")]
         [Tooltip("> 0: shots are real projectiles that travel at this speed and deal damage on contact. 0 = instant hit.")]
         public float projectileSpeed;

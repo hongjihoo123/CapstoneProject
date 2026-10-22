@@ -113,7 +113,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         // 터지는 자리: 스킬이 정한 프리팹 + 기본 이펙트
         public void PlayImpact(Vector3 ground, float radius)
         {
-            Play(Skill.ImpactFx, ground, Vector3.forward, radius / AuthoredRadius);
+            Play(Skill.ImpactFx, ground, Vector3.forward);
 
             switch (Skill.Style)
             {
@@ -133,18 +133,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             }
         }
 
-        // scale: 범위 있는 이펙트(폭발, 장판, 벽)는 프리팹을 반지름 2m 기준으로 만들어서 범위에 맞춰 키움
-        public const float AuthoredRadius = 2f;
-
-        public void Play(FxSlot slot, Vector3 position, Vector3 direction, float scale = 1f)
+        public void Play(FxSlot slot, Vector3 position, Vector3 direction)
         {
             if (slot != null && slot.IsSet)
-                Fx.Spawn(slot.prefab, position, Facing(direction), scale, TintOf(slot));
+                Fx.Spawn(slot.prefab, position, Facing(direction), 1f, TintOf(slot));
         }
 
         // 붙잡아두는 이펙트 (예고, 버프 오라). 다 쓰면 Kill() 해줘야 함
-        public FxHandle Hold(FxSlot slot, Vector3 position, Vector3 direction, float scale = 1f) =>
-            slot != null && slot.IsSet ? Fx.HoldPrefab(slot.prefab, position, Facing(direction), scale, TintOf(slot)) : null;
+        public FxHandle Hold(FxSlot slot, Vector3 position, Vector3 direction) =>
+            slot != null && slot.IsSet ? Fx.HoldPrefab(slot.prefab, position, Facing(direction), 1f, TintOf(slot)) : null;
 
         public Color TintOf(FxSlot slot) => slot.tint ? Color : Color.white;
 

@@ -13,7 +13,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         {
             public float range;
             public float width;
-            [Tooltip("쏘기 전 충전 시간. 애니 이벤트로 쏘는 총이면 충전 이펙트 차오르는 시간으로만 씀")] public float windup;
+            [Tooltip("쏘기 전 충전 시간")] public float windup;
             public float damage;
             [Tooltip("맞은 적 밀어내는 거리")] public float knockback;
             [Tooltip("쏘는 사람 반동 거리")] public float recoil;
@@ -32,13 +32,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         private float _elapsed;
         private FxHandle _charge;
         private FxHandle _aimLine;
-        private IAnimationTimedShots _fireFrameSource;
-        private bool _fireFrameReached;
 
         // muzzle: 총이 알려주는 "지금 총구 위치" (있으면 충전 이펙트가 총구에 딱 붙어서 따라감)
-        // fireFrameSource: 애니 이벤트로 쏘는 총이면 넘김 -> 충전하다가 PassiveShot 클립의 Anim_Fire 프레임에 발사
         public ChargedPiercingShot(ISkillContext context, Vector3 muzzle, Vector3 direction, Settings settings,
-            System.Func<Vector3> liveMuzzle = null, IAnimationTimedShots fireFrameSource = null)
+            System.Func<Vector3> liveMuzzle = null)
         {
             _context = context;
             _s = settings;
@@ -47,23 +44,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             _direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : context.AimDirection;
             // 총구 위치를 못 받으면, 충전하는 동안 움직여도 따라가게 플레이어 기준 위치로 기억
             _muzzleOffset = muzzle - context.Transform.position;
-
-            if (fireFrameSource is { WaitsForAnimation: true })
-            {
-                _fireFrameSource = fireFrameSource;
-                _fireFrameSource.FireFrame += OnFireFrame;
-            }
         }
-
-        // 애니 이벤트 안 와도 총이 알아서 시간 초과로 FireFrame 보내줌. 이건 총이 사라졌을 때 대비용
-        private const float SafetyTimeout = 2f;
-
-        // 애니 이벤트로 쏘면: 총이 FireFrame 보낼 때 / 아니면: 충전 시간 끝
-        private bool ReadyToFire => _fireFrameSource != null
-            ? _fireFrameReached || _elapsed >= SafetyTimeout
-            : _elapsed >= _s.windup;
-
-        private void OnFireFrame() => _fireFrameReached = true;
 
         public bool Tick(float deltaTime)
         {
@@ -71,22 +52,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             Vector3 start = _muzzle != null ? _muzzle() : _context.Transform.position + _muzzleOffset;
             Vector3 end = start + _direction * _s.range;
 
-            if (!ReadyToFire)
+            if (_elapsed < _s.windup)
             {
                 // 충전: 총구에 에너지 모이고 조준선 보임
-                float charge = Mathf.Clamp01(_elapsed / Mathf.Max(0.0001f, _s.windup));
                 _charge ??= Fx.Charge(start, _s.color);
                 _aimLine ??= Fx.AimLine(start, end, _s.color, 0.04f);
                 _charge.MoveTo(start);
-                _charge.SetValue(charge);
+                _charge.SetValue(_elapsed / _s.windup);
                 _aimLine.SetPoints(start, end);
-                _context.PlayShake(_s.chargeRumble * charge, 0.06f);
+                _context.PlayShake(_s.chargeRumble * (_elapsed / _s.windup), 0.06f);
                 return true;
             }
-
-            if (_fireFrameSource != null)
-                _fireFrameSource.FireFrame -= OnFireFrame;
-            _fireFrameSource = null;
 
             StopCharge();
             Fire(start, end);

@@ -73,9 +73,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _player = GetComponent<PlayerAgent>();
             _model = GetComponent<CharacterModel>();
             _controller = GetComponent<CharacterController>();
-            // 애니 이벤트로 쏘는 총은 방아쇠 당길 때(ShotQueued) 클립 틀고, 총알은 클립의 Anim_Fire 프레임에 나감
-            _weapon.ShotQueued += () => _attackRequested = true;
-            _weapon.ShotFired += _ => _attackRequested |= !_weapon.WaitsForAnimation;
+            _weapon.ShotFired += _ => _attackRequested = true;
             _weapon.Swung += _ => _attackRequested = true;
         }
 

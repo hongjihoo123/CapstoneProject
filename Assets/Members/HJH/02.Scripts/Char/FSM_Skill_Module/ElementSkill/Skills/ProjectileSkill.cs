@@ -19,7 +19,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("뚫고 지나감")] private bool pierce;
         [SerializeField, Tooltip("0 = 맞은 적만, 아니면 맞은 자리에서 이 범위로 터짐")] private float explodeRadius;
         [SerializeField, Tooltip("날아가는 이펙트. 비우면 원소 색 구슬")] private FxSlot travelFx = new();
-        [SerializeField, Tooltip("켜면 밀치기가 날아가는 방향 말고 옆으로 (회오리)")] private bool pushSideways;
 
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
@@ -57,7 +56,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             // 적한테 닿았을 때 (터지는 스킬이면 여기선 안 때리고 끝날 때 한 번에)
             void OnHit(RobotWeapons.IDamageable target, Vector3 point)
             {
-                if (explodeRadius <= 0f && cast.Hit(target, PushOf(target, point, direction)))
+                if (explodeRadius <= 0f && cast.Hit(target, direction))
                     cast.Feel(1);
             }
 
@@ -69,16 +68,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 else
                     Fx.ProjectileImpact(point, direction, cast.Color, Mathf.Max(0.5f, radius * 1.5f), false);
             }
-        }
-
-        // 옆으로 밀 때: 투사체 진행 방향 기준 적이 있는 쪽으로 (가운데면 오른쪽)
-        private Vector3 PushOf(RobotWeapons.IDamageable target, Vector3 point, Vector3 direction)
-        {
-            if (!pushSideways)
-                return direction;
-            Vector3 side = Vector3.Cross(Vector3.up, direction).normalized;
-            Vector3 offset = ElementSkillCast.PositionOf(target, point) - point;
-            return Vector3.Dot(offset, side) < 0f ? -side : side;
         }
 
         public override void DescribePreview(ISkillContext context, ISkillPreview preview)

@@ -18,22 +18,6 @@ namespace RobotWeapons
 
         private static readonly RaycastHit[] HitBuffer = new RaycastHit[16];
 
-        // 지금 날아가는 투사체들 (스킬 장막이 막을 때 씀)
-        private static readonly System.Collections.Generic.List<Projectile> ActiveList = new();
-        public static System.Collections.Generic.IReadOnlyList<Projectile> Active => ActiveList;
-        public IWeaponOwner Shooter => shooter;
-
-        private void OnEnable() => ActiveList.Add(this);
-        private void OnDisable() => ActiveList.Remove(this);
-
-        // 막힘: 데미지 없이 그 자리에서 사라짐
-        public void Block()
-        {
-            if (_destroyed) return;
-            _destroyed = true;
-            Destroy(gameObject);
-        }
-
         private void Awake()
         {
             GetComponent<Collider>().isTrigger = true;

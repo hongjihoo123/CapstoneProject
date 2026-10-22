@@ -61,7 +61,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Tooltip("Play를 끄거나 스킬을 바꿀 때, 바뀐 파티클을 원래 프리팹에 자동 저장")]
         private bool saveOnStop = true;
 
-        private static readonly string[] SlotNames = { "castFx", "auraFx", "selfFx", "windupFx", "travelFx", "streamFx", "zoneFx", "barrierFx", "blockFx", "impactFx", "hitFx", "statusFx" };
+        private static readonly string[] SlotNames = { "castFx", "auraFx", "selfFx", "windupFx", "travelFx", "impactFx", "hitFx", "statusFx" };
         private const BindingFlags AnyField = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
 
         private readonly List<Part> _parts = new();
