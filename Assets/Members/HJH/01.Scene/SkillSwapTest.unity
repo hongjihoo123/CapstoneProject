@@ -14,10 +14,10 @@ OcclusionCullingSettings:
 RenderSettings:
   m_ObjectHideFlags: 0
   serializedVersion: 10
-  m_Fog: 0
+  m_Fog: 1
   m_FogColor: {r: 0.5, g: 0.5, b: 0.5, a: 1}
   m_FogMode: 3
-  m_FogDensity: 0.01
+  m_FogDensity: 0
   m_LinearFogStart: 0
   m_LinearFogEnd: 300
   m_AmbientSkyColor: {r: 0.212, g: 0.227, b: 0.259, a: 1}
@@ -27,7 +27,7 @@ RenderSettings:
   m_AmbientMode: 0
   m_SubtractiveShadowColor: {r: 0.42, g: 0.478, b: 0.627, a: 1}
   m_SkyboxMaterial: {fileID: 10304, guid: 0000000000000000f000000000000000, type: 0}
-  m_HaloStrength: 0.5
+  m_HaloStrength: 0.509
   m_FlareStrength: 1
   m_FlareFadeSpeed: 3
   m_HaloTexture: {fileID: 0}
@@ -2297,7 +2297,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0cf07b06f334428e88f9240ec5592c79, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.AttackAreaVisualizer
-  player: {fileID: 10037}
+  owner: {fileID: 0}
+  listenToBus: 1
   groundOffset: 0.06
   lineWidth: 0.08
   guideLineWidth: 0.03
@@ -2633,7 +2634,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -777106112, guid: 91fb74edae78c0e4eace85983ce727ed, type: 3}
+  m_Sprite: {fileID: -215041836, guid: 8ff6a16122a24514e8427f016f66c508, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -18368,7 +18369,6 @@ MonoBehaviour:
   - "\uC804\uAE30"
   - "\uB545"
   clearDelay: 0.35
-  clearScale: 1.1
   bounceScale: 0.25
 --- !u!4 &868167987
 Transform:
@@ -23930,7 +23930,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -777106112, guid: 91fb74edae78c0e4eace85983ce727ed, type: 3}
+  m_Sprite: {fileID: -215041836, guid: 8ff6a16122a24514e8427f016f66c508, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
@@ -25086,13 +25086,13 @@ MonoBehaviour:
   listTitle: {fileID: 244919224}
   listClosedTab: {fileID: 969807373}
   elementSprites:
-  - {fileID: -885724228, guid: 97336109c65f8eb4eb7b06ef790c04dc, type: 3}
-  - {fileID: 500486179, guid: a489b19d98a278644a3c1496c25ff3a4, type: 3}
-  - {fileID: -959364510, guid: dd52e141feb49bf489b501926733114f, type: 3}
-  - {fileID: -361269422, guid: e13a6e05b3f3eb04586c75fa724c8625, type: 3}
-  - {fileID: 2007406162, guid: 72cec25b215827c408d2145b38f4773c, type: 3}
+  - {fileID: 560494377, guid: 0c06e78518f06ba4e8e89bcbf1efacc7, type: 3}
+  - {fileID: -1649354416, guid: 0c06e78518f06ba4e8e89bcbf1efacc7, type: 3}
+  - {fileID: -212393758, guid: 0c06e78518f06ba4e8e89bcbf1efacc7, type: 3}
+  - {fileID: -1215031448, guid: 0c06e78518f06ba4e8e89bcbf1efacc7, type: 3}
+  - {fileID: 1330781119, guid: 0c06e78518f06ba4e8e89bcbf1efacc7, type: 3}
   finisherStackSprites:
-  - {fileID: -777106112, guid: 91fb74edae78c0e4eace85983ce727ed, type: 3}
+  - {fileID: -215041836, guid: 8ff6a16122a24514e8427f016f66c508, type: 3}
   - {fileID: -556009296, guid: 8ff6a16122a24514e8427f016f66c508, type: 3}
   emptyColor: {r: 1, g: 1, b: 1, a: 0.15}
   gold: {r: 1, g: 0.83, b: 0.3, a: 1}
@@ -25106,7 +25106,6 @@ MonoBehaviour:
   - "\uC804\uAE30"
   - "\uB545"
   clearDelay: 0.35
-  clearScale: 1.1
   bounceScale: 0.25
 --- !u!1 &1271410570
 GameObject:
@@ -34302,7 +34301,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: -777106112, guid: 91fb74edae78c0e4eace85983ce727ed, type: 3}
+  m_Sprite: {fileID: -215041836, guid: 8ff6a16122a24514e8427f016f66c508, type: 3}
   m_Type: 0
   m_PreserveAspect: 0
   m_FillCenter: 1
