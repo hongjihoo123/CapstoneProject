@@ -1,3 +1,4 @@
+using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
 using System;
 using Unity.Behavior;
@@ -19,6 +20,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         private ISensor _sensor;
         private INavMesh _navMeshAgent;
+        private IEnemySkillModule _skillModule;
 
         private Vector3 _targetPos;
         private Vector3 _lastTargetPos;
@@ -26,11 +28,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.Sensor == null ||
-                Enemy.Value.EnemyNavMeshAgent == null || Target.Value == null)
+                Enemy.Value.NavMeshAgent == null || Target.Value == null)
                 return Status.Failure;
 
-            _navMeshAgent = Enemy.Value.EnemyNavMeshAgent;
             _sensor = Enemy.Value.Sensor;
+            _navMeshAgent = Enemy.Value.NavMeshAgent;
+            _skillModule = Enemy.Value.SkillModule;
 
             _targetPos = Target.Value.transform.position;
             _lastTargetPos = _targetPos;
@@ -56,25 +59,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             direction.y = 0f;
 
             float distanceToTarget = direction.magnitude;
-            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange - 0.2f)
+            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange && Enemy.Value.EnemyData.CanNormalAttack ||
+                    _skillModule.HasAvailableSkill(distanceToTarget))
             {
                 _navMeshAgent.KeepChase(false);
 
-                if (direction.sqrMagnitude > 0.001f)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-                    Enemy.Value.transform.rotation =
-                        Quaternion.RotateTowards(Enemy.Value.transform.rotation, targetRotation,
-                                                           Enemy.Value.EnemyNavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
-                }
-
-                float angle = Vector3.Angle(Enemy.Value.transform.forward, direction);
-
-                if (angle <= 1f)
-                    return Status.Success;
-
-                return Status.Running;
+                bool aligned = _navMeshAgent.RotateToTarget(_targetPos, 1f);
+                return aligned ? Status.Success : Status.Running;
             }
 
             _navMeshAgent.KeepChase(true);
@@ -85,11 +76,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             }
 
             return Status.Running;
-        }
-
-        protected override void OnEnd()
-        {
-            _navMeshAgent.StopImmediately();
         }
     }
 }

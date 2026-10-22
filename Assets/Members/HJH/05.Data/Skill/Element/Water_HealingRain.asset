@@ -1,0 +1,60 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75bde45f9b16028ff9acf091ef3f840a, type: 3}
+  m_Name: Water_HealingRain
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ZoneSkill
+  cooldown: 14
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 1
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: b0db9f1623c33d5478b823843165e92e, type: 3}
+  displayName: "\uCE58\uC720\uC758 \uBE44"
+  description: "\uBE44\uAD6C\uB984\uC744 \uB9CC\uB4E0\uB2E4. \uC548\uC5D0 \uC788\uC73C\uBA74
+    1\uCD08\uB9C8\uB2E4 \uCCB4\uB825 \uD68C\uBCF5."
+  fxColor: {r: 0, g: 1, b: 0.9818692, a: 1}
+  onHit: []
+  scaling: 1
+  hitStop: 0
+  shake: 0.06
+  castFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 1232725052853271915, guid: 50dab357281e550f123e2fbbf5163d93, type: 3}
+    tint: 1
+  impactStyle: 3
+  hitFx:
+    prefab: {fileID: 0}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  aroundSelf: 0
+  range: 6
+  radius: 3
+  duration: 4
+  interval: 1
+  onSelf:
+  - kind: 0
+    value: 6
+    duration: 0
+  selfFx:
+    prefab: {fileID: 5871354938284254831, guid: bb4869342ce612680c0d8c539728887a, type: 3}
+    tint: 1

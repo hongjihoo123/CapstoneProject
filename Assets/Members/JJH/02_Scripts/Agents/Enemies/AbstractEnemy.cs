@@ -1,77 +1,84 @@
 using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
+using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
-using Members.JJH._02_Scripts.Systems.AnimatorSystem;
-using RobotWeapons;
+using System.Collections.Generic;
 using Unity.Behavior;
+using Unity.Behavior.GraphFramework;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies
 {
-    public abstract class AbstractEnemy : Agent, IWeaponOwner
+    public abstract class AbstractEnemy : Agent
     {
         [Header("Enemy Data")]
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
-        [SerializeField] private AnimParamSO moveSpeedParam;
 
-        [Header("Gun Data")]
-        [SerializeField] private Transform aimOrigin;
-        [SerializeField] private Transform muzzleOrigin;
-        [SerializeField] private WeaponData equippedWeaponData;
-        [SerializeField] private WeaponHitbox weaponHitbox;
+        [SerializeField] private BTBlackboardTableSO btTableSO;
 
-        public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
-        public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
-
-        public IWeapon Weapon { get; private set; }
-        public INavMesh EnemyNavMeshAgent { get; private set; }
+        public IEnemySkillModule SkillModule { get; private set; }
+        public INavMesh NavMeshAgent { get; private set; }
 
         protected BehaviorGraphAgent BehaviorAgent { get; private set; }
 
-        private BlackboardVariable<StateChannel> _stateEvent;
-        private bool isDead = false;
+        private IReadOnlyDictionary<string, SerializableGUID> _guids;
+        private BlackboardVariable<StateChannel> _stateChannel;
 
         protected override void InitializeModules()
         {
             base.InitializeModules();
 
-            EnemyNavMeshAgent = GetModule<INavMesh>();
-            Debug.Assert(EnemyNavMeshAgent != null, $"{gameObject.name}에는 INavMesh모듈이 필요합니다.");
+            SkillModule = GetModule<IEnemySkillModule>();
+            Debug.Assert(SkillModule != null, $"{gameObject.name}에는 IEnemySkillModule모듈이 필요합니다.");
+            NavMeshAgent = GetModule<INavMesh>();
+            Debug.Assert(NavMeshAgent != null, $"{gameObject.name}에는 INavMesh모듈이 필요합니다.");
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
             Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
-
-            Renderer.SetFloat(moveSpeedParam.HashValue, EnemyData.Speed);
-            Health.InitHealth(EnemyData.Health);
-            EnemyNavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.AngularSpeed,
-                                                                            EnemyData.Acceleration);
-
-            BehaviorAgent.SetVariableValue("Enemy", this);
-            BehaviorAgent.GetVariable("StateChannel", out _stateEvent);
-
-            if (equippedWeaponData != null)
-            {
-                Weapon = WeaponFactory.Create(equippedWeaponData);
-                Weapon.Equip(this);
-                weaponHitbox?.Init(Weapon);
-            }
         }
 
-        private void Update()
+        private void Start()
         {
-            if (IsAlive == false && isDead == false)
+            if (btTableSO != null)
             {
-                _stateEvent.Value.SendEventMessage(EnemyState.DEAD);
-                isDead = true;
+                _guids = btTableSO.Map;
             }
+
+            GetBTVariable(BTVars.StateChannel, out _stateChannel);
+            SetBTVariable(BTVars.Enemy, this);
+
+            Health.InitHealth(EnemyData.Health);
+            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed,
+                                                                 EnemyData.Acceleration);
         }
 
-        public virtual void Attack() { }
-        public virtual void Protect() { }
+        public void HandleOnDead()
+        {
+            _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
+        }
 
-        public void ApplyDamageTo(IDamageable target, float amount, bool isWeakpoint = false)
-            => target?.TakeDamage(amount, gameObject);
+        public virtual void NormalAttack() { }
 
-        public void SetWeaponHitboxActive(bool active)
-            => weaponHitbox?.SetActive(active);
+        #region BT Helper
+
+        protected bool SetBTVariable<T>(string varName, T value)
+        {
+            if (_guids != null && _guids.TryGetValue(varName, out var guid))
+                return BehaviorAgent.SetVariableValue(guid, value);
+
+            Debug.LogError($"BT변수 미해결 : {varName}");
+            return false;
+        }
+
+        protected bool GetBTVariable<T>(string varName, out BlackboardVariable<T> variable)
+        {
+            if (_guids != null && _guids.TryGetValue(varName, out var guid))
+                return BehaviorAgent.GetVariable(guid, out variable);
+
+            Debug.LogError($"BT변수 미해결 : {varName}");
+            variable = null;
+            return false;
+        }
+
+        #endregion
     }
 }

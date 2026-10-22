@@ -1,5 +1,4 @@
-﻿using Members.JJH._02_Scripts.Agents.Enemies;
-using Members.JJH._02_Scripts.Systems.ModuleSystem;
+﻿using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -14,17 +13,12 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             base.Initialize(owner);
 
             NavMeshAgent = GetComponentInParent<NavMeshAgent>();
-            NavMeshAgent.updateRotation = true;
-            NavMeshAgent.autoBraking = true;
-
-            if (owner is AbstractEnemy enemy)
-                NavMeshAgent.speed = enemy.EnemyData.Speed;
+            Debug.Assert(NavMeshAgent != null, $"{gameObject.name} : AgentNavMesh에는 NavMeshAgent 컴포넌트가 필요합니다.");
         }
 
-        public void SetNavMeshAgent(float speed, float angularSpeed, float acceleration)
+        public void SetNavMeshAgent(float speed, float acceleration)
         {
             NavMeshAgent.speed = speed;
-            NavMeshAgent.angularSpeed = angularSpeed;
             NavMeshAgent.acceleration = acceleration;
         }
 
@@ -37,7 +31,6 @@ namespace Members.JJH._02_Scripts.Agents.Modules
         {
             NavMeshAgent.isStopped = !value;
 
-
             if (!value)
             {
                 NavMeshAgent.ResetPath();
@@ -45,23 +38,35 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             }
         }
 
-        public void RotateToTarget(Vector3 targetPosition)
+        public bool RotateToTarget(Vector3 targetPosition, float angleThreshold = 1f)
         {
-            Vector3 direction = targetPosition - transform.position;
+            Transform agentTransform = NavMeshAgent.transform;
+
+            Vector3 direction = targetPosition - agentTransform.position;
             direction.y = 0f;
 
-            if (direction.sqrMagnitude <= 0.001f)
-                return;
+            if (direction.sqrMagnitude <= 0.0001f)
+                return true;
 
             Quaternion targetRotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.RotateTowards(
-                transform.rotation,
-                targetRotation,
-                NavMeshAgent.angularSpeed * Time.deltaTime);
+
+            if (Quaternion.Angle(agentTransform.rotation, targetRotation) <= angleThreshold)
+            {
+                agentTransform.rotation = targetRotation;
+                return true;
+            }
+
+            agentTransform.rotation = Quaternion.RotateTowards(agentTransform.rotation, targetRotation,
+                                                                                                    NavMeshAgent.angularSpeed * Time.deltaTime);
+
+            return Quaternion.Angle(agentTransform.rotation, targetRotation) <= angleThreshold;
         }
 
         public void StopImmediately()
         {
+            if (NavMeshAgent == null || !NavMeshAgent.enabled || !NavMeshAgent.isOnNavMesh)
+                return;
+
             NavMeshAgent.ResetPath();
             NavMeshAgent.velocity = Vector3.zero;
         }

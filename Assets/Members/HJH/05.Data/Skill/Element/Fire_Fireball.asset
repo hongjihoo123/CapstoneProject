@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ffae363b0932b1531026d0f71ac73, type: 3}
+  m_Name: Fire_Fireball
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ProjectileSkill
+  cooldown: 3
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 0
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 46aa3c49dbdf8fb4083d99c2bb875f9a, type: 3}
+  displayName: "\uD654\uC5FC\uAD6C"
+  description: "\uB0A0\uC544\uAC00\uB2E4 \uCC98\uC74C \uB9DE\uC740 \uC801\uC5D0\uAC8C
+    \uD130\uC9C4\uB2E4."
+  fxColor: {r: 1, g: 1, b: 1, a: 1}
+  onHit:
+  - kind: 0
+    value: 30
+    duration: 0
+  scaling: 1
+  hitStop: 0.05
+  shake: 0.2
+  castFx:
+    prefab: {fileID: 7500293517542061902, guid: 90fc27f9347bd6cc0a3822eef7c87808, type: 3}
+    tint: 1
+  impactFx:
+    prefab: {fileID: 8998061970073327562, guid: f677569a936a7c0547eba3ac439379a8, type: 3}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: a20e4c71fb4ebbc68a1352c0c236ff11, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  range: 10
+  speed: 18
+  radius: 0.35
+  count: 1
+  spread: 60
+  pierce: 0
+  explodeRadius: 1.6
+  travelFx:
+    prefab: {fileID: 5462476064211179271, guid: 3bf8f6680a1c9ee41a519baebb6699c3, type: 3}
+    tint: 0

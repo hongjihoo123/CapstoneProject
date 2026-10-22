@@ -1,0 +1,59 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4378bb54dc56ec842f6480fb9ceeb279, type: 3}
+  m_Name: Fire_FlameDash
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.DashSkill
+  cooldown: 6
+  charges: 1
+  duration: 0.35
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 0
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 9ba6114724c2cf9408dd42108c5717a5, type: 3}
+  displayName: "\uD654\uC5FC \uB3CC\uC9C4"
+  description: "\uC9E7\uAC8C \uB3CC\uC9C4\uD558\uBA70 \uC9C0\uB098\uAC00\uB294 \uC801\uC744
+    \uBD88\uD0DC\uC6B4\uB2E4."
+  fxColor: {r: 1, g: 0.11280057, b: 0, a: 1}
+  onHit:
+  - kind: 0
+    value: 20
+    duration: 0
+  - kind: 1
+    value: 8
+    duration: 3
+  scaling: 0
+  hitStop: 0.04
+  shake: 0.18
+  castFx:
+    prefab: {fileID: 6628770054992934325, guid: 8da633fb1320d4b849ba31270fef8649, type: 3}
+    tint: 1
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: a20e4c71fb4ebbc68a1352c0c236ff11, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  distance: 6
+  blink: 0
+  dashTime: 0.2
+  pathRadius: 1.2
+  landRadius: 0

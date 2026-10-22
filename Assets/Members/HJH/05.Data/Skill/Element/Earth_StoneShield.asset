@@ -1,0 +1,63 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce47aa658d9a14cd3d484e6df993760, type: 3}
+  m_Name: Earth_StoneShield
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.SelfSkill
+  cooldown: 14
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 4
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: a8280c66ad61d8f40a378eb243c58542, type: 3}
+  displayName: "\uBC14\uC704 \uBC29\uD328"
+  description: "3\uCD08\uAC04 \uBC1B\uB294 \uD53C\uD574 \uAC10\uC18C. \uB05D\uB0A0
+    \uB54C \uC8FC\uBCC0\uC774 \uD130\uC9C0\uBA70 \uC801\uC744 \uBC00\uC5B4\uB0B8\uB2E4."
+  fxColor: {r: 0.6981132, g: 0.49384657, b: 0.009220327, a: 1}
+  onHit:
+  - kind: 0
+    value: 25
+    duration: 0
+  - kind: 5
+    value: 2.5
+    duration: 0
+  scaling: 0
+  hitStop: 0.08
+  shake: 0.35
+  castFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 2396812295139480018, guid: 74840b2c4a991f4e8d91d51bae3b5d59, type: 3}
+    tint: 1
+  impactStyle: 2
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: b19fd82d94616948afe4f344c3f4fdaf, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  onSelf:
+  - kind: 1
+    value: 30
+    duration: 3
+  auraFx:
+    prefab: {fileID: 2707743490971353202, guid: 7e2552229f17f8ddf3ea05c833f0de59, type: 3}
+    tint: 1
+  explodeDelay: 3
+  explodeRadius: 3

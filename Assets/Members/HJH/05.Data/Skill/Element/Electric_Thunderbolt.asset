@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185e328ef8d6cff3b442dc23b8da974d, type: 3}
+  m_Name: Electric_Thunderbolt
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.CircleSkill
+  cooldown: 5
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 3
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: f9442cd9f8b142a4ebb61e879d522880, type: 3}
+  displayName: "\uB099\uB8B0"
+  description: "\uCEE4\uC11C \uC704\uCE58\uC5D0 \uBC88\uAC1C\uAC00 \uBE60\uB974\uAC8C
+    \uB5A8\uC5B4\uC9C4\uB2E4."
+  fxColor: {r: 0.7660377, g: 0.690936, b: 0, a: 1}
+  onHit:
+  - kind: 0
+    value: 40
+    duration: 0
+  - kind: 4
+    value: 0
+    duration: 0.3
+  scaling: 1
+  hitStop: 0.08
+  shake: 0.35
+  castFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 8341635943236292181, guid: 8fe34eaaf8383199d8899ba939a6be3e, type: 3}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: 4a5225b89fa8fa18b58260cd768b1af4, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 4602855379771542814, guid: 22894113e55f6d4de0fda1836af3e306, type: 3}
+    tint: 0
+  aroundSelf: 0
+  range: 9
+  radius: 1.6
+  delay: 0.25
+  windupFx:
+    prefab: {fileID: 5205979673360283496, guid: 04d3836a9fc0e638e57a224ecf6bee9e, type: 3}
+    tint: 0

@@ -20,6 +20,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
             // Visual: VisualSize 0 = invisible (only the debug circle). Otherwise an FxLibrary orb of this size rides it.
             public Color Color;
             public float VisualSize;
+            // 오브 대신 이 프리팹이 날아감 (스킬마다 정한 이펙트). TravelColor 흰색이면 원래 색
+            public GameObject TravelPrefab;
+            public Color TravelColor;
         }
 
         private readonly ISkillContext _context;
@@ -81,11 +84,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 
         private void UpdateOrb()
         {
-            if (_settings.VisualSize <= 0f)
+            if (_settings.VisualSize <= 0f && _settings.TravelPrefab == null)
                 return;
 
             if (_orb == null)
-                _orb = Fx.Orb(_position, _settings.Color, _settings.VisualSize);
+                _orb = _settings.TravelPrefab != null
+                    ? Fx.HoldPrefab(_settings.TravelPrefab, _position, Quaternion.LookRotation(_direction), 1f, _settings.TravelColor)
+                    : Fx.Orb(_position, _settings.Color, _settings.VisualSize);
             else
                 _orb.MoveTo(_position);
         }

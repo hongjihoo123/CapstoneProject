@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ffae363b0932b1531026d0f71ac73, type: 3}
+  m_Name: Electric_ElectricNet
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ProjectileSkill
+  cooldown: 10
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 3
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 8cb42b03bca54f744aa09387f824c980, type: 3}
+  displayName: "\uC804\uAE30 \uADF8\uBB3C"
+  description: "\uADF8\uBB3C\uC744 \uB358\uC838 \uB9DE\uC740 \uC790\uB9AC \uC8FC\uBCC0
+    \uC801\uC744 \uBB36\uB294\uB2E4."
+  fxColor: {r: 1, g: 1, b: 0.49622637, a: 1}
+  onHit:
+  - kind: 0
+    value: 12
+    duration: 0
+  - kind: 3
+    value: 0
+    duration: 1.2
+  scaling: 1
+  hitStop: 0.05
+  shake: 0.22
+  castFx:
+    prefab: {fileID: 7500293517542061902, guid: 9eb865dd1279645efa828b7326760b55, type: 3}
+    tint: 1
+  impactFx:
+    prefab: {fileID: 7183882192237170137, guid: b87bc1991fe45d546bc6e2936a04a50b, type: 3}
+    tint: 0
+  impactStyle: 3
+  hitFx:
+    prefab: {fileID: 9136677862545849837, guid: 4a5225b89fa8fa18b58260cd768b1af4, type: 3}
+    tint: 1
+  statusFx:
+    prefab: {fileID: 4602855379771542814, guid: 22894113e55f6d4de0fda1836af3e306, type: 3}
+    tint: 0
+  range: 9
+  speed: 16
+  radius: 0.5
+  count: 1
+  spread: 60
+  pierce: 0
+  explodeRadius: 2
+  travelFx:
+    prefab: {fileID: 5709501176301374058, guid: b3e3ae5b636332a0e799b1c9089a7b6e, type: 3}
+    tint: 0

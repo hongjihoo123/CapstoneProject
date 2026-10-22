@@ -1,10 +1,10 @@
+using Assets.Members.HJH._02.Scripts.Char;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
-using Assets.Members.HJH._02.Scripts.Char;
-using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01_Scripts.Modules;
 using Members.KYR._01_Scripts.Stats;
@@ -16,7 +16,7 @@ using UnityEngine.UI;
 namespace Members.KYR._01_Scripts
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable,IRecoilCapable
+    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable, IRecoilCapable
     {
 
         [SerializeField] private PlayerInputSO playerInput;
@@ -131,10 +131,8 @@ namespace Members.KYR._01_Scripts
             SkillFsm.EquipKit(newKit);
         }
 
-        protected override void Start()
+        protected virtual void Start()
         {
-            base.Start();
-
             if (!lockCursor)
                 return;
 
@@ -323,7 +321,7 @@ namespace Members.KYR._01_Scripts
         }
         public void OnEnemyKilled()
         {
-            SkillFsm.NotifyEnemyKilled();   
+            SkillFsm.NotifyEnemyKilled();
         }
 
         public void Anim_SkillHitBegin() => SkillFsm.Anim_SkillHitBegin();
