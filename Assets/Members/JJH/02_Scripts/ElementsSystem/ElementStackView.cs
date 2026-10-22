@@ -66,7 +66,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         [Header("Setting")]
         [SerializeField] private float clearDelay = 0.35f;
-        [SerializeField] private float clearScale = 1.3f;
         [SerializeField] private float bounceScale = 0.25f;
 
         private class ListRow

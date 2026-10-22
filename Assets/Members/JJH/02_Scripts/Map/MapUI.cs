@@ -57,6 +57,9 @@ namespace Members.JJH._02_Scripts.Map
         [SerializeField] private float mapPadding = 100f;
         [SerializeField] private float minRoomDistance = 150f;
         [SerializeField] private float connectionWidth = 5f;
+        [SerializeField] private float connectionRoomPadding = 20f;
+        [SerializeField] private float minConnectionDistance = 20f;
+        [SerializeField] private float minConnectionAngle = 25f;
 
         private readonly List<RoomNode> rooms = new List<RoomNode>();
         private readonly List<Image> connections = new List<Image>();
@@ -213,18 +216,6 @@ namespace Members.JJH._02_Scripts.Map
 
             candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
 
-            for (int i = 0; i < rooms.Count; i++)
-            {
-                for (int j = i + 1; j < rooms.Count; j++)
-                {
-                    Vector2Int a = rooms[i].gridPosition;
-                    Vector2Int b = rooms[j].gridPosition;
-
-                    if (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) == 1)
-                        AddConnection(i, j);
-                }
-            }
-
             foreach (ConnectionCandidate candidate in candidates)
             {
                 if (rooms[candidate.from].connections.Count >= 2 &&
@@ -235,7 +226,7 @@ namespace Members.JJH._02_Scripts.Map
                     continue;
 
                 if (WouldCrossConnection(candidate.from, candidate.to) ||
-                        WouldOverlapRoom(candidate.from, candidate.to))
+                    WouldOverlapRoom(candidate.from, candidate.to))
                     continue;
 
                 AddConnection(candidate.from, candidate.to);
@@ -257,7 +248,8 @@ namespace Members.JJH._02_Scripts.Map
                 if (rooms[candidate.from].connections.Contains(candidate.to))
                     continue;
 
-                if (WouldCrossConnection(candidate.from, candidate.to))
+                if (WouldCrossConnection(candidate.from, candidate.to) ||
+                    WouldOverlapRoom(candidate.from, candidate.to))
                     continue;
 
                 AddConnection(candidate.from, candidate.to);
@@ -288,6 +280,10 @@ namespace Members.JJH._02_Scripts.Map
             Vector2 a = rooms[fromId].position;
             Vector2 b = rooms[toId].position;
 
+            RectTransform rect = roomPrefab.GetComponent<RectTransform>();
+            Vector2 roomSize = Vector2.Scale(rect.rect.size, rect.localScale);
+            float trimDistance = roomSize.magnitude * 0.5f + connectionRoomPadding;
+
             foreach (RoomNode room in rooms)
             {
                 foreach (int connectedId in room.connections)
@@ -295,14 +291,34 @@ namespace Members.JJH._02_Scripts.Map
                     if (room.id >= connectedId)
                         continue;
 
-                    if (room.id == fromId || room.id == toId ||
-                        connectedId == fromId || connectedId == toId)
-                        continue;
+                    bool sharesFrom = room.id == fromId || connectedId == fromId;
+                    bool sharesTo = room.id == toId || connectedId == toId;
 
                     Vector2 c = rooms[room.id].position;
                     Vector2 d = rooms[connectedId].position;
 
-                    if (SegmentsIntersect(a, b, c, d))
+                    if (sharesFrom || sharesTo)
+                    {
+                        int sharedId = sharesFrom ? fromId : toId;
+                        int otherA = room.id == sharedId ? connectedId : room.id;
+                        int otherB = sharedId == fromId ? toId : fromId;
+
+                        Vector2 sharedPosition = rooms[sharedId].position;
+                        Vector2 directionA = (rooms[otherA].position - sharedPosition).normalized;
+                        Vector2 directionB = (rooms[otherB].position - sharedPosition).normalized;
+
+                        if (Vector2.Angle(directionA, directionB) < minConnectionAngle)
+                            return true;
+
+                        continue;
+                    }
+
+                    Vector2 trimmedA = Vector2.MoveTowards(a, b, trimDistance);
+                    Vector2 trimmedB = Vector2.MoveTowards(b, a, trimDistance);
+                    Vector2 trimmedC = Vector2.MoveTowards(c, d, trimDistance);
+                    Vector2 trimmedD = Vector2.MoveTowards(d, c, trimDistance);
+
+                    if (GetSegmentDistance(trimmedA, trimmedB, trimmedC, trimmedD) < minConnectionDistance + connectionWidth)
                         return true;
                 }
             }
@@ -315,15 +331,17 @@ namespace Members.JJH._02_Scripts.Map
             Vector2 start = rooms[fromId].position;
             Vector2 end = rooms[toId].position;
 
+            RectTransform rect = roomPrefab.GetComponent<RectTransform>();
+            Vector2 size = Vector2.Scale(rect.rect.size, rect.localScale);
+            float padding = connectionRoomPadding + connectionWidth * 0.5f;
+
             foreach (RoomNode room in rooms)
             {
                 if (room.id == fromId || room.id == toId)
                     continue;
 
-                RectTransform rect = roomPrefab.GetComponent<RectTransform>();
-                Vector2 size = Vector2.Scale(rect.rect.size, rect.localScale);
-
-                Rect roomRect = new Rect(room.position - size * 0.5f, size);
+                Vector2 expandedSize = size + Vector2.one * padding * 2f;
+                Rect roomRect = new Rect(room.position - expandedSize * 0.5f, expandedSize);
 
                 if (SegmentIntersectsRect(start, end, roomRect))
                     return true;
@@ -361,6 +379,29 @@ namespace Members.JJH._02_Scripts.Map
         private float Cross(Vector2 a, Vector2 b)
         {
             return a.x * b.y - a.y * b.x;
+        }
+
+        private float GetSegmentDistance(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            if (SegmentsIntersect(a, b, c, d))
+                return 0f;
+
+            return Mathf.Min(
+                Mathf.Min(GetPointSegmentDistance(a, c, d), GetPointSegmentDistance(b, c, d)),
+                Mathf.Min(GetPointSegmentDistance(c, a, b), GetPointSegmentDistance(d, a, b))
+            );
+        }
+
+        private float GetPointSegmentDistance(Vector2 point, Vector2 start, Vector2 end)
+        {
+            Vector2 direction = end - start;
+            float lengthSquared = direction.sqrMagnitude;
+
+            if (lengthSquared == 0f)
+                return Vector2.Distance(point, start);
+
+            float t = Mathf.Clamp01(Vector2.Dot(point - start, direction) / lengthSquared);
+            return Vector2.Distance(point, start + direction * t);
         }
 
         #endregion
