@@ -22,7 +22,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
     //             LoadoutChanged, SkillUsed, SkillDenied, SkillReady, CharacterChanged
     //   Combo     HasCombo, ComboInputs, ComboList, ComboStock, MaxComboStock, ComboTimeLeft, ComboWindow,
     //             FinisherKey, TryGetNextCombo(...), KeyFor(element)
-    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken, FinisherReleased
+    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken,
+    //             FinisherArmed / FinisherExpired / FinisherReleased, FinisherReady, FinisherTimeLeft, StoredFinishers
     //   Swap      SwapPickup (null = closed), InteractKey, SwapChanged, Swapped
     //   Elements  Palette, ColorOf(element / skill), ElementName(element)
     [DisallowMultipleComponent]
@@ -102,7 +103,10 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
-        public event Action<IReadOnlyList<ElementComboBook.Recipe>> FinisherReleased;
+        // 피니시: 준비됨(스택, 배율) / 시간 끝 / 나감(칸, 배율, 같이 터진 피니시 스킬)
+        public event Action<int, float> FinisherArmed;
+        public event Action FinisherExpired;
+        public event Action<SkillSlotId, float, IReadOnlyList<FinisherBook.Entry>> FinisherReleased;
 
         public event Action<SkillPickup> SwapChanged;
         // slot, skill that went to the floor, skill that came in
@@ -160,7 +164,15 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public int MaxComboStock => comboChain != null ? comboChain.MaxStock : 0;
         public float ComboTimeLeft => comboChain != null ? comboChain.Remaining : 0f;
         public float ComboWindow => comboChain != null ? comboChain.ChainWindow : 0f;
-        public string FinisherKey => comboChain != null ? KeyLabel(comboChain.FinisherSlot) : string.Empty;
+        public string FinisherKey => comboChain != null ? comboChain.FinisherKeyLabel : string.Empty;
+        public bool FinisherReady => comboChain != null && comboChain.IsArmed;
+        public float FinisherTimeLeft => comboChain != null ? comboChain.ArmedRemaining : 0f;
+        public float FinisherReadyTime => comboChain != null ? comboChain.ReadyTime : 0f;
+        public float FinisherScale => comboChain != null ? comboChain.ArmedScale : 1f;
+        public float FinisherScaleFor(int stacks) => comboChain != null ? comboChain.ScaleFor(stacks) : 1f;
+        public IReadOnlyList<FinisherBook.Entry> StoredFinishers => comboChain != null ? comboChain.StoredFinishers : Array.Empty<FinisherBook.Entry>();
+        public IReadOnlyList<FinisherBook.Entry> ArmedFinishers => comboChain != null ? comboChain.ArmedFinishers : Array.Empty<FinisherBook.Entry>();
+        public bool CanCarryFinisher(SkillSlotId slot) => ElementComboChain.CanCarryFinisher(slot);
 
         // The element that continues the best combo in progress (false when no combo is under way).
         public bool TryGetNextCombo(out ElementType next, out ElementComboBook.Recipe combo, out int progress)
@@ -250,6 +262,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
                 comboChain.ComboLanded += HandleComboLanded;
                 comboChain.ChainBroken += HandleComboBroken;
                 comboChain.FinisherReleased += HandleFinisher;
+                comboChain.FinisherArmed += HandleFinisherArmed;
+                comboChain.FinisherExpired += HandleFinisherExpired;
             }
 
             if (swapInteractor != null)
@@ -281,6 +295,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
                 comboChain.ComboLanded -= HandleComboLanded;
                 comboChain.ChainBroken -= HandleComboBroken;
                 comboChain.FinisherReleased -= HandleFinisher;
+                comboChain.FinisherArmed -= HandleFinisherArmed;
+                comboChain.FinisherExpired -= HandleFinisherExpired;
             }
 
             if (swapInteractor != null)
@@ -318,9 +334,21 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             ComboChanged?.Invoke();
         }
 
-        private void HandleFinisher(IReadOnlyList<ElementComboBook.Recipe> released)
+        private void HandleFinisher(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
         {
-            FinisherReleased?.Invoke(released);
+            FinisherReleased?.Invoke(slot, scale, fired);
+            ComboChanged?.Invoke();
+        }
+
+        private void HandleFinisherArmed(int stacks, float scale)
+        {
+            FinisherArmed?.Invoke(stacks, scale);
+            ComboChanged?.Invoke();
+        }
+
+        private void HandleFinisherExpired()
+        {
+            FinisherExpired?.Invoke();
             ComboChanged?.Invoke();
         }
 

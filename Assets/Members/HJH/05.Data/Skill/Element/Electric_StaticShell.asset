@@ -1,0 +1,66 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce47aa658d9a14cd3d484e6df993760, type: 3}
+  m_Name: Electric_StaticShell
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.SelfSkill
+  cooldown: 14
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 3
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 0b1c4f199bb409543a58fef02bcaf8b9, type: 3}
+  displayName: "\uC804\uAE30 \uC7A5\uB9C9"
+  description: "\uBA87 \uCD08\uAC04 \uB098\uB97C \uB54C\uB9B0 \uC801\uC5D0\uAC8C
+    \uAC10\uC804\uC744 \uB3CC\uB824\uC900\uB2E4. \uAC10\uC804\uB41C \uC801\uC740
+    \uB290\uB824\uC9C4\uB2E4."
+  fxColor: {r: 1, g: 0.9, b: 0.35, a: 1}
+  onHit:
+  - kind: 0
+    value: 12
+    duration: 0
+  - kind: 2
+    value: 40
+    duration: 1.5
+  scaling: 1
+  hitStop: 0.03
+  shake: 0.12
+  castFx:
+    prefab: {fileID: 405096781691873698, guid: 7827e0c6deb63d944ab2982ec1eff5c5, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 2480591102326501803, guid: 4b2ca94bbf09ecb4cb3542c7f05d4cbe, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 1307456673335445390, guid: cc7851162e332b145937c574649a1881, type: 3}
+    tint: 0
+  onSelf:
+  - kind: 1
+    value: 15
+    duration: 5
+  auraFx:
+    prefab: {fileID: 2471329545881581303, guid: 5be4d9d805887e544b32891e34771f88, type: 3}
+    tint: 0
+  explodeDelay: 0
+  explodeRadius: 0
+  retaliateTime: 5
+  retaliateRadius: 5
