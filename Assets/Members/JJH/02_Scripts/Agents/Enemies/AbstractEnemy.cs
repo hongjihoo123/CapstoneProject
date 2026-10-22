@@ -56,7 +56,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
         }
 
-        public virtual void Attack() { }
+        public virtual void NormalAttack() { }
 
         #region BT Helper
 

@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 7238682364675669347}
   - component: {fileID: 8175225816426840581}
+  - component: {fileID: 3082390325053784490}
   m_Layer: 9
   m_Name: EnemySkillModule
   m_TagString: Untagged
@@ -44,3 +45,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 437372765bbb8de46a24908766d9ebd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillModule
+--- !u!114 &3082390325053784490
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9197579358193434221}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cf07b06f334428e88f9240ec5592c79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.AttackAreaVisualizer
+  player: {fileID: 0}
+  groundOffset: 0.06
+  lineWidth: 0.08
+  guideLineWidth: 0.03
+  showHitAreas: 0

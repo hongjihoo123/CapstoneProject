@@ -7,16 +7,19 @@ namespace Members.JJH._02_Scripts.Map
     {
         [Header("UI")]
         [SerializeField] private Button button;
-        [SerializeField] private Image icon;
-
+        [SerializeField] private Image roomIcon;
+        [SerializeField] private Image clearIcon;
+        [SerializeField] private Image background;
         [Header("Icons")]
         [SerializeField] private Sprite defaultIcon;
-        [SerializeField] private Sprite startIcon;
+        [SerializeField] private Sprite hideIcon;
         [SerializeField] private Sprite normalIcon;
         [SerializeField] private Sprite eliteIcon;
-        [SerializeField] private Sprite eventIcon;
-        [SerializeField] private Sprite shopIcon;
         [SerializeField] private Sprite bossIcon;
+        [SerializeField] private Sprite shopIcon;
+        [SerializeField] private Sprite clearSprite;
+        [Tooltip("0 : Not Select, 1 : Select")]
+        [SerializeField] private Sprite[] mapIcons;
 
         private int roomId;
         private MapUI mapUI;
@@ -29,7 +32,7 @@ namespace Members.JJH._02_Scripts.Map
             button.onClick.RemoveAllListeners();
             button.onClick.AddListener(OnClick);
 
-            icon.sprite = defaultIcon;
+            roomIcon.sprite = defaultIcon;
         }
 
         public void SetState(bool isCurrent, bool canSelect, bool isVisited, bool isRevealed)
@@ -37,10 +40,15 @@ namespace Members.JJH._02_Scripts.Map
             button.interactable = canSelect;
             transform.localScale = isCurrent ? Vector3.one * 1.2f : Vector3.one;
 
-            if (isRevealed || isVisited)
-                SetRoomIcon();
+            background.sprite = mapIcons[isCurrent ? 1 : 0];
+
+            clearIcon.sprite = clearSprite;
+            clearIcon.enabled = isVisited && !isCurrent;
+
+            if (!isRevealed && !isVisited)
+                roomIcon.sprite = hideIcon;
             else
-                icon.sprite = defaultIcon;
+                SetRoomIcon();
         }
 
         private void SetRoomIcon()
@@ -50,27 +58,23 @@ namespace Members.JJH._02_Scripts.Map
             switch (type)
             {
                 case MapUI.RoomType.Start:
-                    icon.sprite = startIcon;
+                    roomIcon.sprite = defaultIcon;
                     break;
 
                 case MapUI.RoomType.Normal:
-                    icon.sprite = normalIcon;
+                    roomIcon.sprite = normalIcon;
                     break;
 
                 case MapUI.RoomType.Elite:
-                    icon.sprite = eliteIcon;
-                    break;
-
-                case MapUI.RoomType.Event:
-                    icon.sprite = eventIcon;
+                    roomIcon.sprite = eliteIcon;
                     break;
 
                 case MapUI.RoomType.Shop:
-                    icon.sprite = shopIcon;
+                    roomIcon.sprite = shopIcon;
                     break;
 
                 case MapUI.RoomType.Boss:
-                    icon.sprite = bossIcon;
+                    roomIcon.sprite = bossIcon;
                     break;
             }
         }
