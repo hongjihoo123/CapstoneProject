@@ -35,6 +35,7 @@ namespace Members.JJH._02_Scripts.Agents
 
         public virtual void Dead()
         {
+            Debug.Log(1);
             Destroy(gameObject);
         }
     }
