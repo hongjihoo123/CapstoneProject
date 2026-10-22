@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -10,6 +11,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     {
         private static readonly int TintId = Shader.PropertyToID("_Tint");
         private const int DefaultMaxInstances = 12;
+        private const float MaxLingerSeconds = 8f;
 
         // Per prefab: idle instances ready to reuse, and every instance ever made (for the cap).
         private sealed class Pool
@@ -34,17 +36,40 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private MeshRenderer[] _meshes;
         private IFxDriver[] _drivers;
         private MaterialPropertyBlock _block;
+        private ParticleSystemRingBufferMode[] _ringModes;
+        private float _longestDuration;
+        private bool _ringReleased;
         private Color _tint = Color.white;
         private bool _released;
+        private bool _disposable; // edited copy from SourceOverride: destroyed instead of pooled
         private bool _stopping;
         private float _stopTime;
         private float _playTime;
 
         public bool Held { get; private set; }
 
+        // Test tools (FxWorkbench) can hand back an edited copy to play instead of the prefab file.
+        // Such copies are made fresh every time and destroyed when done (never pooled), so edits show at once.
+        public static Func<GameObject, GameObject> SourceOverride;
+        // Called right after such a copy is made (source copy, new instance), before it plays. Used to hide layers for preview.
+        public static Action<GameObject, GameObject> OverrideSpawned;
+
         public static FxPrefabInstance Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, in FxParams parameters,
             bool held = false)
         {
+            GameObject replacement = SourceOverride?.Invoke(prefab);
+            if (replacement != null && replacement != prefab)
+            {
+                GameObject copy = Instantiate(replacement, FxRunner.Instance.transform);
+                copy.name = replacement.name;
+                OverrideSpawned?.Invoke(replacement, copy);
+                if (!copy.TryGetComponent(out FxPrefabInstance fresh))
+                    fresh = copy.AddComponent<FxPrefabInstance>();
+                fresh._disposable = true;
+                fresh.Cache();
+                return fresh.Begin(position, rotation, scale, parameters, held);
+            }
+
             if (!Pools.TryGetValue(prefab, out Pool pool))
                 Pools[prefab] = pool = new Pool();
 
@@ -72,17 +97,23 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 instance.ResetForReuse();
             }
 
-            Transform t = instance.transform;
+            return instance.Begin(position, rotation, scale, parameters, held);
+        }
+
+        private FxPrefabInstance Begin(Vector3 position, Quaternion rotation, float scale, in FxParams parameters, bool held)
+        {
+            Transform t = transform;
             t.SetPositionAndRotation(position, Quaternion.Normalize(rotation));
             t.localScale = Vector3.one * scale;
-            instance.gameObject.SetActive(true);
-            instance.Held = held;
-            instance._released = false;
-            instance._stopping = false;
-            instance._playTime = Time.time;
-            instance.SetTint(parameters.Tint);
-            instance.Play(parameters);
-            return instance;
+            gameObject.SetActive(true);
+            Held = held;
+            _released = false;
+            _stopping = false;
+            _playTime = Time.time;
+            RestoreRingBuffers();
+            SetTint(parameters.Tint);
+            Play(parameters);
+            return this;
         }
 
         public void SetTint(Color tint)
@@ -195,6 +226,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             foreach (ParticleSystem system in _systems)
                 system.Stop(false, ParticleSystemStopBehavior.StopEmitting);
+            LetParticlesDie();
             foreach (TrailRenderer trail in _trails)
                 trail.emitting = false;
             foreach (IFxDriver driver in _drivers)
@@ -232,6 +264,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (Held || Time.time - _playTime < 0.05f)
                 return;
 
+            // Recompiling during Play keeps the arrays above but drops this one (interfaces don't survive the reload).
+            _drivers ??= GetComponentsInChildren<IFxDriver>(true);
+
+            // One-shots never get Kill, so let ring-buffer particles die once the emitters are done.
+            if (!_ringReleased && Time.time - _playTime >= _longestDuration)
+                LetParticlesDie();
+
+            // Safety net: nothing should linger this long after it was told to stop.
+            if (_stopping && Time.time - _stopTime > MaxLingerSeconds)
+            {
+                Release();
+                return;
+            }
+
             if (!IsFinished())
                 return;
 
@@ -262,12 +308,40 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return true;
         }
 
+        private void LetParticlesDie()
+        {
+            _ringReleased = true;
+            foreach (ParticleSystem system in _systems)
+            {
+                ParticleSystem.MainModule main = system.main;
+                main.ringBufferMode = ParticleSystemRingBufferMode.Disabled;
+            }
+        }
+
+        private void RestoreRingBuffers()
+        {
+            _ringReleased = true;
+            for (int i = 0; i < _systems.Length; i++)
+            {
+                ParticleSystem.MainModule main = _systems[i].main;
+                main.ringBufferMode = _ringModes[i];
+                if (_ringModes[i] != ParticleSystemRingBufferMode.Disabled)
+                    _ringReleased = false;
+            }
+        }
+
         private void Release()
         {
             if (_released)
                 return;
 
             _released = true;
+            if (_disposable)
+            {
+                Destroy(gameObject);
+                return;
+            }
+
             foreach (TrailRenderer trail in _trails)
                 trail.Clear();
             gameObject.SetActive(false);
@@ -280,6 +354,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             _systems = GetComponentsInChildren<ParticleSystem>(true);
             _baseColors = new ParticleSystem.MinMaxGradient[_systems.Length];
+            _ringModes = new ParticleSystemRingBufferMode[_systems.Length];
+            _longestDuration = 0f;
             for (int i = 0; i < _systems.Length; i++)
             {
                 ParticleSystem.MainModule main = _systems[i].main;
@@ -288,6 +364,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 // Pooled copies are reused, so they must never destroy or disable themselves when they finish
                 // (imported effects such as Batslash ship with Stop Action = Destroy).
                 main.stopAction = ParticleSystemStopAction.None;
+
+                // Ring Buffer (Loop/Pause Until Replaced) keeps particles alive until new ones replace them.
+                // Keep it while playing for the look, but switch it off at the end or they never die.
+                _ringModes[i] = main.ringBufferMode;
+                if (!main.loop)
+                    _longestDuration = Mathf.Max(_longestDuration, main.duration);
+            }
+
+            // Effects are visuals only. Imported projectile prefabs ship with colliders and rigidbodies
+            // that would push characters around or block raycasts.
+            foreach (Collider body in GetComponentsInChildren<Collider>(true))
+                body.enabled = false;
+            foreach (Rigidbody body in GetComponentsInChildren<Rigidbody>(true))
+            {
+                body.isKinematic = true;
+                body.detectCollisions = false;
             }
 
             _trails = GetComponentsInChildren<TrailRenderer>(true);

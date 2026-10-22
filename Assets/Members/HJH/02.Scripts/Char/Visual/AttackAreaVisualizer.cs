@@ -10,12 +10,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     {
         private const int CircleSegments = 40;
 
-        private static readonly Color PreviewColor = new Color(0.4f, 0.9f, 1f, 0.95f);
-        private static readonly Color GuideColor = new Color(0.4f, 0.9f, 1f, 0.45f);
-        private static readonly Color WindupColor = new Color(1f, 0.65f, 0.2f, 0.5f);
-        private static readonly Color WeaponHitColor = new Color(1f, 0.2f, 0.2f, 0.95f);
-        private static readonly Color SkillHitColor = new Color(1f, 0.5f, 0f, 0.95f);
-
         private struct Shape
         {
             public bool IsCircle;
@@ -41,8 +35,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private float groundOffset = 0.06f;
         [SerializeField] private float lineWidth = 0.08f;
         [SerializeField] private float guideLineWidth = 0.03f;
-        [SerializeField, Tooltip("Debug: draw weapon/skill hit areas. F1 toggles in play mode. Aim previews are always drawn.")]
+        [SerializeField, Tooltip("Debug: draw weapon/skill hit areas. F1 toggles in play mode. Aim previews and enemy warnings are always drawn.")]
         private bool showHitAreas;
+
+        [Header("Colors")]
+        [SerializeField, Tooltip("스킬 키 누르고 있을 때 조준 범위임")] private Color previewColor = new(0.4f, 0.9f, 1f, 0.95f);
+        [SerializeField, Tooltip("사거리 원, 방향선 (얇은 선)")] private Color guideColor = new(0.4f, 0.9f, 1f, 0.45f);
+
+        // 따로 분류했으니까 이거만 쓰면 됨 ㅇㅋ?
+        [SerializeField, Tooltip("적 공격 예고 (항상 보임)")] private Color enemyWarningColor = new(1f, 0.15f, 0.35f, 0.9f);
+
+        [SerializeField, Tooltip("디버그: 무기 휘두르기 준비")] private Color weaponWindupColor = new(1f, 0.65f, 0.2f, 0.5f);
+        [SerializeField, Tooltip("디버그: 무기 판정")] private Color weaponHitColor = new(1f, 0.2f, 0.2f, 0.95f);
+        [SerializeField, Tooltip("디버그: 스킬 판정")] private Color skillHitColor = new(1f, 0.5f, 0f, 0.95f);
 
         private readonly List<TimedShape> _timed = new();
         private readonly List<Shape> _frame = new();
@@ -65,7 +70,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
             {
                 showHitAreas = !showHitAreas;
-                _timed.Clear();
+                _timed.RemoveAll(timed => IsDebug(timed.Kind));   // 적 예고는 남겨둠
             }
         }
 
@@ -93,12 +98,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void OnAreaRaised(AttackArea area)
         {
-            if (!showHitAreas)
+            if (IsDebug(area.Kind) && !showHitAreas)
                 return;
 
-            if (area.Kind != AttackAreaKind.Skill)
+            // 적 예고는 적마다 따로 떠야 해서 안 지움
+            if (area.Kind == AttackAreaKind.WeaponWindup || area.Kind == AttackAreaKind.WeaponHit)
                 _timed.RemoveAll(timed => timed.Kind == area.Kind);
-            else
+            else if (area.Kind == AttackAreaKind.Skill)
                 _timed.RemoveAll(timed => timed.Kind == area.Kind && Mathf.Approximately(timed.Shape.Size.x, area.Size.x) && Time.time - timed.StartTime < 0.1f);
 
             _timed.Add(new TimedShape
@@ -113,13 +119,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     Center = area.Center,
                     Yaw = area.Rotation.eulerAngles.y,
                     Size = area.Size,
-                    Color = GetColor(area.Kind)
+                    Color = area.HasColor ? area.Color : GetColor(area.Kind)
                 }
             });
         }
 
         void ISkillPreview.Circle(Vector3 center, float radius) =>
-            _frame.Add(new Shape { IsCircle = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = PreviewColor });
+            _frame.Add(new Shape { IsCircle = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = previewColor });
 
         void ISkillPreview.Path(Vector3 from, Vector3 to, float width)
         {
@@ -134,12 +140,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Center = (from + to) * 0.5f,
                 Yaw = Quaternion.LookRotation(direction / length).eulerAngles.y,
                 Size = new Vector3(width, 0f, length),
-                Color = PreviewColor
+                Color = previewColor
             });
         }
 
         void ISkillPreview.RangeCircle(Vector3 center, float radius) =>
-            _frame.Add(new Shape { IsCircle = true, IsThin = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = GuideColor });
+            _frame.Add(new Shape { IsCircle = true, IsThin = true, Center = center, Size = new Vector3(radius, 0f, 0f), Color = guideColor });
 
         void ISkillPreview.Cone(Vector3 apex, Vector3 direction, float radius, float angle)
         {
@@ -153,22 +159,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Center = apex,
                 Yaw = Quaternion.LookRotation(direction.normalized).eulerAngles.y,
                 Size = new Vector3(radius, angle, 0f),
-                Color = PreviewColor
+                Color = previewColor
             });
         }
 
         void ISkillPreview.DirectionLine(Vector3 from, Vector3 to) =>
-            _frame.Add(new Shape { IsSegment = true, IsThin = true, Center = from, End = to, Color = GuideColor });
+            _frame.Add(new Shape { IsSegment = true, IsThin = true, Center = from, End = to, Color = guideColor });
 
-        private static Color GetColor(AttackAreaKind kind)
+        private Color GetColor(AttackAreaKind kind)
         {
             switch (kind)
             {
-                case AttackAreaKind.WeaponWindup: return WindupColor;
-                case AttackAreaKind.WeaponHit: return WeaponHitColor;
-                default: return SkillHitColor;
+                case AttackAreaKind.WeaponWindup: return weaponWindupColor;
+                case AttackAreaKind.WeaponHit: return weaponHitColor;
+                case AttackAreaKind.EnemyWarning: return enemyWarningColor;
+                default: return skillHitColor;
             }
         }
+
+        // F1 로 켜고 끄는 디버그용 종류인지 (적 예고는 항상 보임)
+        private static bool IsDebug(AttackAreaKind kind) => kind != AttackAreaKind.EnemyWarning;
 
         private float GroundY(Shape shape) =>
             (player != null ? player.transform.position.y : shape.Center.y) + groundOffset;
