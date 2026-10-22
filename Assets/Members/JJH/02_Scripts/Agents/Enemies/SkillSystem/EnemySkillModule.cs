@@ -41,7 +41,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         {
             foreach (IEnemySkill skill in _skillDict.Values)
             {
-                skill.Initialize(_enemy);
+                skill.Initialize(_enemy, this);
             }
         }
 
