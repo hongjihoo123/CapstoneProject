@@ -18,6 +18,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private readonly LayerMask _targetMask;
         private readonly LayerMask _environmentMask;
         private readonly HashSet<IDamageable> _hitThisActivation = new();
+        private readonly Dictionary<object, float> _incomingScales = new();
+        private readonly Dictionary<SkillData, (float scale, float until)> _boosts = new();
 
         public PlayerSkillContext(PlayerAgent player, LayerMask targetMask, LayerMask environmentMask)
         {
@@ -293,8 +295,28 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public void DealDamage(IDamageable target, float amount, bool isWeakpoint = false) =>
             DealDamage(target, amount, ActiveSkill);
 
+        public void BoostSkillDamage(SkillData skill, float scale, float seconds)
+        {
+            if (skill != null)
+                _boosts[skill] = (scale, Time.time + seconds);
+        }
+
+        public void AddShield(float amount)
+        {
+            if (amount > 0f)
+                _player.AddShield(amount);
+        }
+
         public void DealDamage(IDamageable target, float amount, SkillData skill)
         {
+            if (skill != null && _boosts.TryGetValue(skill, out (float scale, float until) boost))
+            {
+                if (Time.time <= boost.until)
+                    amount *= boost.scale;
+                else
+                    _boosts.Remove(skill);
+            }
+
             if (skill == null)
             {
                 _player.ApplyDamageTo(target, amount);
@@ -314,6 +336,32 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             StatusEffectModule status = _player.GetModule<StatusEffectModule>();
             status?.ApplyDamageOverTime(target, damagePerTick, tickInterval, duration, _player.gameObject);
         }
+
+        public event System.Action<float, GameObject> DamageTaken
+        {
+            add => _player.DamageTaken += value;
+            remove => _player.DamageTaken -= value;
+        }
+
+        public void SetIncomingDamageScale(object source, float scale)
+        {
+            if (source == null)
+                return;
+            if (Mathf.Approximately(scale, 1f))
+                _incomingScales.Remove(source);
+            else
+                _incomingScales[source] = scale;
+
+            float total = 1f;
+            foreach (float value in _incomingScales.Values)
+                total *= value;
+            _player.IncomingDamageScale = total;
+        }
+
+        public void ReduceCooldown(SkillSlotId slot, float seconds) => _player.SkillFsm?.ReduceCooldown(slot, seconds);
+
+        public float GetCooldownRemaining(SkillSlotId slot) =>
+            _player.SkillFsm != null ? _player.SkillFsm.GetCooldownRemaining(slot) : 0f;
 
         public void AddStatModifier(PlayerStatId id, StatModifier modifier) => _player.Stats.AddModifier(id, modifier);
 

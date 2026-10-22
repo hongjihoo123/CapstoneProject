@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ffae363b0932b1531026d0f71ac73, type: 3}
+  m_Name: Earth_Boulder
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ProjectileSkill
+  cooldown: 6
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 4
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 7afd864d99645664c9ddceb842475f31, type: 3}
+  displayName: "\uBC14\uC704 \uB358\uC9C0\uAE30"
+  description: "\uB290\uB9AC\uC9C0\uB9CC \uAC15\uD55C \uBC14\uC704\uB97C \uB358\uC9C4\uB2E4.
+    \uB9DE\uC740 \uC801\uC740 \uBC00\uB824\uB09C\uB2E4."
+  fxColor: {r: 0.85, g: 0.55, b: 0.25, a: 1}
+  onHit:
+  - kind: 0
+    value: 40
+    duration: 0
+  - kind: 5
+    value: 3.5
+    duration: 0
+  scaling: 0
+  hitStop: 0.1
+  shake: 0.35
+  castFx:
+    prefab: {fileID: 3330561580298391436, guid: dff796d779925284aa750ab2043726a8, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 47855586200430430, guid: 2a8d0e5c6501c9d48b1a71ee34dc5766, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  range: 10
+  speed: 11
+  radius: 0.7
+  count: 1
+  spread: 0
+  pierce: 0
+  explodeRadius: 0
+  travelFx:
+    prefab: {fileID: 7453366218028619078, guid: ee3b56e8c3cc2624dbaafc02de4f0f09, type: 3}
+    tint: 0
+  pushSideways: 0

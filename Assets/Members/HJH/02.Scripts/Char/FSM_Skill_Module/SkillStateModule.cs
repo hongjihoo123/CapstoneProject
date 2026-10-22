@@ -63,6 +63,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
 
         public event Action<SkillUsedInfo> SkillUsed;
+        // SkillUsed 와 같은 시전인데, 스킬의 Begin 이 돌기 직전에 옴
+        public event Action<SkillUsedInfo> SkillCasting;
         // Any slot's skill changed (skill swap, kit / character change). Once per EquipKit.
         public event Action LoadoutChanged;
         // A key was pressed for an equipped skill that cannot be cast yet (cooldown, no charge, swap lock).
@@ -315,8 +317,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (!_slots.TryGetValue(slot, out GenericSkillState state) || !state.IsReady)
                 return false;
 
-            Machine.ChangeState(state);
             var info = new SkillUsedInfo(slot, state.Data);
+            SkillCasting?.Invoke(info);   // 스킬 코드가 돌기 전 (피니시 강화처럼 미리 걸어야 하는 것)
+            Machine.ChangeState(state);
             _passive?.OnSkillUsed(info);
             SkillUsed?.Invoke(info);
             return true;
