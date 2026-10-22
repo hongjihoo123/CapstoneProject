@@ -60,21 +60,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             {
                 _navMeshAgent.KeepChase(false);
 
-                if (direction.sqrMagnitude > 0.001f)
-                {
-                    Quaternion targetRotation = Quaternion.LookRotation(direction);
-
-                    Enemy.Value.transform.rotation =
-                        Quaternion.RotateTowards(Enemy.Value.transform.rotation, targetRotation,
-                                                           Enemy.Value.NavMeshAgent.NavMeshAgent.angularSpeed * Time.deltaTime);
-                }
-
-                float angle = Vector3.Angle(Enemy.Value.transform.forward, direction);
-
-                if (angle <= 1f)
-                    return Status.Success;
-
-                return Status.Running;
+                bool aligned = _navMeshAgent.RotateToTarget(_targetPos, 1f);
+                return aligned ? Status.Success : Status.Running;
             }
 
             _navMeshAgent.KeepChase(true);
@@ -85,11 +72,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             }
 
             return Status.Running;
-        }
-
-        protected override void OnEnd()
-        {
-            _navMeshAgent.StopImmediately();
         }
     }
 }

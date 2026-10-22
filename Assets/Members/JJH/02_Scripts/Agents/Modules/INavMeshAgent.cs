@@ -7,10 +7,10 @@ namespace Members.JJH._02_Scripts.Agents.Modules
     {
         NavMeshAgent NavMeshAgent { get; }
 
-        void SetNavMeshAgent(float speed, float angularSpeed, float acceleration);
+        void SetNavMeshAgent(float speed, float acceleration);
         void MoveTo(Vector3 targetPosition);
         void KeepChase(bool value);
-        void RotateToTarget(Vector3 targetPosition);
+        bool RotateToTarget(Vector3 targetPosition, float angleThreshold = 1f);
         void StopImmediately();
     }
 }

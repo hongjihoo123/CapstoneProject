@@ -14,8 +14,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Conditions
         public override bool IsTrue()
         {
             if (Enemy.Value == null || Enemy.Value.Sensor == null
-                || Enemy.Value.EnemyData == null || Target.Value == null)
+                || Enemy.Value.EnemyData == null || Target == null)
                 return false;
+
 
             return Enemy.Value.Sensor.IsTargetInRange(Enemy.Value.EnemyData.DetectRange, out Collider hitCollider);
         }
