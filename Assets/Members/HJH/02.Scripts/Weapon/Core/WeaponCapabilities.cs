@@ -34,6 +34,18 @@ namespace RobotWeapons
         event System.Action ShotIntercepted;
     }
 
+    // Guns whose bullet leaves on an animation event instead of on the trigger pull.
+    // The pull spends ammo/cooldown and raises ShotQueued (play the fire clip now); the clip's Anim_Fire
+    // event calls OnFireFrame(). If no event comes in time (no model, full-body skill clip) the gun fires by itself.
+    // FireFrame lets a shot that replaced the bullet (e.g. the gunner's charged shot) fire on the same frame.
+    public interface IAnimationTimedShots
+    {
+        bool WaitsForAnimation { get; }
+        event System.Action ShotQueued;
+        event System.Action FireFrame;
+        void OnFireFrame();
+    }
+
     // Where the next shot would leave the gun right now (follows the model while it moves and turns).
     public interface IMuzzleSource
     {

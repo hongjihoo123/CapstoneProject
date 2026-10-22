@@ -187,6 +187,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public void AddStatModifier(PlayerStatId id, StatModifier modifier) { }
         public void RemoveStatModifiers(object source) { }
         public void Heal(float amount) { }
+        public void AddShield(float amount) { }
+        public void BoostSkillDamage(SkillData skill, float scale, float seconds) { }
+        public event System.Action<float, GameObject> DamageTaken { add { } remove { } }
+        public void SetIncomingDamageScale(object source, float scale) { }
+
+        // ---------- 쿨타임: 작업대엔 다른 칸이 없음 ----------
+        public void ReduceCooldown(SkillSlotId slot, float seconds) { }
+        public float GetCooldownRemaining(SkillSlotId slot) => 0f;
 
         private static Vector3 Flat(Vector3 v) => new(v.x, 0f, v.z);
     }

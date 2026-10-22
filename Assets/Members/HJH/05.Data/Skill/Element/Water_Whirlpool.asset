@@ -1,0 +1,70 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75bde45f9b16028ff9acf091ef3f840a, type: 3}
+  m_Name: Water_Whirlpool
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ZoneSkill
+  cooldown: 11
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 1
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: b2c4b1ca5d7fb61408c28267094f8a04, type: 3}
+  displayName: "\uC18C\uC6A9\uB3CC\uC774"
+  description: "\uBC14\uB2E5\uC5D0 \uC18C\uC6A9\uB3CC\uC774\uB97C \uB9CC\uB4E0\uB2E4.
+    \uC548\uC5D0 \uC788\uB294 \uC801\uC740 \uD06C\uAC8C \uB290\uB824\uC9C4\uB2E4."
+  fxColor: {r: 0.3, g: 0.7, b: 1, a: 1}
+  onHit:
+  - kind: 0
+    value: 3
+    duration: 0
+  - kind: 2
+    value: 60
+    duration: 1
+  scaling: 1
+  hitStop: 0
+  shake: 0.05
+  castFx:
+    prefab: {fileID: 1386926668693803928, guid: e1a1b8580d21d9242a66446273cfd073, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 760382576433012311, guid: 783a113eddbd7864da61a04830b6166d, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 1307456673335445390, guid: cc7851162e332b145937c574649a1881, type: 3}
+    tint: 0
+  aroundSelf: 0
+  range: 7
+  radius: 2.6
+  zoneTime: 4
+  interval: 0.5
+  followSelf: 0
+  pulseShake: 0
+  strikesPerPulse: 0
+  strikeRadius: 1.2
+  zoneFx:
+    prefab: {fileID: 1732839329014832242, guid: f6db46d297afc3149aa2e029b5471fca, type: 3}
+    tint: 0
+  onSelf: []
+  selfFx:
+    prefab: {fileID: 0}
+    tint: 0

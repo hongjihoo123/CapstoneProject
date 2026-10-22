@@ -1,0 +1,61 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 185e328ef8d6cff3b442dc23b8da974d, type: 3}
+  m_Name: Earth_EarthSmash
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.CircleSkill
+  cooldown: 9
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 4
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 6cc25313118084a44bc02c6ee9de34e8, type: 3}
+  displayName: "\uB300\uC9C0 \uAC15\uD0C0"
+  description: "\uB545\uC744 \uB0B4\uB9AC\uCCD0 \uB0B4 \uC8FC\uBCC0 \uC801\uC744
+    \uAE30\uC808\uC2DC\uD0A8\uB2E4."
+  fxColor: {r: 0.85, g: 0.55, b: 0.25, a: 1}
+  onHit:
+  - kind: 0
+    value: 35
+    duration: 0
+  - kind: 4
+    value: 0
+    duration: 1
+  scaling: 0
+  hitStop: 0.09
+  shake: 0.4
+  castFx:
+    prefab: {fileID: 3330561580298391436, guid: dff796d779925284aa750ab2043726a8, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 6978432365997880141, guid: d25411f0acebeb44597314a580299e26, type: 3}
+    tint: 0
+  impactStyle: 2
+  hitFx:
+    prefab: {fileID: 47855586200430430, guid: 2a8d0e5c6501c9d48b1a71ee34dc5766, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 6909926714915455615, guid: 76c09a74d4aa18b40a7c74fe2e521802, type: 3}
+    tint: 0
+  aroundSelf: 1
+  range: 0
+  radius: 3
+  delay: 0
+  windupFx:
+    prefab: {fileID: 0}
+    tint: 0

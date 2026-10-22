@@ -54,6 +54,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         void DealDamage(IDamageable target, float amount, bool isWeakpoint = false);
         void DealDamage(IDamageable target, float amount, SkillData skill);
         void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration);
+        // 이 스킬이 주는 피해를 seconds 동안 scale 배 (피니시 강화). 늦게 터지는 투사체/폭발도 포함되게 시간으로 줌
+        void BoostSkillDamage(SkillData skill, float scale, float seconds);
     }
 
     public interface ISkillStats
@@ -66,6 +68,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     public interface ISkillVitals
     {
         void Heal(float amount);
+        void AddShield(float amount);
+        // 나를 때린 피해량 + 때린 오브젝트 (모르면 null)
+        event System.Action<float, GameObject> DamageTaken;
+        // 받는 피해 배율 (source 별로 따로, 1 = 지움). 여러 개면 곱해짐
+        void SetIncomingDamageScale(object source, float scale);
+    }
+
+    // 다른 칸 스킬 쿨타임 (과충전, 순풍)
+    public interface ISkillCooldowns
+    {
+        void ReduceCooldown(SkillSlotId slot, float seconds);
+        float GetCooldownRemaining(SkillSlotId slot);
     }
 
     public interface ISkillWeapon
@@ -73,7 +87,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         IWeapon Weapon { get; }
     }
 
-    public interface ISkillContext : ISkillMover, ISkillCombatant, ISkillStats, ISkillVitals, ISkillWeapon, ISkillEffects
+    public interface ISkillContext : ISkillMover, ISkillCombatant, ISkillStats, ISkillVitals, ISkillWeapon, ISkillEffects, ISkillCooldowns
     {
         Transform Transform { get; }
         SkillData ActiveSkill { get; set; }
