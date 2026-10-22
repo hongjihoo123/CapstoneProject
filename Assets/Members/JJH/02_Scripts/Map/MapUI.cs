@@ -18,12 +18,27 @@ namespace Members.JJH._02_Scripts.Map
             Boss
         }
 
+        private struct ConnectionCandidate
+        {
+            public int from;
+            public int to;
+            public float distance;
+
+            public ConnectionCandidate(int from, int to, float distance)
+            {
+                this.from = from;
+                this.to = to;
+                this.distance = distance;
+            }
+        }
+
         [Serializable]
         public struct RoomNode
         {
             public int id;
             public RoomType type;
             public Vector2 position;
+            public Vector2Int gridPosition;
             public List<int> connections;
             public MapRoomUI ui;
         }
@@ -48,6 +63,7 @@ namespace Members.JJH._02_Scripts.Map
         private readonly HashSet<int> visitedRoomIds = new HashSet<int>();
         private readonly HashSet<int> revealedRoomIds = new HashSet<int>();
 
+
         private int currentRoomId = -1;
         private int startRoomId = -1;
         private int bossRoomId = -1;
@@ -56,6 +72,8 @@ namespace Members.JJH._02_Scripts.Map
         {
             GenerateMap();
         }
+
+        #region Generate Map
 
         [ContextMenu("Generate Map")]
         public void GenerateMap()
@@ -94,7 +112,6 @@ namespace Members.JJH._02_Scripts.Map
         private void CreateRooms()
         {
             Rect rect = mapContent.rect;
-
             float minX = rect.xMin + mapPadding;
             float maxX = rect.xMax - mapPadding;
             float minY = rect.yMin + mapPadding;
@@ -102,41 +119,77 @@ namespace Members.JJH._02_Scripts.Map
 
             if (minX >= maxX || minY >= maxY)
             {
-                Debug.LogError("MapContent 크기가 너무 작습니다. 크기와 Map Padding을 확인해 주세요.", this);
+                Debug.LogError("MapContent 크기와 Map Padding을 확인해 주세요.", this);
                 return;
             }
 
-            startRoomId = CreateRoom(new Vector2(minX, Random.Range(minY, maxY)), RoomType.Start);
-            bossRoomId = CreateRoom(new Vector2(maxX, Random.Range(minY, maxY)), RoomType.Boss);
+            List<Vector2> positions = new List<Vector2>();
+            int maxAttempts = 1000;
 
-            int attempts = 0;
-            int maxAttempts = roomCount * 100;
-
-            while (rooms.Count < roomCount && attempts < maxAttempts)
+            for (int i = 0; i < roomCount; i++)
             {
-                attempts++;
+                bool placed = false;
 
-                Vector2 position = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
+                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                {
+                    Vector2 position = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
+                    bool valid = true;
 
-                if (!IsPositionAvailable(position))
-                    continue;
+                    foreach (Vector2 existing in positions)
+                    {
+                        if (Vector2.Distance(position, existing) < minRoomDistance)
+                        {
+                            valid = false;
+                            break;
+                        }
+                    }
 
-                CreateRoom(position, GetRandomRoomType());
+                    if (!valid)
+                        continue;
+
+                    positions.Add(position);
+                    placed = true;
+                    break;
+                }
+
+                if (!placed)
+                {
+                    Debug.LogWarning("방을 배치할 공간이 부족합니다. MapContent 크기를 늘리거나 Min Room Distance를 줄여 주세요.", this);
+                    return;
+                }
             }
 
-            if (rooms.Count < roomCount)
+            bool horizontal = Random.value < 0.5f;
+
+            if (horizontal)
+                positions.Sort((a, b) => a.x.CompareTo(b.x));
+            else
+                positions.Sort((a, b) => a.y.CompareTo(b.y));
+
+            if (Random.value < 0.5f)
+                positions.Reverse();
+
+            for (int i = 0; i < positions.Count; i++)
             {
-                Debug.LogWarning($"공간이 부족하여 {rooms.Count}개의 방만 생성했습니다. MapContent 크기를 늘리거나 Min Room Distance를 줄여 주세요.", this);
+                RoomType type = i == 0 ? RoomType.Start :
+                                i == positions.Count - 1 ? RoomType.Boss :
+                                GetRandomRoomType();
+
+                CreateRoom(positions[i], type, Vector2Int.zero);
             }
+
+            startRoomId = 0;
+            bossRoomId = rooms.Count - 1;
         }
 
-        private int CreateRoom(Vector2 position, RoomType type)
+        private int CreateRoom(Vector2 position, RoomType type, Vector2Int gridPosition)
         {
             RoomNode room = new RoomNode
             {
                 id = rooms.Count,
                 type = type,
                 position = position,
+                gridPosition = gridPosition,
                 connections = new List<int>(),
                 ui = null
             };
@@ -145,94 +198,50 @@ namespace Members.JJH._02_Scripts.Map
             return room.id;
         }
 
-        private bool IsPositionAvailable(Vector2 position)
-        {
-            foreach (RoomNode room in rooms)
-            {
-                if (Vector2.Distance(room.position, position) < minRoomDistance)
-                    return false;
-            }
-
-            return true;
-        }
-
-        private RoomType GetRandomRoomType()
-        {
-            int value = Random.Range(0, 100);
-
-            if (value < 60)
-                return RoomType.Normal;
-
-            if (value < 75)
-                return RoomType.Elite;
-
-            if (value < 88)
-                return RoomType.Event;
-
-            return RoomType.Shop;
-        }
-
         private void ConnectRooms()
         {
-            List<int> connectedRooms = new List<int> { startRoomId };
-            HashSet<int> remainingRooms = new HashSet<int>();
-
-            foreach (RoomNode room in rooms)
-            {
-                if (room.id != startRoomId)
-                    remainingRooms.Add(room.id);
-            }
-
-            while (remainingRooms.Count > 0)
-            {
-                int nearestFrom = -1;
-                int nearestTo = -1;
-                float nearestDistance = float.MaxValue;
-
-                foreach (int fromId in connectedRooms)
-                {
-                    RoomNode from = rooms[fromId];
-
-                    foreach (int toId in remainingRooms)
-                    {
-                        RoomNode to = rooms[toId];
-                        float distance = Vector2.Distance(from.position, to.position);
-
-                        if (distance < nearestDistance)
-                        {
-                            nearestDistance = distance;
-                            nearestFrom = fromId;
-                            nearestTo = toId;
-                        }
-                    }
-                }
-
-                if (nearestFrom == -1 || nearestTo == -1)
-                    break;
-
-                AddConnection(nearestFrom, nearestTo);
-
-                connectedRooms.Add(nearestTo);
-                remainingRooms.Remove(nearestTo);
-            }
-
-            List<(int from, int to)> candidates = new List<(int from, int to)>();
+            List<ConnectionCandidate> candidates = new List<ConnectionCandidate>();
 
             for (int i = 0; i < rooms.Count; i++)
             {
                 for (int j = i + 1; j < rooms.Count; j++)
                 {
-                    if (rooms[i].connections.Contains(j))
-                        continue;
-
                     float distance = Vector2.Distance(rooms[i].position, rooms[j].position);
-
-                    if (distance > minRoomDistance * 3.5f)
-                        continue;
-
-                    candidates.Add((i, j));
+                    candidates.Add(new ConnectionCandidate(i, j, distance));
                 }
             }
+
+            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
+
+            for (int i = 0; i < rooms.Count; i++)
+            {
+                for (int j = i + 1; j < rooms.Count; j++)
+                {
+                    Vector2Int a = rooms[i].gridPosition;
+                    Vector2Int b = rooms[j].gridPosition;
+
+                    if (Mathf.Abs(a.x - b.x) + Mathf.Abs(a.y - b.y) == 1)
+                        AddConnection(i, j);
+                }
+            }
+
+            foreach (ConnectionCandidate candidate in candidates)
+            {
+                if (rooms[candidate.from].connections.Count >= 2 &&
+                    rooms[candidate.to].connections.Count >= 2)
+                    continue;
+
+                if (rooms[candidate.from].connections.Contains(candidate.to))
+                    continue;
+
+                if (WouldCrossConnection(candidate.from, candidate.to) ||
+                        WouldOverlapRoom(candidate.from, candidate.to))
+                    continue;
+
+                AddConnection(candidate.from, candidate.to);
+            }
+
+            int addedConnections = 0;
 
             for (int i = candidates.Count - 1; i > 0; i--)
             {
@@ -240,11 +249,19 @@ namespace Members.JJH._02_Scripts.Map
                 (candidates[i], candidates[randomIndex]) = (candidates[randomIndex], candidates[i]);
             }
 
-            int connectionCount = Mathf.Min(extraConnectionCount, candidates.Count);
-
-            for (int i = 0; i < connectionCount; i++)
+            foreach (ConnectionCandidate candidate in candidates)
             {
-                AddConnection(candidates[i].from, candidates[i].to);
+                if (addedConnections >= extraConnectionCount)
+                    break;
+
+                if (rooms[candidate.from].connections.Contains(candidate.to))
+                    continue;
+
+                if (WouldCrossConnection(candidate.from, candidate.to))
+                    continue;
+
+                AddConnection(candidate.from, candidate.to);
+                addedConnections++;
             }
         }
 
@@ -265,6 +282,90 @@ namespace Members.JJH._02_Scripts.Map
             rooms[fromId] = from;
             rooms[toId] = to;
         }
+
+        private bool WouldCrossConnection(int fromId, int toId)
+        {
+            Vector2 a = rooms[fromId].position;
+            Vector2 b = rooms[toId].position;
+
+            foreach (RoomNode room in rooms)
+            {
+                foreach (int connectedId in room.connections)
+                {
+                    if (room.id >= connectedId)
+                        continue;
+
+                    if (room.id == fromId || room.id == toId ||
+                        connectedId == fromId || connectedId == toId)
+                        continue;
+
+                    Vector2 c = rooms[room.id].position;
+                    Vector2 d = rooms[connectedId].position;
+
+                    if (SegmentsIntersect(a, b, c, d))
+                        return true;
+                }
+            }
+
+            return false;
+        }
+
+        private bool WouldOverlapRoom(int fromId, int toId)
+        {
+            Vector2 start = rooms[fromId].position;
+            Vector2 end = rooms[toId].position;
+
+            foreach (RoomNode room in rooms)
+            {
+                if (room.id == fromId || room.id == toId)
+                    continue;
+
+                RectTransform rect = roomPrefab.GetComponent<RectTransform>();
+                Vector2 size = Vector2.Scale(rect.rect.size, rect.localScale);
+
+                Rect roomRect = new Rect(room.position - size * 0.5f, size);
+
+                if (SegmentIntersectsRect(start, end, roomRect))
+                    return true;
+            }
+
+            return false;
+        }
+
+        private bool SegmentIntersectsRect(Vector2 start, Vector2 end, Rect rect)
+        {
+            if (rect.Contains(start) || rect.Contains(end))
+                return true;
+
+            Vector2 topLeft = new Vector2(rect.xMin, rect.yMax);
+            Vector2 topRight = new Vector2(rect.xMax, rect.yMax);
+            Vector2 bottomLeft = new Vector2(rect.xMin, rect.yMin);
+            Vector2 bottomRight = new Vector2(rect.xMax, rect.yMin);
+
+            return SegmentsIntersect(start, end, topLeft, topRight) ||
+                   SegmentsIntersect(start, end, topRight, bottomRight) ||
+                   SegmentsIntersect(start, end, bottomRight, bottomLeft) ||
+                   SegmentsIntersect(start, end, bottomLeft, topLeft);
+        }
+
+        private bool SegmentsIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
+        {
+            float abC = Cross(b - a, c - a);
+            float abD = Cross(b - a, d - a);
+            float cdA = Cross(d - c, a - c);
+            float cdB = Cross(d - c, b - c);
+
+            return abC * abD < 0f && cdA * cdB < 0f;
+        }
+
+        private float Cross(Vector2 a, Vector2 b)
+        {
+            return a.x * b.y - a.y * b.x;
+        }
+
+        #endregion
+
+        #region Generate UI
 
         private void CreateConnectionUI()
         {
@@ -329,12 +430,14 @@ namespace Members.JJH._02_Scripts.Map
             }
         }
 
+        #endregion
+
         public void SelectRoom(int roomId)
         {
             if (roomId < 0 || roomId >= rooms.Count)
                 return;
 
-            if (currentRoomId == -1)
+            if (currentRoomId == -1 || roomId == currentRoomId)
                 return;
 
             RoomNode currentRoom = rooms[currentRoomId];
@@ -382,6 +485,22 @@ namespace Members.JJH._02_Scripts.Map
             currentRoomId = -1;
             startRoomId = -1;
             bossRoomId = -1;
+        }
+
+        private RoomType GetRandomRoomType()
+        {
+            int value = Random.Range(0, 100);
+
+            if (value < 60)
+                return RoomType.Normal;
+
+            if (value < 75)
+                return RoomType.Elite;
+
+            if (value < 88)
+                return RoomType.Event;
+
+            return RoomType.Shop;
         }
 
         public RoomType GetRoomType(int roomId)
