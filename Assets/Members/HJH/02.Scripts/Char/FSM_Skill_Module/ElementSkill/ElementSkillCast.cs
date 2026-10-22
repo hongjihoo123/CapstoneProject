@@ -47,7 +47,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             if (target is not Component component)
                 return;
 
-            Transform body = component.transform;
+            Transform body = target is IFxBody redirect && redirect.FxBody != null ? redirect.FxBody : component.transform;
             Play(Skill.HitFx, body.position + BodyHeight, push);
 
             // CC 걸린 동안 머리 위에 표시
