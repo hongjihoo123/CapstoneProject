@@ -1,4 +1,5 @@
-﻿using System.Collections;
+﻿using RobotWeapons;
+using System.Collections;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
@@ -12,11 +13,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         [SerializeField] private float dashDuration = 0.2f;
 
         private AbstractEnemy _enemy;
+        private EnemySkillModule _skillModule;
         private Coroutine _dashCoroutine;
 
-        public void Initialize(AbstractEnemy owner)
+        public void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
         {
             _enemy = owner;
+            _skillModule = skillModule;
         }
 
         public void UseSkill()
@@ -30,6 +33,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         private IEnumerator UseSkillCoroutine()
         {
             IsUsing = true;
+
+            _skillModule.AreaVisualizer.Show(
+                            AttackArea.Box(AttackAreaKind.EnemyWarning,
+                                                     _enemy.transform.position + _enemy.transform.forward * (dashDistance * 0.5f),
+                                                     _enemy.transform.rotation, new Vector3(2f, 0f, dashDistance),
+                                                     prepareTime));
 
             yield return new WaitForSeconds(prepareTime);
 
