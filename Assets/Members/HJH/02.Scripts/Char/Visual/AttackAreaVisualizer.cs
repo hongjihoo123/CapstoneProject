@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Members.JJH._02_Scripts.Agents;
 using Members.KYR._01_Scripts;
 using RobotWeapons;
 using UnityEngine;
@@ -31,7 +32,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public float ExpireTime;
         }
 
-        [SerializeField] private PlayerAgent player;
+        [SerializeField] private Agent player;
         [SerializeField] private float groundOffset = 0.06f;
         [SerializeField] private float lineWidth = 0.08f;
         [SerializeField] private float guideLineWidth = 0.03f;
