@@ -193,12 +193,12 @@ namespace Members.KYR._01_Scripts
 
         public override void TakeDamage(float amount, GameObject source)
         {
-            Health.TakeDamage(amount);
+            Health.TakeDamage(amount, source, null);
         }
 
         public void TakeDamage(float amount, GameObject source, ElementType element)
         {
-            Health.TakeDamage(amount, element);
+            Health.TakeDamage(amount, source, element);
         }
 
         public void Heal(float amount)
@@ -237,18 +237,31 @@ namespace Members.KYR._01_Scripts
                 return;
 
             float attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
-            float scale = attackCoeff * attack;
+            float elemental = 0f;
+            float eleCoeff = 0f;
             if (element.HasValue)
             {
-                float elemental = Stats != null
+                elemental = Stats != null
                     ? Stats.Get(PlayerElementStats.DamageStat(element.Value))
                     : 1f;
-                scale += elementCoeff * elemental;
+                eleCoeff = elementCoeff;
             }
 
+            float dealt = StatFormulas.Outgoing(amount, attackCoeff, attack, eleCoeff, elemental);
+
             bool wasAlive = target.IsAlive;
-            float dealt = amount * Mathf.Max(0f, scale);
-            target.TakeDamage(dealt, gameObject);
+            if (element.HasValue && target is PlayerAgent player)
+                player.TakeDamage(dealt, gameObject, element.Value);
+            else
+                target.TakeDamage(dealt, gameObject);
+
+            if (dealt > 0f && Stats != null && Stats.Tree != null)
+            {
+                float omnivamp = Stats.Get(PlayerStatId.Omnivamp);
+                if (omnivamp > 0f)
+                    Heal(dealt * omnivamp);
+            }
+
             if (wasAlive)
                 DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }

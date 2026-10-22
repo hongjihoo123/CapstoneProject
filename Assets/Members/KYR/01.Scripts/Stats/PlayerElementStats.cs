@@ -24,5 +24,15 @@ namespace Members.KYR._01_Scripts.Stats
             ElementType.Earth => PlayerStatId.EarthDefense,
             _ => throw new ArgumentOutOfRangeException(nameof(element), element, null)
         };
+
+        public static PlayerStatId PenetrationStat(ElementType element) => element switch
+        {
+            ElementType.Fire => PlayerStatId.FirePenetration,
+            ElementType.Water => PlayerStatId.WaterPenetration,
+            ElementType.Wind => PlayerStatId.WindPenetration,
+            ElementType.Electric => PlayerStatId.ElectricPenetration,
+            ElementType.Earth => PlayerStatId.EarthPenetration,
+            _ => throw new ArgumentOutOfRangeException(nameof(element), element, null)
+        };
     }
 }

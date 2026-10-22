@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant.So;
 using UnityEngine;
 
@@ -16,24 +17,15 @@ namespace Members.KYR._01.Scripts.Enchant
         }
 
         [SerializeField] private EnchantFragment[] fragments = Array.Empty<EnchantFragment>();
-        [SerializeField] private int currency;
 
         private readonly Dictionary<CharacterData, Progress> _byCharacter = new();
         private readonly Progress _shared = new();
+        private readonly HashSet<string> _hydrated = new();
 
         public event Action<EnchantFragment> FragmentUnlocked;
         public event Action<EnchantFragment, int> OptionSelected;
 
-        public int Currency => currency;
         public IReadOnlyList<EnchantFragment> Fragments => fragments;
-
-        public void AddCurrency(int amount)
-        {
-            if (amount <= 0)
-                return;
-
-            currency += amount;
-        }
 
         public bool IsUnlocked(CharacterData character, EnchantFragment fragment)
         {
@@ -57,6 +49,7 @@ namespace Members.KYR._01.Scripts.Enchant
             if (!progress.Unlocked.Add(fragment.FragmentId))
                 return false;
 
+            Sync(character, progress);
             FragmentUnlocked?.Invoke(fragment);
             return true;
         }
@@ -69,11 +62,13 @@ namespace Members.KYR._01.Scripts.Enchant
             Progress progress = ProgressOf(character);
             if (progress.Unlocked.Contains(fragment.FragmentId))
                 return false;
-            if (currency < fragment.UnlockCost)
+
+            CurrencyService currency = GameBootstrap.Currency;
+            if (currency == null || !currency.TrySpend(CurrencyType.MetaSoul, fragment.UnlockCost))
                 return false;
 
-            currency -= fragment.UnlockCost;
             progress.Unlocked.Add(fragment.FragmentId);
+            Sync(character, progress);
             FragmentUnlocked?.Invoke(fragment);
             return true;
         }
@@ -87,23 +82,87 @@ namespace Members.KYR._01.Scripts.Enchant
             if (fragment.Options[optionIndex] == null)
                 return false;
 
-            ProgressOf(character).Selected[fragment.FragmentId] = optionIndex;
+            Progress progress = ProgressOf(character);
+            progress.Selected[fragment.FragmentId] = optionIndex;
+            Sync(character, progress);
             OptionSelected?.Invoke(fragment, optionIndex);
             return true;
         }
 
         private Progress ProgressOf(CharacterData character)
         {
+            string id = IdOf(character);
+            Progress progress;
             if (character == null)
-                return _shared;
-
-            if (!_byCharacter.TryGetValue(character, out Progress progress))
+            {
+                progress = _shared;
+            }
+            else if (!_byCharacter.TryGetValue(character, out progress))
             {
                 progress = new Progress();
                 _byCharacter.Add(character, progress);
             }
 
+            if (_hydrated.Add(id))
+                Hydrate(progress, id);
+
             return progress;
+        }
+
+        private static string IdOf(CharacterData character)
+        {
+            return character != null ? character.name : string.Empty;
+        }
+
+        private static void Hydrate(Progress progress, string id)
+        {
+            CurrencyService currency = GameBootstrap.Currency;
+            if (currency == null || !currency.TryReadEnchant(id, out string[] unlocked, out EnchantSelectionSave[] selected))
+                return;
+
+            if (unlocked != null)
+            {
+                for (int i = 0; i < unlocked.Length; i++)
+                {
+                    if (!string.IsNullOrEmpty(unlocked[i]))
+                        progress.Unlocked.Add(unlocked[i]);
+                }
+            }
+
+            if (selected == null)
+                return;
+
+            for (int i = 0; i < selected.Length; i++)
+            {
+                EnchantSelectionSave pick = selected[i];
+                if (pick == null || string.IsNullOrEmpty(pick.fragmentId))
+                    continue;
+
+                progress.Selected[pick.fragmentId] = pick.optionIndex;
+            }
+        }
+
+        private static void Sync(CharacterData character, Progress progress)
+        {
+            CurrencyService currency = GameBootstrap.Currency;
+            if (currency == null)
+                return;
+
+            var unlocked = new string[progress.Unlocked.Count];
+            progress.Unlocked.CopyTo(unlocked);
+
+            var selected = new EnchantSelectionSave[progress.Selected.Count];
+            int index = 0;
+            foreach (KeyValuePair<string, int> pair in progress.Selected)
+            {
+                selected[index++] = new EnchantSelectionSave
+                {
+                    fragmentId = pair.Key,
+                    optionIndex = pair.Value
+                };
+            }
+
+            currency.WriteEnchant(IdOf(character), unlocked, selected);
         }
 
         private bool Contains(EnchantFragment fragment)

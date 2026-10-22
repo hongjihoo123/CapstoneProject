@@ -45,5 +45,6 @@ namespace Members.KYR._01_Scripts.Stats
         Omnivamp,
         Tenacity,
         Unflinching,
+        DamageReduction,
     }
 }

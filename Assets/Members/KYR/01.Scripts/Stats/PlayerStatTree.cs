@@ -16,7 +16,12 @@ namespace Members.KYR._01_Scripts.Stats
             StatNode survival = Add(PlayerStatId.Survival, 0f, Root);
             Add(PlayerStatId.MaxHp, bases.MaxHp, survival);
             Add(PlayerStatId.Defense, bases.Defense, survival);
+            Add(PlayerStatId.DamageReduction, bases.DamageReduction, survival);
+            Add(PlayerStatId.MaxStamina, bases.MaxStamina, survival);
+            Add(PlayerStatId.StaminaRegen, bases.StaminaRegen, survival);
             Add(PlayerStatId.HealReceived, bases.HealReceived, survival);
+            Add(PlayerStatId.Tenacity, bases.Tenacity, survival);
+            Add(PlayerStatId.Unflinching, bases.Unflinching, survival);
             Add(PlayerStatId.FireDefense, bases.FireDefense, survival);
             Add(PlayerStatId.WaterDefense, bases.WaterDefense, survival);
             Add(PlayerStatId.WindDefense, bases.WindDefense, survival);
@@ -26,12 +31,20 @@ namespace Members.KYR._01_Scripts.Stats
             StatNode mobility = Add(PlayerStatId.Mobility, 0f, Root);
             Add(PlayerStatId.WalkSpeed, bases.WalkSpeed, mobility);
             Add(PlayerStatId.RunSpeed, bases.RunSpeed, mobility);
+            Add(PlayerStatId.CrouchSpeed, bases.CrouchSpeed, mobility);
+            Add(PlayerStatId.JumpHeight, bases.JumpHeight, mobility);
             Add(PlayerStatId.DashSpeed, bases.DashSpeed, mobility);
             Add(PlayerStatId.DashDuration, bases.DashDuration, mobility);
+            Add(PlayerStatId.AirControl, bases.AirControl, mobility);
 
             StatNode combat = Add(PlayerStatId.Combat, 0f, Root);
             Add(PlayerStatId.Damage, bases.Damage, combat);
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, combat);
+            Add(PlayerStatId.ReloadSpeed, bases.ReloadSpeed, combat);
+            Add(PlayerStatId.RecoilControl, bases.RecoilControl, combat);
+            Add(PlayerStatId.WeakpointMultiplier, bases.WeakpointMultiplier, combat);
+            Add(PlayerStatId.ArmorPenetration, bases.ArmorPenetration, combat);
+            Add(PlayerStatId.Omnivamp, bases.Omnivamp, combat);
 
             StatNode skill = Add(PlayerStatId.Skill, 0f, Root);
             Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, skill);
@@ -42,6 +55,11 @@ namespace Members.KYR._01_Scripts.Stats
             Add(PlayerStatId.WindDamage, bases.WindDamage, element);
             Add(PlayerStatId.ElectricDamage, bases.ElectricDamage, element);
             Add(PlayerStatId.EarthDamage, bases.EarthDamage, element);
+            Add(PlayerStatId.FirePenetration, bases.FirePenetration, element);
+            Add(PlayerStatId.WaterPenetration, bases.WaterPenetration, element);
+            Add(PlayerStatId.WindPenetration, bases.WindPenetration, element);
+            Add(PlayerStatId.ElectricPenetration, bases.ElectricPenetration, element);
+            Add(PlayerStatId.EarthPenetration, bases.EarthPenetration, element);
         }
 
         public float Get(PlayerStatId id)
@@ -72,7 +90,7 @@ namespace Members.KYR._01_Scripts.Stats
         {
             if (!_nodes.TryGetValue(id, out StatNode node))
                 throw new ArgumentException($"Unknown stat {id}.", nameof(id));
-
+            
             return node;
         }
 
