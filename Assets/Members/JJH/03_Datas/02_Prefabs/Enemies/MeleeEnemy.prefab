@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 2046890225593970201}
   - component: {fileID: 380198762110277}
   - component: {fileID: 3459386373503470124}
+  - component: {fileID: 3306830364385336595}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -103,6 +104,28 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c3ba27bdb5fc47448d0215eb14d3e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.AgentRenderer
+--- !u!95 &3306830364385336595
+Animator:
+  serializedVersion: 7
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5511463501763685207}
+  m_Enabled: 1
+  m_Avatar: {fileID: 0}
+  m_Controller: {fileID: 0}
+  m_CullingMode: 0
+  m_UpdateMode: 0
+  m_ApplyRootMotion: 0
+  m_LinearVelocityBlending: 0
+  m_StabilizeFeet: 0
+  m_AnimatePhysics: 0
+  m_WarningMessage: 
+  m_HasTransformHierarchy: 1
+  m_AllowConstantClipSamplingOptimization: 1
+  m_KeepAnimatorStateOnDisable: 0
+  m_WriteDefaultValuesOnDisable: 0
 --- !u!1 &6977966061365344412
 GameObject:
   m_ObjectHideFlags: 0
@@ -116,6 +139,7 @@ GameObject:
   - component: {fileID: 6539598982980265063}
   - component: {fileID: 6607348679926133894}
   - component: {fileID: 3359876293572287583}
+  - component: {fileID: 8826985774723819450}
   m_Layer: 9
   m_Name: MeleeEnemy
   m_TagString: Untagged
@@ -170,10 +194,10 @@ NavMeshAgent:
   m_Speed: 3.5
   m_Acceleration: 8
   avoidancePriority: 50
-  m_AngularSpeed: 120
+  m_AngularSpeed: 720
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
+  m_AutoBraking: 0
   m_AutoRepath: 1
   m_Height: 1
   m_BaseOffset: 0.5
@@ -229,8 +253,23 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1, y: 1, z: 1}
-  m_Center: {x: 0, y: 0, z: 0}
+  m_Size: {x: 1, y: 2, z: 1}
+  m_Center: {x: 0, y: 0.5000001, z: 0}
+--- !u!114 &8826985774723819450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6977966061365344412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d33707b04a411bb1ed28486801e66360, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.CrowdControlReceiver
+  tier: 0
+  stunImmunity: 1
+  knockbackTime: 0.15
 --- !u!1001 &5026464066093207367
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -285,7 +324,10 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 7238682364675669347, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2443824693231431739}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
 --- !u!4 &2428954423756648996 stripped
@@ -354,6 +396,68 @@ PrefabInstance:
 Transform:
   m_CorrespondingSourceObject: {fileID: 6508876654973110295, guid: 1e2252d34a19455428037c4c0d53acbd, type: 3}
   m_PrefabInstance: {fileID: 6031947832751885002}
+  m_PrefabAsset: {fileID: 0}
+--- !u!1001 &6599336464926145295
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 2428954423756648996}
+    m_Modifications:
+    - target: {fileID: 5199237525282005711, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_Name
+      value: EnemyDashSkill
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+--- !u!4 &2443824693231431739 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 8826976176151415604, guid: b0a3597dd40ef61478d316ce686a2900, type: 3}
+  m_PrefabInstance: {fileID: 6599336464926145295}
   m_PrefabAsset: {fileID: 0}
 --- !u!1001 &7313578599444740326
 PrefabInstance:
@@ -478,12 +582,28 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Target
       value: 
-      objectReference: {fileID: 6977966061365344412}
+      objectReference: {fileID: 1992375291954114677}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: Dead
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
