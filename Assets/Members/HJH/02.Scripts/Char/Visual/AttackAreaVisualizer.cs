@@ -4,9 +4,16 @@ using Members.JJH._02_Scripts.Agents;
 using Members.KYR._01_Scripts;
 using RobotWeapons;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
+    // 공격 범위 바닥에 선으로 그려주는 거. 플레이어/적 둘 다 씀
+    //  - 플레이어(씬에 하나): listenToBus 켜기 -> AttackAreaBus 로 올라오는 거 전부 그림 + 스킬 조준 미리보기
+    //  - 적(EnemySkillModule): listenToBus 끄기 -> 버스는 안 듣고, 자기가 Show() 로 넘긴 것만 그림
+    //    (적마다 버스 들으면 적 수만큼 같은 선이 겹쳐 그려짐)
+    //    예) AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, 위치, 반지름, 경고시간));
+    // owner 비워두면 부모에서 Agent 찾아서 씀 (바닥 높이 기준)
     public class AttackAreaVisualizer : MonoBehaviour, ISkillPreview
     {
         private const int CircleSegments = 40;
@@ -32,7 +39,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public float ExpireTime;
         }
 
-        [SerializeField] private Agent player;
+        [SerializeField]
+        private Agent owner;
+        [SerializeField]
+        private bool listenToBus = true;
         [SerializeField] private float groundOffset = 0.06f;
         [SerializeField] private float lineWidth = 0.08f;
         [SerializeField] private float guideLineWidth = 0.03f;
@@ -53,20 +63,34 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private readonly List<TimedShape> _timed = new();
         private readonly List<Shape> _frame = new();
         private readonly List<LineRenderer> _pool = new();
-        private Material _material;
+        private static Material _material;   // 적마다 하나씩 안 만들게 같이 씀
         private int _used;
 
-        private void OnEnable() => AttackAreaBus.Raised += OnAreaRaised;
+        private void Awake()
+        {
+            if (owner == null)
+                owner = GetComponentInParent<Agent>();
+        }
+
+        private void OnEnable()
+        {
+            if (listenToBus)
+                AttackAreaBus.Raised += Show;
+        }
 
         private void OnDisable()
         {
-            AttackAreaBus.Raised -= OnAreaRaised;
+            AttackAreaBus.Raised -= Show;
             _timed.Clear();
             HideUnused(0);
         }
 
         private void Update()
         {
+            // F1 디버그 토글은 버스 듣는 애(플레이어 쪽)만
+            if (!listenToBus)
+                return;
+
             UnityEngine.InputSystem.Keyboard keyboard = UnityEngine.InputSystem.Keyboard.current;
             if (keyboard != null && keyboard.f1Key.wasPressedThisFrame)
             {
@@ -87,7 +111,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     _frame.Add(_timed[i].Shape);
             }
 
-            if (player != null && player.SkillFsm != null && player.SkillFsm.IsAimingSkill)
+            // 스킬 조준 미리보기는 플레이어만
+            if (owner is PlayerAgent player && player.SkillFsm != null && player.SkillFsm.IsAimingSkill)
                 player.SkillFsm.DescribeAimPreview(this);
 
             _used = 0;
@@ -97,7 +122,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             HideUnused(_used);
         }
 
-        private void OnAreaRaised(AttackArea area)
+        // 이 Visualizer 에 범위 하나 그림. 버스 듣는 애는 버스에서 자동으로 불림, 적은 직접 부르면 됨
+        public void Show(AttackArea area)
         {
             if (IsDebug(area.Kind) && !showHitAreas)
                 return;
@@ -182,7 +208,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static bool IsDebug(AttackAreaKind kind) => kind != AttackAreaKind.EnemyWarning;
 
         private float GroundY(Shape shape) =>
-            (player != null ? player.transform.position.y : shape.Center.y) + groundOffset;
+            (owner != null ? owner.transform.position.y : shape.Center.y) + groundOffset;
 
         private void Draw(Shape shape)
         {
