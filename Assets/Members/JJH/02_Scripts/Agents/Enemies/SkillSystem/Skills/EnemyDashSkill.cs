@@ -4,28 +4,17 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyDashSkill : MonoBehaviour, IEnemySkill
+    public class EnemyDashSkill : AbstractEnemySkill, IEnemySkill
     {
-        public bool IsUsing { get; private set; }
-
         [SerializeField] private float prepareTime = 1f;
         [SerializeField] private float dashDistance = 10f;
         [SerializeField] private float dashDuration = 0.2f;
 
-        private AbstractEnemy _enemy;
-        private EnemySkillModule _skillModule;
         private Coroutine _dashCoroutine;
 
-        public void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
+        public override void UseSkill()
         {
-            _enemy = owner;
-            _skillModule = skillModule;
-        }
-
-        public void UseSkill()
-        {
-            if (IsUsing || _enemy == null)
-                return;
+            base.UseSkill();
 
             _dashCoroutine = StartCoroutine(UseSkillCoroutine());
         }
