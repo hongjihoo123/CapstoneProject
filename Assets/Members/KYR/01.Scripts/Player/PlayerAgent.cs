@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts.EffectBuffs;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
 using Members.KYR._01_Scripts.FSM.Weapon;
@@ -66,6 +67,7 @@ namespace Members.KYR._01_Scripts
         public WeaponStateModule WeaponFsm { get; private set; }
         public SkillStateModule SkillFsm { get; private set; }
         public StatusEffectModule StatusEffects { get; private set; }
+        public EffectBuffRunner EffectBuffs { get; private set; }
 
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
@@ -96,6 +98,9 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
             Debug.Assert(WeaponFsm != null, $"{name}에는 WeaponStateModule이 필요합니다.");
             Debug.Assert(SkillFsm != null, $"{name}에는 SkillStateModule이 필요합니다.");
+
+            EffectBuffs = new EffectBuffRunner(this);
+            EffectBuffs.ClaimPlayer();
 
             if (Weapon != null)
                 Weapon.OnWeaponFired += HandleWeaponFired;
@@ -146,6 +151,10 @@ namespace Members.KYR._01_Scripts
                 return;
 
             float dt = Time.deltaTime;
+            if (Health != null && Health.IsDead)
+                EffectBuffs?.Clear();
+            else
+                EffectBuffs?.Tick(dt);
 
             if (playerInput != null)
                 playerInput.Fill(Input);
@@ -401,6 +410,8 @@ namespace Members.KYR._01_Scripts
 
         private void OnDestroy()
         {
+            EffectBuffs?.ReleasePlayer();
+
             if (Weapon != null)
                 Weapon.OnWeaponFired -= HandleWeaponFired;
         }
@@ -411,6 +422,7 @@ namespace Members.KYR._01_Scripts
 
             firePulseTimer = firePulseDuration;
             lastFireWasAimed = false;
+            EffectBuffs?.NotifyBasicAttack();
         }
     }
 }

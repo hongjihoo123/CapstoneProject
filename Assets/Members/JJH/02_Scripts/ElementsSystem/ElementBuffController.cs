@@ -1,4 +1,5 @@
-﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+﻿using Members.KYR._01_Scripts.EffectBuffs;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System;
 using System.Collections.Generic;
@@ -15,7 +16,9 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             public ElementType[] sequence;
             [Tooltip("효과 설명 (아직 실제 효과는 안 걸림, 글자만)")]
             public string effect;
-            [Tooltip("지속 시간(초). 같은 콤보를 다시 터뜨리면 시간만 처음부터 다시")]
+            [Tooltip("효과형 버프. 비어 있으면 아래 지속 시간만 관리한다.")]
+            public EffectBuff effectBuff;
+            [Tooltip("지속 시간(초). 효과형 버프가 있으면 그 에셋의 시간을 쓴다. 같은 콤보를 다시 터뜨리면 시간만 처음부터 다시")]
             public float duration;
         }
 
@@ -266,16 +269,20 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             return false;
         }
 
-        // 콤보 효과는 아직 안 만듦. 지속 시간만 관리함:
-        // 처음 터지면 시간 시작, 이미 켜져 있는 콤보가 또 터지면 겹치지 않고 시간만 처음부터 다시
+        // 처음 터지면 시간 시작, 이미 켜져 있는 콤보가 또 터지면 겹치지 않고 시간만 처음부터 다시.
+        // 효과형 버프가 있으면 그 에셋 시간으로 플레이어 실행기에 넘긴다.
         private void ApplyCombo(ElementCombo combo)
         {
+            float duration = combo.effectBuff != null ? combo.effectBuff.Duration : combo.duration;
             bool refreshed = _active.ContainsKey(combo.name);
-            _active[combo.name] = combo.duration;
+            _active[combo.name] = duration;
+
+            if (combo.effectBuff != null)
+                EffectBuffRunner.Player?.Apply(combo.effectBuff);
 
             Debug.Log(refreshed
-                ? $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시간 초기화 -> {combo.duration}초"
-                : $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시작, {combo.duration}초");
+                ? $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시간 초기화 -> {duration}초"
+                : $"[ElementBuff] Combo: {combo.name} ({combo.effect}) 시작, {duration}초");
         }
 
         private readonly List<string> _ended = new();
@@ -301,8 +308,22 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             foreach (string name in _ended)
             {
                 _active.Remove(name);
+                EffectBuff ended = EffectBuffOf(name);
+                if (ended != null)
+                    EffectBuffRunner.Player?.Remove(ended);
                 Debug.Log($"[ElementBuff] Combo: {name} 끝");
             }
+        }
+
+        private EffectBuff EffectBuffOf(string comboName)
+        {
+            for (int i = 0; i < combos.Count; i++)
+            {
+                if (combos[i].name == comboName)
+                    return combos[i].effectBuff;
+            }
+
+            return null;
         }
 
         // 남은 시간 (UI 에서 쓰려고). 꺼져 있으면 false
