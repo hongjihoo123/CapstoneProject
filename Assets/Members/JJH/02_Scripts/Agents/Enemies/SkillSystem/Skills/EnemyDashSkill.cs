@@ -1,28 +1,19 @@
-﻿using System.Collections;
+﻿using RobotWeapons;
+using System.Collections;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyDashSkill : MonoBehaviour, IEnemySkill
+    public class EnemyDashSkill : AbstractEnemySkill, IEnemySkill
     {
-        public bool IsUsing { get; private set; }
-
-        [SerializeField] private float prepareTime = 1f;
         [SerializeField] private float dashDistance = 10f;
         [SerializeField] private float dashDuration = 0.2f;
 
-        private AbstractEnemy _enemy;
         private Coroutine _dashCoroutine;
 
-        public void Initialize(AbstractEnemy owner)
+        public override void UseSkill()
         {
-            _enemy = owner;
-        }
-
-        public void UseSkill()
-        {
-            if (IsUsing || _enemy == null)
-                return;
+            base.UseSkill();
 
             _dashCoroutine = StartCoroutine(UseSkillCoroutine());
         }
@@ -31,7 +22,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         {
             IsUsing = true;
 
-            yield return new WaitForSeconds(prepareTime);
+            _skillModule.AreaVisualizer.Show(
+                            AttackArea.Box(AttackAreaKind.EnemyWarning,
+                                                     _enemy.transform.position + _enemy.transform.forward * (dashDistance * 0.5f),
+                                                     _enemy.transform.rotation, new Vector3(2f, 0f, dashDistance),
+                                                     SkillSO.SkillPrepareTime));
+
+            yield return new WaitForSeconds(SkillSO.SkillPrepareTime);
 
             Vector3 startPosition = _enemy.transform.position;
             Vector3 direction = _enemy.transform.forward;

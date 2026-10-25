@@ -32,7 +32,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         Defense,        // value = 받는 피해 감소 %, duration
         MoveSpeed,      // value = 이동 속도 +%, duration
         AttackSpeed,    // value = 공격 속도 +%, duration
-        Damage          // value = 공격력 +%, duration
+        Damage,         // value = 공격력 +%, duration
+        CooldownSpeed,  // value = 다른 스킬 쿨이 +% 빨리 돔, duration
+        DashCharge,     // value = 대쉬 몇 번 바로 충전
+        Vulnerability,  // value = 받는 피해 +%, duration (폭주 같은 대가)
+        Shield          // value = 쉴드량
     }
 
     [Serializable]
@@ -104,6 +108,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                     case SelfEffectKind.Damage:
                         AddBuff(context, PlayerStatId.Damage, StatModifierType.PercentAdd, effect, source);
                         break;
+                    case SelfEffectKind.CooldownSpeed:
+                        context.Run(new CooldownBoost(context, effect.value / 100f, effect.duration));
+                        break;
+                    case SelfEffectKind.DashCharge:
+                        for (int i = 0; i < Mathf.Max(1, Mathf.RoundToInt(effect.value)); i++)
+                            context.ReduceCooldown(SkillSlotId.Dash, context.GetCooldownRemaining(SkillSlotId.Dash) + 0.01f);
+                        break;
+                    case SelfEffectKind.Shield:
+                        context.AddShield(effect.value);
+                        break;
+                    case SelfEffectKind.Vulnerability:
+                        context.Run(new IncomingScale(context, source, 1f + effect.value / 100f, effect.duration));
+                        break;
                 }
             }
         }
@@ -141,8 +158,60 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                     SelfEffectKind.MoveSpeed => new SkillStat("이동 속도", $"+{e.value:0}% · {e.duration:0.#}초"),
                     SelfEffectKind.AttackSpeed => new SkillStat("공격 속도", $"+{e.value:0}% · {e.duration:0.#}초"),
                     SelfEffectKind.Damage => new SkillStat("공격력", $"+{e.value:0}% · {e.duration:0.#}초"),
+                    SelfEffectKind.CooldownSpeed => new SkillStat("쿨타임 가속", $"+{e.value:0}% · {e.duration:0.#}초"),
+                    SelfEffectKind.DashCharge => new SkillStat("대쉬 충전", $"{e.value:0}회"),
+                    SelfEffectKind.Shield => new SkillStat("쉴드", $"{e.value:0}"),
+                    SelfEffectKind.Vulnerability =>new SkillStat("받는 피해", $"+{e.value:0}% · {e.duration:0.#}초"),
                     _ => default
                 });
+            }
+        }
+
+        // 몇 초 동안 모든 칸 쿨타임이 더 빨리 돔
+        private sealed class CooldownBoost : ISkillTimedEffect
+        {
+            private readonly ISkillContext _context;
+            private readonly float _rate;
+            private float _left;
+
+            public CooldownBoost(ISkillContext context, float rate, float duration)
+            {
+                _context = context;
+                _rate = rate;
+                _left = duration;
+            }
+
+            public bool Tick(float deltaTime)
+            {
+                foreach (SkillSlotId slot in SkillSlots.All)
+                    _context.ReduceCooldown(slot, deltaTime * _rate);
+                _left -= deltaTime;
+                return _left > 0f;
+            }
+        }
+
+        // 몇 초 동안 받는 피해 배율. 끝나면 원래대로
+        private sealed class IncomingScale : ISkillTimedEffect
+        {
+            private readonly ISkillContext _context;
+            private readonly object _source;
+            private float _left;
+
+            public IncomingScale(ISkillContext context, object source, float scale, float duration)
+            {
+                _context = context;
+                _source = source ?? this;
+                _left = duration;
+                context.SetIncomingDamageScale(_source, scale);
+            }
+
+            public bool Tick(float deltaTime)
+            {
+                _left -= deltaTime;
+                if (_left > 0f)
+                    return true;
+                _context.SetIncomingDamageScale(_source, 1f);
+                return false;
             }
         }
     }

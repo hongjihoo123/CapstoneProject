@@ -4,7 +4,7 @@
     {
         bool IsUsing { get; }
 
-        void Initialize(AbstractEnemy owner);
+        void Initialize(AbstractEnemy owner, EnemySkillModule skillModule);
         void UseSkill();
     }
 }

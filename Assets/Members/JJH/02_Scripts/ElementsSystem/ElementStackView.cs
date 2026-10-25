@@ -38,6 +38,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [SerializeField] private Image[] stockPips;
         [SerializeField] private TextMeshProUGUI readyLabel;
         [SerializeField] private int maxFinisherStock = 3;
+        [Tooltip("피니시 키 (F 는 상호작용이라 C). 바깥 피니시 로직(HJH FinisherViewLink)이 연결되면 이 키는 안 씀")]
+        [SerializeField] private Key finisherKey = Key.C;
 
         [Header("Combo List")]
         [SerializeField] private RectTransform listRowTemplate;
@@ -64,7 +66,6 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         [Header("Setting")]
         [SerializeField] private float clearDelay = 0.35f;
-        [SerializeField] private float clearScale = 1.3f;
         [SerializeField] private float bounceScale = 0.25f;
 
         private class ListRow
@@ -183,16 +184,66 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 bool hasStock = _finisherStock.Count > 0;
                 bool full = _finisherStock.Count >= maxFinisherStock;
 
-                readyLabel.enabled = hasStock;
-                readyLabel.text = full ? "MAX" : "READY";
-                readyLabel.alpha = 0.45f + 0.55f * Pulse(full ? 10f : 4f);
+                if (_external && _externalReady)
+                {
+                    // 피니시 준비 중: 다음 스킬 배율 + 남은 시간
+                    readyLabel.enabled = true;
+                    readyLabel.text = $"×{_externalScale:0.0#}  {_externalLeft:0.0}s";
+                    readyLabel.alpha = 0.6f + 0.4f * Pulse(12f);
+                }
+                else
+                {
+                    readyLabel.enabled = hasStock;
+                    readyLabel.text = full ? "MAX" : "READY";
+                    readyLabel.alpha = 0.45f + 0.55f * Pulse(full ? 10f : 4f);
+                }
             }
 
-            if (Keyboard.current.tabKey.wasPressedThisFrame)
+            Keyboard keyboard = Keyboard.current;
+            if (keyboard == null)
+                return;
+
+            if (keyboard.tabKey.wasPressedThisFrame)
                 SetListOpen(!_listOpen);
 
-            if (Keyboard.current.fKey.wasPressedThisFrame)
+            if (!_external && keyboard[finisherKey].wasPressedThisFrame)
                 PlayFinisher();
+        }
+
+        // ---------- 바깥 피니시 로직 연결 (HJH ElementComboChain → FinisherViewLink) ----------
+        // 연결되면 스톡은 이 뷰가 직접 안 세고, 바깥에서 알려주는 대로 그림 (스택 규칙·키·강화는 바깥 담당)
+        private bool _external;
+        private bool _externalReady;
+        private float _externalScale = 1f;
+        private float _externalLeft;
+
+        public void UseExternalFinisher()
+        {
+            _external = true;
+            _finisherStock.Clear();
+            DrawFinisherStock();
+        }
+
+        public void SetFinisherStock(IReadOnlyList<string> names)
+        {
+            _finisherStock.Clear();
+            for (int i = 0; i < names.Count && i < maxFinisherStock; i++)
+                _finisherStock.Add(new FinisherStock { Name = names[i], Sequence = System.Array.Empty<ElementType>() });
+            DrawFinisherStock();
+        }
+
+        public void SetFinisherReady(bool ready, float scale, float timeLeft)
+        {
+            _externalReady = ready;
+            _externalScale = scale;
+            _externalLeft = timeLeft;
+        }
+
+        public void ShowFinisherBanner(string header, string title, string detail, bool flash)
+        {
+            ShowBanner(header, title, detail, finisherBarColor);
+            if (flash)
+                PlayScreenFlash();
         }
 
         private void LateUpdate()
@@ -274,7 +325,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             _pendingComboLength = evt.Sequence.Count;
             _hasPendingCombo = true;
 
-            AddFinisherStock(evt.ComboName, evt.Sequence);
+            if (!_external)
+                AddFinisherStock(evt.ComboName, evt.Sequence);
             FlashComboList(evt.ComboName);
         }
 
@@ -407,7 +459,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
                     if (row.steps[k] != null)
                     {
-                        row.steps[k].sprite = elementSprites[(int)source[k]];
+                        row.steps[k].sprite = SpriteOf(source[k]);
                         row.steps[k].enabled = true;
                     }
                 }
@@ -543,7 +595,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             {
                 if (i < stacks.Count)
                 {
-                    slotImages[i].sprite = elementSprites[(int)stacks[i]];
+                    slotImages[i].sprite = SpriteOf(stacks[i]);
                     slotImages[i].color = Color.white;
                     slotImages[i].enabled = true;
                 }
@@ -685,12 +737,20 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void DrawFinisherStock()
         {
-            for (int i = 0; i < stockPips.Length; i++)
+            // 씬에 따라 칸/스프라이트가 비어 있을 수 있음 → 스프라이트 없으면 색으로만 켜짐/꺼짐 표시
+            bool hasSprites = finisherStackSprites != null && finisherStackSprites.Length >= 2;
+            for (int i = 0; stockPips != null && i < stockPips.Length; i++)
             {
+                if (stockPips[i] == null)
+                    continue;
+
                 bool active = i < _finisherStock.Count;
 
                 stockPips[i].enabled = true;
-                stockPips[i].sprite = active ? finisherStackSprites[1] : finisherStackSprites[0];
+                if (hasSprites)
+                    stockPips[i].sprite = active ? finisherStackSprites[1] : finisherStackSprites[0];
+                else
+                    stockPips[i].color = active ? gold : emptyColor;
             }
 
             if (readyLabel != null)
@@ -698,6 +758,13 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 readyLabel.enabled = _finisherStock.Count > 0;
                 readyLabel.text = _finisherStock.Count >= maxFinisherStock ? "MAX" : "READY";
             }
+        }
+
+        // 원소 아이콘 (배열이 비었거나 짧은 씬에서도 안 멈춤)
+        private Sprite SpriteOf(ElementType element)
+        {
+            int index = (int)element;
+            return elementSprites != null && index >= 0 && index < elementSprites.Length ? elementSprites[index] : null;
         }
 
         private string ElementText(ElementType element)

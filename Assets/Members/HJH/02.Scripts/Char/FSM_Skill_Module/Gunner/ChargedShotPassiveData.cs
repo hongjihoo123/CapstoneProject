@@ -88,7 +88,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 _shots = 0;
                 var muzzleSource = _gun as IMuzzleSource;
                 Context.Run(new ChargedPiercingShot(Context, muzzle, direction, _data.shot,
-                    muzzleSource != null ? () => muzzleSource.CurrentMuzzle : null));
+                    muzzleSource != null ? () => muzzleSource.CurrentMuzzle : null,
+                    _gun as IAnimationTimedShots));   // 애니 이벤트로 쏘는 총이면 PassiveShot 클립의 Anim_Fire 프레임에 발사
                 return true;
             }
 

@@ -1,0 +1,71 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 75bde45f9b16028ff9acf091ef3f840a, type: 3}
+  m_Name: Wind_Headwind
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ZoneSkill
+  cooldown: 10
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 141d8af1afb860040b361fbcac50a74c, type: 3}
+  displayName: "\uC5ED\uD48D"
+  description: "\uCEE4\uC11C \uC704\uCE58\uC5D0 \uB9DE\uBC14\uB78C \uC9C0\uB300\uB97C
+    \uB9CC\uB4E0\uB2E4. \uC548\uC758 \uC801\uC740 \uC798 \uB098\uC544\uAC00\uC9C0
+    \uBABB\uD55C\uB2E4."
+  fxColor: {r: 0.6, g: 1, b: 0.85, a: 1}
+  onHit:
+  - kind: 0
+    value: 2
+    duration: 0
+  - kind: 2
+    value: 45
+    duration: 0.8
+  scaling: 1
+  hitStop: 0
+  shake: 0.05
+  castFx:
+    prefab: {fileID: 8425151493505572694, guid: 87ac162a19c9dc746be541d4944c7834, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 5549900474003470467, guid: 5aa0812110e351249b006c7ddbd42733, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 1307456673335445390, guid: cc7851162e332b145937c574649a1881, type: 3}
+    tint: 0
+  aroundSelf: 0
+  range: 7
+  radius: 3
+  zoneTime: 4
+  interval: 0.5
+  followSelf: 0
+  pulseShake: 0
+  strikesPerPulse: 0
+  strikeRadius: 1.2
+  zoneFx:
+    prefab: {fileID: 929819339008492585, guid: 21890154e4d71c541ab27ed1b60e65b3, type: 3}
+    tint: 0
+  onSelf: []
+  selfFx:
+    prefab: {fileID: 0}
+    tint: 0
