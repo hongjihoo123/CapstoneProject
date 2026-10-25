@@ -48,6 +48,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             // 총구 위치를 못 받으면, 충전하는 동안 움직여도 따라가게 플레이어 기준 위치로 기억
             _muzzleOffset = muzzle - context.Transform.position;
 
+            // 쏠 때까지 이 방향으로 조준·몸 고정 + 걷기 막기 (마우스로 안 돌아감)
+            _context.LockAim(_direction, lockMove: true);
+
             if (fireFrameSource is { WaitsForAnimation: true })
             {
                 _fireFrameSource = fireFrameSource;
@@ -89,6 +92,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             _fireFrameSource = null;
 
             StopCharge();
+            _context.ReleaseAim();   // 반동 대쉬는 잠금과 상관없지만 쏘는 순간 바로 풀어줌
             Fire(start, end);
             return false;
         }

@@ -1,4 +1,5 @@
-﻿using RobotWeapons;
+﻿using Assets.Members.HJH._02.Scripts.Char.Visual;
+using RobotWeapons;
 using System.Collections;
 using UnityEngine;
 
@@ -45,17 +46,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 yield return null;
             }
 
-            Collider[] hits = Physics.OverlapSphere(center, SkillSO.SkillRange);
-
-            foreach (Collider hit in hits)
-            {
-                Vector3 direction = hit.transform.position - center;
-                direction.y = 0f;
-
-                if (direction.sqrMagnitude > SkillSO.SkillRange * SkillSO.SkillRange ||
-                    Vector3.Angle(rotation * Vector3.forward, direction) > angle * 0.5f)
-                    continue;
-            }
+            Vector3 forward = rotation * Vector3.forward;
+            Fx.ConeBlast(center, forward, SkillSO.SkillRange, angle, EnemyHit.FxColor);
+            EnemyHit.Area(_enemy, center, SkillSO.SkillRange, SkillSO.SkillDamage, forward, angle);
 
             IsUsing = false;
             _skillCoroutine = null;

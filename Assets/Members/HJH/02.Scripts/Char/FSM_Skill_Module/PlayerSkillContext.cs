@@ -80,6 +80,51 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             return _faceDash && _player.Mover.IsDashing;
         }
 
+        // 조준 잠금. 거는 쪽이 중간에 사라져서 ReleaseAim 을 못 불러도 안 굳게 일정 시간 지나면 저절로 풀림
+        private const float AimLockTimeout = 3f;
+        private bool _aimLocked;
+        private bool _moveLocked;
+        private Vector3 _aimLockDirection;
+        private float _aimLockUntil;
+        private float _speedBeforeLock = 1f;
+
+        public void LockAim(Vector3 direction, bool lockMove)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                direction = AimDirection;
+
+            _aimLockDirection = direction.normalized;
+            _aimLocked = true;
+            _aimLockUntil = Time.time + AimLockTimeout;
+
+            if (lockMove && !_moveLocked)
+            {
+                _speedBeforeLock = _player.Mover.OwnerSpeedMultiplier;
+                _player.Mover.SetOwnerSpeedMultiplier(0f);
+                _player.Mover.StopPlanarImmediately();   // 배율만 0이면 달리던 속도가 서서히 줄면서 미끄러짐
+                _moveLocked = true;
+            }
+        }
+
+        public void ReleaseAim()
+        {
+            _aimLocked = false;
+            if (!_moveLocked)
+                return;
+
+            _moveLocked = false;
+            _player.Mover.SetOwnerSpeedMultiplier(_speedBeforeLock);
+        }
+
+        public bool TryGetAimLock(out Vector3 direction)
+        {
+            direction = _aimLockDirection;
+            if (_aimLocked && Time.time > _aimLockUntil)
+                ReleaseAim();
+            return _aimLocked;
+        }
+
         public void SetSpinEffect(GameObject prefab, bool active, float radius)
         {
             SkillSpinEffect effect = _player.GetComponent<SkillSpinEffect>();

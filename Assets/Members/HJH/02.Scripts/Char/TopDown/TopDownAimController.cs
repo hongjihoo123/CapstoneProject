@@ -16,6 +16,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
         public Vector3 AimPoint { get; private set; }
 
+        private bool _wasLocked;
+        private Vector3 _lockedFacing;
+
+        // 다른 코드(마우스 룩 회전 등)가 Update 에서 몸을 돌려도 잠금 중엔 프레임 끝에서 다시 고정
+        private void LateUpdate()
+        {
+            if (_wasLocked && _lockedFacing.sqrMagnitude > 0.0001f)
+                transform.rotation = Quaternion.LookRotation(_lockedFacing);
+        }
+
         private void Start()
         {
             if (viewCamera == null)
@@ -26,6 +36,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
         private void Update()
         {
+            _wasLocked = false;
             if (!player.IsAlive || !player.ControlFsm.IsGameplayAlive)
                 return;
 
@@ -39,10 +50,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                 return;
 
             AimPoint = ray.GetPoint(distance);
-            player.SetAimPoint(AimPoint);
 
             Vector3 toAim = AimPoint - transform.position;
             toAim.y = 0f;
+
+            var context = player.SkillFsm != null ? player.SkillFsm.Context : null;
+
+            // 조준 잠금 중 (충전 사격 등): 마우스 무시하고 잠근 방향으로 조준·몸 고정
+            if (context != null && context.TryGetAimLock(out Vector3 locked))
+            {
+                float reach = Mathf.Max(toAim.magnitude, 1f);
+                AimPoint = new Vector3(transform.position.x, AimPoint.y, transform.position.z) + locked * reach;
+                player.SetAimPoint(AimPoint);
+                player.SetAimDirection(locked);
+                transform.rotation = Quaternion.LookRotation(locked);
+                _lockedFacing = locked;
+                _wasLocked = true;
+                return;
+            }
+
+            player.SetAimPoint(AimPoint);
             if (toAim.sqrMagnitude < 0.04f)
                 return;
 
@@ -52,7 +79,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             // 쏘는 방향(AimDirection)은 그대로 마우스라 대쉬 중에 쏴도 마우스 쪽으로 나감
             Vector3 facing = toAim;
             float speed = turnSpeed;
-            if (player.SkillFsm != null && player.SkillFsm.Context != null && player.SkillFsm.Context.TryGetDashFacing(out Vector3 dash))
+            if (context != null && context.TryGetDashFacing(out Vector3 dash))
             {
                 facing = dash;
                 speed = turnSpeed * dashTurnMultiplier;
