@@ -20,7 +20,6 @@ namespace Members.KYR._01.Scripts.Enchant
 
         private readonly Dictionary<CharacterData, Progress> _byCharacter = new();
         private readonly Progress _shared = new();
-        private readonly HashSet<string> _hydrated = new();
 
         public event Action<EnchantFragment> FragmentUnlocked;
         public event Action<EnchantFragment, int> OptionSelected;
@@ -49,7 +48,6 @@ namespace Members.KYR._01.Scripts.Enchant
             if (!progress.Unlocked.Add(fragment.FragmentId))
                 return false;
 
-            Sync(character, progress);
             FragmentUnlocked?.Invoke(fragment);
             return true;
         }
@@ -68,7 +66,6 @@ namespace Members.KYR._01.Scripts.Enchant
                 return false;
 
             progress.Unlocked.Add(fragment.FragmentId);
-            Sync(character, progress);
             FragmentUnlocked?.Invoke(fragment);
             return true;
         }
@@ -84,85 +81,22 @@ namespace Members.KYR._01.Scripts.Enchant
 
             Progress progress = ProgressOf(character);
             progress.Selected[fragment.FragmentId] = optionIndex;
-            Sync(character, progress);
             OptionSelected?.Invoke(fragment, optionIndex);
             return true;
         }
 
         private Progress ProgressOf(CharacterData character)
         {
-            string id = IdOf(character);
-            Progress progress;
             if (character == null)
-            {
-                progress = _shared;
-            }
-            else if (!_byCharacter.TryGetValue(character, out progress))
+                return _shared;
+
+            if (!_byCharacter.TryGetValue(character, out Progress progress))
             {
                 progress = new Progress();
                 _byCharacter.Add(character, progress);
             }
 
-            if (_hydrated.Add(id))
-                Hydrate(progress, id);
-
             return progress;
-        }
-
-        private static string IdOf(CharacterData character)
-        {
-            return character != null ? character.name : string.Empty;
-        }
-
-        private static void Hydrate(Progress progress, string id)
-        {
-            CurrencyService currency = GameBootstrap.Currency;
-            if (currency == null || !currency.TryReadEnchant(id, out string[] unlocked, out EnchantSelectionSave[] selected))
-                return;
-
-            if (unlocked != null)
-            {
-                for (int i = 0; i < unlocked.Length; i++)
-                {
-                    if (!string.IsNullOrEmpty(unlocked[i]))
-                        progress.Unlocked.Add(unlocked[i]);
-                }
-            }
-
-            if (selected == null)
-                return;
-
-            for (int i = 0; i < selected.Length; i++)
-            {
-                EnchantSelectionSave pick = selected[i];
-                if (pick == null || string.IsNullOrEmpty(pick.fragmentId))
-                    continue;
-
-                progress.Selected[pick.fragmentId] = pick.optionIndex;
-            }
-        }
-
-        private static void Sync(CharacterData character, Progress progress)
-        {
-            CurrencyService currency = GameBootstrap.Currency;
-            if (currency == null)
-                return;
-
-            var unlocked = new string[progress.Unlocked.Count];
-            progress.Unlocked.CopyTo(unlocked);
-
-            var selected = new EnchantSelectionSave[progress.Selected.Count];
-            int index = 0;
-            foreach (KeyValuePair<string, int> pair in progress.Selected)
-            {
-                selected[index++] = new EnchantSelectionSave
-                {
-                    fragmentId = pair.Key,
-                    optionIndex = pair.Value
-                };
-            }
-
-            currency.WriteEnchant(IdOf(character), unlocked, selected);
         }
 
         private bool Contains(EnchantFragment fragment)

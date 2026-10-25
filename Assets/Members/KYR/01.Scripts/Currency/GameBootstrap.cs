@@ -25,18 +25,7 @@ namespace Members.KYR._01.Scripts.Currency
             }
 
             DontDestroyOnLoad(gameObject);
-            Currency = new CurrencyService(new JsonFileSaveRepository());
-        }
-
-        private void OnApplicationPause(bool paused)
-        {
-            if (paused)
-                Currency?.SaveIfDirty();
-        }
-
-        private void OnApplicationQuit()
-        {
-            Currency?.SaveIfDirty();
+            Currency = new CurrencyService();
         }
     }
 }

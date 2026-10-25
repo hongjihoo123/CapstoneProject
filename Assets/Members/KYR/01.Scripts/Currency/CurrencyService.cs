@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Currency
@@ -8,23 +7,12 @@ namespace Members.KYR._01.Scripts.Currency
     {
         public event Action<CurrencyType, int> OnChanged;
 
-        private readonly ISaveRepository _repo;
-        private readonly CurrencySaveData _data;
         private int _runGold;
-        private bool _dirty;
-
-        public CurrencyService(ISaveRepository repo)
-        {
-            _repo = repo;
-            _data = _repo.Load() ?? new CurrencySaveData();
-            _data.metaSoul = Mathf.Max(0, _data.metaSoul);
-            if (_data.progress == null)
-                _data.progress = Array.Empty<EnchantCharacterSave>();
-        }
+        private int _metaSoul;
 
         public int Get(CurrencyType type)
         {
-            return type == CurrencyType.RunGold ? _runGold : _data.metaSoul;
+            return type == CurrencyType.RunGold ? _runGold : _metaSoul;
         }
 
         public bool CanAfford(CurrencyType type, int amount)
@@ -70,76 +58,12 @@ namespace Members.KYR._01.Scripts.Currency
             Set(CurrencyType.RunGold, 0);
         }
 
-        public void SaveIfDirty()
-        {
-            if (!_dirty)
-                return;
-
-            _repo.Save(_data);
-            _dirty = false;
-        }
-
-        public bool TryReadEnchant(string characterId, out string[] unlocked, out EnchantSelectionSave[] selected)
-        {
-            characterId ??= string.Empty;
-            EnchantCharacterSave[] progress = _data.progress;
-            if (progress != null)
-            {
-                for (int i = 0; i < progress.Length; i++)
-                {
-                    EnchantCharacterSave entry = progress[i];
-                    if (entry == null || (entry.characterId ?? string.Empty) != characterId)
-                        continue;
-
-                    unlocked = entry.unlocked ?? Array.Empty<string>();
-                    selected = entry.selected ?? Array.Empty<EnchantSelectionSave>();
-                    return true;
-                }
-            }
-
-            unlocked = Array.Empty<string>();
-            selected = Array.Empty<EnchantSelectionSave>();
-            return false;
-        }
-
-        public void WriteEnchant(string characterId, string[] unlocked, EnchantSelectionSave[] selected)
-        {
-            characterId ??= string.Empty;
-            var kept = new List<EnchantCharacterSave>();
-            EnchantCharacterSave[] progress = _data.progress;
-            if (progress != null)
-            {
-                for (int i = 0; i < progress.Length; i++)
-                {
-                    EnchantCharacterSave entry = progress[i];
-                    if (entry == null || (entry.characterId ?? string.Empty) == characterId)
-                        continue;
-
-                    kept.Add(entry);
-                }
-            }
-
-            kept.Add(new EnchantCharacterSave
-            {
-                characterId = characterId,
-                unlocked = unlocked ?? Array.Empty<string>(),
-                selected = selected ?? Array.Empty<EnchantSelectionSave>()
-            });
-            _data.progress = kept.ToArray();
-            _dirty = true;
-        }
-
         private void Set(CurrencyType type, int value)
         {
             if (type == CurrencyType.RunGold)
-            {
                 _runGold = value;
-            }
             else
-            {
-                _data.metaSoul = value;
-                _dirty = true;
-            }
+                _metaSoul = value;
 
             OnChanged?.Invoke(type, value);
         }
