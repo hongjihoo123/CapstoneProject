@@ -1,4 +1,6 @@
-﻿using System;
+﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -52,6 +54,9 @@ namespace Members.JJH._02_Scripts.Map
         [SerializeField] private RectTransform mapContent;
         [SerializeField] private MapRoomUI roomPrefab;
         [SerializeField] private Image connectionPrefab;
+        [SerializeField] private CanvasGroup mapCanvasGroup;
+        [SerializeField] private EventChannelSO eventChannel;
+        [SerializeField] private string[] roomSceneNames = new string[6];
 
         [Header("Layout")]
         [SerializeField] private float mapPadding = 100f;
@@ -66,14 +71,44 @@ namespace Members.JJH._02_Scripts.Map
         private readonly HashSet<int> visitedRoomIds = new HashSet<int>();
         private readonly HashSet<int> revealedRoomIds = new HashSet<int>();
 
+        private bool isMapVisible;
 
         private int currentRoomId = -1;
         private int startRoomId = -1;
         private int bossRoomId = -1;
 
+        private void Awake()
+        {
+            DontDestroyOnLoad(gameObject);
+        }
+
+        private void OnEnable()
+        {
+            eventChannel.AddListener<ToggleMapEvent>(OnToggleMap);
+        }
+
+        private void OnDisable()
+        {
+            eventChannel.RemoveListener<ToggleMapEvent>(OnToggleMap);
+        }
+
         private void Start()
         {
+            SetMapVisible(false);
             GenerateMap();
+        }
+
+        private void OnToggleMap(ToggleMapEvent evt)
+        {
+            SetMapVisible(!isMapVisible);
+        }
+
+        private void SetMapVisible(bool visible)
+        {
+            isMapVisible = visible;
+            mapCanvasGroup.alpha = visible ? 1f : 0f;
+            mapCanvasGroup.interactable = visible;
+            mapCanvasGroup.blocksRaycasts = visible;
         }
 
         #region Generate Map
@@ -491,6 +526,10 @@ namespace Members.JJH._02_Scripts.Map
             revealedRoomIds.Add(roomId);
             RevealConnectedRooms(roomId);
             UpdateRoomState();
+
+            string sceneName = roomSceneNames[(int)rooms[roomId].type];
+            if (!string.IsNullOrWhiteSpace(sceneName))
+                eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(sceneName));
         }
 
         private void UpdateRoomState()

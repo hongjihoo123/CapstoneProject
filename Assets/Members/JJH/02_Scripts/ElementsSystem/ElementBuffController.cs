@@ -81,13 +81,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             {
                 ElementType nextElement = nextCombo.sequence[progress];
 
-                systemChannel.RaiseEvent(
-                    SystemEvents.ElementComboNextEvent
-                        .Init(
-                            nextElement,
-                            nextCombo.name,
-                            progress,
-                            nextCombo.sequence.Length));
+                systemChannel.RaiseEvent(SystemEvents.ElementComboNextEvent
+                    .Init(nextElement, nextCombo.name, progress, nextCombo.sequence.Length));
             }
         }
 
