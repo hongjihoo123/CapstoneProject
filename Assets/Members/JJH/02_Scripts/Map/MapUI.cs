@@ -1,6 +1,7 @@
 ﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -79,7 +80,7 @@ namespace Members.JJH._02_Scripts.Map
 
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.parent);
         }
 
         private void OnEnable()
@@ -528,8 +529,16 @@ namespace Members.JJH._02_Scripts.Map
             UpdateRoomState();
 
             string sceneName = roomSceneNames[(int)rooms[roomId].type];
+
             if (!string.IsNullOrWhiteSpace(sceneName))
-                eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(sceneName));
+                StartCoroutine(TransitionToRoom(sceneName));
+        }
+
+        private IEnumerator TransitionToRoom(string sceneName)
+        {
+            yield return new WaitForSeconds(0.2f);
+            SetMapVisible(false);
+            eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(sceneName));
         }
 
         private void UpdateRoomState()

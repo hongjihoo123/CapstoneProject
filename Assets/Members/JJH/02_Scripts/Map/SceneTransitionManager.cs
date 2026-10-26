@@ -17,7 +17,7 @@ namespace Members.JJH._02_Scripts.Map
 
         private void Awake()
         {
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.parent);
 
             fadeCanvasGroup.alpha = 1f;
             fadeCanvasGroup.blocksRaycasts = true;

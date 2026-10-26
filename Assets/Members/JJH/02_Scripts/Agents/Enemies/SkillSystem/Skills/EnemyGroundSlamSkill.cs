@@ -20,9 +20,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             IsUsing = true;
 
             Vector3 center = _enemy.transform.position;
-            float prepareTime = SkillSO.SkillPrepareTime;
-            float expandTime = SkillSO.SkillExpandTime;
-            float skillRange = SkillSO.SkillRange;
+            float prepareTime = SkillSO.PrepareTime;
+            float expandTime = SkillSO.ExpandTime;
+            float skillRange = SkillSO.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
                                                                    center, skillRange, prepareTime + expandTime));

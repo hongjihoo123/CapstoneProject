@@ -6,6 +6,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
     public class EnemyShoutSkill : AbstractEnemySkill
     {
+        [Header("Shout Settings")]
         [SerializeField] private float angle = 45f;
 
         private Coroutine _skillCoroutine;
@@ -23,9 +24,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             Vector3 center = _enemy.transform.position;
             Quaternion rotation = _enemy.transform.rotation;
-            float prepareTime = SkillSO.SkillPrepareTime;
-            float expandTime = SkillSO.SkillExpandTime;
-            float skillRange = SkillSO.SkillRange;
+            float prepareTime = SkillSO.PrepareTime;
+            float expandTime = SkillSO.ExpandTime;
+            float skillRange = SkillSO.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
                                                           center, rotation, skillRange, angle, prepareTime + expandTime));
@@ -48,7 +49,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             }
 
             Collider[] hits = Physics.OverlapSphere(center, skillRange);
-
             foreach (Collider hit in hits)
             {
                 Vector3 direction = hit.transform.position - center;
@@ -59,7 +59,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                     continue;
             }
 
-            yield return new WaitForSeconds(SkillSO.SkillAttackDutation);
+            yield return new WaitForSeconds(SkillSO.AttackDutation);
 
             IsUsing = false;
             _skillCoroutine = null;

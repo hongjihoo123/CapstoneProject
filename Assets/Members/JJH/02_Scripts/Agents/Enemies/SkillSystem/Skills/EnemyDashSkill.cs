@@ -19,15 +19,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         {
             IsUsing = true;
 
-            float expandTime = SkillSO.SkillExpandTime;
-            float skillRange = SkillSO.SkillRange;
+            float prepareTime = SkillSO.PrepareTime;
+            float expandTime = SkillSO.ExpandTime;
+            float skillRange = SkillSO.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
                                                      _enemy.transform.position + _enemy.transform.forward * (skillRange * 0.5f),
-                                                     _enemy.transform.rotation, new Vector3(2f, 0f, skillRange + 1.5f),
-                                                     SkillSO.SkillPrepareTime));
+                                                     _enemy.transform.rotation, new Vector3(2f, 0f, skillRange + 1.5f), prepareTime));
 
-            yield return new WaitForSeconds(SkillSO.SkillPrepareTime);
+            yield return new WaitForSeconds(prepareTime);
 
             Vector3 startPosition = _enemy.transform.position;
             Vector3 direction = _enemy.transform.forward;
