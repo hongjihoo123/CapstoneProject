@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using RobotWeapons;
+using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
@@ -9,7 +10,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         public bool IsUsing { get; protected set; }
 
         protected AbstractEnemy _enemy;
-        protected EnemySkillModule _skillModule;
+        protected IEnemySkillModule _skillModule;
+
         public virtual void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
         {
             _enemy = owner;
@@ -20,6 +22,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         {
             if (IsUsing || _enemy == null || SkillSO == null)
                 return;
+        }
+
+        protected void ApplyDamage(Collider hit)
+        {
+            if (!hit.TryGetComponent<IDamageable>(out var damageable))
+                damageable = hit.GetComponentInParent<IDamageable>();
+
+            if (damageable == null || !damageable.IsAlive)
+                return;
+
+            damageable.TakeDamage(SkillSO.Damage, _enemy.gameObject);
         }
     }
 }

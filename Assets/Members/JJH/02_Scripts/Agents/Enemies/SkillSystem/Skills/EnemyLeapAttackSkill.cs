@@ -1,7 +1,8 @@
-﻿using RobotWeapons;
+﻿using Members.JJH._02_Scripts.Agents.Enemies.BT;
+using RobotWeapons;
 using System.Collections;
+using Unity.Behavior;
 using UnityEngine;
-using UnityEngine.AI;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
@@ -9,14 +10,16 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
     {
         [Header("Leap Settings")]
         [SerializeField] private float leapHeight = 3f;
+        [SerializeField] private float leapDamageRange = 2f;
+        [Tooltip("상승 시간 비율"), SerializeField, Min(0.01f)] private float riseRatio = 0.35f;
+        [Tooltip("멈추는 시간 비율"), SerializeField, Min(0f)] private float hangRatio = 0.2f;
+        [Tooltip("하강 시간 비율"), SerializeField, Min(0.01f)] private float fallRatio = 0.45f;
 
         private Coroutine _leapCoroutine;
-        private NavMeshAgent _navMeshAgent;
 
         public override void UseSkill()
         {
-            if (IsUsing || _enemy == null)
-                return;
+            base.UseSkill();
 
             _leapCoroutine = StartCoroutine(LeapAttackCoroutine());
         }
@@ -27,90 +30,79 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             float prepareTime = SkillSO.PrepareTime;
             float attackDuration = SkillSO.AttackDutation;
-            float skillRange = SkillSO.Range;
 
-            if (_navMeshAgent == null)
-                _navMeshAgent = _enemy.GetComponent<NavMeshAgent>();
+            BlackboardVariable<GameObject> target;
+            _skillModule.enemy.GetBTVariable(BTVars.Target, out target);
 
-            bool wasAgentEnabled = _navMeshAgent != null && _navMeshAgent.enabled;
-
-            if (wasAgentEnabled)
+            if (target == null || target.Value == null)
             {
-                _navMeshAgent.isStopped = true;
-                _navMeshAgent.enabled = false;
-            }
-
-            Vector3 startPosition = _enemy.transform.position;
-            GameObject target = GameObject.FindGameObjectWithTag("Player");
-
-            if (target == null)
-            {
-                RestoreNavMesh(wasAgentEnabled);
                 IsUsing = false;
+                _leapCoroutine = null;
                 yield break;
             }
 
-            Vector3 landingPosition = target.transform.position;
+            Vector3 startPosition = _enemy.transform.position;
+            Vector3 landingPosition = target.Value.transform.position;
             landingPosition.y = startPosition.y;
+            Vector3 peakPosition = landingPosition + Vector3.up * leapHeight;
+
+            float ratioSum = riseRatio + hangRatio + fallRatio;
+            float riseTime = attackDuration * riseRatio / ratioSum;
+            float hangTime = attackDuration * hangRatio / ratioSum;
+            float fallTime = attackDuration * fallRatio / ratioSum;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                                                                        landingPosition, skillRange, prepareTime));
+                                                               landingPosition, leapDamageRange, prepareTime));
 
             yield return new WaitForSeconds(prepareTime);
 
-            float elapsed = 0f;
+            _skillModule.enemy.NavMeshAgent.NavMeshAgent.enabled = false;
 
-            while (elapsed < attackDuration)
+            float elapsed = 0f;
+            while (elapsed < riseTime)
             {
                 elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / attackDuration);
+                float t = Mathf.Clamp01(elapsed / riseTime);
+                float eased = 1f - Mathf.Pow(1f - t, 3f);
 
-                Vector3 position = Vector3.Lerp(startPosition, landingPosition, t);
-                position.y = Mathf.Lerp(startPosition.y, landingPosition.y, t) + Mathf.Sin(t * Mathf.PI) * leapHeight;
-
-                _enemy.transform.position = position;
-
+                _enemy.transform.position = Vector3.Lerp(startPosition, peakPosition, eased);
                 yield return null;
             }
+            _enemy.transform.position = peakPosition;
 
+            yield return new WaitForSeconds(hangTime);
+
+            elapsed = 0f;
+            while (elapsed < fallTime)
+            {
+                elapsed += Time.deltaTime;
+                float t = Mathf.Clamp01(elapsed / fallTime);
+                float eased = t * t * t;
+
+                _enemy.transform.position = Vector3.Lerp(peakPosition, landingPosition, eased);
+                yield return null;
+            }
             _enemy.transform.position = landingPosition;
+            _skillModule.enemy.NavMeshAgent.NavMeshAgent.enabled = true;
+            _skillModule.enemy.NavMeshAgent.NavMeshAgent.Warp(landingPosition);
 
-            Collider[] hits = Physics.OverlapSphere(landingPosition, skillRange);
+            Collider[] hits = Physics.OverlapSphere(landingPosition, leapDamageRange, _skillModule.TargetLayer);
             foreach (Collider hit in hits)
             {
-                if (hit.gameObject == _enemy.gameObject ||
-                    hit.transform.IsChildOf(_enemy.transform))
+                if (hit.transform.IsChildOf(_enemy.transform))
                     continue;
 
-                if (!hit.CompareTag("Player"))
+                Vector3 direction = hit.transform.position - landingPosition;
+                direction.y = 0f;
+
+                if (direction.sqrMagnitude > leapDamageRange * leapDamageRange)
                     continue;
+
+                ApplyDamage(hit);
             }
 
-            RestoreNavMesh(wasAgentEnabled);
             IsUsing = false;
             _leapCoroutine = null;
-        }
-
-        private void RestoreNavMesh(bool wasAgentEnabled)
-        {
-            if (_navMeshAgent == null || !wasAgentEnabled)
-                return;
-
-            _navMeshAgent.enabled = true;
-            _navMeshAgent.Warp(_enemy.transform.position);
-            _navMeshAgent.isStopped = false;
-        }
-
-        private void OnDisable()
-        {
-            if (_leapCoroutine != null)
-                StopCoroutine(_leapCoroutine);
-
-            if (IsUsing)
-            {
-                IsUsing = false;
-                RestoreNavMesh(_navMeshAgent != null && !_navMeshAgent.enabled);
-            }
         }
     }
 }

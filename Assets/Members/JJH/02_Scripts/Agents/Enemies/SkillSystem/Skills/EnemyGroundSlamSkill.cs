@@ -39,18 +39,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
                                                                                                     center, radius, Time.deltaTime * 2f));
-
                 yield return null;
             }
 
-            Explode(center, skillRange);
+            Collider[] hits = Physics.OverlapSphere(center, skillRange, _skillModule.TargetLayer);
+            foreach (Collider hit in hits)
+                ApplyDamage(hit);
 
             IsUsing = false;
             _skillCoroutine = null;
-        }
-
-        private void Explode(Vector3 center, float radius)
-        {
         }
     }
 }

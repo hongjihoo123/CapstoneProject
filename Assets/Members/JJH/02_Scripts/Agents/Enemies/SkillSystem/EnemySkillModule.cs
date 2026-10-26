@@ -10,18 +10,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
     public class EnemySkillModule : Module, IEnemySkillModule, IAfterInitModule
     {
-        public AttackAreaVisualizer AreaVisualizer { get; private set; }
+        [field: SerializeField] public AttackAreaVisualizer AreaVisualizer { get; private set; }
+        [field: SerializeField] public LayerMask TargetLayer { get; private set; }
+
+        public AbstractEnemy enemy { get; private set; }
 
         protected Dictionary<Type, IEnemySkill> _skillDict = new Dictionary<Type, IEnemySkill>();
         private readonly Dictionary<Type, float> _skillCooldowns = new Dictionary<Type, float>();
-
-        private AbstractEnemy _enemy;
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
 
-            _enemy = _owner as AbstractEnemy;
+            enemy = _owner as AbstractEnemy;
 
             AreaVisualizer = GetComponent<AttackAreaVisualizer>();
             Debug.Assert(AreaVisualizer != null, $"{gameObject.name} : EnemySkillModule은 AttackAreaVisualizer를 가져야 합니다.");
@@ -41,7 +42,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         {
             foreach (IEnemySkill skill in _skillDict.Values)
             {
-                skill.Initialize(_enemy, this);
+                skill.Initialize(enemy, this);
             }
         }
 
@@ -68,7 +69,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             if (skill.IsUsing)
                 return;
 
-            var skillData = _enemy.EnemyData.EnemySkills.FirstOrDefault(data =>
+            var skillData = enemy.EnemyData.EnemySkills.FirstOrDefault(data =>
                                                                     data != null && data.SkillType == skillType);
             if (skillData == null)
                 return;
@@ -88,7 +89,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasAvailableSkill(float distance)
         {
-            foreach (var data in _enemy.EnemyData.EnemySkills.OrderByDescending(data => data.Range))
+            foreach (var data in enemy.EnemyData.EnemySkills.OrderByDescending(data => data.Range))
             {
                 if (data == null || distance > data.Range)
                     continue;
