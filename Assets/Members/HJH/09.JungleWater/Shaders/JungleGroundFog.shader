@@ -53,8 +53,6 @@ Shader "HJH/JungleWater/GroundFog"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/DeclareDepthTexture.hlsl"
             #include "Include/JungleWaterCommon.hlsl"
 
-            #define FOG_STEPS 8
-
             CBUFFER_START(UnityPerMaterial)
                 half4 _FogColor;
                 float _Density;
@@ -88,44 +86,27 @@ Shader "HJH/JungleWater/GroundFog"
                 return o;
             }
 
-            float FogNoise(float3 p, float t)
-            {
-                float3 q = p * _NoiseScale;
-                float n = JW_ValueNoise3(q + _Wind.xyz * t) * 0.65
-                        + JW_ValueNoise3(q * 2.3 - _Wind.xyz * t * 1.3) * 0.35;
-                return saturate((n - 0.5) * _NoiseContrast + 0.5);
-            }
-
+            // 노드 버전(SG_JungleGroundFog)과 같은 순서 / 같은 공식
             half4 frag(Varyings i) : SV_Target
             {
-                float3 entry = i.positionWS;   // 안개층 윗면
                 float2 screenUV = GetNormalizedScreenSpaceUV(i.positionCS);
-                float3 exit = JW_ReconstructWorldPos(screenUV, SampleSceneDepth(screenUV));
 
-                float3 ray = exit - entry;
-                float len = length(ray);
-                if (len < 1e-3)
-                    return 0;
+                // [SGS_SceneBed] 안개층 윗면(이 판) → 바닥
+                float3 entry = i.positionWS;
+                float3 exit = JW_BedFromRay(entry, LinearEyeDepth(SampleSceneDepth(screenUV), _ZBufferParams));
 
-                float3 dir = ray / len;
-                len = min(len, _MaxMarchDistance);
-                float stepLen = len / FOG_STEPS;
-                float jitter = JW_Hash21(i.positionCS.xy);   // 띠무늬 줄이기
-                float t = _Time.y;
+                // [JungleFogMarch] 반복문으로 안개 쌓기
+                float fog = JW_FogMarch(entry, exit, screenUV, _Density, _FogThickness, _MaxMarchDistance,
+                                        _NoiseScale, _NoiseContrast, _Wind.xyz,
+                                        _RevealRadius, _RevealSoftness, _RevealMin);
 
-                float transmittance = 1.0;
-                [unroll] for (int s = 0; s < FOG_STEPS; s++)
-                {
-                    float3 p = entry + dir * ((s + jitter) * stepLen);
-                    float heightFactor = saturate((entry.y - p.y) / _FogThickness);
-                    float reveal = JW_PlayerReveal(p, _RevealRadius, _RevealSoftness, _RevealMin);
-                    float density = _Density * heightFactor * FogNoise(p, t) * reveal;
-                    transmittance *= exp(-density * stepLen);
-                }
+                // [SGS_MainLight] 해 색을 살짝 받는 안개 색
+                float3 lightDir, lightColor, ambient;
+                float shadow;
+                JW_MainLight(entry, float3(0, 1, 0), lightDir, lightColor, shadow, ambient);
+                float3 color = lerp(_FogColor.rgb, _FogColor.rgb * lightColor, _LightInfluence);
 
-                Light mainLight = GetMainLight();
-                half3 color = lerp(_FogColor.rgb, _FogColor.rgb * mainLight.color, _LightInfluence);
-                return half4(color, (1.0 - transmittance) * _FogColor.a);
+                return half4(color, fog * _FogColor.a);
             }
             ENDHLSL
         }

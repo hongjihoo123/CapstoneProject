@@ -13,6 +13,8 @@ namespace Assets.Members.HJH.Environment
         [SerializeField] private Shader simShader;
 
         [Header("Water Area")]
+        [Tooltip("물 판(Water). 넣어 두면 아래 높이·영역을 물 판 위치에서 자동으로 맞춘다 (씬에서 옮겨도 OK)")]
+        [SerializeField] private Renderer waterSurface;
         [SerializeField] private float waterHeight = 1f;
         [SerializeField] private Vector2 areaMin = Vector2.zero;
         [SerializeField] private float areaSize = 48f;
@@ -37,6 +39,7 @@ namespace Assets.Members.HJH.Environment
         private static readonly int DropCountId = Shader.PropertyToID("_DropCount");
         private static readonly int DampingId = Shader.PropertyToID("_Damping");
 
+        private static readonly RaycastHit[] GroundHits = new RaycastHit[8];
         private readonly Vector4[] _drops = new Vector4[MaxDrops];
         private int _dropCount;
         private float _stepAccumulator;
@@ -45,8 +48,24 @@ namespace Assets.Members.HJH.Environment
 
         public float WaterHeight => waterHeight;
 
+        private void OnValidate() => SyncFromSurface();
+
+        // 물 판의 위치·크기 → 물 높이, 시뮬레이션 영역
+        private void SyncFromSurface()
+        {
+            if (waterSurface == null)
+                return;
+
+            Bounds b = waterSurface.bounds;
+            waterHeight = b.center.y;
+            areaMin = new Vector2(b.min.x, b.min.z);
+            areaSize = Mathf.Max(b.size.x, b.size.z);
+        }
+
         private void OnEnable()
         {
+            SyncFromSurface();
+
             if (simShader == null)
             {
                 Debug.LogError($"{name}: Ripple Sim 셰이더가 비어 있습니다.", this);
@@ -128,11 +147,16 @@ namespace Assets.Members.HJH.Environment
             if (!Contains(position))
                 return false;
 
+            // 적·나무 줄기에 먼저 맞을 수 있으니 가장 낮은 지점(= 바닥)을 쓴다
             Vector3 origin = new(position.x, Mathf.Max(position.y, waterHeight) + 2f, position.z);
-            if (Physics.Raycast(origin, Vector3.down, out RaycastHit hit, 50f, groundMask, QueryTriggerInteraction.Ignore))
-                return hit.point.y < waterHeight;
+            int count = Physics.RaycastNonAlloc(origin, Vector3.down, GroundHits, 50f, groundMask, QueryTriggerInteraction.Ignore);
+            if (count == 0)
+                return position.y <= waterHeight + 0.3f;
 
-            return position.y <= waterHeight + 0.3f;
+            float lowest = float.PositiveInfinity;
+            for (int i = 0; i < count; i++)
+                lowest = Mathf.Min(lowest, GroundHits[i].point.y);
+            return lowest < waterHeight;
         }
 
         public void AddDrop(Vector3 position, float radius, float strength)

@@ -49,10 +49,10 @@ namespace Assets.Members.HJH.Environment.EditorTools
             SetupLighting();
             Terrain terrain = BuildTerrain(mats.Terrain);
             ScatterMangroves(terrain, BuildMangrovePrefab(mats));
-            BuildWaterAndFog(mats);
+            Renderer water = BuildWaterAndFog(mats);
             GameObject walker = BuildWalker(terrain);
             BuildCamera(walker.transform);
-            BuildWaterSystems(walker.transform, BuildSplashPrefab(mats.Splash));
+            BuildWaterSystems(walker.transform, water, BuildSplashPrefab(mats.Splash));
 
             EditorSceneManager.SaveScene(scene, ScenePath);
             AssetDatabase.SaveAssets();
@@ -330,7 +330,7 @@ namespace Assets.Members.HJH.Environment.EditorTools
 
         // ---------------- 물 / 안개 ----------------
 
-        private static void BuildWaterAndFog(Materials mats)
+        private static Renderer BuildWaterAndFog(Materials mats)
         {
             var water = Primitive(PrimitiveType.Plane, null, mats.Water, keepCollider: false);
             water.name = "Water";
@@ -345,6 +345,7 @@ namespace Assets.Members.HJH.Environment.EditorTools
             fog.transform.localScale = Vector3.one * (MapSize * 1.6f / 10f);
             NoShadowCast(fog);
             fog.GetComponent<MeshRenderer>().receiveShadows = false;
+            return water.GetComponent<Renderer>();
         }
 
         private static void NoShadowCast(GameObject go) =>
@@ -416,13 +417,14 @@ namespace Assets.Members.HJH.Environment.EditorTools
             camGo.transform.SetPositionAndRotation(target.position + Vector3.up - rot * Vector3.forward * 16f, rot);
         }
 
-        private static void BuildWaterSystems(Transform revealTarget, ParticleSystem splashPrefab)
+        private static void BuildWaterSystems(Transform revealTarget, Renderer waterSurface, ParticleSystem splashPrefab)
         {
             var go = new GameObject("JungleWaterSystem");
 
             var sim = go.AddComponent<WaterRippleSimulation>();
             var simSo = new SerializedObject(sim);
             simSo.FindProperty("simShader").objectReferenceValue = Shader.Find("Hidden/HJH/JungleWater/RippleSim");
+            simSo.FindProperty("waterSurface").objectReferenceValue = waterSurface;
             simSo.FindProperty("waterHeight").floatValue = WaterY;
             simSo.FindProperty("areaMin").vector2Value = Vector2.zero;
             simSo.FindProperty("areaSize").floatValue = MapSize;
@@ -433,6 +435,8 @@ namespace Assets.Members.HJH.Environment.EditorTools
             var poolSo = new SerializedObject(pool);
             poolSo.FindProperty("splashPrefab").objectReferenceValue = splashPrefab;
             poolSo.ApplyModifiedPropertiesWithoutUndo();
+
+            go.AddComponent<WaterSkillSplashListener>();
         }
 
         // ---------------- 물보라 프리팹 ----------------

@@ -108,76 +108,68 @@ Shader "HJH/JungleWater/ShallowWater"
                 return o;
             }
 
-            // 두 겹의 흐르는 노이즈로 만든 잔물결 높이
-            float WaveHeight(float2 p, float t)
-            {
-                return JW_ValueNoise(p + float2(t, t * 0.6)) * 0.6
-                     + JW_ValueNoise(p * 2.1 + float2(-t * 1.3, t * 0.8)) * 0.4;
-            }
-
-            float2 WaveGradient(float2 p, float t)
-            {
-                const float e = 0.08;
-                float hx = WaveHeight(p + float2(e, 0), t) - WaveHeight(p - float2(e, 0), t);
-                float hz = WaveHeight(p + float2(0, e), t) - WaveHeight(p - float2(0, e), t);
-                return float2(hx, hz) / (2.0 * e);
-            }
-
+            // 노드 버전과 같은 순서 / 같은 공식 (각 단계 = Sub Graph 하나)
             half4 frag(Varyings i) : SV_Target
             {
                 float3 posWS = i.positionWS;
                 float2 screenUV = GetNormalizedScreenSpaceUV(i.positionCS);
                 float t = _Time.y * _WaveSpeed;
 
-                // ---- 노멀: 잔물결 + 상호작용 물결 ----
-                float2 waveGrad = WaveGradient(posWS.xz * _WaveScale, t) * _WaveStrength;
+                // [SGS_SceneBed] 물 두께 = 수면 높이 - 바닥 높이
+                float3 bedWS = JW_BedFromRay(posWS, LinearEyeDepth(SampleSceneDepth(screenUV), _ZBufferParams));
+                float depth = max(posWS.y - bedWS.y, 0.0);
+
+                // [SGS_SurfaceWaves] 잔물결 기울기
+                float2 waveGrad = JW_WaveGradient(posWS.xz * _WaveScale, t) * _WaveStrength;
+
+                // [SGS_InteractiveRipple] 캐릭터·스킬 물결
                 float3 rippleN;
                 float rippleH;
                 JW_RippleNormal(posWS, _RippleStrength, rippleN, rippleH);
-                float3 n = normalize(float3(-waveGrad.x + rippleN.x, 1.0, -waveGrad.y + rippleN.z));
 
-                // ---- 물 두께: 수면 높이 - 바닥 높이 ----
-                float3 bedWS = JW_ReconstructWorldPos(screenUV, SampleSceneDepth(screenUV));
-                float depth = max(posWS.y - bedWS.y, 0.0);
+                // [SGS_CombineNormal]
+                float3 n = normalize(float3(rippleN.x - waveGrad.x, 1.0, rippleN.z - waveGrad.y));
 
-                // ---- 굴절: 노멀만큼 UV 를 밀되, 물 위에 있는 물체를 끌어오면 취소 ----
+                // [SGS_Refraction] 노멀만큼 UV 를 밀되, 물 위에 있는 물체를 끌어오면 취소
                 float2 refrUV = screenUV + n.xz * _RefractionStrength * saturate(depth * 2.0);
-                float3 refrBed = JW_ReconstructWorldPos(refrUV, SampleSceneDepth(refrUV));
+                float3 refrBed = JW_BedFromRay(posWS, LinearEyeDepth(SampleSceneDepth(refrUV), _ZBufferParams));
                 if (refrBed.y > posWS.y)
                     refrUV = screenUV;
                 else
                     depth = max(posWS.y - refrBed.y, 0.0);
+                float3 sceneCol = SampleSceneColor(refrUV);
 
-                half3 sceneCol = SampleSceneColor(refrUV);
+                // [SGS_MainLight]
+                float3 lightDir, lightColor, ambient;
+                float shadow;
+                JW_MainLight(posWS, n, lightDir, lightColor, shadow, ambient);
+                float3 diffuse = lightColor * saturate(dot(n, lightDir)) * shadow + ambient;
 
-                // ---- 조명 ----
-                Light mainLight = GetMainLight(TransformWorldToShadowCoord(posWS));
-                half shadow = mainLight.shadowAttenuation;
-                half3 ambient = SampleSH(n);
-                half3 diffuse = mainLight.color * saturate(dot(n, mainLight.direction)) * shadow + ambient;
+                // [SGS_WaterColor] 얕으면 바닥이 비치고, 깊을수록 탁한 물 색
+                float murk = depth * _Murkiness;
+                float absorb = 1.0 - exp(-murk);
+                float3 transmitted = sceneCol * lerp(float3(1, 1, 1), _ShallowTint.rgb, saturate(murk * 2.0));
+                float3 col = lerp(transmitted, _DeepColor.rgb * diffuse, absorb);
 
-                // ---- 색: 얕으면 바닥이 비치고, 깊을수록 탁한 물 색 ----
-                float absorb = 1.0 - exp(-depth * _Murkiness);
-                half3 transmitted = sceneCol * lerp(half3(1, 1, 1), _ShallowTint.rgb, saturate(depth * _Murkiness * 2.0));
-                half3 col = lerp(transmitted, _DeepColor.rgb * diffuse, absorb);
-
-                // ---- 반사 (비스듬히 볼수록 강함) ----
-                float3 V = normalize(GetWorldSpaceViewDir(posWS));
-                float fresnel = pow(1.0 - saturate(dot(n, V)), _FresnelPower);
+                // [SGS_Reflection] 비스듬히 볼수록 반사색
+                float3 V = normalize(_WorldSpaceCameraPos - posWS);
+                float fresnel = pow(1.0 - saturate(dot(normalize(n), V)), _FresnelPower);
                 col = lerp(col, _ReflectionColor.rgb, fresnel * _ReflectionStrength);
 
-                // ---- 거품: 물가 + 물결 마루 ----
+                // [SGS_Foam] 물가 + 물결 마루
                 float foamNoise = JW_Fbm(posWS.xz * _FoamNoiseScale + float2(t * 0.6, -t * 0.4));
                 float shore = 1.0 - saturate(depth / _FoamDistance);
                 float foam = smoothstep(0.5, 0.7, shore + foamNoise * 0.6 - 0.3);
-                foam += saturate(abs(rippleH) * _RippleFoam - 0.15) * smoothstep(0.3, 0.6, foamNoise);
-                col = lerp(col, _FoamColor.rgb * diffuse, saturate(foam) * _FoamColor.a);
+                foam = saturate(foam + saturate(abs(rippleH) * _RippleFoam - 0.15) * smoothstep(0.3, 0.6, foamNoise));
 
-                // ---- 하이라이트 ----
-                float3 H = normalize(mainLight.direction + V);
-                col += mainLight.color * pow(saturate(dot(n, H)), _SpecularPower) * _SpecularStrength * shadow * (1.0 - saturate(foam));
+                // [SGS_Specular] 하이라이트
+                float3 H = normalize(lightDir + V);
+                float3 spec = lightColor * pow(saturate(dot(n, H)), _SpecularPower) * _SpecularStrength * shadow * (1.0 - foam);
 
-                half alpha = saturate(depth / _EdgeFade + saturate(foam) * _FoamColor.a);
+                // [SGS_FinalComposite]
+                float foamAmount = foam * _FoamColor.a;
+                col = lerp(col, _FoamColor.rgb * diffuse, foamAmount) + spec;
+                float alpha = saturate(depth / _EdgeFade + foamAmount);
                 return half4(col, alpha);
             }
             ENDHLSL
