@@ -1,0 +1,42 @@
+using System;
+using System.Collections.Generic;
+using UnityEngine;
+
+namespace Members.KYR._01_Scripts.Spawner
+{
+    [Serializable]
+    public class EnemySpawnEntry
+    {
+        [SerializeField] private GameObject prefab;
+
+        [SerializeField, Min(0f)]
+        [Tooltip("한 종류만 내려면 그 항목만 두고 가중치를 1 이상으로 둡니다.")]
+        private float weight = 1f;
+
+        public GameObject Prefab => prefab;
+        public float Weight => weight;
+    }
+
+    [CreateAssetMenu(fileName = "Enemy Wave", menuName = "SO/Enemy/Wave", order = 2)]
+    public class EnemyWaveSO : ScriptableObject
+    {
+        [SerializeField, Min(0)]
+        [Tooltip("웨이브에서 나올 적")]
+        private int totalCount = 5;
+
+        [SerializeField] private List<EnemySpawnEntry> enemies = new List<EnemySpawnEntry>();
+
+        [SerializeField]
+        [Tooltip("고정 스폰 포인트")]
+        private List<SpawnPointId> requiredPointIds = new List<SpawnPointId>();
+
+        [SerializeField, Min(0f)]
+        [Tooltip("다음 웨이브까지 대기시간")]
+        private float delayAfterWave = 1f;
+
+        public int TotalCount => totalCount;
+        public IReadOnlyList<EnemySpawnEntry> Enemies => enemies;
+        public IReadOnlyList<SpawnPointId> RequiredPointIds => requiredPointIds;
+        public float DelayAfterWave => delayAfterWave;
+    }
+}

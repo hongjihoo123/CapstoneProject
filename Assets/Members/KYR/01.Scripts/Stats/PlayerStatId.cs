@@ -46,5 +46,7 @@ namespace Members.KYR._01_Scripts.Stats
         Tenacity,
         Unflinching,
         DamageReduction,
+        TrueDamage,
+        
     }
 }

@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 66a282f91f3b33c43b8fc28bf588b7d2, type: 3}
+  m_Name: TestEnemyWave
+  m_EditorClassIdentifier: Assembly-CSharp::Members.KYR._01_Scripts.Spawner.EnemyWaveSO
+  totalCount: 7
+  enemies:
+  - prefab: {fileID: 6977966061365344412, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+    weight: 1
+  - prefab: {fileID: 6962236216818172625, guid: f002405e7763a9444847ff57740055c3, type: 3}
+    weight: 1
+  - prefab: {fileID: 8541734892472665447, guid: 5a8476a51e6502943b0af327be057eb0, type: 3}
+    weight: 1
+  requiredPointIds:
+  - 1
+  delayAfterWave: 1
