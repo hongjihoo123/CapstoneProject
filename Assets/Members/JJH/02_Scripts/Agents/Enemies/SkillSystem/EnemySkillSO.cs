@@ -8,11 +8,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
     [CreateAssetMenu(fileName = "Enemy Skill", menuName = "SO/Enemy/Enemy Skill", order = 1)]
     public class EnemySkillSO : ScriptableObject
     {
-        [field: SerializeField] public float SkillCooltime { get; private set; }
-        [field: SerializeField] public float SkillPrepareTime { get; private set; }
-        [field: SerializeField] public float SkillExpandTime { get; private set; }
-        [field: SerializeField] public float SkillRange { get; private set; }
-        [field: SerializeField] public float SkillDamage { get; private set; } = 20f;
+        [field: SerializeField] public float Cooltime { get; private set; }
+        [field: SerializeField] public float PrepareTime { get; private set; }
+        [field: SerializeField] public float ExpandTime { get; private set; }
+        [field: SerializeField] public float AttackDutation { get; private set; }
+        [field: SerializeField] public float Range { get; private set; }
+        [field: SerializeField] public float Damage { get; private set; }
 
 
         [SerializeField] private MonoScript skillScript;

@@ -36,7 +36,7 @@ namespace Members.KYR._01_Scripts
         public bool AimHeld { get; private set; }
         public bool AimPressed { get; private set; }
         public bool ReloadPressed { get; private set; }
-
+        
         public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
         public bool IsSkillHeld(SkillSlotId slot) => _skillHeld[(int)slot];
         public bool WasSkillReleased(SkillSlotId slot) => _skillReleased[(int)slot];
