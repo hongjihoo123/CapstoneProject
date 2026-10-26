@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyMeleeBombSkill : AbstractEnemySkill
+    public class EnemyGroundSlamSkill : AbstractEnemySkill
     {
         private Coroutine _skillCoroutine;
 
@@ -20,19 +20,22 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             IsUsing = true;
 
             Vector3 center = _enemy.transform.position;
-            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                                                                                center, SkillSO.SkillRange,
-                                                                                SkillSO.SkillPrepareTime + SkillSO.SkillExpandTime));
+            float prepareTime = SkillSO.PrepareTime;
+            float expandTime = SkillSO.ExpandTime;
+            float skillRange = SkillSO.Range;
 
-            yield return new WaitForSeconds(SkillSO.SkillPrepareTime);
+            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
+                                                                   center, skillRange, prepareTime + expandTime));
+
+            yield return new WaitForSeconds(prepareTime);
 
             float elapsed = 0f;
             float startRadius = 0.1f;
 
-            while (elapsed < SkillSO.SkillExpandTime)
+            while (elapsed < expandTime)
             {
                 elapsed += Time.deltaTime;
-                float radius = Mathf.Lerp(startRadius, SkillSO.SkillRange, Mathf.Clamp01(elapsed / SkillSO.SkillExpandTime));
+                float radius = Mathf.Lerp(startRadius, skillRange, Mathf.Clamp01(elapsed / expandTime));
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
                                                                                                     center, radius, Time.deltaTime * 2f));
@@ -40,7 +43,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 yield return null;
             }
 
-            Explode(center, SkillSO.SkillRange);
+            Explode(center, skillRange);
 
             IsUsing = false;
             _skillCoroutine = null;
