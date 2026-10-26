@@ -78,7 +78,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
                 return;
 
             skill.UseSkill();
-            _skillCooldowns[skillType] = Time.time + skillData.SkillCooltime;
+            _skillCooldowns[skillType] = Time.time + skillData.Cooltime;
         }
 
         public bool IsSkillUsing()
@@ -88,9 +88,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasAvailableSkill(float distance)
         {
-            foreach (var data in _enemy.EnemyData.EnemySkills.OrderByDescending(data => data.SkillRange))
+            foreach (var data in _enemy.EnemyData.EnemySkills.OrderByDescending(data => data.Range))
             {
-                if (data == null || distance > data.SkillRange)
+                if (data == null || distance > data.Range)
                     continue;
 
                 Type skillType = data.SkillType;

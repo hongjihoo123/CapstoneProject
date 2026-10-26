@@ -87,6 +87,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return IsDashing;
         }
 
+        // 워크벤치엔 마우스 조준이 없어서 잠금은 기억만 함
+        private bool _aimLocked;
+        private Vector3 _aimLockDirection;
+        public void LockAim(Vector3 direction, bool lockMove) { _aimLocked = true; _aimLockDirection = direction; }
+        public void ReleaseAim() => _aimLocked = false;
+        public bool TryGetAimLock(out Vector3 direction) { direction = _aimLockDirection; return _aimLocked; }
+
         public void SetScriptedMotion(Vector3 velocity) => _scriptedMotion = velocity;
         public void SetScriptedPosition(Vector3 position) => Transform.position = position;
 

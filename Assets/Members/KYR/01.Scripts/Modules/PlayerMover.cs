@@ -88,6 +88,13 @@ namespace Members.KYR._01_Scripts.Modules
             OwnerSpeedMultiplier = Mathf.Max(0f, multiplier);
         }
 
+        // (HJH) 걷던 속도를 즉시 0으로 (감속 없이 바로 멈춤). 충전 사격 같은 이동 잠금용
+        public void StopPlanarImmediately()
+        {
+            _planarSpeed = 0f;
+            _targetPlanarSpeed = 0f;
+        }
+
         public void SetPlanarInput(Vector2 input, float speed)
         {
             _planarInput = input.sqrMagnitude > 1f ? input.normalized : input;

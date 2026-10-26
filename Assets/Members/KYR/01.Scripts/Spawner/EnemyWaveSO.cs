@@ -10,7 +10,7 @@ namespace Members.KYR._01_Scripts.Spawner
         [SerializeField] private GameObject prefab;
 
         [SerializeField, Min(0f)]
-        [Tooltip("한 종류만 내려면 그 항목만 두고 가중치를 1 이상으로 둡니다.")]
+        [Tooltip("적 종류 가중치")]
         private float weight = 1f;
 
         public GameObject Prefab => prefab;

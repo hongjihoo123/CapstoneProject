@@ -306,7 +306,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             _duration = evt.TimerDuration;
             _remaining = evt.TimerDuration;
 
-            if (timerSlider != null) timerSlider.maxValue = _duration;
+            if (timerSlider != null)
+                timerSlider.maxValue = _duration;
 
             SetTimer(_remaining);
             UpdateComboListDisplay();

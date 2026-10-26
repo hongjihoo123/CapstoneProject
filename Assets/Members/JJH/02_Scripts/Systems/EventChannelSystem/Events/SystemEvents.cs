@@ -8,8 +8,11 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         public static readonly UseSkillEvent UseSkillEvent = new();
         public static readonly ElementStackChangedEvent ElementStackChangedEvent = new();
         public static readonly ElementBuffTriggeredEvent ElementBuffTriggeredEvent = new();
-        public static readonly ElementComboNextEvent ElementComboNextEvent  = new();
+        public static readonly ElementComboNextEvent ElementComboNextEvent = new();
         public static readonly ElementComboCompleteEvent ElementComboCompleteEvent = new();
+
+        public static readonly ToggleMapEvent ToggleMapEvent = new();
+        public static readonly ChangeSceneEvent ChangeSceneEvent = new();
     }
 
     #region Element System Events
@@ -28,12 +31,14 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         }
     }
 
-    /// <summary>스택 목록이 바뀔 때마다 발생. UI가 구독한다.</summary>
+    /// <summary>
+    /// 스택 목록이 바뀔 시 발생
+    /// </summary>
     public class ElementStackChangedEvent : GameEvent
     {
         public IReadOnlyList<ElementType> Stacks;
         public int MaxStack;
-        public float TimerDuration; // 스택 효과 자동 발생까지 남은 시간
+        public float TimerDuration;
 
         public ElementStackChangedEvent Init(IReadOnlyList<ElementType> stacks, int maxStack, float timerDuration)
         {
@@ -58,6 +63,9 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         }
     }
 
+    /// <summary>
+    /// 다음 콤보 알려주는 용도
+    /// </summary>
     public class ElementComboNextEvent : GameEvent
     {
         public ElementType NextElement { get; private set; }
@@ -75,6 +83,7 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         }
     }
 
+
     public class ElementComboCompleteEvent : GameEvent
     {
         public string ComboName { get; private set; }
@@ -84,6 +93,23 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         {
             ComboName = comboName;
             Sequence = sequence;
+            return this;
+        }
+    }
+
+    #endregion
+
+    #region Map System Events
+
+    public class ToggleMapEvent : GameEvent { }
+
+    public class ChangeSceneEvent : GameEvent
+    {
+        public string SceneName { get; private set; }
+
+        public ChangeSceneEvent Init(string sceneName)
+        {
+            SceneName = sceneName;
             return this;
         }
     }

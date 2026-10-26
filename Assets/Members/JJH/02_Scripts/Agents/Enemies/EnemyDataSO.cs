@@ -21,6 +21,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         [field: SerializeField] public float DetectRange { get; private set; }
         [field: SerializeField] public float AttackRange { get; private set; }
         [field: SerializeField] public float AttackCooltime { get; private set; }
+        [field: SerializeField] public float AttackDamage { get; private set; } = 10f;
         [field: SerializeField] public List<EnemySkillSO> EnemySkills { get; private set; }
     }
 }
