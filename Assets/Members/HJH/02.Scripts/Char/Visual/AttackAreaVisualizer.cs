@@ -29,6 +29,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public Vector3 Size;
             public Vector3 End;     // segment end (segment starts at Center)
             public Color Color;
+            public bool HasGround;  // true 면 GroundY 높이에 고정 (주인이 날아올라도 안 따라감)
+            public float GroundY;
         }
 
         private struct TimedShape
@@ -39,11 +41,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public float ExpireTime;
         }
 
-        [SerializeField]
+        [SerializeField, FormerlySerializedAs("player")]
         private Agent owner;
         [SerializeField]
         private bool listenToBus = true;
         [SerializeField] private float groundOffset = 0.06f;
+        [SerializeField, Tooltip("끄면(기본) Show 한 순간 그 자리의 실제 바닥 높이에 고정 → 주인이 공중으로 떠도 범위는 바닥에 남음.\n켜면 예전처럼 매 프레임 주인 높이를 따라감")]
+        private bool followOwnerHeight;
+        [SerializeField, Tooltip("바닥 찾을 때 아래로 쏘는 레이 길이")] private float groundProbeDistance = 50f;
         [SerializeField] private float lineWidth = 0.08f;
         [SerializeField] private float guideLineWidth = 0.03f;
         [SerializeField, Tooltip("Debug: draw weapon/skill hit areas. F1 toggles in play mode. Aim previews and enemy warnings are always drawn.")]
@@ -65,11 +70,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private readonly List<LineRenderer> _pool = new();
         private static Material _material;   // 적마다 하나씩 안 만들게 같이 씀
         private int _used;
+        private float _nextOwnerSearch;
 
-        private void Awake()
+        private void Awake() => ResolveOwner();
+
+        // 비어 있으면 부모 Agent -> (플레이어용이면) 씬의 플레이어 순서로 찾음.
+        // 플레이어용 Visualizer 는 보통 플레이어 밖에 따로 놓여 있어서 부모에서 못 찾음 -> 조준 미리보기가 안 뜨던 원인
+        private void ResolveOwner()
         {
-            if (owner == null)
-                owner = GetComponentInParent<Agent>();
+            if (owner != null)
+                return;
+
+            owner = GetComponentInParent<Agent>();
+            if (owner == null && listenToBus)
+                owner = FindFirstObjectByType<PlayerAgent>();
         }
 
         private void OnEnable()
@@ -111,6 +125,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     _frame.Add(_timed[i].Shape);
             }
 
+            // 플레이어가 나중에 생기거나 바뀌는 씬도 있어서, 비었으면 1초에 한 번 다시 찾아봄
+            if (owner == null && listenToBus && Time.unscaledTime >= _nextOwnerSearch)
+            {
+                _nextOwnerSearch = Time.unscaledTime + 1f;
+                ResolveOwner();
+            }
+
             // 스킬 조준 미리보기는 플레이어만
             if (owner is PlayerAgent player && player.SkillFsm != null && player.SkillFsm.IsAimingSkill)
                 player.SkillFsm.DescribeAimPreview(this);
@@ -146,9 +167,36 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     Center = area.Center,
                     Yaw = area.Rotation.eulerAngles.y,
                     Size = area.Size,
-                    Color = area.HasColor ? area.Color : GetColor(area.Kind)
+                    Color = area.HasColor ? area.Color : GetColor(area.Kind),
+                    HasGround = !followOwnerHeight,
+                    GroundY = followOwnerHeight ? 0f : FindGroundY(area.Center)
                 }
             });
+        }
+
+        private static readonly RaycastHit[] GroundHits = new RaycastHit[16];
+
+        // point 바로 아래의 바닥 높이. 캐릭터(Agent) 콜라이더는 무시함 (적/플레이어 몸 위에 그려지면 안 되니까)
+        // 바닥을 못 찾으면 지금 주인 높이 (그것도 없으면 point 높이)
+        private float FindGroundY(Vector3 point)
+        {
+            float fallback = owner != null ? owner.transform.position.y : point.y;
+            int count = Physics.RaycastNonAlloc(point + Vector3.up * 0.5f, Vector3.down, GroundHits,
+                                                groundProbeDistance, ~0, QueryTriggerInteraction.Ignore);
+
+            float bestDistance = float.MaxValue;
+            float groundY = fallback;
+            for (int i = 0; i < count; i++)
+            {
+                RaycastHit hit = GroundHits[i];
+                if (hit.distance >= bestDistance || hit.collider.GetComponentInParent<Agent>() != null)
+                    continue;
+
+                bestDistance = hit.distance;
+                groundY = hit.point.y;
+            }
+
+            return groundY;
         }
 
         void ISkillPreview.Circle(Vector3 center, float radius) =>
@@ -208,7 +256,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static bool IsDebug(AttackAreaKind kind) => kind != AttackAreaKind.EnemyWarning;
 
         private float GroundY(Shape shape) =>
-            (owner != null ? owner.transform.position.y : shape.Center.y) + groundOffset;
+            (shape.HasGround ? shape.GroundY
+                : owner != null ? owner.transform.position.y : shape.Center.y) + groundOffset;
 
         private void Draw(Shape shape)
         {

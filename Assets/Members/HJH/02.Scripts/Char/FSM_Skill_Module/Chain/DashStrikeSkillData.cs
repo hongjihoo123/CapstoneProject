@@ -86,6 +86,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                     return;
 
                 _landed = true;
+                // 회전 이펙트부터 끈다: 아래에서 무슨 일이 생겨도 이펙트가 계속 도는 일이 없게.
+                _context.SetSpinEffect(_data.spinEffectPrefab, false, _data.strikeRadius);
                 DamageTick();
 
                 // Landing: two blades crossing in an X.
@@ -94,7 +96,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 Fx.Slash(chest, _direction, _data.strikeRadius * 1.2f, false, 25f, 2.2f);
                 Fx.Slash(chest, _direction, _data.strikeRadius * 1.2f, true, -25f, 2.2f);
                 _context.PlayHitFeel(0.04f, 0.25f);
-                _context.SetSpinEffect(_data.spinEffectPrefab, false, _data.strikeRadius);
             }
 
             // Centered on the player's position at this tick, so the hit area travels with the dash.
