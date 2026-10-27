@@ -7,7 +7,6 @@ namespace Members.KYR._01_Scripts.Combat
         float Get(PlayerStatId id);
     }
 
-    // 스탯이 없는 대상용 기본값 (공격력 1배, 방어 0, 받는 피해 1배)
     public sealed class NeutralCombatStats : ICombatStats
     {
         public static readonly NeutralCombatStats Instance = new();

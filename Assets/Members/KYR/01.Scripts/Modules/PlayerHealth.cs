@@ -84,7 +84,7 @@ namespace Members.KYR._01_Scripts.Modules
             ApplyDamage(DamageCalculator.Incoming(amount, info, _stats));
         }
 
-        // 계산이 끝난 최종 피해. 쉴드 → HP 순서로 깎음
+        // 방어 계산이 끝난 최종 피해만 넣을 것
         public DamageResult ApplyDamage(float damage)
         {
             ClampHpToMax();

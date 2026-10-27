@@ -121,12 +121,10 @@ namespace Members.KYR._01_Scripts
                 _reload.AddBinding("<Keyboard>/r");
                 _reload.AddBinding("<Gamepad>/leftShoulder");
             }
-
-            // Top-down layout: Space = dash (also cancels aiming), right click = weapon skill, R = ultimate.
-            // Weapon aim loses right click, jump loses Space, and manual reload is removed (dash reloads instantly).
+            
             DisableBinding(_aim, "<Mouse>/rightButton");
             DisableBinding(map.FindAction("Jump"), "<Keyboard>/space");
-            DisableBinding(map.FindAction("Crouch"), "<Keyboard>/c");   // C = 피니시 (ElementComboChain)
+            DisableBinding(map.FindAction("Crouch"), "<Keyboard>/c");   
             _reload = null;
         }
 

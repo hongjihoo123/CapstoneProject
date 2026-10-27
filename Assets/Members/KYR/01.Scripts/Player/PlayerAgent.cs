@@ -279,8 +279,7 @@ namespace Members.KYR._01_Scripts
             if (wasAlive)
                 DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }
-
-        // Every damage the player deals (weapon, skills, DoT) passes through ApplyDamageTo.
+        
         public event System.Action<DamageDealtInfo> DamageDealt;
 
         public void ApplyHealTo(IHealable target, float amount)
