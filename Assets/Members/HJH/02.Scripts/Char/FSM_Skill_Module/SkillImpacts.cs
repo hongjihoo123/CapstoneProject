@@ -10,6 +10,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         // 위치(월드), 반지름(m)
         public static event Action<Vector3, float> Impacted;
 
-        public static void Raise(Vector3 position, float radius) => Impacted?.Invoke(position, radius);
+        // 듣는 쪽 하나가 오류를 내도 스킬 코드까지 올라오지 않게 하나씩 따로 부른다.
+        // (연출 오류 때문에 스킬이 끝 처리를 못 하면 회전 이펙트가 안 꺼지는 등 더 큰 문제가 생김)
+        public static void Raise(Vector3 position, float radius)
+        {
+            if (Impacted == null)
+                return;
+
+            foreach (Delegate listener in Impacted.GetInvocationList())
+            {
+                try
+                {
+                    ((Action<Vector3, float>)listener)(position, radius);
+                }
+                catch (Exception e)
+                {
+                    Debug.LogException(e);
+                }
+            }
+        }
     }
 }
