@@ -9,7 +9,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
     public class EnemySkillSO : ScriptableObject
     {
         [field: SerializeField] public float SkillCooltime { get; private set; }
+        [field: SerializeField] public float SkillPrepareTime { get; private set; }
+        [field: SerializeField] public float SkillExpandTime { get; private set; }
         [field: SerializeField] public float SkillRange { get; private set; }
+        [field: SerializeField] public float SkillDamage { get; private set; } = 20f;
 
 
         [SerializeField] private MonoScript skillScript;

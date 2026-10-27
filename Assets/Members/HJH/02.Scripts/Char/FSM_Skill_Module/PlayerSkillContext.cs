@@ -13,6 +13,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     {
         private static readonly IReadOnlyList<IDamageable> NoTargets = new List<IDamageable>();
         private static readonly Collider[] OverlapBuffer = new Collider[64];
+        private const float HitImpactRadius = 0.8f;   // 적 하나를 맞혔을 때 알리는 충격 반지름
 
         private readonly PlayerAgent _player;
         private readonly LayerMask _targetMask;
@@ -78,6 +79,51 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             direction = _dashFacing;
             return _faceDash && _player.Mover.IsDashing;
+        }
+
+        // 조준 잠금. 거는 쪽이 중간에 사라져서 ReleaseAim 을 못 불러도 안 굳게 일정 시간 지나면 저절로 풀림
+        private const float AimLockTimeout = 3f;
+        private bool _aimLocked;
+        private bool _moveLocked;
+        private Vector3 _aimLockDirection;
+        private float _aimLockUntil;
+        private float _speedBeforeLock = 1f;
+
+        public void LockAim(Vector3 direction, bool lockMove)
+        {
+            direction.y = 0f;
+            if (direction.sqrMagnitude < 0.0001f)
+                direction = AimDirection;
+
+            _aimLockDirection = direction.normalized;
+            _aimLocked = true;
+            _aimLockUntil = Time.time + AimLockTimeout;
+
+            if (lockMove && !_moveLocked)
+            {
+                _speedBeforeLock = _player.Mover.OwnerSpeedMultiplier;
+                _player.Mover.SetOwnerSpeedMultiplier(0f);
+                _player.Mover.StopPlanarImmediately();   // 배율만 0이면 달리던 속도가 서서히 줄면서 미끄러짐
+                _moveLocked = true;
+            }
+        }
+
+        public void ReleaseAim()
+        {
+            _aimLocked = false;
+            if (!_moveLocked)
+                return;
+
+            _moveLocked = false;
+            _player.Mover.SetOwnerSpeedMultiplier(_speedBeforeLock);
+        }
+
+        public bool TryGetAimLock(out Vector3 direction)
+        {
+            direction = _aimLockDirection;
+            if (_aimLocked && Time.time > _aimLockUntil)
+                ReleaseAim();
+            return _aimLocked;
         }
 
         public void SetSpinEffect(GameObject prefab, bool active, float radius)
@@ -260,6 +306,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IReadOnlyList<IDamageable> OverlapSphere(Vector3 center, float radius)
         {
+            SkillImpacts.Raise(center, radius);   // 범위 공격이 닿은 곳 (물 튀김 등)
+
             var results = new List<IDamageable>();
             int count = Physics.OverlapSphereNonAlloc(center, radius, OverlapBuffer, _targetMask, QueryTriggerInteraction.Collide);
 
@@ -309,6 +357,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void DealDamage(IDamageable target, float amount, SkillData skill)
         {
+            // 맞은 적의 발밑 (투사체·빔·근접처럼 범위 판정이 없는 스킬도 여기서 잡힌다)
+            if (target is Component hitTarget)
+                SkillImpacts.Raise(hitTarget.transform.position, HitImpactRadius);
+
             if (skill != null && _boosts.TryGetValue(skill, out (float scale, float until) boost))
             {
                 if (Time.time <= boost.until)

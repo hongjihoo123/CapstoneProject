@@ -17,6 +17,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         void Dash(Vector3 direction, float speed, float duration, float endSlowdown = 0f, bool faceDirection = true);
         // 지금 대쉬 중이고 날아가는 방향을 봐야 하면 true (조준 컨트롤러가 이걸 보고 몸을 돌림)
         bool TryGetDashFacing(out Vector3 direction);
+        // 조준 잠금 (충전 사격 등): 몸과 조준을 direction 으로 고정해서 마우스로 안 돌아감.
+        // lockMove 면 걷기도 막음 (대쉬/반동은 그대로). 끝나면 꼭 ReleaseAim
+        void LockAim(Vector3 direction, bool lockMove);
+        void ReleaseAim();
+        bool TryGetAimLock(out Vector3 direction);
         void SetScriptedMotion(Vector3 velocity);
         // Moves through enemies/props; ends with CancelDash.
         void SetScriptedPosition(Vector3 position);
