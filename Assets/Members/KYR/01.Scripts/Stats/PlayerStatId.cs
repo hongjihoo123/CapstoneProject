@@ -47,6 +47,6 @@ namespace Members.KYR._01_Scripts.Stats
         Unflinching,
         DamageReduction,
         TrueDamage,
-        
+        IncomingDamageTaken,
     }
 }

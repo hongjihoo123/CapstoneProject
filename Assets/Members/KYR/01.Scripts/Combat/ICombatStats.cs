@@ -1,0 +1,35 @@
+using Members.KYR._01_Scripts.Stats;
+
+namespace Members.KYR._01_Scripts.Combat
+{
+    public interface ICombatStats
+    {
+        float Get(PlayerStatId id);
+    }
+
+    // 스탯이 없는 대상용 기본값 (공격력 1배, 방어 0, 받는 피해 1배)
+    public sealed class NeutralCombatStats : ICombatStats
+    {
+        public static readonly NeutralCombatStats Instance = new();
+
+        private NeutralCombatStats() { }
+
+        public float Get(PlayerStatId id)
+        {
+            switch (id)
+            {
+                case PlayerStatId.Damage:
+                case PlayerStatId.FireDamage:
+                case PlayerStatId.WaterDamage:
+                case PlayerStatId.WindDamage:
+                case PlayerStatId.ElectricDamage:
+                case PlayerStatId.EarthDamage:
+                case PlayerStatId.IncomingDamageTaken:
+                case PlayerStatId.HealReceived:
+                    return 1f;
+                default:
+                    return 0f;
+            }
+        }
+    }
+}

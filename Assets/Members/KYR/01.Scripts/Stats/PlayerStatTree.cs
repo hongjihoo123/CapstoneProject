@@ -18,6 +18,7 @@ namespace Members.KYR._01_Scripts.Stats
             Add(PlayerStatId.MaxHp, bases.MaxHp, survival);
             Add(PlayerStatId.Defense, bases.Defense, survival);
             Add(PlayerStatId.DamageReduction, bases.DamageReduction, survival);
+            Add(PlayerStatId.IncomingDamageTaken, bases.IncomingDamageTaken, survival);
             Add(PlayerStatId.MaxStamina, bases.MaxStamina, survival);
             Add(PlayerStatId.StaminaRegen, bases.StaminaRegen, survival);
             Add(PlayerStatId.HealReceived, bases.HealReceived, survival);

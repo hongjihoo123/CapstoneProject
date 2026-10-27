@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.EffectBuffs;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
@@ -17,7 +18,7 @@ using UnityEngine.UI;
 namespace Members.KYR._01_Scripts
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable, IRecoilCapable
+    public class PlayerAgent : Agent, IWeaponOwner, IDamageReceiver, IHealable, IRecoilCapable
     {
 
         [SerializeField] private PlayerInputSO playerInput;
@@ -198,22 +199,26 @@ namespace Members.KYR._01_Scripts
                 ammoText.text = text;
         }
 
+        public ICombatStats CombatStats => Stats != null ? Stats : NeutralCombatStats.Instance;
+
+        public DamageResult ReceiveDamage(in DamageInfo info)
+        {
+            if (!IsAlive)
+                return default;
+
+            float dealt = DamageCalculator.Outgoing(info);
+            DamageResult result = Health.ApplyDamage(DamageCalculator.Incoming(dealt, info, CombatStats));
+            DamageTaken?.Invoke(dealt, info.Source);
+            return result;
+        }
+
         public override void TakeDamage(float amount, GameObject source)
         {
-            amount *= IncomingDamageScale;
             Health.TakeDamage(amount, source, null);
             DamageTaken?.Invoke(amount, source);
         }
 
-        public void TakeDamage(float amount, GameObject source, ElementType element)
-        {
-            amount *= IncomingDamageScale;
-            Health.TakeDamage(amount, source, element);
-            DamageTaken?.Invoke(amount, source);
-        }
-
-        // (HJH) 받는 피해 배율 (스킬 버프/디버프용, 1 = 그대로). 나를 때린 쪽 알림 (source 는 null 일 수 있음)
-        public float IncomingDamageScale { get; set; } = 1f;
+        // (HJH) 나를 때린 쪽 알림 (source 는 null 일 수 있음)
         public event System.Action<float, GameObject> DamageTaken;
 
         public void Heal(float amount)
@@ -251,28 +256,22 @@ namespace Members.KYR._01_Scripts
             if (target == null)
                 return;
 
-            float attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
-            float elemental = 0f;
-            float eleCoeff = 0f;
-            if (element.HasValue)
+            var info = new DamageInfo(amount, gameObject, CombatStats, attackCoeff, element, elementCoeff);
+            bool wasAlive = target.IsAlive;
+            float dealt;
+            if (target is IDamageReceiver receiver)
             {
-                elemental = Stats != null
-                    ? Stats.Get(PlayerElementStats.DamageStat(element.Value))
-                    : 1f;
-                eleCoeff = elementCoeff;
+                dealt = receiver.ReceiveDamage(info).Damage;
+            }
+            else
+            {
+                dealt = DamageCalculator.Outgoing(info);
+                target.TakeDamage(dealt, gameObject);
             }
 
-            float dealt = StatFormulas.Outgoing(amount, attackCoeff, attack, eleCoeff, elemental);
-
-            bool wasAlive = target.IsAlive;
-            if (element.HasValue && target is PlayerAgent player)
-                player.TakeDamage(dealt, gameObject, element.Value);
-            else
-                target.TakeDamage(dealt, gameObject);
-
-            if (dealt > 0f && Stats != null && Stats.Tree != null)
+            if (dealt > 0f)
             {
-                float omnivamp = Stats.Get(PlayerStatId.Omnivamp);
+                float omnivamp = CombatStats.Get(PlayerStatId.Omnivamp);
                 if (omnivamp > 0f)
                     Heal(dealt * omnivamp);
             }
