@@ -1,4 +1,5 @@
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using System;
 using Unity.Behavior;
 using Unity.Properties;
@@ -13,8 +14,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
 
-        [Tooltip("사용하고 싶은 스킬이 있다면 넣기(없다면 스킬 리스트에 들어간 순서대로 실행)")]
+        [Tooltip("사용하고 싶은 스킬이 있다면 넣기(없다면 스킬 리스트에 들어간 순서대로 실행")]
         [SerializeReference] public BlackboardVariable<EnemySkillSO> EnemySkill;
+        [Tooltip("실행할 스킬의 AnimParamSO")]
+        [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
         private IEnemySkillModule _enemySkillModule;
 
@@ -25,6 +28,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Enemy.Value == null || Enemy.Value.SkillModule == null)
                 return Status.Failure;
 
+
             _enemySkillModule = Enemy.Value.SkillModule;
             if (EnemySkill == null || EnemySkill.Value == null)
             {
@@ -34,12 +38,14 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 skillIndex %= Enemy.Value.EnemyData.EnemySkills.Count;
 
                 _enemySkillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
+                AnimParam.Value = Enemy.Value.EnemyData.EnemySkills[skillIndex].AnimParam;
 
                 skillIndex++;
             }
             else
             {
                 _enemySkillModule.UseSkill(EnemySkill.Value.SkillType);
+                AnimParam.Value = EnemySkill.Value.AnimParam;
             }
 
             return Status.Running;
