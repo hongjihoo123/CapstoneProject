@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts.EffectBuffs;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
 using Members.KYR._01_Scripts.FSM.Weapon;
@@ -66,6 +67,7 @@ namespace Members.KYR._01_Scripts
         public WeaponStateModule WeaponFsm { get; private set; }
         public SkillStateModule SkillFsm { get; private set; }
         public StatusEffectModule StatusEffects { get; private set; }
+        public EffectBuffRunner EffectBuffs { get; private set; }
 
         public Transform AimOrigin => aimOrigin != null ? aimOrigin : transform;
         public Transform MuzzleOrigin => muzzleOrigin != null ? muzzleOrigin : transform;
@@ -96,6 +98,9 @@ namespace Members.KYR._01_Scripts
             Debug.Assert(MoveFsm != null, $"{name}에는 MoveStateModule이 필요합니다.");
             Debug.Assert(WeaponFsm != null, $"{name}에는 WeaponStateModule이 필요합니다.");
             Debug.Assert(SkillFsm != null, $"{name}에는 SkillStateModule이 필요합니다.");
+
+            EffectBuffs = new EffectBuffRunner(this);
+            EffectBuffs.ClaimPlayer();
 
             if (Weapon != null)
                 Weapon.OnWeaponFired += HandleWeaponFired;
@@ -146,6 +151,10 @@ namespace Members.KYR._01_Scripts
                 return;
 
             float dt = Time.deltaTime;
+            if (Health != null && Health.IsDead)
+                EffectBuffs?.Clear();
+            else
+                EffectBuffs?.Tick(dt);
 
             if (playerInput != null)
                 playerInput.Fill(Input);
@@ -192,14 +201,14 @@ namespace Members.KYR._01_Scripts
         public override void TakeDamage(float amount, GameObject source)
         {
             amount *= IncomingDamageScale;
-            Health.TakeDamage(amount);
+            Health.TakeDamage(amount, source, null);
             DamageTaken?.Invoke(amount, source);
         }
 
         public void TakeDamage(float amount, GameObject source, ElementType element)
         {
             amount *= IncomingDamageScale;
-            Health.TakeDamage(amount, element);
+            Health.TakeDamage(amount, source, element);
             DamageTaken?.Invoke(amount, source);
         }
 
@@ -243,18 +252,31 @@ namespace Members.KYR._01_Scripts
                 return;
 
             float attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f;
-            float scale = attackCoeff * attack;
+            float elemental = 0f;
+            float eleCoeff = 0f;
             if (element.HasValue)
             {
-                float elemental = Stats != null
+                elemental = Stats != null
                     ? Stats.Get(PlayerElementStats.DamageStat(element.Value))
                     : 1f;
-                scale += elementCoeff * elemental;
+                eleCoeff = elementCoeff;
             }
 
+            float dealt = StatFormulas.Outgoing(amount, attackCoeff, attack, eleCoeff, elemental);
+
             bool wasAlive = target.IsAlive;
-            float dealt = amount * Mathf.Max(0f, scale);
-            target.TakeDamage(dealt, gameObject);
+            if (element.HasValue && target is PlayerAgent player)
+                player.TakeDamage(dealt, gameObject, element.Value);
+            else
+                target.TakeDamage(dealt, gameObject);
+
+            if (dealt > 0f && Stats != null && Stats.Tree != null)
+            {
+                float omnivamp = Stats.Get(PlayerStatId.Omnivamp);
+                if (omnivamp > 0f)
+                    Heal(dealt * omnivamp);
+            }
+
             if (wasAlive)
                 DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }
@@ -388,6 +410,8 @@ namespace Members.KYR._01_Scripts
 
         private void OnDestroy()
         {
+            EffectBuffs?.ReleasePlayer();
+
             if (Weapon != null)
                 Weapon.OnWeaponFired -= HandleWeaponFired;
         }
@@ -398,6 +422,7 @@ namespace Members.KYR._01_Scripts
 
             firePulseTimer = firePulseDuration;
             lastFireWasAimed = false;
+            EffectBuffs?.NotifyBasicAttack();
         }
     }
 }

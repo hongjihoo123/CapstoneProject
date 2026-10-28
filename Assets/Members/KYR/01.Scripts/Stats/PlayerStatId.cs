@@ -35,6 +35,18 @@ namespace Members.KYR._01_Scripts.Stats
         WaterDefense,
         WindDefense,
         ElectricDefense,
-        EarthDefense
+        EarthDefense,
+        ArmorPenetration,
+        FirePenetration,
+        WaterPenetration,
+        WindPenetration,
+        ElectricPenetration,
+        EarthPenetration,
+        Omnivamp,
+        Tenacity,
+        Unflinching,
+        DamageReduction,
+        TrueDamage,
+        
     }
 }

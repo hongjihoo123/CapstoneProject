@@ -8,7 +8,6 @@ namespace Members.KYR._01_Scripts.Modules
 {
     public class PlayerHealth : Module, IHealth, IAfterInitModule
     {
-       
         [SerializeField] private float stunOnHitDuration;
         [Header("스탯 풀백 모듈 없을 때")]
         [SerializeField] private float maxHp = 100f;
@@ -66,36 +65,61 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void TakeDamage(float amount)
         {
-            TakeDamage(amount, null);
+            TakeDamage(amount, null, null);
         }
 
         public void TakeDamage(float amount, ElementType? element)
+        {
+            TakeDamage(amount, null, element);
+        }
+
+        public void TakeDamage(float amount, GameObject source, ElementType? element)
         {
             ClampHpToMax();
             if (IsDead || amount <= 0f)
                 return;
 
+            float taken = amount;
+            if (_stats != null && _stats.Tree != null)
+            {
+                PlayerStatsModule attacker = StatsFrom(source);
+                bool hasElement = element.HasValue;
+                float eleDef = 0f;
+                float elePen = 0f;
+                if (hasElement)
+                {
+                    eleDef = _stats.Get(PlayerElementStats.DefenseStat(element.Value));
+                    if (attacker != null && attacker.Tree != null)
+                        elePen = attacker.Get(PlayerElementStats.PenetrationStat(element.Value));
+                }
+
+                float armorPen = attacker != null && attacker.Tree != null
+                    ? attacker.Get(PlayerStatId.ArmorPenetration)
+                    : 0f;
+
+                taken = StatFormulas.Incoming(
+                    amount,
+                    _stats.Get(PlayerStatId.Defense),
+                    armorPen,
+                    eleDef,
+                    elePen,
+                    _stats.Get(PlayerStatId.DamageReduction),
+                    hasElement);
+            }
+
+            if (taken <= 0f)
+                return;
+
             if (_shield > 0f)
             {
-                float absorbed = Mathf.Min(_shield, amount);
+                float absorbed = Mathf.Min(_shield, taken);
                 _shield -= absorbed;
-                amount -= absorbed;
-                if (amount <= 0f)
+                taken -= absorbed;
+                if (taken <= 0f)
                     return;
             }
 
-            if (element.HasValue && _stats != null && _stats.Tree != null)
-                amount *= 1f - Mathf.Clamp01(_stats.Get(PlayerElementStats.DefenseStat(element.Value)));
-
-            float defense = _stats != null && _stats.Tree != null
-                ? Mathf.Clamp01(_stats.Get(PlayerStatId.Defense))
-                : 0f;
-            amount *= 1f - defense;
-
-            if (amount <= 0f)
-                return;
-
-            _hp = Mathf.Max(0f, _hp - amount);
+            _hp = Mathf.Max(0f, _hp - taken);
             if (IsDead)
             {
                 _shield = 0f;
@@ -137,6 +161,15 @@ namespace Members.KYR._01_Scripts.Modules
                 return;
 
             _stunRemaining = Mathf.Max(_stunRemaining, duration);
+        }
+
+        private static PlayerStatsModule StatsFrom(GameObject source)
+        {
+            if (source == null)
+                return null;
+            if (source.TryGetComponent(out PlayerStatsModule stats))
+                return stats;
+            return source.GetComponentInParent<PlayerStatsModule>();
         }
 
         private void ClampHpToMax()

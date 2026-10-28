@@ -24,7 +24,20 @@ namespace Assets.Members.HJH.Environment
 
             _pool = new ParticleSystem[Mathf.Max(1, poolSize)];
             for (int i = 0; i < _pool.Length; i++)
+            {
                 _pool[i] = Instantiate(splashPrefab, transform);
+                KeepAfterPlay(_pool[i]);
+            }
+        }
+
+        // 프리팹이 '재생 끝나면 삭제'(Stop Action = Destroy)로 되어 있으면 한 번 쓰고 사라져서 재사용할 수 없다.
+        private static void KeepAfterPlay(ParticleSystem root)
+        {
+            foreach (ParticleSystem system in root.GetComponentsInChildren<ParticleSystem>(true))
+            {
+                ParticleSystem.MainModule main = system.main;
+                main.stopAction = ParticleSystemStopAction.None;
+            }
         }
 
         private void OnEnable() => JungleWater.Register(this);
@@ -36,6 +49,12 @@ namespace Assets.Members.HJH.Environment
                 return;
 
             ParticleSystem splash = _pool[_next];
+            if (splash == null)   // 다른 코드가 지웠으면 새로 채운다
+            {
+                splash = _pool[_next] = Instantiate(splashPrefab, transform);
+                KeepAfterPlay(splash);
+            }
+
             _next = (_next + 1) % _pool.Length;
 
             splash.transform.position = position;

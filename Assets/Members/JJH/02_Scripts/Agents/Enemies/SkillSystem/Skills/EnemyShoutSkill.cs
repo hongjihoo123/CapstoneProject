@@ -1,5 +1,4 @@
-﻿using Assets.Members.HJH._02.Scripts.Char.Visual;
-using RobotWeapons;
+﻿using RobotWeapons;
 using System.Collections;
 using UnityEngine;
 
@@ -7,6 +6,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
     public class EnemyShoutSkill : AbstractEnemySkill
     {
+        [Header("Shout Settings")]
         [SerializeField] private float angle = 45f;
 
         private Coroutine _skillCoroutine;
@@ -24,21 +24,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             Vector3 center = _enemy.transform.position;
             Quaternion rotation = _enemy.transform.rotation;
+            float prepareTime = SkillSO.PrepareTime;
+            float expandTime = SkillSO.ExpandTime;
+            float skillRange = SkillSO.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                                                                        center, rotation, SkillSO.SkillRange,
-                                                                        angle, SkillSO.SkillPrepareTime + SkillSO.SkillExpandTime));
+                                                          center, rotation, skillRange, angle, prepareTime + expandTime));
 
-            yield return new WaitForSeconds(SkillSO.SkillPrepareTime);
+            yield return new WaitForSeconds(prepareTime);
 
             float elapsed = 0f;
             float startRange = 0.1f;
 
-            while (elapsed < SkillSO.SkillExpandTime)
+            while (elapsed < expandTime)
             {
                 elapsed += Time.deltaTime;
-                float currentRange = Mathf.Lerp(startRange, SkillSO.SkillRange,
-                                                            Mathf.Clamp01(elapsed / SkillSO.SkillExpandTime));
+                float currentRange = Mathf.Lerp(startRange, skillRange,
+                                                            Mathf.Clamp01(elapsed / expandTime));
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
                                                                             center, rotation, currentRange, angle, Time.deltaTime * 2f));
@@ -46,9 +48,18 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 yield return null;
             }
 
-            Vector3 forward = rotation * Vector3.forward;
-            Fx.ConeBlast(center, forward, SkillSO.SkillRange, angle, EnemyHit.FxColor);
-            EnemyHit.Area(_enemy, center, SkillSO.SkillRange, SkillSO.SkillDamage, forward, angle);
+            Collider[] hits = Physics.OverlapSphere(center, skillRange);
+            foreach (Collider hit in hits)
+            {
+                Vector3 direction = hit.transform.position - center;
+                direction.y = 0f;
+
+                if (direction.sqrMagnitude > skillRange * skillRange ||
+                    Vector3.Angle(rotation * Vector3.forward, direction) > angle * 0.5f)
+                    continue;
+            }
+
+            yield return new WaitForSeconds(SkillSO.AttackDutation);
 
             IsUsing = false;
             _skillCoroutine = null;
