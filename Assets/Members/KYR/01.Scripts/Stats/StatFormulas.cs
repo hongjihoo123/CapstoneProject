@@ -46,6 +46,7 @@ namespace Members.KYR._01_Scripts.Stats
             float elementDefense,
             float elementPenetration,
             float damageReduction,
+            float damageTakenMultiplier,
             bool hasElement)
         {
             float taken = dealt;
@@ -58,6 +59,7 @@ namespace Members.KYR._01_Scripts.Stats
             float def = Mathf.Max(0f, defense - armorPenetration);
             taken *= 1f - Mitigation(def, DefenseK);
             taken *= 1f - Mathf.Clamp01(damageReduction);
+            taken *= Mathf.Max(0f, damageTakenMultiplier);
             return Mathf.Max(0f, taken);
         }
     }

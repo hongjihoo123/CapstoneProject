@@ -73,22 +73,31 @@ namespace Members.KYR._01.Scripts.Stats
         {
             float flat = 0f;
             float percentAdd = 0f;
+            float percentMore = 1f;
 
             for (StatNode node = this; node != null; node = node.Parent)
-                Accumulate(node, ref flat, ref percentAdd);
+                Accumulate(node, ref flat, ref percentAdd, ref percentMore);
 
-            return (BaseValue + flat) * (1f + percentAdd);
+            return (BaseValue + flat) * (1f + percentAdd) * percentMore;
         }
 
-        private static void Accumulate(StatNode node, ref float flat, ref float percentAdd)
+        private static void Accumulate(StatNode node, ref float flat, ref float percentAdd, ref float percentMore)
         {
             for (int i = 0; i < node._modifiers.Count; i++)
             {
                 StatModifier modifier = node._modifiers[i].Modifier;
-                if (modifier.Type == StatModifierType.Flat)
-                    flat += modifier.Value;
-                else
-                    percentAdd += modifier.Value;
+                switch (modifier.Type)
+                {
+                    case StatModifierType.Flat:
+                        flat += modifier.Value;
+                        break;
+                    case StatModifierType.PercentAdd:
+                        percentAdd += modifier.Value;
+                        break;
+                    case StatModifierType.PercentMore:
+                        percentMore *= 1f + modifier.Value;
+                        break;
+                }
             }
         }
     }

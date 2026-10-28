@@ -76,8 +76,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         void AddShield(float amount);
         // 나를 때린 피해량 + 때린 오브젝트 (모르면 null)
         event System.Action<float, GameObject> DamageTaken;
-        // 받는 피해 배율 (source 별로 따로, 1 = 지움). 여러 개면 곱해짐
-        void SetIncomingDamageScale(object source, float scale);
     }
 
     // 다른 칸 스킬 쿨타임 (과충전, 순풍)

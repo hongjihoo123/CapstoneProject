@@ -1,10 +1,11 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerStatsModule : Module
+    public class PlayerStatsModule : Module, ICombatStats
     {
         [Header("Formula")]
         [SerializeField] private CombatFormulaManagerSO combatFormula;
@@ -13,6 +14,7 @@ namespace Members.KYR._01_Scripts.Modules
         [SerializeField] private float maxHp = 100f;
         [SerializeField] private float defense;
         [SerializeField] private float damageReduction;
+        [SerializeField] private float incomingDamageTaken = 1f;
         [SerializeField] private float maxStamina;
         [SerializeField] private float staminaRegen;
         [SerializeField] private float healReceived = 1f;
@@ -74,6 +76,7 @@ namespace Members.KYR._01_Scripts.Modules
                 MaxHp = maxHp,
                 Defense = defense,
                 DamageReduction = damageReduction,
+                IncomingDamageTaken = incomingDamageTaken,
                 MaxStamina = maxStamina,
                 StaminaRegen = staminaRegen,
                 HealReceived = healReceived,
@@ -114,7 +117,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         public float Get(PlayerStatId id)
         {
-            return Tree.Get(id);
+            return Tree != null ? Tree.Get(id) : NeutralCombatStats.Instance.Get(id);
         }
 
         public void AddModifier(PlayerStatId id, StatModifier modifier)
@@ -143,7 +146,7 @@ namespace Members.KYR._01_Scripts.Modules
 
             Debug.Log(
                 $"{name} MaxHp={Get(PlayerStatId.MaxHp):0.##} Def={Get(PlayerStatId.Defense):0.##} " +
-                $"DR={Get(PlayerStatId.DamageReduction):0.##} " +
+                $"DR={Get(PlayerStatId.DamageReduction):0.##} Taken={Get(PlayerStatId.IncomingDamageTaken):0.##} " +
                 $"HealRecv={Get(PlayerStatId.HealReceived):0.##} " +
                 $"Walk={Get(PlayerStatId.WalkSpeed):0.##} Run={Get(PlayerStatId.RunSpeed):0.##} " +
                 $"Crouch={Get(PlayerStatId.CrouchSpeed):0.##} " +

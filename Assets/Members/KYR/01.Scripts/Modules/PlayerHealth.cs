@@ -1,6 +1,7 @@
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.Stats;
 using UnityEngine;
 
@@ -73,61 +74,42 @@ namespace Members.KYR._01_Scripts.Modules
             TakeDamage(amount, null, element);
         }
 
+        // 이미 공격 배율이 들어간 피해. 방어 계산만 하고 적용
         public void TakeDamage(float amount, GameObject source, ElementType? element)
         {
-            ClampHpToMax();
             if (IsDead || amount <= 0f)
                 return;
 
-            float taken = amount;
-            if (_stats != null && _stats.Tree != null)
-            {
-                PlayerStatsModule attacker = StatsFrom(source);
-                bool hasElement = element.HasValue;
-                float eleDef = 0f;
-                float elePen = 0f;
-                if (hasElement)
-                {
-                    eleDef = _stats.Get(PlayerElementStats.DefenseStat(element.Value));
-                    if (attacker != null && attacker.Tree != null)
-                        elePen = attacker.Get(PlayerElementStats.PenetrationStat(element.Value));
-                }
+            var info = new DamageInfo(amount, source, DamageCalculator.StatsOf(source), element: element);
+            ApplyDamage(DamageCalculator.Incoming(amount, info, _stats));
+        }
 
-                float armorPen = attacker != null && attacker.Tree != null
-                    ? attacker.Get(PlayerStatId.ArmorPenetration)
-                    : 0f;
+        // 방어 계산이 끝난 최종 피해만 넣을 것
+        public DamageResult ApplyDamage(float damage)
+        {
+            ClampHpToMax();
+            if (IsDead || damage <= 0f)
+                return default;
 
-                taken = StatFormulas.Incoming(
-                    amount,
-                    _stats.Get(PlayerStatId.Defense),
-                    armorPen,
-                    eleDef,
-                    elePen,
-                    _stats.Get(PlayerStatId.DamageReduction),
-                    hasElement);
-            }
-
-            if (taken <= 0f)
-                return;
-
+            float absorbed = 0f;
+            float remaining = damage;
             if (_shield > 0f)
             {
-                float absorbed = Mathf.Min(_shield, taken);
+                absorbed = Mathf.Min(_shield, remaining);
                 _shield -= absorbed;
-                taken -= absorbed;
-                if (taken <= 0f)
-                    return;
+                remaining -= absorbed;
             }
 
-            _hp = Mathf.Max(0f, _hp - taken);
+            float before = _hp;
+            if (remaining > 0f)
+                _hp = Mathf.Max(0f, _hp - remaining);
+
             if (IsDead)
-            {
                 _shield = 0f;
-                return;
-            }
-
-            if (stunOnHitDuration > 0f)
+            else if (remaining > 0f && stunOnHitDuration > 0f)
                 ApplyStun(stunOnHitDuration);
+
+            return new DamageResult(damage, absorbed, before - _hp, IsDead);
         }
 
         public void AddShield(float amount)
@@ -161,15 +143,6 @@ namespace Members.KYR._01_Scripts.Modules
                 return;
 
             _stunRemaining = Mathf.Max(_stunRemaining, duration);
-        }
-
-        private static PlayerStatsModule StatsFrom(GameObject source)
-        {
-            if (source == null)
-                return null;
-            if (source.TryGetComponent(out PlayerStatsModule stats))
-                return stats;
-            return source.GetComponentInParent<PlayerStatsModule>();
         }
 
         private void ClampHpToMax()

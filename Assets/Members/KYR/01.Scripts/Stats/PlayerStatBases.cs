@@ -5,6 +5,7 @@ namespace Members.KYR._01_Scripts.Stats
         public float MaxHp;
         public float Defense;
         public float DamageReduction;
+        public float IncomingDamageTaken;
         public float MaxStamina;
         public float StaminaRegen;
         public float HealReceived;

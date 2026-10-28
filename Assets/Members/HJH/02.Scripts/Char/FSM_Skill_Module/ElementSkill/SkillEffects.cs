@@ -96,7 +96,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                         context.Heal(effect.value);
                         break;
                     case SelfEffectKind.Defense:
-                        AddBuff(context, PlayerStatId.Defense, StatModifierType.Flat, effect, source);
+                        AddBuff(context, PlayerStatId.DamageReduction, StatModifierType.Flat, effect, source);
                         break;
                     case SelfEffectKind.MoveSpeed:
                         AddBuff(context, PlayerStatId.WalkSpeed, StatModifierType.PercentAdd, effect, source);
@@ -119,7 +119,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                         context.AddShield(effect.value);
                         break;
                     case SelfEffectKind.Vulnerability:
-                        context.Run(new IncomingScale(context, source, 1f + effect.value / 100f, effect.duration));
+                        AddBuff(context, PlayerStatId.IncomingDamageTaken, StatModifierType.PercentMore, effect, source);
                         break;
                 }
             }
@@ -187,31 +187,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                     _context.ReduceCooldown(slot, deltaTime * _rate);
                 _left -= deltaTime;
                 return _left > 0f;
-            }
-        }
-
-        // 몇 초 동안 받는 피해 배율. 끝나면 원래대로
-        private sealed class IncomingScale : ISkillTimedEffect
-        {
-            private readonly ISkillContext _context;
-            private readonly object _source;
-            private float _left;
-
-            public IncomingScale(ISkillContext context, object source, float scale, float duration)
-            {
-                _context = context;
-                _source = source ?? this;
-                _left = duration;
-                context.SetIncomingDamageScale(_source, scale);
-            }
-
-            public bool Tick(float deltaTime)
-            {
-                _left -= deltaTime;
-                if (_left > 0f)
-                    return true;
-                _context.SetIncomingDamageScale(_source, 1f);
-                return false;
             }
         }
     }

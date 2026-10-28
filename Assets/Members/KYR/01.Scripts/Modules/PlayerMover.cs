@@ -195,7 +195,6 @@ namespace Members.KYR._01_Scripts.Modules
 
             if (_hasScriptedMotion)
             {
-                // Zero velocity = position is driven by SetScriptedPosition; Move(0) would still depenetrate from enemies.
                 if (_scriptedVelocity.sqrMagnitude > 0f)
                     characterController.Move(_scriptedVelocity * deltaTime);
                 return;
@@ -222,8 +221,7 @@ namespace Members.KYR._01_Scripts.Modules
         }
 
         public CharacterController Body => characterController;
-
-        // Places the player ignoring collisions and holds it there (no gravity/input) until CancelDash.
+        
         public void SetScriptedPosition(Vector3 position)
         {
             Teleport(position);
