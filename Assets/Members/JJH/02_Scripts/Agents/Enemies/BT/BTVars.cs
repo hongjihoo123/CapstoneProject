@@ -5,8 +5,10 @@
         public const string Enemy = "Enemy";
         public const string Target = "Target";
         public const string State = "State";
-        public const string AnimationChannel = "AnimationChannel";
-        public const string Clip = "Clip";
         public const string StateChannel = "StateChannel";
+        public const string Clip = "Clip";
+        public const string AnimationChannel = "AnimationChannel";
+        public const string AnimParam = "AnimParam";
+        public const string CrossFadeDuration = "CrossFadeDuration";
     }
 }
