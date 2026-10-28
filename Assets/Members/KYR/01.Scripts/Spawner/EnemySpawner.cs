@@ -22,12 +22,10 @@ namespace Members.KYR._01_Scripts.Spawner
         private float overlapIgnoreDuration = 0.5f;
 
         [SerializeField]
-        [Tooltip("적 표시")]
+        [Tooltip("적 위치 표시")]
         private GameObject telegraphPrefab;
 
-        [SerializeField]
-        [Tooltip("바로 생성")]
-        private bool playOnStart = true;
+        [SerializeField] private bool playOnStart = true;
 
         [SerializeField] private UnityEvent onRoomCleared;
 
