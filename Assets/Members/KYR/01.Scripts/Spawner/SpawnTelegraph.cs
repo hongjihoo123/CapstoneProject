@@ -1,7 +1,7 @@
 using UnityEngine;
 using UnityEngine.Rendering;
 
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     public class SpawnTelegraph : MonoBehaviour
     {

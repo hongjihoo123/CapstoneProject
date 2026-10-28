@@ -1,9 +1,9 @@
+using System.Linq;
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using System.Linq;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01.Scripts.Modules
 {
     public class PlayerSensor : Module, ISensor
     {

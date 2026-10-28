@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.KYR._01.Scripts.Spawner;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
@@ -40,7 +41,7 @@ namespace Members.KYR._01_Scripts.Spawner
         private bool _running;
 
 #if UNITY_EDITOR
-        private string _lastEditorWarnings;
+        private static readonly HashSet<string> LoggedEditorWarnings = new HashSet<string>();
 #endif
 
         public bool IsRunning => _running;
@@ -67,13 +68,51 @@ namespace Members.KYR._01_Scripts.Spawner
                 return;
 
             var warnings = new List<string>();
-            WaveSpawnPlanner.Validate(waveSet, CollectPoints(), warnings);
-            string message = string.Join("\n", warnings);
-            if (message == _lastEditorWarnings)
+            WaveSpawnPlanner.Validate(waveSet, CollectPointsForEditor(), warnings);
+            if (warnings.Count == 0)
                 return;
 
-            _lastEditorWarnings = message;
+            string key = GetEditorWarningKey(warnings);
+            if (!LoggedEditorWarnings.Add(key))
+                return;
+
             LogWarnings(warnings);
+        }
+
+        private string GetEditorWarningKey(List<string> warnings)
+        {
+            var path = new System.Text.StringBuilder(name);
+            Transform current = transform.parent;
+            while (current != null)
+            {
+                path.Insert(0, current.name + "/");
+                current = current.parent;
+            }
+
+            path.Append('\n');
+            for (int i = 0; i < warnings.Count; i++)
+            {
+                path.Append(warnings[i]);
+                path.Append('\n');
+            }
+
+            return path.ToString();
+        }
+
+        private List<SpawnPoint> CollectPointsForEditor()
+        {
+            SpawnPoint[] found = GetComponentsInChildren<SpawnPoint>(true);
+            var points = new List<SpawnPoint>(found.Length);
+            for (int i = 0; i < found.Length; i++)
+            {
+                SpawnPoint point = found[i];
+                if (point == null || !point.enabled || !point.gameObject.activeSelf)
+                    continue;
+
+                points.Add(point);
+            }
+
+            return points;
         }
 #endif
 

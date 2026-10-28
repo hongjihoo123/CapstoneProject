@@ -1,5 +1,6 @@
 ﻿using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
 
@@ -29,7 +30,7 @@ namespace Members.JJH._02_Scripts.Agents
             bool wasAlive = IsAlive;
             Health.TakeDamage(amount);
             Debug.Log($"[TestDummy] {gameObject.name} 이(가) {amount:F1} 데미지를 입음 (남은 HP: {Mathf.Max(Health.CurrentHealth, 0):F1})");
-            if (wasAlive && !IsAlive && source != null && source.TryGetComponent(out Members.KYR._01_Scripts.PlayerAgent killer))
+            if (wasAlive && !IsAlive && source != null && source.TryGetComponent(out PlayerAgent killer))
                 killer.OnEnemyKilled();
         }
 

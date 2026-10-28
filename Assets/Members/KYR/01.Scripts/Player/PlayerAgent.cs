@@ -3,19 +3,20 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.EffectBuffs;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
 using Members.KYR._01_Scripts.FSM.Weapon;
-using Members.KYR._01_Scripts.Modules;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Modules;
+using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Members.KYR._01_Scripts
+namespace Members.KYR._01.Scripts.Player
 {
     [RequireComponent(typeof(CharacterController))]
     public class PlayerAgent : Agent, IWeaponOwner, IDamageReceiver, IHealable, IRecoilCapable

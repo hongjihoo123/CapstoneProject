@@ -1,3 +1,4 @@
+using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace RobotWeapons
@@ -62,7 +63,7 @@ namespace RobotWeapons
                 Debug.Log($"[TestDummy] {gameObject.name} 파괴됨");
 
                 // Same kill report as JJH Agent, so on-kill passives can be tested on dummies.
-                if (source != null && source.TryGetComponent(out Members.KYR._01_Scripts.PlayerAgent killer))
+                if (source != null && source.TryGetComponent(out PlayerAgent killer))
                     killer.OnEnemyKilled();
             }
         }

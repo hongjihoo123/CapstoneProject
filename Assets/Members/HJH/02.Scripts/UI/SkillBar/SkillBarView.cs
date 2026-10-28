@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts;
+using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 using UnityEngine.UI;
 

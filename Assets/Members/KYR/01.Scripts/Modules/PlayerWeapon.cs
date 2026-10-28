@@ -1,11 +1,12 @@
 using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Player;
+using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using Unity.Cinemachine;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01.Scripts.Modules
 {
     public class PlayerWeapon : Module
     {
@@ -168,7 +169,7 @@ namespace Members.KYR._01_Scripts.Modules
             _fsmWantsAim = wantAim;
             _isAiming = wantAim;
 
-            if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
+            if (_owner is PlayerAgent player && player.Mover != null)
             {
                 if (wantAim)
                     player.Mover.SetCameraLocalPositionInstant(player.Mover.HipCameraLocalPosition + adsCameraLocalOffset);
@@ -182,7 +183,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         private void UpdateAimFov(float deltaTime)
         {
-            if (_owner is not Members.KYR._01_Scripts.PlayerAgent player || player.CinemachineCamera == null)
+            if (_owner is not PlayerAgent player || player.CinemachineCamera == null)
                 return;
 
             if (!_fovInitialized)
@@ -224,7 +225,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void TriggerSkillOverlapHit()
         {
-            if (_owner is Members.KYR._01_Scripts.PlayerAgent player)
+            if (_owner is PlayerAgent player)
                 player.SkillFsm.Anim_SkillOverlapHit();
         }
         public void BeginSkillHitWindow(Action<IDamageable, bool> onHit)
@@ -241,7 +242,7 @@ namespace Members.KYR._01_Scripts.Modules
 
         public void ApplyRecoil(float pitchDelta, float yawDelta, float dutchImpulse = 0f)
         {
-            if (_owner is Members.KYR._01_Scripts.PlayerAgent player && player.Mover != null)
+            if (_owner is PlayerAgent player && player.Mover != null)
             {
                 float multiplier = 1f;
                 float recoilControl = 0f;

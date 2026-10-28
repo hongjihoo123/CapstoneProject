@@ -1,6 +1,7 @@
+using Members.KYR._01_Scripts.Spawner;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     [DisallowMultipleComponent]
     public class SpawnPoint : MonoBehaviour

@@ -1,4 +1,4 @@
-using Members.KYR._01_Scripts.Modules;
+using Members.KYR._01.Scripts.Modules;
 using UnityEngine;
 using UnityEngine.UI;
 
