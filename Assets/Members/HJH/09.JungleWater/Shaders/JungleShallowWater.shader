@@ -9,8 +9,8 @@ Shader "HJH/JungleWater/ShallowWater"
     {
         [Header(Color)]
         _ShallowTint ("Shallow Tint (바닥 비침 색)", Color) = (0.78, 0.86, 0.68, 1)
-        _DeepColor ("Deep Color (탁한 물 색)", Color) = (0.09, 0.16, 0.11, 1)
-        _Murkiness ("Murkiness (흐림 정도)", Range(0.1, 12)) = 3.5
+        _DeepColor ("Deep Color (탁한 물 색)", Color) = (0.06, 0.11, 0.08, 1)
+        _Murkiness ("Murkiness (흐림 정도)", Range(0.1, 12)) = 5
 
         [Header(Surface Waves)]
         _WaveScale ("Wave Scale", Float) = 1.4
@@ -20,11 +20,11 @@ Shader "HJH/JungleWater/ShallowWater"
 
         [Header(Interactive Ripples)]
         _RippleStrength ("Ripple Normal Strength", Range(0, 60)) = 18
-        _RippleFoam ("Ripple Foam", Range(0, 10)) = 2.5
+        _RippleFoam ("Ripple Foam", Range(0, 10)) = 1.5
 
         [Header(Foam)]
-        _FoamColor ("Foam Color", Color) = (0.82, 0.86, 0.74, 0.9)
-        _FoamDistance ("Shore Foam Distance (m)", Range(0.01, 1)) = 0.12
+        _FoamColor ("Foam Color", Color) = (0.6, 0.64, 0.52, 0.45)
+        _FoamDistance ("Shore Foam Distance (m)", Range(0.01, 1)) = 0.05
         _FoamNoiseScale ("Foam Noise Scale", Float) = 3
         _EdgeFade ("Shore Edge Fade (m)", Range(0.001, 0.3)) = 0.05
 

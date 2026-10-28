@@ -66,6 +66,37 @@ namespace Assets.Members.HJH.Environment.GraphGen
             return new ShaderGraphBuilder(graph, includeGuid);
         }
 
+        // 빛·그림자를 받는 불투명 + 알파 잘라내기 (잎 카드용). 양면.
+        public static ShaderGraphBuilder LitCutout(string includeGuid)
+        {
+            var target = (URPSG.UniversalTarget)Activator.CreateInstance(typeof(URPSG.UniversalTarget));
+            target.TrySetActiveSubTarget(typeof(URPSG.UniversalLitSubTarget));
+            target.surfaceType = URPSG.SurfaceType.Opaque;
+            target.alphaClip = true;
+            target.renderFace = URPSG.RenderFace.Both;
+            target.castShadows = true;
+            target.receiveShadows = true;
+
+            var graph = new GraphData();
+            graph.AddContexts();
+            graph.InitializeOutputs(new Target[] { target }, new[]
+            {
+                BlockFields.VertexDescription.Position,
+                BlockFields.VertexDescription.Normal,
+                BlockFields.VertexDescription.Tangent,
+                BlockFields.SurfaceDescription.BaseColor,
+                BlockFields.SurfaceDescription.NormalTS,
+                BlockFields.SurfaceDescription.Metallic,
+                BlockFields.SurfaceDescription.Smoothness,
+                BlockFields.SurfaceDescription.Emission,
+                BlockFields.SurfaceDescription.Occlusion,
+                BlockFields.SurfaceDescription.Alpha,
+                BlockFields.SurfaceDescription.AlphaClipThreshold,
+            });
+            graph.path = "HJH/JungleWater";
+            return new ShaderGraphBuilder(graph, includeGuid);
+        }
+
         public void Save(string path)
         {
             Graph.AddCategory(CategoryData.DefaultCategory(Graph.properties.Cast<ShaderInput>().ToList()));
@@ -226,6 +257,13 @@ namespace Assets.Members.HJH.Environment.GraphGen
         public Vector4ShaderProperty Vec4Prop(string displayName, Vector4 value = default, string reference = null) =>
             AddInput(new Vector4ShaderProperty { displayName = displayName, value = value }, reference);
 
+        public Texture2DShaderProperty TextureProp(string displayName, Texture texture, string reference = null) =>
+            AddInput(new Texture2DShaderProperty
+            {
+                displayName = displayName,
+                value = new SerializableTexture { texture = texture },
+            }, reference);
+
         private T AddInput<T>(T property, string reference) where T : AbstractShaderProperty
         {
             Graph.AddGraphInput(property);
@@ -255,6 +293,16 @@ namespace Assets.Members.HJH.Environment.GraphGen
             block.GetInputSlots(slots);
             MaterialSlot outSlot = FindSlot(from, outName, input: false);
             Graph.Connect(from.GetSlotReference(outSlot.id), block.GetSlotReference(slots[0].id));
+        }
+
+        // 출력 블록에 노드 없이 값만 넣기 (예: Smoothness = 0.15)
+        public void SetBlock(BlockFieldDescriptor descriptor, float value)
+        {
+            BlockNode block = Graph.GetNodes<BlockNode>().First(b => b.descriptor == descriptor);
+            var slots = new List<MaterialSlot>();
+            block.GetInputSlots(slots);
+            if (slots[0] is Vector1MaterialSlot s)
+                s.value = value;
         }
 
         // ---------------- 설명용 그룹 / 메모 ----------------
