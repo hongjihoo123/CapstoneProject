@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using UnityEngine;
@@ -6,7 +7,7 @@ using UnityEngine.InputSystem;
 namespace Members.KYR._01_Scripts
 {
     [CreateAssetMenu(fileName = "PlayerInput", menuName = "SO/Player Input")]
-    public class PlayerInputSO : ScriptableObject
+    public class PlayerInputSO : ScriptableObject, Controls.IPlayerActions
     {
         private static readonly (SkillSlotId slot, string binding)[] DefaultSkillBindings =
         {
@@ -17,14 +18,18 @@ namespace Members.KYR._01_Scripts
             (SkillSlotId.Basic2, "<Keyboard>/e"),
         };
 
+        public event Action OnAttackPressed;
+        public event Action OnAttackReleased;
+        public event Action OnJumpPressed;
+        public event Action OnInteractPressed;
+        public event Action OnAimPressedEvent;
+
         private readonly Dictionary<SkillSlotId, InputAction> _skillActions = new();
         private readonly bool[] _skillPressed = new bool[SkillSlots.Count];
         private readonly bool[] _skillHeld = new bool[SkillSlots.Count];
         private readonly bool[] _skillReleased = new bool[SkillSlots.Count];
 
         private Controls _controls;
-        private InputAction _aim;
-        private InputAction _reload;
 
         public Vector2 Move { get; private set; }
         public Vector2 Look { get; private set; }
@@ -36,7 +41,7 @@ namespace Members.KYR._01_Scripts
         public bool AimHeld { get; private set; }
         public bool AimPressed { get; private set; }
         public bool ReloadPressed { get; private set; }
-        
+
         public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
         public bool IsSkillHeld(SkillSlotId slot) => _skillHeld[(int)slot];
         public bool WasSkillReleased(SkillSlotId slot) => _skillReleased[(int)slot];
@@ -49,13 +54,12 @@ namespace Members.KYR._01_Scripts
             if (_controls == null)
             {
                 _controls = new Controls();
-                BindAimReload();
+                _controls.Player.SetCallbacks(this);
+                ApplyTopDownBindings();
                 BindSkillActions();
             }
 
             _controls.Player.Enable();
-            _aim?.Enable();
-            _reload?.Enable();
 
             foreach (InputAction action in _skillActions.Values)
                 action.Enable();
@@ -63,14 +67,60 @@ namespace Members.KYR._01_Scripts
 
         private void OnDisable()
         {
-            _aim?.Disable();
-            _reload?.Disable();
-
             foreach (InputAction action in _skillActions.Values)
                 action.Disable();
 
             _controls?.Player.Disable();
+            ResetHeldValues();
         }
+
+        #region Controls.IPlayerActions
+
+        public void OnMove(InputAction.CallbackContext context) => Move = context.ReadValue<Vector2>();
+
+        public void OnLook(InputAction.CallbackContext context) => Look = context.ReadValue<Vector2>();
+
+        public void OnAttack(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+            {
+                FireHeld = true;
+                OnAttackPressed?.Invoke();
+            }
+            else if (context.canceled)
+            {
+                FireHeld = false;
+                OnAttackReleased?.Invoke();
+            }
+        }
+
+        public void OnInteract(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                OnInteractPressed?.Invoke();
+        }
+
+        public void OnCrouch(InputAction.CallbackContext context) => CrouchHeld = context.ReadValueAsButton();
+
+        public void OnJump(InputAction.CallbackContext context)
+        {
+            if (context.performed)
+                OnJumpPressed?.Invoke();
+        }
+
+        public void OnSprint(InputAction.CallbackContext context) => RunHeld = context.ReadValueAsButton();
+
+        public void OnAim(InputAction.CallbackContext context)
+        {
+            AimHeld = context.ReadValueAsButton();
+            if (context.performed)
+                OnAimPressedEvent?.Invoke();
+        }
+
+        // 탑다운에서는 수동 장전 없음 (대시하면 즉시 장전)
+        public void OnReload(InputAction.CallbackContext context) { }
+
+        #endregion
 
         public void Fill(PlayerInputState state)
         {
@@ -80,16 +130,11 @@ namespace Members.KYR._01_Scripts
                 return;
             }
 
-            Move = _controls.Player.Move.ReadValue<Vector2>();
-            Look = _controls.Player.Look.ReadValue<Vector2>();
-            JumpPressed = _controls.Player.Jump.WasPressedThisFrame();
-            CrouchHeld = _controls.Player.Crouch.IsPressed();
-            RunHeld = _controls.Player.Sprint.IsPressed();
-            FireHeld = _controls.Player.Attack.IsPressed();
-            FirePressed = _controls.Player.Attack.WasPressedThisFrame();
-            AimHeld = _aim != null && _aim.IsPressed();
-            AimPressed = _aim != null && _aim.WasPressedThisFrame();
-            ReloadPressed = _reload != null && _reload.WasPressedThisFrame();
+            Controls.PlayerActions player = _controls.Player;
+            JumpPressed = player.Jump.WasPressedThisFrame();
+            FirePressed = player.Attack.WasPressedThisFrame();
+            AimPressed = player.Aim.WasPressedThisFrame();
+            ReloadPressed = false;
 
             foreach (SkillSlotId slot in SkillSlots.All)
             {
@@ -102,30 +147,22 @@ namespace Members.KYR._01_Scripts
             state.CopyFrom(this);
         }
 
-        private void BindAimReload()
+        private void ResetHeldValues()
         {
-            InputActionMap map = _controls.asset.FindActionMap("Player");
-            _aim = map.FindAction("Aim");
-            _reload = map.FindAction("Reload");
+            Move = Vector2.zero;
+            Look = Vector2.zero;
+            CrouchHeld = false;
+            RunHeld = false;
+            FireHeld = false;
+            AimHeld = false;
+        }
 
-            if (_aim == null)
-            {
-                _aim = new InputAction("Aim", InputActionType.Button);
-                _aim.AddBinding("<Mouse>/rightButton");
-                _aim.AddBinding("<Gamepad>/leftTrigger");
-            }
-
-            if (_reload == null)
-            {
-                _reload = new InputAction("Reload", InputActionType.Button);
-                _reload.AddBinding("<Keyboard>/r");
-                _reload.AddBinding("<Gamepad>/leftShoulder");
-            }
-            
-            DisableBinding(_aim, "<Mouse>/rightButton");
-            DisableBinding(map.FindAction("Jump"), "<Keyboard>/space");
-            DisableBinding(map.FindAction("Crouch"), "<Keyboard>/c");   
-            _reload = null;
+         private void ApplyTopDownBindings()
+        {
+            Controls.PlayerActions player = _controls.Player;
+            DisableBinding(player.Aim, "<Mouse>/rightButton");
+            DisableBinding(player.Jump, "<Keyboard>/space");
+            DisableBinding(player.Crouch, "<Keyboard>/c");
         }
 
         private static void DisableBinding(InputAction action, string path)
@@ -137,7 +174,7 @@ namespace Members.KYR._01_Scripts
             }
         }
 
-        private void BindSkillActions()
+         private void BindSkillActions()
         {
             InputActionMap map = _controls.asset.FindActionMap("Player");
             _skillActions.Clear();
