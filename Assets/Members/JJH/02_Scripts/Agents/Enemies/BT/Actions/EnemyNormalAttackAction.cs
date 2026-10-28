@@ -17,9 +17,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         protected override Status OnStart()
         {
-            if (Enemy.Value == null || Enemy.Value.EnemyData == null)
+            if (Enemy.Value == null || Enemy.Value.EnemyData == null ||
+                Enemy.Value.SkillModule == null || Enemy.Value.SkillModule.IsSkillUsing())
                 return Status.Failure;
-
+            Debug.Log(1);
             return Status.Running;
         }
 
@@ -30,8 +31,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
             Enemy.Value.NormalAttack();
             IsMove.Value = false;
-
             _cooldownTimer = Time.time + Enemy.Value.EnemyData.AttackCooltime;
+            Debug.Log(2);
 
             return Status.Success;
         }
