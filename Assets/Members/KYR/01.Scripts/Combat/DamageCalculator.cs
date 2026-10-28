@@ -2,7 +2,7 @@ using Members.KYR._01_Scripts.Stats;
 using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Combat
+namespace Members.KYR._01.Scripts.Combat
 {
     public static class DamageCalculator
     {

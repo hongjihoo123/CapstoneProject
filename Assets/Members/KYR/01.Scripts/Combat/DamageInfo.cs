@@ -1,7 +1,7 @@
 using Members.JJH._02_Scripts.ElementsSystem;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Combat
+namespace Members.KYR._01.Scripts.Combat
 {
     public readonly struct DamageInfo
     {

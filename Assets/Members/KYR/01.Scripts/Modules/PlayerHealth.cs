@@ -1,7 +1,7 @@
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Combat;
+using Members.KYR._01.Scripts.Combat;
 using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 

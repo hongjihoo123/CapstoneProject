@@ -2,7 +2,7 @@ using Members.KYR._01.Scripts.Modules;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Members.KYR._01_Scripts.UI
+namespace Members.KYR._01.Scripts.UI
 {
     [DefaultExecutionOrder(10000)]
     public class HeadHealthBar : MonoBehaviour
@@ -12,8 +12,7 @@ namespace Members.KYR._01_Scripts.UI
         [SerializeField] private Image shield;
         [SerializeField] private float clearance = 0.22f;
          private bool hideWhenDead = true;
-
-        [Header("색")]
+         
         [SerializeField] private Color highColor = new(0.32f, 0.82f, 0.38f, 1f);
         [SerializeField] private Color lowColor = new(0.86f, 0.22f, 0.18f, 1f);
         [SerializeField] private float trailSpeed = 0.85f;
