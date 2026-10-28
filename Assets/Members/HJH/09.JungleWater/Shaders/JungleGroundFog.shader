@@ -9,19 +9,19 @@ Shader "HJH/JungleWater/GroundFog"
 {
     Properties
     {
-        _FogColor ("Fog Color", Color) = (0.62, 0.7, 0.62, 1)
-        _Density ("Density", Range(0, 4)) = 1.1
-        _FogThickness ("Fog Thickness (m, 판에서 이만큼 내려가면 최대 농도)", Float) = 1.6
+        _FogColor ("Fog Color", Color) = (0.55, 0.63, 0.56, 0.8)
+        _Density ("Density", Range(0, 4)) = 0.45
+        _FogThickness ("Fog Thickness (m, 판에서 이만큼 내려가면 최대 농도)", Float) = 2
         _MaxMarchDistance ("Max March Distance (m)", Float) = 25
         _NoiseScale ("Noise Scale", Float) = 0.35
-        _NoiseContrast ("Noise Contrast", Range(0.5, 4)) = 1.6
+        _NoiseContrast ("Noise Contrast", Range(0.5, 4)) = 2
         _Wind ("Wind (xyz)", Vector) = (0.3, 0.05, 0.15, 0)
         _LightInfluence ("Light Influence", Range(0, 1)) = 0.4
 
         [Header(Player Reveal)]
         _RevealRadius ("Clear Radius", Float) = 3
         _RevealSoftness ("Clear Softness", Float) = 3
-        _RevealMin ("Density Near Player", Range(0, 1)) = 0.15
+        _RevealMin ("Density Near Player", Range(0, 1)) = 0.1
     }
 
     SubShader
