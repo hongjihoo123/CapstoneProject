@@ -19,7 +19,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private readonly LayerMask _targetMask;
         private readonly LayerMask _environmentMask;
         private readonly HashSet<IDamageable> _hitThisActivation = new();
-        private readonly Dictionary<object, float> _incomingScales = new();
         private readonly Dictionary<SkillData, (float scale, float until)> _boosts = new();
 
         public PlayerSkillContext(PlayerAgent player, LayerMask targetMask, LayerMask environmentMask)
@@ -393,21 +392,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             add => _player.DamageTaken += value;
             remove => _player.DamageTaken -= value;
-        }
-
-        public void SetIncomingDamageScale(object source, float scale)
-        {
-            if (source == null)
-                return;
-            if (Mathf.Approximately(scale, 1f))
-                _incomingScales.Remove(source);
-            else
-                _incomingScales[source] = scale;
-
-            float total = 1f;
-            foreach (float value in _incomingScales.Values)
-                total *= value;
-            _player.IncomingDamageScale = total;
         }
 
         public void ReduceCooldown(SkillSlotId slot, float seconds) => _player.SkillFsm?.ReduceCooldown(slot, seconds);

@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.EffectBuffs;
 using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
@@ -17,8 +18,7 @@ using UnityEngine.UI;
 namespace Members.KYR._01_Scripts
 {
     [RequireComponent(typeof(CharacterController))]
-    public class PlayerAgent : Agent, IWeaponOwner, IDamageable, IHealable, IRecoilCapable,
-        IAttackStatProvider, IDefenseStatProvider, IFinalDamageReceiver
+    public class PlayerAgent : Agent, IWeaponOwner, IDamageReceiver, IHealable, IRecoilCapable
     {
 
         [SerializeField] private PlayerInputSO playerInput;
@@ -199,49 +199,26 @@ namespace Members.KYR._01_Scripts
                 ammoText.text = text;
         }
 
-        // 숫자만 들어온 피해(적 공격 등) → 공격 스탯으로 바꿔서 계산기로
+        public ICombatStats CombatStats => Stats != null ? Stats : NeutralCombatStats.Instance;
+
+        public DamageResult ReceiveDamage(in DamageInfo info)
+        {
+            if (!IsAlive)
+                return default;
+
+            float dealt = DamageCalculator.Outgoing(info);
+            DamageResult result = Health.ApplyDamage(DamageCalculator.Incoming(dealt, info, CombatStats));
+            DamageTaken?.Invoke(dealt, info.Source);
+            return result;
+        }
+
         public override void TakeDamage(float amount, GameObject source)
         {
-            DamageCalculator.Apply(DamageCalculator.FromSource(amount, source, null), this);
+            Health.TakeDamage(amount, source, null);
+            DamageTaken?.Invoke(amount, source);
         }
 
-        public void TakeDamage(float amount, GameObject source, ElementType element)
-        {
-            DamageCalculator.Apply(DamageCalculator.FromSource(amount, source, element), this);
-        }
-
-        // (HJH) IFinalDamageReceiver: 계산기가 구한 최종 피해만 받아서 적용
-        public void ApplyFinalDamage(float finalDamage, in AttackStats attack)
-        {
-            finalDamage *= IncomingDamageScale;
-            Health.ApplyFinalDamage(finalDamage);
-            DamageTaken?.Invoke(finalDamage, attack.Source);
-        }
-
-        // (HJH) IDefenseStatProvider: 맞을 때 계산기에 줄 방어 스탯
-        public DefenseStats GetDefenseStats(ElementType? element) =>
-            Health != null ? Health.GetDefenseStats(element) : DefenseStats.None;
-
-        // (HJH) IAttackStatProvider: 때릴 때 계산기에 줄 공격 스탯
-        public AttackStats BuildAttack(float amount, float attackCoeff, ElementType? element, float elementCoeff)
-        {
-            bool hasTree = Stats != null && Stats.Tree != null;
-            return new AttackStats
-            {
-                Amount = amount,
-                AttackCoeff = attackCoeff,
-                Attack = Stats != null ? Stats.Get(PlayerStatId.Damage) : 1f,
-                Element = element,
-                ElementCoeff = element.HasValue ? elementCoeff : 0f,
-                ElementDamage = element.HasValue ? (Stats != null ? Stats.Get(PlayerElementStats.DamageStat(element.Value)) : 1f) : 0f,
-                ArmorPenetration = hasTree ? Stats.Get(PlayerStatId.ArmorPenetration) : 0f,
-                ElementPenetration = hasTree && element.HasValue ? Stats.Get(PlayerElementStats.PenetrationStat(element.Value)) : 0f,
-                Source = gameObject,
-            };
-        }
-
-        // (HJH) 받는 피해 배율 (스킬 버프/디버프용, 1 = 그대로). 나를 때린 쪽 알림 (source 는 null 일 수 있음)
-        public float IncomingDamageScale { get; set; } = 1f;
+        // (HJH) 나를 때린 쪽 알림 (source 는 null 일 수 있음)
         public event System.Action<float, GameObject> DamageTaken;
 
         public void Heal(float amount)
@@ -279,13 +256,22 @@ namespace Members.KYR._01_Scripts
             if (target == null)
                 return;
 
-            // 타격 확인 → 내 스탯만 묶어서 계산기로 → 최종 피해만 대상에게 넘어감
+            var info = new DamageInfo(amount, gameObject, CombatStats, attackCoeff, element, elementCoeff);
             bool wasAlive = target.IsAlive;
-            float dealt = DamageCalculator.Apply(BuildAttack(amount, attackCoeff, element, elementCoeff), target);
-
-            if (dealt > 0f && Stats != null && Stats.Tree != null)
+            float dealt;
+            if (target is IDamageReceiver receiver)
             {
-                float omnivamp = Stats.Get(PlayerStatId.Omnivamp);
+                dealt = receiver.ReceiveDamage(info).Damage;
+            }
+            else
+            {
+                dealt = DamageCalculator.Outgoing(info);
+                target.TakeDamage(dealt, gameObject);
+            }
+
+            if (dealt > 0f)
+            {
+                float omnivamp = CombatStats.Get(PlayerStatId.Omnivamp);
                 if (omnivamp > 0f)
                     Heal(dealt * omnivamp);
             }
@@ -293,8 +279,7 @@ namespace Members.KYR._01_Scripts
             if (wasAlive)
                 DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
         }
-
-        // Every damage the player deals (weapon, skills, DoT) passes through ApplyDamageTo.
+        
         public event System.Action<DamageDealtInfo> DamageDealt;
 
         public void ApplyHealTo(IHealable target, float amount)

@@ -26,7 +26,6 @@ namespace Members.KYR._01_Scripts
         public bool WasSkillPressed(SkillSlotId slot) => _skillPressed[(int)slot];
         public bool IsSkillHeld(SkillSlotId slot) => _skillHeld[(int)slot];
         public bool WasSkillReleased(SkillSlotId slot) => _skillReleased[(int)slot];
-        // The dash key (right click) doubles as the skill-cancel key.
         public bool WasCancelPressed() => _skillPressed[(int)SkillSlotId.Dash];
         public bool WasJumpPressed() => JumpPressed;
 

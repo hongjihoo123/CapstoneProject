@@ -197,7 +197,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public void AddShield(float amount) { }
         public void BoostSkillDamage(SkillData skill, float scale, float seconds) { }
         public event System.Action<float, GameObject> DamageTaken { add { } remove { } }
-        public void SetIncomingDamageScale(object source, float scale) { }
 
         // ---------- 쿨타임: 작업대엔 다른 칸이 없음 ----------
         public void ReduceCooldown(SkillSlotId slot, float seconds) { }

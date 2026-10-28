@@ -1,8 +1,8 @@
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.Combat;
 using Members.KYR._01_Scripts.Stats;
-using RobotWeapons;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
@@ -74,52 +74,42 @@ namespace Members.KYR._01_Scripts.Modules
             TakeDamage(amount, null, element);
         }
 
-        // 숫자만 들어온 피해: 계산기로 최종값을 구한 뒤 적용
+        // 이미 공격 배율이 들어간 피해. 방어 계산만 하고 적용
         public void TakeDamage(float amount, GameObject source, ElementType? element)
         {
-            AttackStats attack = DamageCalculator.FromSource(amount, source, element);
-            ApplyFinalDamage(DamageCalculator.Current.Calculate(attack, GetDefenseStats(element)));
+            if (IsDead || amount <= 0f)
+                return;
+
+            var info = new DamageInfo(amount, source, DamageCalculator.StatsOf(source), element: element);
+            ApplyDamage(DamageCalculator.Incoming(amount, info, _stats));
         }
 
-        // (HJH) 계산기에 넘겨줄 내 방어 스탯
-        public DefenseStats GetDefenseStats(ElementType? element)
-        {
-            if (_stats == null || _stats.Tree == null)
-                return DefenseStats.None;
-
-            return new DefenseStats
-            {
-                Defense = _stats.Get(PlayerStatId.Defense),
-                ElementDefense = element.HasValue ? _stats.Get(PlayerElementStats.DefenseStat(element.Value)) : 0f,
-                DamageReduction = _stats.Get(PlayerStatId.DamageReduction),
-            };
-        }
-
-        // (HJH) 계산이 끝난 최종 피해만 적용 (보호막 → HP → 경직). 여기선 계산 안 함
-        public void ApplyFinalDamage(float taken)
+        // 방어 계산이 끝난 최종 피해만 넣을 것
+        public DamageResult ApplyDamage(float damage)
         {
             ClampHpToMax();
-            if (IsDead || taken <= 0f)
-                return;
+            if (IsDead || damage <= 0f)
+                return default;
 
+            float absorbed = 0f;
+            float remaining = damage;
             if (_shield > 0f)
             {
-                float absorbed = Mathf.Min(_shield, taken);
+                absorbed = Mathf.Min(_shield, remaining);
                 _shield -= absorbed;
-                taken -= absorbed;
-                if (taken <= 0f)
-                    return;
+                remaining -= absorbed;
             }
 
-            _hp = Mathf.Max(0f, _hp - taken);
+            float before = _hp;
+            if (remaining > 0f)
+                _hp = Mathf.Max(0f, _hp - remaining);
+
             if (IsDead)
-            {
                 _shield = 0f;
-                return;
-            }
-
-            if (stunOnHitDuration > 0f)
+            else if (remaining > 0f && stunOnHitDuration > 0f)
                 ApplyStun(stunOnHitDuration);
+
+            return new DamageResult(damage, absorbed, before - _hp, IsDead);
         }
 
         public void AddShield(float amount)
