@@ -19,7 +19,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             if (Enemy.Value == null || Enemy.Value.Renderer == null || Clip.Value == null)
                 return Status.Failure;
 
-            Enemy.Value.Renderer.PlayClip(Clip.Value.HashValue, 0f, 0.2f, 0);
+            Enemy.Value.Renderer.PlayClip(Clip.Value.HashValue, 0f, 0f, 0);
 
             return Status.Success;
         }

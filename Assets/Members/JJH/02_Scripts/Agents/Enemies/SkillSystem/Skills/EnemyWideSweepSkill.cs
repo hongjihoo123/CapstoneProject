@@ -32,7 +32,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             yield return new WaitForSeconds(prepareTime);
 
-            Collider[] hits = Physics.OverlapSphere(center, skillRange);
+            Collider[] hits = Physics.OverlapSphere(center, skillRange, _skillModule.TargetLayer);
             foreach (Collider hit in hits)
             {
                 Vector3 direction = hit.transform.position - center;
@@ -41,6 +41,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 if (direction.sqrMagnitude > skillRange * skillRange ||
                     Vector3.Angle(rotation * Vector3.forward, direction) > angle * 0.5f)
                     continue;
+
+                ApplyDamage(hit);
             }
 
             yield return new WaitForSeconds(SkillSO.AttackDutation);

@@ -60,7 +60,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         #region BT Helper
 
-        protected bool SetBTVariable<T>(string varName, T value)
+        public bool SetBTVariable<T>(string varName, T value)
         {
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.SetVariableValue(guid, value);
@@ -69,7 +69,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             return false;
         }
 
-        protected bool GetBTVariable<T>(string varName, out BlackboardVariable<T> variable)
+        public bool GetBTVariable<T>(string varName, out BlackboardVariable<T> variable)
         {
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.GetVariable(guid, out variable);

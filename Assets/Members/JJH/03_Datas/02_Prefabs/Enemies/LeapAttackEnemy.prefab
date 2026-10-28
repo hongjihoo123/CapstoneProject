@@ -278,6 +278,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1652894756446153563}
     m_Modifications:
+    - target: {fileID: 968887329937855729, guid: 20f35424b4d60744795c7e70980b5368, type: 3}
+      propertyPath: fallRatio
+      value: 0.15
+      objectReference: {fileID: 0}
     - target: {fileID: 3169492420103384403, guid: 20f35424b4d60744795c7e70980b5368, type: 3}
       propertyPath: m_LocalPosition.x
       value: 0
@@ -454,6 +458,14 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8175225816426840581, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
+      propertyPath: <AreaVisualizer>k__BackingField
+      value: 
+      objectReference: {fileID: 6359766499122091922}
+    - target: {fileID: 8175225816426840581, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
+      propertyPath: <TargetLayer>k__BackingField.m_Bits
+      value: 256
+      objectReference: {fileID: 0}
     - target: {fileID: 9197579358193434221, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
       propertyPath: m_Name
       value: EnemySkillModule
@@ -475,6 +487,17 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 7238682364675669347, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
   m_PrefabInstance: {fileID: 8251918622028764728}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &6359766499122091922 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 3082390325053784490, guid: 44db27188c6a13645b8bee4d9ecb8b11, type: 3}
+  m_PrefabInstance: {fileID: 8251918622028764728}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0cf07b06f334428e88f9240ec5592c79, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.AttackAreaVisualizer
 --- !u!1001 &8710517964073247543
 PrefabInstance:
   m_ObjectHideFlags: 0
