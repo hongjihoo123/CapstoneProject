@@ -1,4 +1,5 @@
-﻿using Members.JJH._02_Scripts.Agents.Enemies.BT;
+﻿
+using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using RobotWeapons;
 using System.Collections;
 using Unity.Behavior;
@@ -51,8 +52,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             float hangTime = attackDuration * hangRatio / ratioSum;
             float fallTime = attackDuration * fallRatio / ratioSum;
 
-            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                                                               landingPosition, leapDamageRange, prepareTime));
+            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, landingPosition,
+                                                                                        leapDamageRange, prepareTime + attackDuration + fallTime));
 
             yield return new WaitForSeconds(prepareTime);
 
@@ -72,17 +73,35 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             yield return new WaitForSeconds(hangTime);
 
+
             elapsed = 0f;
-            while (elapsed < fallTime)
+            float startRadius = 0.1f;
+            float expandDuration = hangTime + fallTime;
+
+            while (elapsed < expandDuration)
             {
                 elapsed += Time.deltaTime;
-                float t = Mathf.Clamp01(elapsed / fallTime);
-                float eased = t * t * t;
+                float t = Mathf.Clamp01(elapsed / expandDuration);
 
-                _enemy.transform.position = Vector3.Lerp(peakPosition, landingPosition, eased);
+                if (elapsed <= hangTime)
+                {
+                    _enemy.transform.position = peakPosition;
+                }
+                else
+                {
+                    float fallT = Mathf.Clamp01((elapsed - hangTime) / fallTime);
+                    float eased = fallT * fallT * fallT;
+                    _enemy.transform.position = Vector3.Lerp(peakPosition, landingPosition, eased);
+                }
+
+                float radius = Mathf.Lerp(startRadius, leapDamageRange, t);
+                _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, landingPosition, radius, Time.deltaTime * 2f));
+
                 yield return null;
             }
+
             _enemy.transform.position = landingPosition;
+
             _skillModule.enemy.NavMeshAgent.NavMeshAgent.enabled = true;
             _skillModule.enemy.NavMeshAgent.NavMeshAgent.Warp(landingPosition);
 
