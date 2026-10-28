@@ -46,6 +46,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             }
 
             _enemy.transform.position = targetPosition;
+
+            Collider[] hits = Physics.OverlapBox((startPosition + targetPosition) * 0.5f,
+                            new Vector3(1f, 1f, Vector3.Distance(startPosition, targetPosition) * 0.5f),
+                            _enemy.transform.rotation, _skillModule.TargetLayer);
+            foreach (Collider hit in hits)
+                ApplyDamage(hit);
+
             IsUsing = false;
             _dashCoroutine = null;
         }
