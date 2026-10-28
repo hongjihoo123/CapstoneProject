@@ -2,6 +2,7 @@ using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts.Stats;
+using RobotWeapons;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
@@ -73,41 +74,32 @@ namespace Members.KYR._01_Scripts.Modules
             TakeDamage(amount, null, element);
         }
 
+        // 숫자만 들어온 피해: 계산기로 최종값을 구한 뒤 적용
         public void TakeDamage(float amount, GameObject source, ElementType? element)
         {
-            ClampHpToMax();
-            if (IsDead || amount <= 0f)
-                return;
+            AttackStats attack = DamageCalculator.FromSource(amount, source, element);
+            ApplyFinalDamage(DamageCalculator.Current.Calculate(attack, GetDefenseStats(element)));
+        }
 
-            float taken = amount;
-            if (_stats != null && _stats.Tree != null)
+        // (HJH) 계산기에 넘겨줄 내 방어 스탯
+        public DefenseStats GetDefenseStats(ElementType? element)
+        {
+            if (_stats == null || _stats.Tree == null)
+                return DefenseStats.None;
+
+            return new DefenseStats
             {
-                PlayerStatsModule attacker = StatsFrom(source);
-                bool hasElement = element.HasValue;
-                float eleDef = 0f;
-                float elePen = 0f;
-                if (hasElement)
-                {
-                    eleDef = _stats.Get(PlayerElementStats.DefenseStat(element.Value));
-                    if (attacker != null && attacker.Tree != null)
-                        elePen = attacker.Get(PlayerElementStats.PenetrationStat(element.Value));
-                }
+                Defense = _stats.Get(PlayerStatId.Defense),
+                ElementDefense = element.HasValue ? _stats.Get(PlayerElementStats.DefenseStat(element.Value)) : 0f,
+                DamageReduction = _stats.Get(PlayerStatId.DamageReduction),
+            };
+        }
 
-                float armorPen = attacker != null && attacker.Tree != null
-                    ? attacker.Get(PlayerStatId.ArmorPenetration)
-                    : 0f;
-
-                taken = StatFormulas.Incoming(
-                    amount,
-                    _stats.Get(PlayerStatId.Defense),
-                    armorPen,
-                    eleDef,
-                    elePen,
-                    _stats.Get(PlayerStatId.DamageReduction),
-                    hasElement);
-            }
-
-            if (taken <= 0f)
+        // (HJH) 계산이 끝난 최종 피해만 적용 (보호막 → HP → 경직). 여기선 계산 안 함
+        public void ApplyFinalDamage(float taken)
+        {
+            ClampHpToMax();
+            if (IsDead || taken <= 0f)
                 return;
 
             if (_shield > 0f)
@@ -161,15 +153,6 @@ namespace Members.KYR._01_Scripts.Modules
                 return;
 
             _stunRemaining = Mathf.Max(_stunRemaining, duration);
-        }
-
-        private static PlayerStatsModule StatsFrom(GameObject source)
-        {
-            if (source == null)
-                return null;
-            if (source.TryGetComponent(out PlayerStatsModule stats))
-                return stats;
-            return source.GetComponentInParent<PlayerStatsModule>();
         }
 
         private void ClampHpToMax()

@@ -201,14 +201,19 @@ namespace Assets.Members.HJH.Environment.EditorTools
             float h = 0.35f + n * 1.1f;
 
             float toCenter = Vector2.Distance(new Vector2(x, z), new Vector2(MapSize * 0.5f, MapSize * 0.5f));
-            h = Mathf.Max(h, WaterY + 0.25f - Mathf.Max(0f, toCenter - 3f) * 0.15f);
+            // 시작 섬: 반지름을 각도마다 다르게 해서 물가 선이 원이 되지 않게
+            float angle = Mathf.Atan2(z - MapSize * 0.5f, x - MapSize * 0.5f);
+            float radius = 3f + (Mathf.PerlinNoise(Mathf.Cos(angle) * 1.3f + 7f, Mathf.Sin(angle) * 1.3f + 3f) - 0.5f) * 3f;
+            h = Mathf.Max(h, WaterY + 0.25f - Mathf.Max(0f, toCenter - radius) * 0.15f);
 
             float edge = Mathf.Min(Mathf.Min(x, MapSize - x), Mathf.Min(z, MapSize - z));
             float wall = 1f - Smooth(0f, 6f, edge);
             return Mathf.Lerp(h, 3.2f + n * 0.8f, wall);
         }
 
-        private static void PaintSplat(TerrainData data)
+        // 높이·경사로 바닥 텍스처 칠하기: 물 아래 = 진흙, 물가 = 젖은 이끼, 높은 곳 = 이끼, 가파른 곳 = 진흙
+        // waterLocalY = 터레인 기준 물 높이 (터레인을 옮겨도 맞게)
+        internal static void PaintSplat(TerrainData data, float waterLocalY = WaterY)
         {
             int res = data.alphamapResolution;
             var maps = new float[res, res, 3];
@@ -219,8 +224,8 @@ namespace Assets.Members.HJH.Environment.EditorTools
                 float h = data.GetInterpolatedHeight(nx, nz);
                 float steep = data.GetSteepness(nx, nz);
 
-                float mud = 1f - Smooth(WaterY - 0.02f, WaterY + 0.2f, h);
-                float moss = Smooth(WaterY + 0.25f, WaterY + 0.8f, h);
+                float mud = 1f - Smooth(waterLocalY - 0.02f, waterLocalY + 0.2f, h);
+                float moss = Smooth(waterLocalY + 0.25f, waterLocalY + 0.8f, h);
                 float wet = Mathf.Max(0f, 1f - mud - moss);
                 mud += Smooth(25f, 45f, steep);
 
