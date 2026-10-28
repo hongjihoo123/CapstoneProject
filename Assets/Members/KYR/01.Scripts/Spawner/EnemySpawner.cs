@@ -1,12 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using Members.JJH._02_Scripts.Agents.Modules;
-using Members.KYR._01.Scripts.Spawner;
 using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.Events;
 
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     public class EnemySpawner : MonoBehaviour
     {

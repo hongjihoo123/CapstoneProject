@@ -1,5 +1,4 @@
 using System.Collections.Generic;
-using Members.KYR._01_Scripts.Spawner;
 using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Spawner

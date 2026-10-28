@@ -1,8 +1,7 @@
 using System.Collections.Generic;
-using Members.KYR._01.Scripts.Spawner;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     [CreateAssetMenu(fileName = "Room Wave Set", menuName = "SO/Enemy/Room Wave Set", order = 3)]
     public class RoomWaveSetSO : ScriptableObject
