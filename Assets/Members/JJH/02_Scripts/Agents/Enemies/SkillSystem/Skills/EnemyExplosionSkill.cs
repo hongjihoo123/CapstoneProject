@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyGroundSlamSkill : AbstractEnemySkill
+    public class EnemyExplosionSkill : AbstractEnemySkill
     {
         private Coroutine _skillCoroutine;
 
