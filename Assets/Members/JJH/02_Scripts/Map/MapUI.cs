@@ -1,7 +1,7 @@
-﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+﻿
+using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System;
-using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
@@ -13,591 +13,331 @@ namespace Members.JJH._02_Scripts.Map
     {
         public enum RoomType
         {
-            Start,
             Normal,
             Elite,
-            Event,
+            Upgrade,
             Shop,
             Boss
         }
 
-        private struct ConnectionCandidate
-        {
-            public int from;
-            public int to;
-            public float distance;
-
-            public ConnectionCandidate(int from, int to, float distance)
-            {
-                this.from = from;
-                this.to = to;
-                this.distance = distance;
-            }
-        }
-
         [Serializable]
-        public struct RoomNode
+        public struct RoomOption
         {
-            public int id;
             public RoomType type;
-            public Vector2 position;
-            public Vector2Int gridPosition;
-            public List<int> connections;
-            public MapRoomUI ui;
+            public string displayName;
+            public Sprite backgroundSprite;
+            public string sceneName;
+            [Min(1)] public int weight;
         }
 
-        [Header("Map")]
-        [SerializeField] private int seed = 0;
-        [SerializeField] private int roomCount = 25;
-        [SerializeField] private int extraConnectionCount = 12;
+        private const int NormalRoomCount = 6;
+        private const int MinChoiceCount = 2;
+        private const int MaxChoiceCount = 3;
 
         [Header("UI")]
-        [SerializeField] private RectTransform mapContent;
-        [SerializeField] private MapRoomUI roomPrefab;
-        [SerializeField] private Image connectionPrefab;
-        [SerializeField] private CanvasGroup mapCanvasGroup;
+        [SerializeField] private Transform choiceContent;
+        [SerializeField] private CanvasGroup mapUICanvasGroup;
+        [SerializeField] private Image[] progressSlots;
+
+        [Header("Progress Outline")]
+        [SerializeField] private Outline[] progressOutlines;
+        [SerializeField] private Color currentOutlineColor;
+        [SerializeField] private Vector2 outlineEffectDistance;
+
+        [Header("Sprites")]
+        [SerializeField] private Sprite[] progressSprites;
+
+        [Header("Room Options")]
+        [SerializeField] private RoomOption[] roomOptions;
+        [SerializeField] private RoomOption bossRoom;
+
+        [Header("Data")]
         [SerializeField] private EventChannelSO eventChannel;
-        [SerializeField] private string[] roomSceneNames = new string[6];
+        [SerializeField] private MapChoiceUI choicePrefab;
 
-        [Header("Layout")]
-        [SerializeField] private float mapPadding = 100f;
-        [SerializeField] private float minRoomDistance = 150f;
-        [SerializeField] private float connectionWidth = 5f;
-        [SerializeField] private float connectionRoomPadding = 20f;
-        [SerializeField] private float minConnectionDistance = 20f;
-        [SerializeField] private float minConnectionAngle = 25f;
+        private readonly List<MapChoiceUI> _choices = new();
 
-        private readonly List<RoomNode> rooms = new List<RoomNode>();
-        private readonly List<Image> connections = new List<Image>();
-        private readonly HashSet<int> visitedRoomIds = new HashSet<int>();
-        private readonly HashSet<int> revealedRoomIds = new HashSet<int>();
+        private int _currentRoomCount = 1;
+        private int _stageNumber = 1;
 
-        private bool isMapVisible;
-
-        private int currentRoomId = -1;
-        private int startRoomId = -1;
-        private int bossRoomId = -1;
+        private bool _isMapVisible;
+        private bool _choicesGenerated;
+        private bool _bossEntered;
 
         private void Awake()
         {
-            DontDestroyOnLoad(transform.parent);
+            DontDestroyOnLoad(transform.parent != null ? transform.parent.gameObject : gameObject);
         }
 
         private void OnEnable()
         {
             eventChannel.AddListener<ToggleMapEvent>(OnToggleMap);
+            eventChannel.AddListener<SelectRoomEvent>(OnSelectRoom);
         }
 
         private void OnDisable()
         {
             eventChannel.RemoveListener<ToggleMapEvent>(OnToggleMap);
+            eventChannel.RemoveListener<SelectRoomEvent>(OnSelectRoom);
         }
 
         private void Start()
         {
             SetMapVisible(false);
-            GenerateMap();
+            UpdateProgressUI();
         }
 
         private void OnToggleMap(ToggleMapEvent evt)
         {
-            SetMapVisible(!isMapVisible);
+            bool visible = !_isMapVisible;
+
+            if (visible && !_choicesGenerated)
+                GenerateChoices();
+
+            SetMapVisible(visible);
+        }
+
+        private void OnSelectRoom(SelectRoomEvent evt)
+        {
+            SelectRoom(evt.Choice, evt.RoomOption);
         }
 
         private void SetMapVisible(bool visible)
         {
-            isMapVisible = visible;
-            mapCanvasGroup.alpha = visible ? 1f : 0f;
-            mapCanvasGroup.interactable = visible;
-            mapCanvasGroup.blocksRaycasts = visible;
+            _isMapVisible = visible;
+            mapUICanvasGroup.alpha = visible ? 1f : 0f;
+            mapUICanvasGroup.interactable = visible;
+            mapUICanvasGroup.blocksRaycasts = visible;
         }
 
-        #region Generate Map
-
-        [ContextMenu("Generate Map")]
-        public void GenerateMap()
+        private void GenerateChoices()
         {
-            if (mapContent == null || roomPrefab == null || connectionPrefab == null)
+            ClearChoices();
+
+            if (_bossEntered)
+                return;
+
+            if (_currentRoomCount >= NormalRoomCount)
             {
-                Debug.LogError("MapUI의 UI 참조를 모두 설정해 주세요.", this);
+                CreateChoice(bossRoom);
+                _choicesGenerated = true;
                 return;
             }
 
-            if (roomCount < 2)
+            if (roomOptions == null || roomOptions.Length == 0)
             {
-                Debug.LogWarning("방 개수는 최소 2개 이상이어야 합니다.");
+                Debug.LogError($"{gameObject.name} : Room Option 설정 안됨", this);
                 return;
             }
 
-            ClearMap();
+            List<RoomOption> combatOptions = new();
+            List<RoomOption> specialOptions = new();
 
-            Random.InitState(seed == 0 ? Environment.TickCount : seed);
-
-            CreateRooms();
-            ConnectRooms();
-            CreateConnectionUI();
-            CreateRoomUI();
-
-            currentRoomId = startRoomId;
-            visitedRoomIds.Add(startRoomId);
-            revealedRoomIds.Add(startRoomId);
-            revealedRoomIds.Add(bossRoomId);
-            RevealConnectedRooms(startRoomId);
-            UpdateRoomState();
-
-            UpdateRoomState();
-        }
-
-        private void CreateRooms()
-        {
-            Rect rect = mapContent.rect;
-            float minX = rect.xMin + mapPadding;
-            float maxX = rect.xMax - mapPadding;
-            float minY = rect.yMin + mapPadding;
-            float maxY = rect.yMax - mapPadding;
-
-            if (minX >= maxX || minY >= maxY)
+            foreach (RoomOption option in roomOptions)
             {
-                Debug.LogError("MapContent 크기와 Map Padding을 확인해 주세요.", this);
+                if (option.weight <= 0)
+                    continue;
+
+                if (option.type == RoomType.Normal || option.type == RoomType.Elite)
+                    combatOptions.Add(option);
+                else if (option.type == RoomType.Shop || option.type == RoomType.Upgrade)
+                    specialOptions.Add(option);
+            }
+
+            if (combatOptions.Count == 0)
+            {
+                Debug.LogError($"{gameObject.name} : Normal 또는 Elite 방 설정이 필요합니다.", this);
                 return;
             }
 
-            List<Vector2> positions = new List<Vector2>();
-            int maxAttempts = 1000;
+            int choiceCount = Random.Range(MinChoiceCount, MaxChoiceCount + 1);
 
-            for (int i = 0; i < roomCount; i++)
+            if (_currentRoomCount == NormalRoomCount - 1)
             {
-                bool placed = false;
-
-                for (int attempt = 0; attempt < maxAttempts; attempt++)
+                if (!TryGetRoomOption(RoomType.Shop, out RoomOption shopOption) ||
+                    !TryGetRoomOption(RoomType.Upgrade, out RoomOption upgradeOption))
                 {
-                    Vector2 position = new Vector2(Random.Range(minX, maxX), Random.Range(minY, maxY));
-                    bool valid = true;
-
-                    foreach (Vector2 existing in positions)
-                    {
-                        if (Vector2.Distance(position, existing) < minRoomDistance)
-                        {
-                            valid = false;
-                            break;
-                        }
-                    }
-
-                    if (!valid)
-                        continue;
-
-                    positions.Add(position);
-                    placed = true;
-                    break;
-                }
-
-                if (!placed)
-                {
-                    Debug.LogWarning("방을 배치할 공간이 부족합니다. MapContent 크기를 늘리거나 Min Room Distance를 줄여 주세요.", this);
+                    Debug.LogError($"{gameObject.name} : Shop과 Upgrade 방 설정이 필요합니다.", this);
                     return;
                 }
+
+                CreateChoice(shopOption);
+                CreateChoice(upgradeOption);
+
+                if (choiceCount == 3)
+                    CreateChoice(GetWeightedRandomOption(combatOptions));
             }
+            else if (_currentRoomCount == 3)
+            {
+                if (specialOptions.Count == 0)
+                {
+                    Debug.LogError($"{gameObject.name} : Shop 또는 Upgrade 방 설정이 필요합니다.", this);
+                    return;
+                }
 
-            bool horizontal = Random.value < 0.5f;
+                CreateChoice(GetWeightedRandomOption(specialOptions));
 
-            if (horizontal)
-                positions.Sort((a, b) => a.x.CompareTo(b.x));
+                while (_choices.Count < choiceCount)
+                    CreateChoice(GetWeightedRandomOption(combatOptions));
+            }
             else
-                positions.Sort((a, b) => a.y.CompareTo(b.y));
-
-            if (Random.value < 0.5f)
-                positions.Reverse();
-
-            for (int i = 0; i < positions.Count; i++)
             {
-                RoomType type = i == 0 ? RoomType.Start :
-                                i == positions.Count - 1 ? RoomType.Boss :
-                                GetRandomRoomType();
-
-                CreateRoom(positions[i], type, Vector2Int.zero);
+                while (_choices.Count < choiceCount)
+                    CreateChoice(GetWeightedRandomOption(combatOptions));
             }
 
-            startRoomId = 0;
-            bossRoomId = rooms.Count - 1;
+            _choicesGenerated = _choices.Count > 0;
         }
 
-        private int CreateRoom(Vector2 position, RoomType type, Vector2Int gridPosition)
+        private RoomOption GetWeightedRandomOption(List<RoomOption> options)
         {
-            RoomNode room = new RoomNode
-            {
-                id = rooms.Count,
-                type = type,
-                position = position,
-                gridPosition = gridPosition,
-                connections = new List<int>(),
-                ui = null
-            };
+            int totalWeight = 0;
 
-            rooms.Add(room);
-            return room.id;
+            foreach (RoomOption option in options)
+                totalWeight += option.weight;
+
+            int randomValue = Random.Range(0, totalWeight);
+
+            foreach (RoomOption option in options)
+            {
+                randomValue -= option.weight;
+
+                if (randomValue < 0)
+                    return option;
+            }
+
+            return options[options.Count - 1];
         }
 
-        private void ConnectRooms()
+        private bool TryGetRoomOption(RoomType type, out RoomOption selectedOption)
         {
-            List<ConnectionCandidate> candidates = new List<ConnectionCandidate>();
+            List<RoomOption> options = new();
 
-            for (int i = 0; i < rooms.Count; i++)
+            foreach (RoomOption option in roomOptions)
             {
-                for (int j = i + 1; j < rooms.Count; j++)
-                {
-                    float distance = Vector2.Distance(rooms[i].position, rooms[j].position);
-                    candidates.Add(new ConnectionCandidate(i, j, distance));
-                }
+                if (option.type == type && option.weight > 0)
+                    options.Add(option);
             }
 
-            candidates.Sort((a, b) => a.distance.CompareTo(b.distance));
-
-            foreach (ConnectionCandidate candidate in candidates)
+            if (options.Count == 0)
             {
-                if (rooms[candidate.from].connections.Count >= 2 &&
-                    rooms[candidate.to].connections.Count >= 2)
-                    continue;
-
-                if (rooms[candidate.from].connections.Contains(candidate.to))
-                    continue;
-
-                if (WouldCrossConnection(candidate.from, candidate.to) ||
-                    WouldOverlapRoom(candidate.from, candidate.to))
-                    continue;
-
-                AddConnection(candidate.from, candidate.to);
+                selectedOption = default;
+                return false;
             }
 
-            int addedConnections = 0;
-
-            for (int i = candidates.Count - 1; i > 0; i--)
-            {
-                int randomIndex = Random.Range(0, i + 1);
-                (candidates[i], candidates[randomIndex]) = (candidates[randomIndex], candidates[i]);
-            }
-
-            foreach (ConnectionCandidate candidate in candidates)
-            {
-                if (addedConnections >= extraConnectionCount)
-                    break;
-
-                if (rooms[candidate.from].connections.Contains(candidate.to))
-                    continue;
-
-                if (WouldCrossConnection(candidate.from, candidate.to) ||
-                    WouldOverlapRoom(candidate.from, candidate.to))
-                    continue;
-
-                AddConnection(candidate.from, candidate.to);
-                addedConnections++;
-            }
+            selectedOption = GetWeightedRandomOption(options);
+            return true;
         }
 
-        private void AddConnection(int fromId, int toId)
+        private void CreateChoice(RoomOption option)
         {
-            if (fromId == toId)
+            MapChoiceUI choice = Instantiate(choicePrefab, choiceContent);
+            choice.Initialize(option);
+            _choices.Add(choice);
+        }
+
+        private void ClearChoices()
+        {
+            foreach (MapChoiceUI choice in _choices)
+            {
+                if (choice != null)
+                    Destroy(choice.gameObject);
+            }
+
+            _choices.Clear();
+        }
+
+        public void SelectRoom(MapChoiceUI choice, RoomOption option)
+        {
+            if (choice == null || !_choices.Contains(choice))
                 return;
 
-            RoomNode from = rooms[fromId];
-            RoomNode to = rooms[toId];
-
-            if (from.connections.Contains(toId))
+            if (_bossEntered)
                 return;
 
-            from.connections.Add(toId);
-            to.connections.Add(fromId);
-
-            rooms[fromId] = from;
-            rooms[toId] = to;
-        }
-
-        private bool WouldCrossConnection(int fromId, int toId)
-        {
-            Vector2 a = rooms[fromId].position;
-            Vector2 b = rooms[toId].position;
-
-            RectTransform rect = roomPrefab.GetComponent<RectTransform>();
-            Vector2 roomSize = Vector2.Scale(rect.rect.size, rect.localScale);
-            float trimDistance = roomSize.magnitude * 0.5f + connectionRoomPadding;
-
-            foreach (RoomNode room in rooms)
+            if (_currentRoomCount >= NormalRoomCount)
             {
-                foreach (int connectedId in room.connections)
-                {
-                    if (room.id >= connectedId)
-                        continue;
+                if (option.type != RoomType.Boss)
+                    return;
 
-                    bool sharesFrom = room.id == fromId || connectedId == fromId;
-                    bool sharesTo = room.id == toId || connectedId == toId;
+                _bossEntered = true;
+            }
+            else
+            {
+                if (option.type == RoomType.Boss)
+                    return;
 
-                    Vector2 c = rooms[room.id].position;
-                    Vector2 d = rooms[connectedId].position;
-
-                    if (sharesFrom || sharesTo)
-                    {
-                        int sharedId = sharesFrom ? fromId : toId;
-                        int otherA = room.id == sharedId ? connectedId : room.id;
-                        int otherB = sharedId == fromId ? toId : fromId;
-
-                        Vector2 sharedPosition = rooms[sharedId].position;
-                        Vector2 directionA = (rooms[otherA].position - sharedPosition).normalized;
-                        Vector2 directionB = (rooms[otherB].position - sharedPosition).normalized;
-
-                        if (Vector2.Angle(directionA, directionB) < minConnectionAngle)
-                            return true;
-
-                        continue;
-                    }
-
-                    Vector2 trimmedA = Vector2.MoveTowards(a, b, trimDistance);
-                    Vector2 trimmedB = Vector2.MoveTowards(b, a, trimDistance);
-                    Vector2 trimmedC = Vector2.MoveTowards(c, d, trimDistance);
-                    Vector2 trimmedD = Vector2.MoveTowards(d, c, trimDistance);
-
-                    if (GetSegmentDistance(trimmedA, trimmedB, trimmedC, trimmedD) < minConnectionDistance + connectionWidth)
-                        return true;
-                }
+                _currentRoomCount++;
             }
 
-            return false;
-        }
-
-        private bool WouldOverlapRoom(int fromId, int toId)
-        {
-            Vector2 start = rooms[fromId].position;
-            Vector2 end = rooms[toId].position;
-
-            RectTransform rect = roomPrefab.GetComponent<RectTransform>();
-            Vector2 size = Vector2.Scale(rect.rect.size, rect.localScale);
-            float padding = connectionRoomPadding + connectionWidth * 0.5f;
-
-            foreach (RoomNode room in rooms)
-            {
-                if (room.id == fromId || room.id == toId)
-                    continue;
-
-                Vector2 expandedSize = size + Vector2.one * padding * 2f;
-                Rect roomRect = new Rect(room.position - expandedSize * 0.5f, expandedSize);
-
-                if (SegmentIntersectsRect(start, end, roomRect))
-                    return true;
-            }
-
-            return false;
-        }
-
-        private bool SegmentIntersectsRect(Vector2 start, Vector2 end, Rect rect)
-        {
-            if (rect.Contains(start) || rect.Contains(end))
-                return true;
-
-            Vector2 topLeft = new Vector2(rect.xMin, rect.yMax);
-            Vector2 topRight = new Vector2(rect.xMax, rect.yMax);
-            Vector2 bottomLeft = new Vector2(rect.xMin, rect.yMin);
-            Vector2 bottomRight = new Vector2(rect.xMax, rect.yMin);
-
-            return SegmentsIntersect(start, end, topLeft, topRight) ||
-                   SegmentsIntersect(start, end, topRight, bottomRight) ||
-                   SegmentsIntersect(start, end, bottomRight, bottomLeft) ||
-                   SegmentsIntersect(start, end, bottomLeft, topLeft);
-        }
-
-        private bool SegmentsIntersect(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-        {
-            float abC = Cross(b - a, c - a);
-            float abD = Cross(b - a, d - a);
-            float cdA = Cross(d - c, a - c);
-            float cdB = Cross(d - c, b - c);
-
-            return abC * abD < 0f && cdA * cdB < 0f;
-        }
-
-        private float Cross(Vector2 a, Vector2 b)
-        {
-            return a.x * b.y - a.y * b.x;
-        }
-
-        private float GetSegmentDistance(Vector2 a, Vector2 b, Vector2 c, Vector2 d)
-        {
-            if (SegmentsIntersect(a, b, c, d))
-                return 0f;
-
-            return Mathf.Min(
-                Mathf.Min(GetPointSegmentDistance(a, c, d), GetPointSegmentDistance(b, c, d)),
-                Mathf.Min(GetPointSegmentDistance(c, a, b), GetPointSegmentDistance(d, a, b))
-            );
-        }
-
-        private float GetPointSegmentDistance(Vector2 point, Vector2 start, Vector2 end)
-        {
-            Vector2 direction = end - start;
-            float lengthSquared = direction.sqrMagnitude;
-
-            if (lengthSquared == 0f)
-                return Vector2.Distance(point, start);
-
-            float t = Mathf.Clamp01(Vector2.Dot(point - start, direction) / lengthSquared);
-            return Vector2.Distance(point, start + direction * t);
-        }
-
-        #endregion
-
-        #region Generate UI
-
-        private void CreateConnectionUI()
-        {
-            foreach (RoomNode room in rooms)
-            {
-                foreach (int connectedRoomId in room.connections)
-                {
-                    if (room.id >= connectedRoomId)
-                        continue;
-
-                    RoomNode connectedRoom = rooms[connectedRoomId];
-                    CreateConnection(room.position, connectedRoom.position);
-                }
-            }
-        }
-
-        private void CreateConnection(Vector2 start, Vector2 end)
-        {
-            Image connection = Instantiate(connectionPrefab, mapContent);
-            RectTransform rect = connection.rectTransform;
-            Vector2 direction = end - start;
-
-            rect.anchorMin = new Vector2(0.5f, 0.5f);
-            rect.anchorMax = new Vector2(0.5f, 0.5f);
-            rect.pivot = new Vector2(0.5f, 0.5f);
-            rect.anchoredPosition = start + direction * 0.5f;
-            rect.sizeDelta = new Vector2(direction.magnitude, connectionWidth);
-
-            float angle = Mathf.Atan2(direction.y, direction.x) * Mathf.Rad2Deg;
-            rect.localRotation = Quaternion.Euler(0f, 0f, angle);
-
-            connections.Add(connection);
-        }
-
-        private void CreateRoomUI()
-        {
-            for (int i = 0; i < rooms.Count; i++)
-            {
-                RoomNode room = rooms[i];
-                MapRoomUI roomUI = Instantiate(roomPrefab, mapContent);
-
-                roomUI.Initialize(room.id, this);
-
-                RectTransform rect = roomUI.GetComponent<RectTransform>();
-                rect.anchorMin = new Vector2(0.5f, 0.5f);
-                rect.anchorMax = new Vector2(0.5f, 0.5f);
-                rect.anchoredPosition = room.position;
-
-                room.ui = roomUI;
-                rooms[i] = room;
-            }
-        }
-
-        private void RevealConnectedRooms(int roomId)
-        {
-            if (roomId < 0 || roomId >= rooms.Count)
-                return;
-
-            foreach (int connectedRoomId in rooms[roomId].connections)
-            {
-                revealedRoomIds.Add(connectedRoomId);
-            }
-        }
-
-        #endregion
-
-        public void SelectRoom(int roomId)
-        {
-            if (roomId < 0 || roomId >= rooms.Count)
-                return;
-
-            if (currentRoomId == -1 || roomId == currentRoomId)
-                return;
-
-            RoomNode currentRoom = rooms[currentRoomId];
-
-            if (!currentRoom.connections.Contains(roomId))
-                return;
-
-            currentRoomId = roomId;
-            visitedRoomIds.Add(roomId);
-            revealedRoomIds.Add(roomId);
-            RevealConnectedRooms(roomId);
-            UpdateRoomState();
-
-            string sceneName = roomSceneNames[(int)rooms[roomId].type];
-
-            if (!string.IsNullOrWhiteSpace(sceneName))
-                StartCoroutine(TransitionToRoom(sceneName));
-        }
-
-        private IEnumerator TransitionToRoom(string sceneName)
-        {
-            yield return new WaitForSeconds(0.2f);
+            UpdateProgressUI();
+            _choicesGenerated = false;
             SetMapVisible(false);
-            eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(sceneName));
+            ClearChoices();
+
+            if (string.IsNullOrWhiteSpace(option.sceneName))
+            {
+                Debug.LogError($"{option.displayName}의 Scene Name이 설정되지 않았습니다.", this);
+                return;
+            }
+
+            eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(option.sceneName));
         }
 
-        private void UpdateRoomState()
+        private void UpdateProgressUI()
         {
-            for (int i = 0; i < rooms.Count; i++)
+            if (progressSlots == null || progressSlots.Length < 7 ||
+                progressSprites == null || progressSprites.Length < 3)
             {
-                RoomNode room = rooms[i];
+                Debug.LogError($"{gameObject.name} : Progress Slots는 7개, Progress Sprites는 3개가 필요합니다.", this);
+                return;
+            }
 
-                if (room.ui == null)
-                    continue;
+            for (int i = 0; i < NormalRoomCount; i++)
+            {
+                progressSlots[i].sprite = progressSprites[i < _currentRoomCount ? 0 : 1];
 
-                bool isCurrent = room.id == currentRoomId;
-                bool canSelect = currentRoomId != -1 && room.id != currentRoomId && rooms[currentRoomId].connections.Contains(room.id);
-                bool isVisited = visitedRoomIds.Contains(room.id);
-                bool isRevealed = revealedRoomIds.Contains(room.id);
+                if (progressOutlines != null && i < progressOutlines.Length && progressOutlines[i] != null)
+                {
+                    progressOutlines[i].effectColor = currentOutlineColor;
+                    progressOutlines[i].effectDistance = outlineEffectDistance;
+                    progressOutlines[i].enabled = i == _currentRoomCount - 1;
+                }
+            }
 
-                room.ui.SetState(isCurrent, canSelect, isVisited, isRevealed);
+            progressSlots[6].sprite = progressSprites[2];
+
+            if (progressOutlines != null && progressOutlines.Length > 6 && progressOutlines[6] != null)
+            {
+                progressOutlines[6].effectColor = currentOutlineColor;
+                progressOutlines[6].effectDistance = outlineEffectDistance;
+                progressOutlines[6].enabled = _bossEntered;
             }
         }
 
-        private void ClearMap()
+        public void CompleteBossStage()
         {
-            foreach (Transform child in mapContent)
-            {
-                Destroy(child.gameObject);
-            }
+            if (!_bossEntered)
+                return;
 
-            rooms.Clear();
-            connections.Clear();
-            visitedRoomIds.Clear();
-            revealedRoomIds.Clear();
+            _stageNumber++;
+            _currentRoomCount = 1;
+            _bossEntered = false;
+            _choicesGenerated = false;
 
-            currentRoomId = -1;
-            startRoomId = -1;
-            bossRoomId = -1;
+            ClearChoices();
+            UpdateProgressUI();
+            SetMapVisible(false);
         }
 
-        private RoomType GetRandomRoomType()
+        public int GetStageNumber()
         {
-            int value = Random.Range(0, 100);
-
-            if (value < 60)
-                return RoomType.Normal;
-
-            if (value < 75)
-                return RoomType.Elite;
-
-            if (value < 88)
-                return RoomType.Event;
-
-            return RoomType.Shop;
+            return _stageNumber;
         }
 
-        public RoomType GetRoomType(int roomId)
+        public int GetCurrentRoomCount()
         {
-            if (roomId < 0 || roomId >= rooms.Count)
-                return RoomType.Normal;
-
-            return rooms[roomId].type;
+            return _currentRoomCount;
         }
     }
 }
