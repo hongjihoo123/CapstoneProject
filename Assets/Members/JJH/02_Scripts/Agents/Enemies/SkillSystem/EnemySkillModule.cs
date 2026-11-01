@@ -14,9 +14,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }
 
         public AbstractEnemy enemy { get; private set; }
+        public float LastSkillEndTime { get; private set; } = -1f;
+
 
         protected Dictionary<Type, IEnemySkill> _skillDict = new Dictionary<Type, IEnemySkill>();
         private readonly Dictionary<Type, float> _skillCooldowns = new Dictionary<Type, float>();
+
+        private bool _wasSkillUsing;
 
         public override void Initialize(ModuleOwner owner)
         {
@@ -56,6 +60,16 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         #endregion
 
+        private void Update()
+        {
+            bool isSkillUsing = IsSkillUsing();
+
+            if (_wasSkillUsing && !isSkillUsing)
+                LastSkillEndTime = Time.time;
+
+            _wasSkillUsing = isSkillUsing;
+        }
+
         public IEnemySkill GetSkill<T>() where T : IEnemySkill
         {
             _skillDict.TryGetValue(typeof(T), out IEnemySkill skill);
@@ -79,6 +93,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
                 return;
 
             skill.UseSkill();
+            LastSkillEndTime = Time.time;
             _skillCooldowns[skillType] = Time.time + skillData.Cooltime;
         }
 

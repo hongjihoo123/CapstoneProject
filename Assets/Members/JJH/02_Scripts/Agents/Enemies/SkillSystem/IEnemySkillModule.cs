@@ -7,6 +7,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
     public interface IEnemySkillModule
     {
+        float LastSkillEndTime { get; }
+
         AttackAreaVisualizer AreaVisualizer { get; }
         LayerMask TargetLayer { get; }
         AbstractEnemy enemy { get; }

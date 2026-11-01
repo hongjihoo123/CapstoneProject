@@ -1,5 +1,7 @@
 ﻿using Members.JJH._02_Scripts.ElementsSystem;
+using Members.JJH._02_Scripts.Map;
 using System.Collections.Generic;
+using static Members.JJH._02_Scripts.Map.MapUI;
 
 namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
 {
@@ -12,6 +14,7 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         public static readonly ElementComboCompleteEvent ElementComboCompleteEvent = new();
 
         public static readonly ToggleMapEvent ToggleMapEvent = new();
+        public static readonly SelectRoomEvent SelectRoomEvent = new();
         public static readonly ChangeSceneEvent ChangeSceneEvent = new();
     }
 
@@ -102,6 +105,19 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
     #region Map System Events
 
     public class ToggleMapEvent : GameEvent { }
+
+    public class SelectRoomEvent : GameEvent
+    {
+        public MapChoiceUI Choice;
+        public RoomOption RoomOption;
+
+        public SelectRoomEvent Init(MapChoiceUI choice, MapUI.RoomOption roomOption)
+        {
+            Choice = choice;
+            RoomOption = roomOption;
+            return this;
+        }
+    }
 
     public class ChangeSceneEvent : GameEvent
     {
