@@ -48,6 +48,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             IsUsing = false;
             _skillCoroutine = null;
+
+            _enemy.HandleOnDead();
         }
     }
 }
