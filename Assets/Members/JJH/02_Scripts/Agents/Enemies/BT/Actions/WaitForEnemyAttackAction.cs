@@ -19,16 +19,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 Enemy.Value.SkillModule == null)
                 return Status.Failure;
 
-
             return Status.Running;
         }
 
         protected override Status OnUpdate()
         {
+            if (Enemy.Value == null || Target.Value == null)
+                return Status.Failure;
+
             Vector3 direction = Target.Value.transform.position - Enemy.Value.transform.position;
             direction.y = 0f;
 
             float distance = direction.magnitude;
+
+            if (Enemy.Value.EnemyData.CanNormalAttack &&
+                distance <= Enemy.Value.EnemyData.AttackRange &&
+                !Enemy.Value.SkillModule.HasAvailableSkill(distance))
+                return Status.Success;
 
             if (!Enemy.Value.SkillModule.HasSkillInRange(distance))
                 return Status.Failure;
