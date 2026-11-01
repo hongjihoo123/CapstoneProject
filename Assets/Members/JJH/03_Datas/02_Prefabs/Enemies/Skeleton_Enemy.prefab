@@ -125,7 +125,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9036616788491421169}
-  m_LocalEulerAnglesHint: {x: 28.10135, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 24.052328, y: 123.29636, z: 14.985977}
 --- !u!1 &1388049145991515084
 GameObject:
   m_ObjectHideFlags: 0
@@ -156,7 +156,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9036616788491421169}
-  m_LocalEulerAnglesHint: {x: -28.101347, y: -90, z: 180}
+  m_LocalEulerAnglesHint: {x: -24.98961, y: -60.791985, z: 166.71144}
 --- !u!1 &1638832828813043648
 GameObject:
   m_ObjectHideFlags: 0
@@ -883,7 +883,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9036616788491421169}
-  m_LocalEulerAnglesHint: {x: 28.10135, y: 90, z: 0}
+  m_LocalEulerAnglesHint: {x: 24.657164, y: 59.27871, z: -13.923892}
 --- !u!1 &4587028814783848863
 GameObject:
   m_ObjectHideFlags: 0
@@ -1667,7 +1667,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 9036616788491421169}
-  m_LocalEulerAnglesHint: {x: -28.101347, y: -90, z: 180}
+  m_LocalEulerAnglesHint: {x: -25.06987, y: -118.83063, z: -166.87111}
 --- !u!1 &7775774250678711280
 GameObject:
   m_ObjectHideFlags: 0
@@ -2041,6 +2041,25 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c3ba27bdb5fc47448d0215eb14d3e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.AgentRenderer
+  <OnDeadAnimation>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
+  <OnDeadObject>k__BackingField:
+    m_PersistentCalls:
+      m_Calls:
+      - m_Target: {fileID: 1992375291954114677}
+        m_TargetAssemblyTypeName: Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy,
+          Assembly-CSharp
+        m_MethodName: Dead
+        m_Mode: 1
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: UnityEngine.Object, UnityEngine
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
 --- !u!1 &8634520574640864226
 GameObject:
   m_ObjectHideFlags: 0
