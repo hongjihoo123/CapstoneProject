@@ -121,5 +121,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
             return false;
         }
+
+        public bool HasSkillInRange(float distance)
+        {
+            return enemy.EnemyData.EnemySkills.Any(data =>
+                data != null && data.SkillType != null && distance <= data.Range &&
+                _skillDict.ContainsKey(data.SkillType));
+        }
     }
 }

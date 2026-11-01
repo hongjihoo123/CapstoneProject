@@ -13,7 +13,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Conditions
 
         public override bool IsTrue()
         {
-            if (Enemy.Value == null || Target.Value == null)
+            if (Enemy.Value == null || Target.Value == null || Enemy.Value.EnemyData == null)
+                return false;
+
+            if (Enemy.Value.EnemyData.CanNormalAttack == false)
                 return false;
 
             Vector3 direction = Target.Value.transform.position - Enemy.Value.transform.position;

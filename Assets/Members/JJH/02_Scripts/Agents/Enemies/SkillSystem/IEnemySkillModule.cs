@@ -17,5 +17,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         void UseSkill(Type skillType);
         bool IsSkillUsing();
         bool HasAvailableSkill(float distance);
+        bool HasSkillInRange(float distance);
     }
 }
