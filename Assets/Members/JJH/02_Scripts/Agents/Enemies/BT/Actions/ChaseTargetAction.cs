@@ -59,7 +59,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             direction.y = 0f;
 
             float distanceToTarget = direction.magnitude;
-            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange && Enemy.Value.EnemyData.CanNormalAttack ||
+            if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange ||
                     _skillModule.HasAvailableSkill(distanceToTarget))
             {
                 _navMeshAgent.KeepChase(false);
