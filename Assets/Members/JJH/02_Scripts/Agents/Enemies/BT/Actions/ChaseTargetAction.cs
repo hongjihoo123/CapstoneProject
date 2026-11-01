@@ -55,12 +55,28 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
             _targetPos = Target.Value.transform.position;
 
+            bool isInSight = _sensor.IsTargetInSight(Enemy.Value.EnemyData.DetectRange, Enemy.Value.EnemyData.AttackSight);
+
+            if (!isInSight)
+            {
+                _navMeshAgent.KeepChase(true);
+
+                if (Vector3.Distance(_lastTargetPos, _targetPos) >= DestinationUpdateDistance)
+                {
+                    _lastTargetPos = _targetPos;
+                    _navMeshAgent.MoveTo(_targetPos);
+                }
+
+                return Status.Running;
+            }
+
             Vector3 direction = _targetPos - Enemy.Value.transform.position;
             direction.y = 0f;
 
             float distanceToTarget = direction.magnitude;
+
             if (distanceToTarget <= Enemy.Value.EnemyData.AttackRange ||
-                    _skillModule.HasAvailableSkill(distanceToTarget))
+                _skillModule.HasAvailableSkill(distanceToTarget))
             {
                 _navMeshAgent.KeepChase(false);
 
@@ -69,6 +85,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             }
 
             _navMeshAgent.KeepChase(true);
+
             if (Vector3.Distance(_lastTargetPos, _targetPos) >= DestinationUpdateDistance)
             {
                 _lastTargetPos = _targetPos;
