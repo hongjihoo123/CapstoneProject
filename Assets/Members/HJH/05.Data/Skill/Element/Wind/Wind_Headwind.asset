@@ -29,41 +29,47 @@ MonoBehaviour:
   description: "\uCEE4\uC11C \uC704\uCE58\uC5D0 \uB9DE\uBC14\uB78C \uC9C0\uB300\uB97C
     \uB9CC\uB4E0\uB2E4. \uC548\uC758 \uC801\uC740 \uC798 \uB098\uC544\uAC00\uC9C0
     \uBABB\uD55C\uB2E4."
-  fxColor: {r: 0.6, g: 1, b: 0.85, a: 1}
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
   onHit:
   - kind: 0
-    value: 2
+    value: 3
     duration: 0
   - kind: 2
     value: 45
     duration: 0.8
+  - kind: 5
+    value: 1.4
+    duration: 0
   scaling: 1
   hitStop: 0
   shake: 0.05
+  castShake: 0.15
   castFx:
-    prefab: {fileID: 8425151493505572694, guid: 87ac162a19c9dc746be541d4944c7834, type: 3}
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
     tint: 0
   impactFx:
     prefab: {fileID: 0}
     tint: 0
   impactStyle: 0
   hitFx:
-    prefab: {fileID: 5549900474003470467, guid: 5aa0812110e351249b006c7ddbd42733, type: 3}
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
     tint: 0
   statusFx:
     prefab: {fileID: 1307456673335445390, guid: cc7851162e332b145937c574649a1881, type: 3}
     tint: 0
+  hideMagicCircle: 1
   aroundSelf: 0
   range: 7
   radius: 3
   zoneTime: 4
   interval: 0.5
   followSelf: 0
-  pulseShake: 0
+  pulseShake: 0.03
   strikesPerPulse: 0
   strikeRadius: 1.2
+  pushFromCaster: 1
   zoneFx:
-    prefab: {fileID: 929819339008492585, guid: 21890154e4d71c541ab27ed1b60e65b3, type: 3}
+    prefab: {fileID: 457096000965209807, guid: 53d11a68e911ef94baa3f703045ee22d, type: 3}
     tint: 0
   onSelf: []
   selfFx:

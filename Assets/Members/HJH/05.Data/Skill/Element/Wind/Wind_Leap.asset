@@ -28,7 +28,7 @@ MonoBehaviour:
   displayName: "\uB3C4\uC57D"
   description: "\uCEE4\uC11C \uC704\uCE58\uB85C \uB6F0\uC5B4\uC62C\uB77C \uCC29\uC9C0\uD558\uBA70
     \uC8FC\uBCC0 \uC801\uC744 \uC0B4\uC9DD \uBC00\uC5B4\uB0B8\uB2E4."
-  fxColor: {r: 0.65471697, g: 1, b: 0.9405117, a: 1}
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
   onHit:
   - kind: 0
     value: 25
@@ -38,22 +38,27 @@ MonoBehaviour:
     duration: 0
   scaling: 0
   hitStop: 0.08
-  shake: 0.35
+  shake: 0.45
+  castShake: 0.15
   castFx:
-    prefab: {fileID: 8425151493505572694, guid: 87ac162a19c9dc746be541d4944c7834, type: 3}
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
     tint: 0
   impactFx:
-    prefab: {fileID: 8082006432448553932, guid: 49aa884af0a019d42ad5d95e50a8ebeb, type: 3}
+    prefab: {fileID: 6645358154226836990, guid: dac75eba4e2a1074bad076693f8cc631, type: 3}
     tint: 0
-  impactStyle: 3
+  impactStyle: 0
   hitFx:
-    prefab: {fileID: 5549900474003470467, guid: 5aa0812110e351249b006c7ddbd42733, type: 3}
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
     tint: 0
   statusFx:
     prefab: {fileID: 0}
     tint: 0
+  hideMagicCircle: 0
   distance: 6
   blink: 0
   dashTime: 0.3
   pathRadius: 0
   landRadius: 2.5
+  dashFx:
+    prefab: {fileID: 1485958647852507149, guid: c40e9c59e8eb0714198ddd9a227b5ba4, type: 3}
+    tint: 0

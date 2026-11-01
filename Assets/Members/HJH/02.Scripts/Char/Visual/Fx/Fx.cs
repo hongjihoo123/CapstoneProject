@@ -30,6 +30,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void DamageNumber(Vector3 position, float amount, Color color, float scale = 1f) =>
             Play(Library?.damageNumber, position, Quaternion.identity, 1f, color, new FxParams { Value = amount, Radius = scale });
 
+        // 짧은 글자 팝업 ("2단!", "격파!"). 데미지 숫자와 같은 움직임
+        public static void PopText(Vector3 position, string text, Color color, float scale = 1f) =>
+            Play(Library?.damageNumber, position, Quaternion.identity, 1f, color, new FxParams { Text = text, Radius = scale });
+
         public static void CharacterSwap(Vector3 center, Color color) =>
             Play(Library?.characterSwap, center, Quaternion.identity, 1f, color);
 

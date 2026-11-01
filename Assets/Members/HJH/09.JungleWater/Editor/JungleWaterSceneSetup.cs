@@ -44,25 +44,20 @@ namespace Assets.Members.HJH.Environment.EditorTools
 
         private static void ConnectWater(WaterRippleSimulation sim, StringBuilder log)
         {
-            GameObject water = GameObject.Find("Water");
+            Renderer renderer = JungleWaterSceneUtil.FindWaterSurface();
             var so = new SerializedObject(sim);
-            if (water != null && water.TryGetComponent(out Renderer renderer))
+            if (renderer != null)
             {
                 so.FindProperty("waterSurface").objectReferenceValue = renderer;
                 Bounds b = renderer.bounds;
-                log.AppendLine($" · 물 시스템 ← 'Water' 판 (높이 {b.center.y:0.##}, 영역 {b.min.x:0.#},{b.min.z:0.#} ~ {b.max.x:0.#},{b.max.z:0.#})");
+                log.AppendLine($" · 물 시스템 ← '{renderer.name}' 판 (높이 {b.center.y:0.##}, 영역 {b.min.x:0.#},{b.min.z:0.#} ~ {b.max.x:0.#},{b.max.z:0.#})");
             }
             else
             {
-                log.AppendLine(" · ⚠ 'Water' 오브젝트를 못 찾음 → 물 높이/영역을 인스펙터에서 직접 맞춰 주세요");
+                log.AppendLine(" · ⚠ 물 판(물 셰이더를 쓰는 오브젝트)을 못 찾음 → 물 높이/영역을 인스펙터에서 직접 맞춰 주세요");
             }
 
-            var player = Object.FindFirstObjectByType<PlayerAgent>();
-            if (player != null)
-            {
-                so.FindProperty("revealTarget").objectReferenceValue = player.transform;
-                log.AppendLine($" · 안개 걷힘 대상 ← {player.name}");
-            }
+            log.AppendLine(" · 안개(플레이어 주변·스킬 반응)는 JungleFogController 가 플레이 때 자동으로 맡음");
 
             so.ApplyModifiedProperties();
         }

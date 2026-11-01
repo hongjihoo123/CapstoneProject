@@ -305,7 +305,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IReadOnlyList<IDamageable> OverlapSphere(Vector3 center, float radius)
         {
-            SkillImpacts.Raise(center, radius);   // 범위 공격이 닿은 곳 (물 튀김 등)
+            SkillImpacts.Raise(center, radius, ActiveSkill);   // 범위 공격이 닿은 곳 (물 튀김, 연출 등)
 
             var results = new List<IDamageable>();
             int count = Physics.OverlapSphereNonAlloc(center, radius, OverlapBuffer, _targetMask, QueryTriggerInteraction.Collide);
@@ -358,7 +358,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             // 맞은 적의 발밑 (투사체·빔·근접처럼 범위 판정이 없는 스킬도 여기서 잡힌다)
             if (target is Component hitTarget)
-                SkillImpacts.Raise(hitTarget.transform.position, HitImpactRadius);
+                SkillImpacts.Raise(hitTarget.transform.position, HitImpactRadius, skill);
 
             if (skill != null && _boosts.TryGetValue(skill, out (float scale, float until) boost))
             {

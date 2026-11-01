@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -71,6 +72,22 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
             File.WriteAllLines(OutputPath, log);
         }
 
+        // 에디터를 안 켜고 배치 모드로: Unity -batchmode -executeMethod ...FxPreviewBridge.RunBatch (cmd.txt 를 바로 실행)
+        // 배치 모드는 시작할 때 Temp 를 지우므로 명령은 Library/FxBridgeBatch.txt 에, 결과는 Library/FxBridgeOut/ 로 복사
+        public static void RunBatch()
+        {
+            const string batchCommand = "Library/FxBridgeBatch.txt";
+            const string batchOut = "Library/FxBridgeOut";
+            Directory.CreateDirectory(Dir);
+            if (File.Exists(batchCommand))
+                File.Copy(batchCommand, CommandPath, true);
+            _nextCheck = 0;
+            Poll();
+            Directory.CreateDirectory(batchOut);
+            foreach (string file in Directory.GetFiles(Dir))
+                File.Copy(file, Path.Combine(batchOut, Path.GetFileName(file)), true);
+        }
+
         private static string Run(string line)
         {
             string[] parts = line.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -89,8 +106,89 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
                     return EditScene(parts[1], ComboFix);
                 case "skill":
                     return Sheet(parts[1], parts.Skip(2).SelectMany(SkillRows).ToList());
+                case "shotwater":
+                    return ShotWater(parts[1]);
+                case "rec":
+                    return parts[1] == "start" ? GameplayRecorder.Begin(parts.Length > 2 ? parts[2] : "Recordings/Gameplay.mp4") : GameplayRecorder.End();
+                case "hp":
+                {
+                    var health = Object.FindAnyObjectByType<global::Members.KYR._01_Scripts.Modules.PlayerHealth>();
+                    return health == null ? "hp: 없음" : $"hp {health.CurrentHealth:0.#}/{health.MaxHealth:0.#} dead={health.IsDead}";
+                }
+                case "open":
+                    if (EditorApplication.isPlaying || SceneManager.GetActiveScene().isDirty)
+                        return "open: 플레이 중이거나 저장 안 된 씬이 있어서 안 엶";
+                    EditorSceneManager.OpenScene(parts[1]);
+                    return "open " + parts[1];
+                case "showcase":
+                    if (!EditorApplication.isPlaying)
+                        return "showcase: 플레이 모드가 아님";
+                    File.Delete("Temp/FxBridge/showcase_done.txt");
+                    SkillShowcaseDirector.Run(parts.Length > 1 ? parts[1] : "Recordings/SkillShowcase.mp4");
+                    return "showcase started";
+                case "tp":
+                    return GameplayRecorder.TeleportToJungle();
+                case "equip":
+                    return GameplayRecorder.EquipPair(int.Parse(parts[1]));
+                case "play":
+                    EditorApplication.EnterPlaymode();
+                    return "play";
+                case "stop":
+                    EditorApplication.ExitPlaymode();
+                    return "stop";
+                case "scene":
+                    return $"scene {SceneManager.GetActiveScene().path} playing={EditorApplication.isPlaying} dirty={SceneManager.GetActiveScene().isDirty}";
+                case "reel":
+                    return SkillReelRecorder.Record(parts.Length > 1 ? parts[1] : "Recordings/SkillReel.mp4");
                 default:
                     return "unknown " + parts[0];
+            }
+        }
+
+        // 열린 씬의 물을 게임 카메라 각도(위에서 55도)로 찍음. 물가가 보이게 물 판 가장자리 쪽을 겨눔
+        //   shotwater <이름> → Temp/FxBridge/<이름>.jpg
+        private static string ShotWater(string name)
+        {
+            Renderer water = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                .FirstOrDefault(r => r.sharedMaterial != null && r.sharedMaterial.shader.name.Contains("ShallowWater"));
+            if (water == null)
+                return "shotwater: 열린 씬에 물이 없음";
+
+            Bounds b = water.bounds;
+            Vector3 target = b.center;
+            // 물만 보려고 찍는 동안 안개 판은 잠깐 끔
+            List<Renderer> fog = Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
+                .Where(r => r.enabled && r.sharedMaterial != null && r.sharedMaterial.shader.name.Contains("GroundFog")).ToList();
+            fog.ForEach(r => r.enabled = false);
+            var go = new GameObject("[ShotWater]") { hideFlags = HideFlags.HideAndDontSave };
+            try
+            {
+                var cam = go.AddComponent<Camera>();
+                cam.fieldOfView = 40f;
+                cam.farClipPlane = 300f;
+                go.transform.rotation = Quaternion.Euler(55f, 0f, 0f);
+                go.transform.position = target - go.transform.forward * 22f;
+
+                const int w = 1280, h = 720;
+                var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGB32);
+                cam.targetTexture = rt;
+                cam.Render();
+                RenderTexture.active = rt;
+                var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+                tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+                tex.Apply();
+                RenderTexture.active = null;
+                cam.targetTexture = null;
+                Directory.CreateDirectory(Dir);
+                File.WriteAllBytes($"{Dir}/{name}.jpg", tex.EncodeToJPG(88));
+                Object.DestroyImmediate(tex);
+                rt.Release();
+                return $"shotwater {SceneManager.GetActiveScene().name} -> {Dir}/{name}.jpg";
+            }
+            finally
+            {
+                Object.DestroyImmediate(go);
+                fog.ForEach(r => r.enabled = true);
             }
         }
 

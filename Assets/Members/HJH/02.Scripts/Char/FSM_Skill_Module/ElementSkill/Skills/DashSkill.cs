@@ -19,6 +19,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("돌진에 걸리는 시간")] private float dashTime = 0.2f;
         [SerializeField, Tooltip("0 = 지나가는 길은 안 때림")] private float pathRadius;
         [SerializeField, Tooltip("0 = 도착해도 안 터짐")] private float landRadius;
+        [SerializeField, Tooltip("돌진하는 동안 몸에 붙어 따라오는 이펙트 (앞에서 공기가 갈라지는 막 등). 앞 = +Z")] private FxSlot dashFx = new();
 
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
@@ -97,7 +98,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 _direction = direction;
                 float time = Mathf.Max(0.05f, skill.dashTime);
                 cast.Context.Dash(direction, Mathf.Max(0.1f, reach) / time, time);
+
+                // 잔상은 원소 색으로, 몸 앞에는 공기 가르는 막
+                DashTint.Set(cast.Color, time + 0.3f);
+                _fx = cast.Hold(skill.dashFx, cast.Position, direction);
+                if (_fx != null)
+                    Fx.FollowFor(_fx, cast.Context.Transform, Vector3.zero, time + 0.1f);
             }
+
+            private readonly FxHandle _fx;
 
             public void Tick(float elapsed)
             {
@@ -128,6 +137,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 if (_landed)
                     return;
                 _landed = true;
+                _fx?.Kill();
 
                 if (_skill.landRadius > 0f)
                     _cast.Impact(_cast.Position, _skill.landRadius);

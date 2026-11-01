@@ -463,12 +463,19 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(diffuse, deepLit, "B");
             b.Link(transmitted, "Out", col, "A");
             b.Link(deepLit, "Out", col, "B");
-            b.Link(absorb, "Out", col, "T");
+            // 반실사: 흡수량을 부드러운 3단계로 → 얕음/중간/깊음 색 덩어리 (HLSL JW_SoftBands)
+            var bands = b.Func("JungleSoftBands", 5, 0,
+                new[] { ("In", V.Vector1), ("Steps", V.Vector1), ("Softness", V.Vector1) },
+                new[] { ("Out", V.Vector1) });
+            ShaderGraphBuilder.Set(bands, "Steps", 3f);        // 카툰: 또렷한 4단계 색 띠
+            ShaderGraphBuilder.Set(bands, "Softness", 0.05f);
+            b.Link(absorb, "Out", bands, "In");
+            b.Link(bands, "Out", col, "T");
 
             b.Output("Color", V.Vector3, col, "Out");
             b.PlaceOutput(7.2f, 2);
 
-            b.Group("흡수량 = 1 - e^(-두께×흐림)  (빛이 물에 먹히는 양)", thick, murkiness, murk, neg, exp, absorb);
+            b.Group("흡수량 = 1 - e^(-두께×흐림) → 3단계 색 덩어리", thick, murkiness, murk, neg, exp, absorb, bands);
             b.Group("비쳐 보이는 바닥 = 바닥색 × 얕은 물 색조", murk2, tintT, white, tintColor, tint, scene, transmitted);
             b.Group("탁한 물 색 (조명 받음)", deep, diffuse, deepLit);
             b.Note("SGS_WaterColor",
@@ -502,8 +509,38 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(refl, col, "B");
             b.Link(amount, "Out", col, "T");
 
-            b.Output("Color", V.Vector3, col, "Out");
-            b.PlaceOutput(4.2f, 1);
+            // 물에 비치는 구름: 반사 방향으로 하늘의 구름 평면을 읽음 (HLSL JW_CloudReflection, 흘러감)
+            var cloudColorProp = b.Vec3Prop("CloudColor");
+            var cloudStrengthProp = b.FloatProp("CloudStrength", 0.3f);
+            var cloudScaleProp = b.FloatProp("CloudScale", 0.04f);
+            var cloudCoverageProp = b.FloatProp("CloudCoverage", 0.55f);
+            var cloudSoftProp = b.FloatProp("CloudSoftness", 0.05f);
+            var pos = b.Node<PositionNode>(2, 3.2f);
+            var cloudScale = b.Prop(cloudScaleProp, 2, 4);
+            var cloudCoverage = b.Prop(cloudCoverageProp, 2, 4.6f);
+            var cloudSoft = b.Prop(cloudSoftProp, 2, 5.2f);
+            var cloud = b.Func("JungleCloudReflection", 3, 3.5f,
+                new[] { ("PositionWS", V.Vector3), ("NormalWS", V.Vector3), ("Scale", V.Vector1), ("Coverage", V.Vector1), ("Softness", V.Vector1) },
+                new[] { ("Cloud", V.Vector1) });
+            var cloudStrength = b.Prop(cloudStrengthProp, 3.5f, 5);
+            var cloudAmount = b.Node<MultiplyNode>(4.5f, 4);
+            var cloudColor = b.Prop(cloudColorProp, 4.5f, 2.8f);
+            var withCloud = b.Node<LerpNode>(5.5f, 2);
+
+            b.Link(pos, "Out", cloud, "PositionWS");
+            b.Link(normal, cloud, "NormalWS");
+            b.Link(cloudScale, cloud, "Scale");
+            b.Link(cloudCoverage, cloud, "Coverage");
+            b.Link(cloudSoft, cloud, "Softness");
+            b.Link(cloud, "Cloud", cloudAmount, "A");
+            b.Link(cloudStrength, cloudAmount, "B");
+            b.Link(col, "Out", withCloud, "A");
+            b.Link(cloudColor, withCloud, "B");
+            b.Link(cloudAmount, "Out", withCloud, "T");
+
+            b.Output("Color", V.Vector3, withCloud, "Out");
+            b.PlaceOutput(6.7f, 2);
+            b.Group("물에 비치는 구름 (반사 방향 → 하늘의 구름 평면, 천천히 흐름)", pos, cloudScale, cloudCoverage, cloudSoft, cloud, cloudStrength, cloudAmount, cloudColor, withCloud);
             b.Note("SGS_Reflection",
                 "수면을 비스듬히 볼수록 하늘이 더 많이 반사된다(프레넬). Fresnel Effect 노드 = pow(1 - N·V, 세기).", 0, -1.4f);
         }
@@ -545,9 +582,14 @@ namespace Assets.Members.HJH.Environment.GraphGen
             var shoreM = b.Node<SubtractNode>(9, 3.8f, n => ShaderGraphBuilder.Set(n, "B", 0.3f));
             var foamA = b.Node<SmoothstepNode>(10, 3.8f, n =>
             {
-                ShaderGraphBuilder.Set(n, "Edge1", 0.5f);
-                ShaderGraphBuilder.Set(n, "Edge2", 0.7f);
+                ShaderGraphBuilder.Set(n, "Edge1", 0.55f);   // 카툰: 가장자리 또렷하게
+                ShaderGraphBuilder.Set(n, "Edge2", 0.6f);
             });
+            // 카툰: 거품 띠 바깥에 얇은 거품 줄 하나 더 (HLSL JW_ToonFoamLine)
+            var line = b.Func("JungleToonFoamLine", 10, 5.2f,
+                new[] { ("Thickness", V.Vector1), ("Distance", V.Vector1), ("Noise", V.Vector1) },
+                new[] { ("Line", V.Vector1) });
+            var shoreFoam = b.Node<AddNode>(11, 4.5f);
 
             // 물결 마루
             var rippleH = b.Prop(rippleHProp, 6, 0);
@@ -598,7 +640,12 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(rhs, "Out", foamB, "A");
             b.Link(mask, "Out", foamB, "B");
 
-            b.Link(foamA, "Out", sum, "A");
+            b.Link(thick, line, "Thickness");
+            b.Link(dist, line, "Distance");
+            b.Link(fbm, "Noise", line, "Noise");
+            b.Link(foamA, "Out", shoreFoam, "A");
+            b.Link(line, "Line", shoreFoam, "B");
+            b.Link(shoreFoam, "Out", sum, "A");
             b.Link(foamB, "Out", sum, "B");
             b.Link(sum, "Out", foam, "In");
 
@@ -606,7 +653,7 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.PlaceOutput(14, 2.5f);
 
             b.Group("흐르는 거품 노이즈 (fBm 4겹 = HLSL JungleFbm)", time, speed, t, flow, tFlow, pos, sp, xz, scale, scaled, p, fbm);
-            b.Group("물가 거품: 물이 얇을수록 + 노이즈로 들쭉날쭉", thick, dist, ratio, ratioSat, shore, n06, shoreN, shoreM, foamA);
+            b.Group("물가 거품: 물이 얇을수록 + 노이즈로 들쭉날쭉 + 바깥 거품 줄", thick, dist, ratio, ratioSat, shore, n06, shoreN, shoreM, foamA, line, shoreFoam);
             b.Group("물결 마루 거품: 캐릭터 물결이 높은 곳", rippleH, abs, rippleFoam, rh, rhm, rhs, mask, foamB);
             b.Note("SGS_Foam",
                 "거품은 두 군데에서 생긴다. ① 물이 얇은 물가 ② 캐릭터·스킬 물결이 솟은 곳.\n" +
@@ -636,6 +683,12 @@ namespace Assets.Members.HJH.Environment.GraphGen
             var sat = b.Node<SaturateNode>(6, 1.5f);
             var power = b.Prop(powerProp, 6, 2.5f);
             var pow = b.Node<PowerNode>(7, 1.5f);
+            // 카툰: 부드러운 반짝임을 칼같이 잘라 하얀 덩어리로
+            var toon = b.Node<SmoothstepNode>(7.5f, 2.5f, n =>
+            {
+                ShaderGraphBuilder.Set(n, "Edge1", 0.45f);
+                ShaderGraphBuilder.Set(n, "Edge2", 0.5f);
+            });
 
             var color = b.Prop(colorProp, 7, 0);
             var m1 = b.Node<MultiplyNode>(8, 1);
@@ -659,7 +712,8 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(sat, "Out", pow, "A");
             b.Link(power, pow, "B");
             b.Link(color, m1, "A");
-            b.Link(pow, "Out", m1, "B");
+            b.Link(pow, "Out", toon, "In");
+            b.Link(toon, "Out", m1, "B");
             b.Link(m1, "Out", m2, "A");
             b.Link(strength, m2, "B");
             b.Link(m2, "Out", m3, "A");
@@ -672,7 +726,7 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.PlaceOutput(13, 1);
 
             b.Group("하프 벡터 H = normalize(빛 방향 + 시선 방향)", cam, pos, toCam, view, dir, half, halfN);
-            b.Group("반짝임 = (N·H)^세기", normal, ndh, sat, power, pow);
+            b.Group("반짝임 = (N·H)^세기 → 카툰 계단", normal, ndh, sat, power, pow, toon);
             b.Group("× 라이트 색 × 강도 × 그림자 × (거품 없는 곳만)", color, m1, strength, m2, shadow, m3, foam, noFoam, spec);
             b.Note("SGS_Specular",
                 "해가 수면에 비쳐 반짝이는 점. 노멀이 빛과 시선의 중간 방향(H)을 향할수록 밝다.\n" +
@@ -765,6 +819,11 @@ namespace Assets.Members.HJH.Environment.GraphGen
             var reflStrength = b.FloatProp("Reflection Strength", 0.5f, "_ReflectionStrength", new Vector2(0f, 1f));
             var specPower = b.FloatProp("Specular Power", 180f, "_SpecularPower", new Vector2(8f, 512f));
             var specStrength = b.FloatProp("Specular Strength", 0.7f, "_SpecularStrength", new Vector2(0f, 3f));
+            var cloudColor = b.ColorProp("Cloud Color", new Color(0.9f, 0.97f, 0.95f, 1f), "_CloudColor");
+            var cloudStrength = b.FloatProp("Cloud Strength", 0.3f, "_CloudStrength", new Vector2(0f, 1f));
+            var cloudScale = b.FloatProp("Cloud Scale", 0.04f, "_CloudScale");
+            var cloudCoverage = b.FloatProp("Cloud Coverage", 0.55f, "_CloudCoverage", new Vector2(0f, 1f));
+            var cloudSoftness = b.FloatProp("Cloud Edge Softness", 0.05f, "_CloudSoftness", new Vector2(0.01f, 0.5f));
 
             // 1열: 입력
             var screen = b.Node<ScreenPositionNode>(-1, 0);
@@ -834,6 +893,11 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(pRefl, refl, "ReflectionColor");
             b.Link(pFresnel, refl, "FresnelPower");
             b.Link(pReflStr, refl, "ReflectionStrength");
+            b.Link(b.Prop(cloudColor, 6, 3.8f), refl, "CloudColor");
+            b.Link(b.Prop(cloudStrength, 6, 4.2f), refl, "CloudStrength");
+            b.Link(b.Prop(cloudScale, 6, 4.6f), refl, "CloudScale");
+            b.Link(b.Prop(cloudCoverage, 6, 5f), refl, "CloudCoverage");
+            b.Link(b.Prop(cloudSoftness, 6, 5.4f), refl, "CloudSoftness");
 
             b.Link(refr, "Thickness", fm, "Thickness");
             b.Link(pFoamDist, fm, "FoamDistance");
@@ -1041,6 +1105,10 @@ namespace Assets.Members.HJH.Environment.GraphGen
             if (hlsl != null)
                 mat.CopyMatchingPropertiesFromMaterial(hlsl);
 
+            // Shader Graph 머티리얼은 renderQueue 를 직접 넣어도 자동(3000)으로 되돌아가므로 오프셋으로 정한다.
+            // 물과 안개가 같은 순서면 카메라 위치에 따라 그리는 순서가 바뀌어 안개가 물에 덮였다 말았다 함
+            if (mat.HasProperty("_QueueOffset"))
+                mat.SetFloat("_QueueOffset", renderQueue - 3000);
             mat.renderQueue = renderQueue;
             EditorUtility.SetDirty(mat);
         }

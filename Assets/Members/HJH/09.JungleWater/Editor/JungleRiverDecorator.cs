@@ -59,7 +59,7 @@ namespace Assets.Members.HJH.Environment.EditorTools
         // 씬에 직접 놓은 원본 Tree 모델에 나무 머티리얼 + 잎
         private static int LeafSceneTrees(Material leaf)
         {
-            var bark = AssetDatabase.LoadAssetAtPath<Material>(TreeMaterial);
+            var bark = AssetDatabase.LoadAssetAtPath<Material>(BarkOrTreeMaterial());
             var rng = new System.Random();
             int count = 0;
             foreach (GameObject tree in FindModelInstances(TreeModel).ToList())
@@ -333,10 +333,10 @@ namespace Assets.Members.HJH.Environment.EditorTools
         [MenuItem("HJH/Jungle Water/강가 꾸미기 (다시 누르면 새로 배치)")]
         public static void DecorateRiver()
         {
-            GameObject water = GameObject.Find("Water");
-            if (water == null || !water.TryGetComponent(out Renderer waterRenderer))
+            Renderer waterRenderer = JungleWaterSceneUtil.FindWaterSurface();
+            if (waterRenderer == null)
             {
-                Debug.LogError("[JungleWater] 열린 씬에 'Water' 오브젝트가 없습니다.");
+                Debug.LogError("[JungleWater] 열린 씬에서 물 판(물 셰이더를 쓰는 오브젝트)을 찾지 못했습니다.");
                 return;
             }
 
@@ -362,10 +362,10 @@ namespace Assets.Members.HJH.Environment.EditorTools
             if (chunky.Count > 0)
                 rocks = chunky;
             List<PropVariant> roots = BuildVariants(RootsModel, RootsMaterial, "PF_MangroveRoots", null);
-            List<PropVariant> trees = BuildVariants(TreeModel, TreeMaterial, "PF_JungleTree", root =>
+            List<PropVariant> trees = BuildVariants(TreeModel, BarkOrTreeMaterial(), "PF_JungleTree", root =>
             {
                 BuildLeaves(root.transform, leaf, new System.Random(root.name.GetHashCode()));
-                AddTrunkCollider(root);
+                // 나무는 콜라이더 없음: 대시·이동이 나무에 걸려 멈추지 않게 (가리면 반투명으로 대신)
             });
             if (rocks.Count == 0 || roots.Count == 0 || trees.Count == 0)
             {
@@ -587,10 +587,10 @@ namespace Assets.Members.HJH.Environment.EditorTools
         [MenuItem("HJH/Jungle Water/지형 바닥 텍스처 복구")]
         public static void RestoreTerrainFloor()
         {
-            GameObject water = GameObject.Find("Water");
-            if (water == null || !water.TryGetComponent(out Renderer waterRenderer))
+            Renderer waterRenderer = JungleWaterSceneUtil.FindWaterSurface();
+            if (waterRenderer == null)
             {
-                Debug.LogError("[JungleWater] 열린 씬에 'Water' 오브젝트가 없습니다.");
+                Debug.LogError("[JungleWater] 열린 씬에서 물 판(물 셰이더를 쓰는 오브젝트)을 찾지 못했습니다.");
                 return;
             }
 
@@ -616,10 +616,10 @@ namespace Assets.Members.HJH.Environment.EditorTools
         [MenuItem("HJH/Jungle Water/시작 섬 테두리 다듬기")]
         public static void RoughenStartIsland()
         {
-            GameObject water = GameObject.Find("Water");
-            if (water == null || !water.TryGetComponent(out Renderer waterRenderer))
+            Renderer waterRenderer = JungleWaterSceneUtil.FindWaterSurface();
+            if (waterRenderer == null)
             {
-                Debug.LogError("[JungleWater] 열린 씬에 'Water' 오브젝트가 없습니다.");
+                Debug.LogError("[JungleWater] 열린 씬에서 물 판(물 셰이더를 쓰는 오브젝트)을 찾지 못했습니다.");
                 return;
             }
 
@@ -848,5 +848,12 @@ namespace Assets.Members.HJH.Environment.EditorTools
         private static Quaternion RandomYaw(System.Random rng) => Quaternion.Euler(0f, Range(rng, 0f, 360f), 0f);
 
         private static float Range(System.Random rng, float min, float max) => min + (float)rng.NextDouble() * (max - min);
+
+        // 반투명을 지원하는 줄기 머티리얼(M_JungleBark)이 있으면 그걸, 없으면 KM 원본
+        private static string BarkOrTreeMaterial()
+        {
+            const string bark = Generated + "/Materials/M_JungleBark.mat";
+            return AssetDatabase.LoadAssetAtPath<Material>(bark) != null ? bark : TreeMaterial;
+        }
     }
 }

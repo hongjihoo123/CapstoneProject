@@ -28,7 +28,7 @@ MonoBehaviour:
   displayName: "\uD68C\uC624\uB9AC"
   description: "\uCC9C\uCC9C\uD788 \uB098\uC544\uAC00\uB294 \uD68C\uC624\uB9AC. \uB2FF\uC740
     \uC801\uC744 \uC606\uC73C\uB85C \uD295\uACA8\uB0B8\uB2E4."
-  fxColor: {r: 0.6, g: 1, b: 0.85, a: 1}
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
   onHit:
   - kind: 0
     value: 18
@@ -38,28 +38,30 @@ MonoBehaviour:
     duration: 0
   scaling: 1
   hitStop: 0.04
-  shake: 0.2
+  shake: 0.3
+  castShake: 0.18
   castFx:
-    prefab: {fileID: 8425151493505572694, guid: 87ac162a19c9dc746be541d4944c7834, type: 3}
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
     tint: 0
   impactFx:
     prefab: {fileID: 0}
     tint: 0
   impactStyle: 0
   hitFx:
-    prefab: {fileID: 5549900474003470467, guid: 5aa0812110e351249b006c7ddbd42733, type: 3}
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
     tint: 0
   statusFx:
     prefab: {fileID: 0}
     tint: 0
-  range: 10
+  hideMagicCircle: 0
+  range: 12
   speed: 6
-  radius: 1.1
+  radius: 1.8
   count: 1
   spread: 0
   pierce: 1
   explodeRadius: 0
   travelFx:
-    prefab: {fileID: 6476949028944266944, guid: bfaa6cd4f97cd3f47ac6f616de27aaca, type: 3}
+    prefab: {fileID: 8455258922260146480, guid: 6f30db9b4a21edb46b65929e7fb4c344, type: 3}
     tint: 0
   pushSideways: 1
