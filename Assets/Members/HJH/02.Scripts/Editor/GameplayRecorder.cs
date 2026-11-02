@@ -36,7 +36,7 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
         {
             if (!EditorApplication.isPlaying)
                 return "tp: 플레이 모드가 아님";
-            var player = Object.FindAnyObjectByType<global::Members.KYR._01_Scripts.PlayerAgent>();
+            var player = Object.FindAnyObjectByType<global::Members.KYR._01.Scripts.Player.PlayerAgent>();
             Renderer water = null;
             foreach (Renderer r in Object.FindObjectsByType<Renderer>(FindObjectsInactive.Exclude, FindObjectsSortMode.None))
                 if (r.sharedMaterial != null && r.sharedMaterial.shader.name.Contains("ShallowWater"))

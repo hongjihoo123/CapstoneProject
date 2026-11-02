@@ -112,7 +112,7 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
                     return parts[1] == "start" ? GameplayRecorder.Begin(parts.Length > 2 ? parts[2] : "Recordings/Gameplay.mp4") : GameplayRecorder.End();
                 case "hp":
                 {
-                    var health = Object.FindAnyObjectByType<global::Members.KYR._01_Scripts.Modules.PlayerHealth>();
+                    var health = Object.FindAnyObjectByType<global::Members.KYR._01.Scripts.Modules.PlayerHealth>();
                     return health == null ? "hp: 없음" : $"hp {health.CurrentHealth:0.#}/{health.MaxHealth:0.#} dead={health.IsDead}";
                 }
                 case "open":
