@@ -12,7 +12,10 @@ namespace Members.KYR._01.Scripts.Currency
         {
             CurrencyService currency = GameBootstrap.Currency;
             if (currency == null || text == null)
+            {
+                Debug.LogWarning($"{name}: Currency 또는 text가 null", this);
                 return;
+            }
 
             currency.OnChanged += Handle;
             text.text = currency.Get(type).ToString();

@@ -29,11 +29,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             base.InitializeModules();
 
             SkillModule = GetModule<IEnemySkillModule>();
-            Debug.Assert(SkillModule != null, $"{gameObject.name}에는 IEnemySkillModule모듈이 필요합니다.");
+            Debug.Assert(SkillModule != null, $"{gameObject.name}???? IEnemySkillModule????? ???????.");
             NavMeshAgent = GetModule<INavMesh>();
-            Debug.Assert(NavMeshAgent != null, $"{gameObject.name}에는 INavMesh모듈이 필요합니다.");
+            Debug.Assert(NavMeshAgent != null, $"{gameObject.name}???? INavMesh????? ???????.");
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
-            Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
+            Debug.Assert(BehaviorAgent != null, $"{gameObject.name}???? BehaviorGraphAgent?? ???????.");
         }
 
         private void Start()
@@ -65,7 +65,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.SetVariableValue(guid, value);
 
-            Debug.LogError($"BT변수 미해결 : {varName}");
+            Debug.LogError($"BT???? ????? : {varName}");
             return false;
         }
 
@@ -74,7 +74,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.GetVariable(guid, out variable);
 
-            Debug.LogError($"BT변수 미해결 : {varName}");
+            Debug.LogError($"BT???? ????? : {varName}");
             variable = null;
             return false;
         }
