@@ -34,6 +34,13 @@ Shader "HJH/JungleWater/ShallowWater"
         _ReflectionStrength ("Reflection Strength", Range(0, 1)) = 0.5
         _SpecularPower ("Specular Power", Range(8, 512)) = 180
         _SpecularStrength ("Specular Strength", Range(0, 3)) = 0.7
+
+        [Header(Cloud Reflection)]
+        _CloudColor ("Cloud Color", Color) = (0.9, 0.97, 0.95, 1)
+        _CloudStrength ("Cloud Strength", Range(0, 1)) = 0.3
+        _CloudScale ("Cloud Scale (작을수록 큰 구름)", Float) = 0.04
+        _CloudCoverage ("Cloud Coverage (작을수록 많음)", Range(0, 1)) = 0.55
+        _CloudSoftness ("Cloud Edge Softness", Range(0.01, 0.5)) = 0.05
     }
 
     SubShader
@@ -87,6 +94,11 @@ Shader "HJH/JungleWater/ShallowWater"
                 float _ReflectionStrength;
                 float _SpecularPower;
                 float _SpecularStrength;
+                half4 _CloudColor;
+                float _CloudStrength;
+                float _CloudScale;
+                float _CloudCoverage;
+                float _CloudSoftness;
             CBUFFER_END
 
             struct Attributes
@@ -147,7 +159,7 @@ Shader "HJH/JungleWater/ShallowWater"
 
                 // [SGS_WaterColor] 얕으면 바닥이 비치고, 깊을수록 탁한 물 색
                 float murk = depth * _Murkiness;
-                float absorb = 1.0 - exp(-murk);
+                float absorb = JW_SoftBands(1.0 - exp(-murk), 3.0, 0.05);   // 카툰: 또렷한 4단계 색 띠
                 float3 transmitted = sceneCol * lerp(float3(1, 1, 1), _ShallowTint.rgb, saturate(murk * 2.0));
                 float3 col = lerp(transmitted, _DeepColor.rgb * diffuse, absorb);
 
@@ -156,15 +168,21 @@ Shader "HJH/JungleWater/ShallowWater"
                 float fresnel = pow(1.0 - saturate(dot(normalize(n), V)), _FresnelPower);
                 col = lerp(col, _ReflectionColor.rgb, fresnel * _ReflectionStrength);
 
+                // [SGS_Reflection] 물에 비치는 구름 (흘러감)
+                float cloud = JW_CloudReflection(posWS, n, _CloudScale, _CloudCoverage, _CloudSoftness);
+                col = lerp(col, _CloudColor.rgb, cloud * _CloudStrength);
+
                 // [SGS_Foam] 물가 + 물결 마루
                 float foamNoise = JW_Fbm(posWS.xz * _FoamNoiseScale + float2(t * 0.6, -t * 0.4));
                 float shore = 1.0 - saturate(depth / _FoamDistance);
-                float foam = smoothstep(0.5, 0.7, shore + foamNoise * 0.6 - 0.3);
+                float foam = smoothstep(0.55, 0.6, shore + foamNoise * 0.6 - 0.3);   // 카툰: 가장자리 또렷하게
+                foam = saturate(foam + JW_ToonFoamLine(depth, _FoamDistance, foamNoise));   // 바깥에 거품 줄 하나 더
                 foam = saturate(foam + saturate(abs(rippleH) * _RippleFoam - 0.15) * smoothstep(0.3, 0.6, foamNoise));
 
                 // [SGS_Specular] 하이라이트
                 float3 H = normalize(lightDir + V);
-                float3 spec = lightColor * pow(saturate(dot(n, H)), _SpecularPower) * _SpecularStrength * shadow * (1.0 - foam);
+                float glint = smoothstep(0.45, 0.5, pow(saturate(dot(n, H)), _SpecularPower));   // 카툰: 하얀 반짝임 덩어리
+                float3 spec = lightColor * glint * _SpecularStrength * shadow * (1.0 - foam);
 
                 // [SGS_FinalComposite]
                 float foamAmount = foam * _FoamColor.a;

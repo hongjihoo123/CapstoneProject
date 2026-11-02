@@ -152,6 +152,75 @@ float JW_PlayerReveal(float3 positionWS, float radius, float softness, float min
     return lerp(minValue, 1.0, smoothstep(radius, radius + softness, d));
 }
 
+// 반실사 색 덩어리: 연속으로 변하는 값(0~1)을 부드러운 계단으로
+//  steps = 계단 수 (2 → 얕음/중간/깊음 3단계), softness = 계단 경계 부드러움 (0 = 칼같이, 0.5 = 거의 연속)
+float JW_SoftBands(float x, float steps, float softness)
+{
+    float s = saturate(x) * steps;
+    float stepped = floor(s) + smoothstep(0.5 - softness, 0.5 + softness, frac(s));
+    return saturate(stepped / steps);
+}
+
+void JungleSoftBands_float(float In, float Steps, float Softness, out float Out)
+{
+    Out = JW_SoftBands(In, Steps, Softness);
+}
+
+// 물에 비치는 구름: 하늘을 실제로 그리지 않고, 반사 방향으로 위쪽 "구름 평면"의 노이즈를 읽음
+//  탑뷰라 하늘은 화면에 안 보이고 반사만 보이므로 이걸로 충분. 구름은 천천히 흘러감
+//  scale = 구름 크기(작을수록 큼), coverage = 구름 양(작을수록 많음), softness = 구름 가장자리 (작을수록 또렷 = 카툰)
+float JW_CloudReflection(float3 positionWS, float3 normalWS, float scale, float coverage, float softness)
+{
+    float3 view = normalize(_WorldSpaceCameraPos - positionWS);
+    float3 r = reflect(-view, normalize(normalWS));
+    r.y = max(r.y, 0.15);
+    float2 p = positionWS.xz + r.xz / r.y * 30.0;          // 30m 위 구름 평면에 닿는 곳
+    p = p * scale + float2(_Time.y * 0.015, _Time.y * 0.008); // 바람에 흐름
+    float n = JW_Fbm(p) * 0.7 + JW_Fbm(p * 2.7 + 13.1) * 0.3;
+    return smoothstep(coverage, coverage + softness, n);
+}
+
+void JungleCloudReflection_float(float3 PositionWS, float3 NormalWS, float Scale, float Coverage, float Softness, out float Cloud)
+{
+    Cloud = JW_CloudReflection(PositionWS, NormalWS, Scale, Coverage, Softness);
+}
+
+// 카툰 물의 두 번째 거품 줄: 물가 거품 띠 바깥에 얇은 선 하나 더 (노이즈로 군데군데 끊김)
+float JW_ToonFoamLine(float thickness, float distance, float noise)
+{
+    float d = thickness / max(distance * 1.8, 1e-4) + (noise - 0.5) * 0.15;
+    float ring = smoothstep(0.86, 0.9, d) * (1.0 - smoothstep(0.95, 0.99, d));   // 얇은 선
+    return ring * smoothstep(0.45, 0.55, noise);   // 군데군데 끊김
+}
+
+void JungleToonFoamLine_float(float Thickness, float Distance, float Noise, out float Line)
+{
+    Line = JW_ToonFoamLine(Thickness, Distance, Noise);
+}
+
+// 스킬 충격으로 뚫린 안개 구멍 (JungleFogController 가 채움)
+// xy = 중심 xz, z = 반지름, w = 세기 (1 = 완전히 걷힘 → 0 = 다시 참)
+#define JW_FOG_HOLES 8
+float4 _JungleFogHoles[JW_FOG_HOLES];
+float _JungleFogHoleCount;
+
+// 1 = 안개 그대로. 구멍 안은 옅어지고, 테두리는 밀려난 안개가 살짝 짙어짐
+float JW_FogHoles(float3 positionWS)
+{
+    float k = 1.0;
+    [unroll] for (int h = 0; h < JW_FOG_HOLES; h++)
+    {
+        if (h >= (int)_JungleFogHoleCount)
+            break;
+        float4 hole = _JungleFogHoles[h];
+        float d = distance(positionWS.xz, hole.xy);
+        float inside = 1.0 - smoothstep(hole.z * 0.55, hole.z, d);
+        float rim = smoothstep(hole.z * 0.8, hole.z, d) * (1.0 - smoothstep(hole.z, hole.z * 1.45, d));
+        k *= (1.0 - inside * hole.w) * (1.0 + rim * 0.8 * hole.w);
+    }
+    return k;
+}
+
 float JW_FogNoise(float3 p, float t, float scale, float contrast, float3 wind)
 {
     float3 q = p * scale;
@@ -185,7 +254,7 @@ float JW_FogMarch(float3 entry, float3 exit, float2 screenUV,
     {
         float3 p = entry + dir * ((s + jitter) * stepLen);
         float heightFactor = saturate((entry.y - p.y) / thickness);
-        float reveal = JW_PlayerReveal(p, revealRadius, revealSoftness, revealMin);
+        float reveal = JW_PlayerReveal(p, revealRadius, revealSoftness, revealMin) * JW_FogHoles(p);
         float d = density * heightFactor * JW_FogNoise(p, t, noiseScale, noiseContrast, wind) * reveal;
         transmittance *= exp(-d * stepLen);
     }

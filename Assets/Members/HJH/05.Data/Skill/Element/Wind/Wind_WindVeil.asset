@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 3a6c35df097045b78e14673a27a20f8a, type: 3}
+  m_Name: Wind_WindVeil
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.BarrierSkill
+  cooldown: 12
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 3c660d7d1fd2ed848b50453b4dba1fb0, type: 3}
+  displayName: "\uBC14\uB78C \uC7A5\uB9C9"
+  description: "\uBA87 \uCD08\uAC04 \uB0B4 \uC8FC\uBCC0\uC744 \uB3C4\uB294 \uBC14\uB78C\uC774
+    \uC801 \uD22C\uC0AC\uCCB4\uB97C \uB9C9\uB294\uB2E4."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit: []
+  scaling: 1
+  hitStop: 0
+  shake: 0.1
+  castShake: 0.2
+  castFx:
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  hideMagicCircle: 0
+  placement: 2
+  distance: 0
+  width: 5
+  thickness: 0.8
+  radius: 2.5
+  lifetime: 3
+  blockProjectiles: 1
+  blockMovement: 0
+  barrierFx:
+    prefab: {fileID: 8353372526126558530, guid: 29ff8aa5eb091a8408d536f98043aea5, type: 3}
+    tint: 0
+  blockFx:
+    prefab: {fileID: 5549900474003470467, guid: 5aa0812110e351249b006c7ddbd42733, type: 3}
+    tint: 0

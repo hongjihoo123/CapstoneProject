@@ -27,8 +27,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             if (center.HasValue)
             {
                 Vector3 ground = cast.Ground(center.Value);
-                _circle = Fx.MagicCircle(ground, radius, cast.Color);
-                _circle.SetSpeed(160f);
+                if (!cast.Skill.HideMagicCircle)
+                {
+                    _circle = Fx.MagicCircle(ground, radius, cast.Color);
+                    _circle.SetSpeed(160f);
+                }
                 _windup = cast.Hold(windupFx, ground, Vector3.forward);
             }
         }

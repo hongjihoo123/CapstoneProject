@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
@@ -34,6 +35,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private readonly WeaponVisualTracker _weapon = new();
         private CharacterSwitcher _switcher;
         private FxHandle _dashTrail;
+        private Color _dashTrailColor;
         private Vector3 _lastPosition;
         private float _lastHitShakeTime;
         private bool _hitParticles = true;
@@ -108,13 +110,34 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 direction = markedDirection;
             }
 
+            // 원소 스킬로 맞았으면 불꽃·숫자를 그 원소 색으로 (아니면 캐릭터 색)
+            Color sparkColor = _hitColor;
+            Color normalColor = normalNumber;
+            Color bigColor = bigNumber;
+            if (HitTint.TryGet(info.Target, out Color elementColor))
+            {
+                sparkColor = elementColor;
+                normalColor = Color.Lerp(normalNumber, elementColor, 0.35f);
+                bigColor = Color.Lerp(bigNumber, elementColor, 0.6f);
+            }
+
             bool big = info.Amount >= bigHitThreshold || info.IsWeakpoint;
-            Color numberColor = info.Killed ? killNumber : big ? bigNumber : normalNumber;
+            Color numberColor = info.Killed ? killNumber : big ? bigColor : normalColor;
             Fx.DamageNumber(body + Vector3.up * 0.7f, info.Amount, numberColor, big || info.Killed ? 1.35f : 1f);
 
-            if (_hitParticles)
-                Fx.Hit(impact, direction, _hitColor, big);
+            bool skillHit = sparkColor != _hitColor;
+            // 원소 스킬 피격은 스킬 에셋의 PBR 피격 이펙트가 맡음 → 납작한 불꽃은 일반 공격에만
+            if (_hitParticles && !skillHit)
+                Fx.Hit(impact, direction, sparkColor, big);
             Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f));
+
+            // 맞은 적이 순간 번쩍 (하얀빛에 원소 색을 살짝)
+            HitFlash.Flash(component, Color.Lerp(Color.white, sparkColor, 0.35f), big || info.Killed ? 0.16f : 0.1f);
+
+            // 맞은 지점 섬광 (빛줄기 + 플레어). 큰 타격·원소 스킬일 때만 → 연사 무기로 도배되지 않게
+            if (big || skillHit || info.Killed)
+                SpawnFlare(impact, direction, sparkColor, big || info.Killed ? 1.3f : 0.9f);
+
 
             if (Time.unscaledTime - _lastHitShakeTime > 0.04f)
             {
@@ -125,9 +148,29 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (info.Killed)
             {
                 if (_killBurst)
-                    Fx.Explosion(target.position, 1.6f, _hitColor, 1.3f);
+                    Fx.Explosion(target.position, 1.6f, sparkColor, 1.3f);
                 HitFeel.Play(killHitStop, killShake);
             }
+        }
+
+        // ------------------------------------------------ 섬광
+
+        private const string FlarePath = "HJH/StylizedFx/FX_HitFlare";   // HJH > Element FX > 스타일 이펙트 만들기
+        private static GameObject _flarePrefab;
+        private static bool _flareLoaded;
+
+        private static void SpawnFlare(Vector3 point, Vector3 direction, Color color, float scale)
+        {
+            if (!_flareLoaded)
+            {
+                _flareLoaded = true;
+                _flarePrefab = Resources.Load<GameObject>(FlarePath);
+            }
+            if (_flarePrefab == null)
+                return;
+
+            Quaternion facing = direction.sqrMagnitude > 0.0001f ? Quaternion.LookRotation(direction) : Quaternion.identity;
+            Fx.Spawn(_flarePrefab, point, facing, scale, color);
         }
 
         private void HandleShot(ShotVisual shot)
@@ -200,6 +243,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _dashTrail ??= Fx.DashTrail(transform, themeColor);
             bool dashing = player != null && player.Mover != null && player.Mover.IsDashing;
             _dashTrail.SetValue(dashing ? 1f : 0f);
+
+            // 스킬 돌진이면 잔상을 원소 색으로 (아니면 캐릭터 테마색)
+            Color trailColor = DashTint.TryGet(out Color skillColor) ? skillColor : themeColor;
+            if (trailColor != _dashTrailColor)
+            {
+                _dashTrailColor = trailColor;
+                _dashTrail.SetTint(trailColor);
+            }
 
             Vector3 position = transform.position;
             Vector3 jump = position - _lastPosition;

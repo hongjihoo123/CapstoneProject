@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce47aa658d9a14cd3d484e6df993760, type: 3}
+  m_Name: Fire_Frenzy
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.SelfSkill
+  cooldown: 14
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 0
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 1475107760907d14ab97e3e3c76aace5, type: 3}
+  displayName: "\uD3ED\uC8FC"
+  description: "\uBA87 \uCD08\uAC04 \uACF5\uACA9 \uC18D\uB3C4\uAC00 \uD06C\uAC8C
+    \uC624\uB974\uC9C0\uB9CC \uBC1B\uB294 \uD53C\uD574\uB3C4 \uB298\uC5B4\uB09C\uB2E4."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit: []
+  scaling: 1
+  hitStop: 0
+  shake: 0.15
+  castShake: 0.3
+  castFx:
+    prefab: {fileID: 7660689964575469284, guid: b0dbc8a3856102e41ba581d1f482afb9, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 9216581490588856625, guid: 57b7b0b95c70aee4293ded23fbab502b, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  hideMagicCircle: 0
+  onSelf:
+  - kind: 3
+    value: 40
+    duration: 5
+  - kind: 7
+    value: 20
+    duration: 5
+  auraFx:
+    prefab: {fileID: 159444809423671767, guid: 315422adaabceaf40a34b38f527b7fef, type: 3}
+    tint: 0
+  explodeDelay: 0
+  explodeRadius: 0
+  retaliateTime: 0
+  retaliateRadius: 5

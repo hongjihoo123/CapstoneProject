@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4378bb54dc56ec842f6480fb9ceeb279, type: 3}
+  m_Name: Wind_Leap
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.DashSkill
+  cooldown: 7
+  charges: 1
+  duration: 0.45
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: 06413ae447231a5458506ec4231e0b85, type: 3}
+  displayName: "\uB3C4\uC57D"
+  description: "\uCEE4\uC11C \uC704\uCE58\uB85C \uB6F0\uC5B4\uC62C\uB77C \uCC29\uC9C0\uD558\uBA70
+    \uC8FC\uBCC0 \uC801\uC744 \uC0B4\uC9DD \uBC00\uC5B4\uB0B8\uB2E4."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 25
+    duration: 0
+  - kind: 5
+    value: 1.5
+    duration: 0
+  scaling: 0
+  hitStop: 0.08
+  shake: 0.45
+  castShake: 0.15
+  castFx:
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 6645358154226836990, guid: dac75eba4e2a1074bad076693f8cc631, type: 3}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  hideMagicCircle: 0
+  distance: 6
+  blink: 0
+  dashTime: 0.3
+  pathRadius: 0
+  landRadius: 2.5
+  dashFx:
+    prefab: {fileID: 1485958647852507149, guid: c40e9c59e8eb0714198ddd9a227b5ba4, type: 3}
+    tint: 0

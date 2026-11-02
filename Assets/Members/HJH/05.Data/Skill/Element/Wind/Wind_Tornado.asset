@@ -1,0 +1,67 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 756ffae363b0932b1531026d0f71ac73, type: 3}
+  m_Name: Wind_Tornado
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.ProjectileSkill
+  cooldown: 8
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: dbf008fa5c393584b8a8aac6e976da15, type: 3}
+  displayName: "\uD68C\uC624\uB9AC"
+  description: "\uCC9C\uCC9C\uD788 \uB098\uC544\uAC00\uB294 \uD68C\uC624\uB9AC. \uB2FF\uC740
+    \uC801\uC744 \uC606\uC73C\uB85C \uD295\uACA8\uB0B8\uB2E4."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 18
+    duration: 0
+  - kind: 5
+    value: 3
+    duration: 0
+  scaling: 1
+  hitStop: 0.04
+  shake: 0.3
+  castShake: 0.18
+  castFx:
+    prefab: {fileID: 7979275917982808502, guid: f7764faff8b80414cb9e6407ded9aa1e, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 0}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  hideMagicCircle: 0
+  range: 12
+  speed: 6
+  radius: 1.8
+  count: 1
+  spread: 0
+  pierce: 1
+  explodeRadius: 0
+  travelFx:
+    prefab: {fileID: 8455258922260146480, guid: 6f30db9b4a21edb46b65929e7fb4c344, type: 3}
+    tint: 0
+  pushSideways: 1

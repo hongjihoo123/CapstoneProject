@@ -33,10 +33,8 @@ namespace Members.JJH._02_Scripts.Agents
             if (wasAlive && !IsAlive && source != null && source.TryGetComponent(out PlayerAgent killer))
                 killer.OnEnemyKilled();
         }
-
         public virtual void Dead()
         {
-            Debug.Log(1);
             Destroy(gameObject);
         }
     }

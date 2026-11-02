@@ -337,7 +337,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             if (_material == null)
             {
-                Shader shader = Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit");
+                // 항상 맨 위에 그리는 선 (언덕·바위에 묻혀 잘리지 않게). 없으면 예전 셰이더
+                Shader shader = Shader.Find("HJH/AimLine") ?? Shader.Find("Sprites/Default") ?? Shader.Find("Universal Render Pipeline/Unlit");
                 _material = new Material(shader);
             }
 

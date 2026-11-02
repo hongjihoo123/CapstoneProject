@@ -1,0 +1,76 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bce47aa658d9a14cd3d484e6df993760, type: 3}
+  m_Name: Wind_Tailwind
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill.SelfSkill
+  cooldown: 10
+  charges: 1
+  duration: 0
+  allowsMove: 1
+  allowsFire: 1
+  moveSpeedMultiplier: 1
+  cancelable: 0
+  cancelDelay: 0
+  grantsElement: 1
+  element: 2
+  attackCoefficient: 1
+  elementCoefficient: 0
+  icon: {fileID: 21300000, guid: b53b9141f640f6543a1eec5ddd75f7b8, type: 3}
+  displayName: "\uC21C\uD48D"
+  description: "\uC774\uB3D9 \uC18D\uB3C4\uAC00 \uC624\uB974\uACE0 \uB300\uC26C\uAC00
+    \uBC14\uB85C 1\uD68C \uCDA9\uC804\uB41C\uB2E4."
+  fxColor: {r: 0, g: 0, b: 0, a: 0}
+  onHit:
+  - kind: 0
+    value: 15
+    duration: 0
+  - kind: 5
+    value: 3.5
+    duration: 0
+  scaling: 1
+  hitStop: 0
+  shake: 0.35
+  castShake: 0.3
+  castFx:
+    prefab: {fileID: 9035162138893536134, guid: 01bc814b96da6b849b6054ae30100117, type: 3}
+    tint: 0
+  impactFx:
+    prefab: {fileID: 6645358154226836990, guid: dac75eba4e2a1074bad076693f8cc631, type: 3}
+    tint: 0
+  impactStyle: 0
+  hitFx:
+    prefab: {fileID: 7317301066005041912, guid: 61b7cb464aba7804c828ca81e685c8d2, type: 3}
+    tint: 0
+  statusFx:
+    prefab: {fileID: 0}
+    tint: 0
+  hideMagicCircle: 0
+  onSelf:
+  - kind: 2
+    value: 60
+    duration: 6
+  - kind: 3
+    value: 30
+    duration: 6
+  - kind: 5
+    value: 50
+    duration: 6
+  - kind: 6
+    value: 2
+    duration: 0
+  auraFx:
+    prefab: {fileID: 3840696606556610886, guid: fa80a4f962909584092fe6eaa0319b1f, type: 3}
+    tint: 0
+  explodeDelay: 0
+  explodeRadius: 3.5
+  retaliateTime: 0
+  retaliateRadius: 5

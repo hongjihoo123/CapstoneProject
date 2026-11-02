@@ -19,6 +19,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public Transform Follow;
         public Vector3 Offset;
         public SwingShape Shape;
+        // 데미지 숫자 대신 글자를 띄울 때 ("2단!" 등). 비어 있으면 Value 숫자
+        public string Text;
     }
 
     // A component on an effect prefab that needs runtime values. Play is called right after spawning.

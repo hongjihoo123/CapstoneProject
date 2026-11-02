@@ -9,11 +9,12 @@ namespace Assets.Members.HJH.Environment
     // 장판·대쉬처럼 매 프레임 판정하는 스킬이 물보라를 도배하지 않도록, 최근 물보라 안쪽이면 건너뛴다.
     public class WaterSkillSplashListener : MonoBehaviour
     {
-        [SerializeField] private float minRadius = 0.8f;
-        [SerializeField] private float maxRadius = 3f;
-        [SerializeField] private float strength = 1f;
-        [Tooltip("이 시간 안에 이미 튄 자리(반지름 안)는 다시 안 튐")]
-        [SerializeField] private float repeatWindow = 0.25f;
+        [SerializeField] private float minRadius = 1.2f;
+        [SerializeField] private float maxRadius = 4f;
+        [Tooltip("스킬이 터질 때 물결 세기 (걷는 물결보다 훨씬 크게: 스킬의 존재감)")]
+        [SerializeField] private float skillSplashStrength = 1.1f;
+        [Tooltip("이 시간 안에 이미 튄 자리(반지름 안)는 다시 안 튐. 장판·돌진이 물결을 도배하지 않게")]
+        [SerializeField] private float repeatSeconds = 0.8f;
 
         private struct RecentSplash
         {
@@ -30,15 +31,15 @@ namespace Assets.Members.HJH.Environment
         private void OnImpact(Vector3 position, float radius)
         {
             float now = Time.time;
-            _recent.RemoveAll(s => now - s.Time > repeatWindow);
+            _recent.RemoveAll(s => now - s.Time > repeatSeconds);
 
             var flat = new Vector2(position.x, position.z);
             foreach (RecentSplash s in _recent)
-                if (Vector2.Distance(s.Position, flat) < s.Radius)
+                if (Vector2.Distance(s.Position, flat) < s.Radius * 1.5f)
                     return;
 
             float r = Mathf.Clamp(radius, minRadius, maxRadius);
-            if (JungleWater.Splash(position, r, strength))
+            if (JungleWater.Splash(position, r, skillSplashStrength))
                 _recent.Add(new RecentSplash { Position = flat, Radius = r, Time = now });
         }
     }

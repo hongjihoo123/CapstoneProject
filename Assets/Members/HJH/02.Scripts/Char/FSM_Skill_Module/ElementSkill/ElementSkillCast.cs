@@ -43,12 +43,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         // 이미 맞은 적이어도 또 때림 (장판용). push = 밀치기 방향
         public void HitAgain(IDamageable target, Vector3 push)
         {
+            HitTint.Mark(target, Color);   // 피격 불꽃·데미지 숫자를 원소 색으로
             SkillEffects.Apply(Context, Skill, Skill.OnHit, target, push);
             if (target is not Component component)
                 return;
 
             Transform body = target is IFxBody redirect && redirect.FxBody != null ? redirect.FxBody : component.transform;
-            Play(Skill.HitFx, body.position + BodyHeight, push);
+            Play(Skill.HitFx, body.position + BodyHeight, push, 1.6f);   // 키트 이펙트가 작아서 키움
+            Flair(() => ElementFlair.Hit(Skill.Element, body.position + BodyHeight, push, Color));
 
             // CC 걸린 동안 머리 위에 표시
             if (_statusTime > 0f && Skill.StatusFx.IsSet && target.IsAlive)
@@ -98,8 +100,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
             float more = 1f + 0.2f * (Mathf.Min(hits, 5) - 1);
             Context.PlayHitFeel(Skill.HitStop * more, Skill.Shake * more);
+            Flair(() => ElementFlair.Landed(Color, Skill.Shake, hits));
+            if (Skill.Shake >= 0.5f)   // 큰 스킬(메테오, 폭염 등)이 적을 맞히면 임팩트 프레임 (젠존제 풍)
+                Flair(() => ScreenPulse.ImpactFrame());
             if (groundSlam)
+            {
                 Context.PlayCameraKick(Vector3.down * Mathf.Clamp(0.08f + size * 0.04f, 0.1f, 0.3f), 0.25f);
+                return;
+            }
+
+            // 바닥 찍기가 아니면 공격한 방향으로 카메라가 툭 (세게 흔드는 스킬일수록 크게)
+            Vector3 aim = Context.AimDirection;
+            aim.y = 0f;
+            if (aim.sqrMagnitude > 0.0001f)
+                Context.PlayCameraKick(aim.normalized * Mathf.Clamp(0.04f + Skill.Shake * 0.3f * more, 0.05f, 0.22f), 0.16f);
         }
 
         // 쏠 때 반동: 카메라가 쏘는 반대쪽으로 살짝
@@ -108,12 +122,38 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
         // ------------------------------------------------ 이펙트
 
-        public void PlayCast(Vector3 direction) => Play(Skill.CastFx, Position + BodyHeight + direction * 0.6f, direction);
+        public void PlayCast(Vector3 direction)
+        {
+            Vector3 at = Position + BodyHeight + direction * 0.6f;
+            Play(Skill.CastFx, at, direction, 1.6f);
+            Flair(() => ElementFlair.Cast(Skill.Element, at, direction, Color));
+
+            // 시전 손맛: 쓰는 순간 흔들림 + 카메라가 살짝 다가감
+            if (Skill.CastShake > 0f)
+            {
+                Context.PlayShake(Skill.CastShake, 0.22f);
+                HitFeel.Zoom(Mathf.Clamp(Skill.CastShake * 0.25f, 0.02f, 0.08f), 0.3f);
+            }
+        }
+
+        // 연출 오류가 스킬 판정·끝 처리까지 올라오지 않게
+        private static void Flair(System.Action draw)
+        {
+            try
+            {
+                draw();
+            }
+            catch (System.Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
 
         // 터지는 자리: 스킬이 정한 프리팹 + 기본 이펙트
         public void PlayImpact(Vector3 ground, float radius)
         {
-            Play(Skill.ImpactFx, ground, Vector3.forward, radius / AuthoredRadius);
+            Play(Skill.ImpactFx, ground, Vector3.forward, radius / AuthoredRadius * 1.3f);
+            Flair(() => ElementFlair.Impact(Skill.Element, ground, radius, Color));
 
             switch (Skill.Style)
             {

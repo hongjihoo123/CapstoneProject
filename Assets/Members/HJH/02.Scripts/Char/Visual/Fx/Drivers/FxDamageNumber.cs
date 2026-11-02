@@ -19,6 +19,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _scale;
         private float _time;
         private bool _playing;
+        private TMP_FontAsset _defaultFont;
+
+        private static TMP_FontAsset _koreanFont;
+        private static bool _koreanLoaded;
+
+        // TextMesh Pro 기본 Resources 폴더의 한글 글꼴
+        private static TMP_FontAsset KoreanFont
+        {
+            get
+            {
+                if (!_koreanLoaded)
+                {
+                    _koreanLoaded = true;
+                    _koreanFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/Pretendard-Medium SDF");
+                }
+                return _koreanFont;
+            }
+        }
 
         public bool IsPlaying => _playing;
 
@@ -30,7 +48,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _velocity = new Vector3(Random.Range(-0.8f, 0.8f), riseSpeed, 0f);
             _time = 0f;
             _playing = true;
-            text.text = Mathf.RoundToInt(parameters.Value).ToString();
+            // 글자(한글)는 숫자 글꼴에 없어서 한글 글꼴로 바꿔 씀. 숫자로 돌아오면 원래 글꼴
+            _defaultFont ??= text.font;
+            bool isText = !string.IsNullOrEmpty(parameters.Text);
+            TMP_FontAsset korean = isText ? KoreanFont : null;
+            text.font = isText && korean != null ? korean : _defaultFont;
+            text.text = isText ? parameters.Text : Mathf.RoundToInt(parameters.Value).ToString();
             Apply();
         }
 

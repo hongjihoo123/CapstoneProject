@@ -17,6 +17,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
         public Vector3 AimPoint { get; private set; }
 
+        // 녹화·자동 시연용: 값이 있으면 마우스 대신 이 월드 위치를 조준 (사람이 마우스를 안 움직여도 됨). 평소엔 null
+        public static Vector3? ScriptedAimPoint;
+
+        [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
+        private static void ResetStatics() => ScriptedAimPoint = null;
+
         private bool _wasLocked;
         private Vector3 _lockedFacing;
 
@@ -41,16 +47,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             if (!player.IsAlive || !player.ControlFsm.IsGameplayAlive)
                 return;
 
-            Mouse mouse = Mouse.current;
-            if (mouse == null)
-                return;
+            if (ScriptedAimPoint.HasValue)
+            {
+                Vector3 scripted = ScriptedAimPoint.Value;
+                AimPoint = new Vector3(scripted.x, transform.position.y + aimPlaneHeight, scripted.z);
+            }
+            else
+            {
+                Mouse mouse = Mouse.current;
+                if (mouse == null)
+                    return;
 
-            Ray ray = viewCamera.ScreenPointToRay(mouse.position.ReadValue());
-            var plane = new Plane(Vector3.up, new Vector3(0f, transform.position.y + aimPlaneHeight, 0f));
-            if (!plane.Raycast(ray, out float distance))
-                return;
+                Ray ray = viewCamera.ScreenPointToRay(mouse.position.ReadValue());
+                var plane = new Plane(Vector3.up, new Vector3(0f, transform.position.y + aimPlaneHeight, 0f));
+                if (!plane.Raycast(ray, out float distance))
+                    return;
 
-            AimPoint = ray.GetPoint(distance);
+                AimPoint = ray.GetPoint(distance);
+            }
 
             Vector3 toAim = AimPoint - transform.position;
             toAim.y = 0f;

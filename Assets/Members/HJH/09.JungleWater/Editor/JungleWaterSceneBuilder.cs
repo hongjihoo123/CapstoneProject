@@ -433,7 +433,6 @@ namespace Assets.Members.HJH.Environment.EditorTools
             simSo.FindProperty("waterHeight").floatValue = WaterY;
             simSo.FindProperty("areaMin").vector2Value = Vector2.zero;
             simSo.FindProperty("areaSize").floatValue = MapSize;
-            simSo.FindProperty("revealTarget").objectReferenceValue = revealTarget;
             simSo.ApplyModifiedPropertiesWithoutUndo();
 
             var pool = go.AddComponent<WaterSplashPool>();

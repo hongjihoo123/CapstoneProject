@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering;
 
 namespace Assets.Members.HJH.Environment
 {
@@ -25,16 +26,12 @@ namespace Assets.Members.HJH.Environment
         [SerializeField] private int resolution = 512;
         [Tooltip("초당 계산 횟수. 올리면 물결이 빨리 퍼진다")]
         [SerializeField] private float stepsPerSecond = 60f;
-        [Range(0.9f, 1f)]
-        [SerializeField] private float damping = 0.985f;
+        [Tooltip("물결이 거의 다 가라앉기까지 걸리는 시간 (초). 짧을수록 빨리 잔잔해짐")]
+        [SerializeField, Range(0.3f, 4f)] private float settleSeconds = 0.9f;
 
-        [Header("Fog Reveal")]
-        [Tooltip("안개가 이 대상 주변에서 걷힌다")]
-        [SerializeField] private Transform revealTarget;
 
         private static readonly int RippleTexId = Shader.PropertyToID("_JungleRippleTex");
         private static readonly int RippleAreaId = Shader.PropertyToID("_JungleRippleArea");
-        private static readonly int PlayerPosId = Shader.PropertyToID("_JunglePlayerPos");
         private static readonly int DropsId = Shader.PropertyToID("_Drops");
         private static readonly int DropCountId = Shader.PropertyToID("_DropCount");
         private static readonly int DampingId = Shader.PropertyToID("_Damping");
@@ -62,9 +59,41 @@ namespace Assets.Members.HJH.Environment
             areaSize = Mathf.Max(b.size.x, b.size.z);
         }
 
+        // 물 판이 연결 안 돼 있으면 물 셰이더(ShallowWater)를 쓰는 가장 큰 판을 찾는다 (씬에서 이름을 바꿔도 동작)
+        private void FindSurfaceIfMissing()
+        {
+            if (waterSurface != null)
+                return;
+
+            float best = 0f;
+            foreach (Renderer r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
+            {
+                Material m = r.sharedMaterial;
+                if (m == null || m.shader == null || !m.shader.name.Contains("ShallowWater"))
+                    continue;
+                float area = r.bounds.size.x * r.bounds.size.z;
+                if (area > best)
+                {
+                    best = area;
+                    waterSurface = r;
+                }
+            }
+
+            if (waterSurface == null)
+                Debug.LogWarning($"{name}: 물 셰이더를 쓰는 판을 찾지 못해 기본 영역({areaMin}, {areaSize}m)으로 돕니다.", this);
+        }
+
         private void OnEnable()
         {
+            FindSurfaceIfMissing();
             SyncFromSurface();
+
+            // 넓은 맵에서도 물결이 뭉개지지 않게 약 10cm 당 1칸 (512~2048)
+            resolution = Mathf.Clamp(Mathf.NextPowerOfTwo(Mathf.CeilToInt(areaSize / 0.1f)), resolution, 2048);
+
+            // 스킬 물튀김은 리스너가 있어야 동작 → 없으면 붙인다
+            if (GetComponent<WaterSkillSplashListener>() == null)
+                gameObject.AddComponent<WaterSkillSplashListener>();
 
             if (simShader == null)
             {
@@ -99,7 +128,6 @@ namespace Assets.Members.HJH.Environment
         {
             JungleWater.Unregister(this);
             Shader.SetGlobalVector(RippleAreaId, Vector4.zero);
-            Shader.SetGlobalVector(PlayerPosId, Vector4.zero);
 
             if (_texture != null)
             {
@@ -113,8 +141,6 @@ namespace Assets.Members.HJH.Environment
 
         private void Update()
         {
-            Shader.SetGlobalVector(PlayerPosId, revealTarget != null ? (Vector4)revealTarget.position + new Vector4(0, 0, 0, 1) : Vector4.zero);
-
             // 프레임레이트와 상관없이 일정한 속도로 퍼지도록 고정 간격으로 계산
             _stepAccumulator += Time.deltaTime * stepsPerSecond;
             int steps = Mathf.Min((int)_stepAccumulator, MaxStepsPerFrame);
@@ -129,6 +155,8 @@ namespace Assets.Members.HJH.Environment
 
             _material.SetVectorArray(DropsId, _drops);
             _material.SetFloat(DropCountId, _dropCount);
+            // settleSeconds 동안 세기가 5% 로 줄도록 한 걸음마다 곱할 값
+            float damping = Mathf.Pow(0.05f, 1f / (Mathf.Max(0.1f, settleSeconds) * stepsPerSecond));
             _material.SetFloat(DampingId, damping);
             _texture.Update(steps);
 

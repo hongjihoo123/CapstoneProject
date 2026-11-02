@@ -21,6 +21,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("판정마다 화면 흔들림 (지진). 0 = 없음")] private float pulseShake;
         [SerializeField, Tooltip("0 = 안에 있는 적 전부. 1 이상 = 판정마다 안에서 무작위 N명만 (번개가 떨어짐, 폭풍)")] private int strikesPerPulse;
         [SerializeField, Tooltip("무작위로 맞을 때 그 자리 터지는 범위")] private float strikeRadius = 1.2f;
+        [SerializeField, Tooltip("켜면 적을 장판 중심이 아니라 나(시전자)에게서 먼 쪽으로 밂 (역풍: 내 앞에서 맞바람)")] private bool pushFromCaster;
         [SerializeField, Tooltip("장판 깔려 있는 동안 계속 붙어 있는 이펙트 (바닥 불길, 소용돌이 등)")] private FxSlot zoneFx = new();
 
         [Header("내가 안에 있으면 (판정마다)")]
@@ -69,9 +70,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 _skill = skill;
                 _cast = cast;
                 _center = cast.Ground(center);
-                _circle = Fx.MagicCircle(_center, skill.radius, cast.Color);
-                _circle.SetValue(1f);
-                _circle.SetSpeed(60f);
+                if (!cast.Skill.HideMagicCircle)
+                {
+                    _circle = Fx.MagicCircle(_center, skill.radius, cast.Color);
+                    _circle.SetValue(1f);
+                    _circle.SetSpeed(60f);
+                }
                 _body = cast.Hold(skill.zoneFx, _center, cast.Context.AimDirection, skill.radius / ElementSkillCast.AuthoredRadius);
             }
 
@@ -81,7 +85,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 if (_skill.followSelf)
                 {
                     _center = _cast.Ground(_cast.Position);
-                    _circle.MoveTo(_center);
+                    _circle?.MoveTo(_center);
                     _body?.MoveTo(_center);
                 }
                 AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, _center, _skill.radius, 0.02f));
@@ -95,7 +99,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 if (_elapsed < _skill.zoneTime)
                     return true;
 
-                _circle.Kill();
+                _circle?.Kill();
                 _body?.Kill();
                 return false;
             }
@@ -111,8 +115,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 if (_skill.strikesPerPulse > 0)
                     Strike(inside);
                 else
+                {
+                    Vector3 origin = _skill.pushFromCaster ? _cast.Position : _center;
                     foreach (IDamageable target in inside)
-                        _cast.HitAgain(target, ElementSkillCast.PositionOf(target, _center) - _center);
+                    {
+                        Vector3 push = ElementSkillCast.PositionOf(target, _center) - origin;
+                        push.y = 0f;
+                        _cast.HitAgain(target, push.sqrMagnitude > 0.01f ? push : _cast.Context.AimDirection);
+                    }
+                }
 
                 Vector3 me = _cast.Position - _center;
                 me.y = 0f;

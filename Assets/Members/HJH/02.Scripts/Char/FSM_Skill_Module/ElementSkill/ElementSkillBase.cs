@@ -31,6 +31,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [Header("손맛")]
         [SerializeField, Tooltip("맞았을 때 화면 멈추는 시간 (많이 맞히면 더 길어짐)")] private float hitStop = 0.05f;
         [SerializeField, Tooltip("맞았을 때 화면 흔들림")] private float shake = 0.2f;
+        [SerializeField, Tooltip("쓰는 순간 화면 흔들림 + 살짝 줌 (맞든 안 맞든). 0 = 없음")] private float castShake;
 
         [Header("이펙트")]
         [SerializeField, Tooltip("쓸 때 내 손/몸에서")] private FxSlot castFx = new();
@@ -39,16 +40,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         private ImpactStyle impactStyle = ImpactStyle.Explosion;
         [SerializeField, Tooltip("맞은 적 몸마다")] private FxSlot hitFx = new();
         [SerializeField, Tooltip("CC 걸린 적 머리 위, CC 시간 동안")] private FxSlot statusFx = new();
+        [SerializeField, Tooltip("켜면 바닥 마법진을 안 그림 (예고·장판 이펙트 프리팹이 바닥 연출을 직접 함)")] private bool hideMagicCircle;
 
         public IReadOnlyList<HitEffect> OnHit => onHit;
         public DamageScaling Scaling => scaling;
         public float HitStop => hitStop;
         public float Shake => shake;
+        public float CastShake => castShake;
         public FxSlot CastFx => castFx;
         public FxSlot ImpactFx => impactFx;
         public ImpactStyle Style => impactStyle;
         public FxSlot HitFx => hitFx;
         public FxSlot StatusFx => statusFx;
+        public bool HideMagicCircle => hideMagicCircle;
 
         // 이펙트 색 = 원소 색 (에셋에서 fxColor 따로 정하면 그거)
         protected override Color DefaultFxColor =>

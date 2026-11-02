@@ -81,7 +81,13 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(tex, sample, "Texture");
             b.Link(sample, "G", cut, "In");
             b.ToBlock(BlockFields.SurfaceDescription.BaseColor, sample, "RGBA");
-            b.ToBlock(BlockFields.SurfaceDescription.Alpha, cut, "Out");
+
+            // ③ 카메라를 가리면 반투명 (JungleOcclusionFader 가 렌더러마다 _Fade 를 내림)
+            AbstractMaterialNode fadeMask = AddDitherFade(b, 0, 1.6f);
+            var alpha = b.Node<MultiplyNode>(3.5f, 1f);
+            b.Link(cut, "Out", alpha, "A");
+            b.Link(fadeMask, "Out", alpha, "B");
+            b.ToBlock(BlockFields.SurfaceDescription.Alpha, alpha, "Out");
             b.SetBlock(BlockFields.SurfaceDescription.Smoothness, 0.15f);   // 잎이 번들거리지 않게
 
             // ================= ② 흔들림 (12개) =================
@@ -123,12 +129,82 @@ namespace Assets.Members.HJH.Environment.GraphGen
             b.Link(offset, "Out", final, "B");
             b.ToBlock(BlockFields.VertexDescription.Position, final, "Out");
 
-            b.Group("① 검정 지우기: 초록(G)이 어두우면 잘라냄", tex, sample, cut);
+            b.Group("① 검정 지우기: 초록(G)이 어두우면 잘라냄", tex, sample, cut, alpha);
             b.Group("② 흔들림: sin(시간 + 위치) × 세기 × 가장자리일수록 크게", time, speed, t, worldPos, split, phase, sine, strength, sway, uv, edge, amount, offset, localPos, final);
             b.Note("정글 잎 카드 (노드만)",
                 "① 잎은 초록 채널이 밝고 배경은 0 → Smoothstep 으로 투명도를 만들고 Alpha Clip 으로 잘라낸다.\n" +
                 "② 꼭짓점을 sin 으로 좌우로 민다. 월드 x 를 더해 카드마다 박자가 다르고, UV 중심에서 멀수록(가장자리) 크게 흔들린다.\n" +
-                "불투명 + Alpha Clip 이라 그림자도 잎 모양대로 떨어진다.", 0, -1.6f, 520f, 150f);
+                "불투명 + Alpha Clip 이라 그림자도 잎 모양대로 떨어진다.\n" +
+                "③ Fade: 화면 픽셀을 바둑판처럼 듬성듬성 지워서(디더링) 반투명처럼 보이게. 투명 셰이더가 아니라 그리는 순서 문제가 없다.", 0, -1.6f, 520f, 170f);
+        }
+
+        // 디더링 반투명: Dither(_Fade) 가 0 보다 크면 남기고 아니면 지움 → 1 또는 0
+        private static AbstractMaterialNode AddDitherFade(ShaderGraphBuilder b, float col, float row)
+        {
+            var fadeProp = b.FloatProp("Fade", 1f, "_Fade", new Vector2(0f, 1f));
+            var fade = b.Prop(fadeProp, col, row);
+            var dither = b.Node<DitherNode>(col + 1, row);
+            var keep = b.Node<StepNode>(col + 2, row, n => ShaderGraphBuilder.Set(n, "Edge", 0.0001f));
+            b.Link(fade, dither, "In");
+            b.Link(dither, "Out", keep, "In");
+            b.Group("③ 가리면 반투명 (디더링)", fade, dither, keep);
+            return keep;
+        }
+
+        // =====================================================================
+        // 나무 줄기: KM 의 M_Tree 와 같은 텍스처 + 가리면 반투명
+        // =====================================================================
+
+        public const string BarkMenuPath = "HJH/Jungle Water/나무 줄기 셰이더 그래프 만들기";
+        private const string BarkGraphPath = Root + "/Shaders/Graph/SG_JungleBark.shadergraph";
+        public const string BarkMaterialPath = Root + "/Generated/Materials/M_JungleBark.mat";
+        private const string SourceBarkMaterial = "Assets/Members/KM/Assets/Props/Natural/Tree/M_Tree.mat";
+
+        [MenuItem(BarkMenuPath)]
+        public static void GenerateBark()
+        {
+            var source = AssetDatabase.LoadAssetAtPath<Material>(SourceBarkMaterial);
+            Texture baseMap = source != null && source.HasProperty("_BaseColor") ? source.GetTexture("_BaseColor") : null;
+            Texture normalMap = source != null && source.HasProperty("_Normal") ? source.GetTexture("_Normal") : null;
+
+            var b = ShaderGraphBuilder.LitCutout(null);
+            var baseProp = b.TextureProp("Base Map", baseMap, "_BaseMap");
+            var normalProp = b.TextureProp("Normal Map", normalMap, "_NormalMap");
+            normalProp.defaultType = UnityEditor.ShaderGraph.Internal.Texture2DShaderProperty.DefaultType.NormalMap;
+
+            var baseTex = b.Prop(baseProp, 0, 0);
+            var baseSample = b.Node<SampleTexture2DNode>(1, 0);
+            var normalTex = b.Prop(normalProp, 0, 1.4f);
+            var normalSample = b.Node<SampleTexture2DNode>(1, 1.4f, n => n.textureType = TextureType.Normal);
+            b.Link(baseTex, baseSample, "Texture");
+            b.Link(normalTex, normalSample, "Texture");
+            b.ToBlock(BlockFields.SurfaceDescription.BaseColor, baseSample, "RGBA");
+            b.ToBlock(BlockFields.SurfaceDescription.NormalTS, normalSample, "RGBA");
+            b.SetBlock(BlockFields.SurfaceDescription.Smoothness, 0.15f);
+
+            AbstractMaterialNode fadeMask = AddDitherFade(b, 0, 3f);
+            b.ToBlock(BlockFields.SurfaceDescription.Alpha, fadeMask, "Out");
+            b.Note("정글 나무 줄기",
+                "KM 의 M_Tree 와 같은 텍스처를 쓰고, 카메라를 가릴 때만 디더링으로 반투명해진다.", 0, -1.4f, 420f, 110f);
+            b.Save(BarkGraphPath);
+
+            var shader = AssetDatabase.LoadAssetAtPath<Shader>(BarkGraphPath);
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(BarkMaterialPath);
+            if (mat == null)
+            {
+                mat = new Material(shader);
+                AssetDatabase.CreateAsset(mat, BarkMaterialPath);
+            }
+            else
+            {
+                mat.shader = shader;
+            }
+            if (baseMap != null) mat.SetTexture("_BaseMap", baseMap);
+            if (normalMap != null) mat.SetTexture("_NormalMap", normalMap);
+            mat.enableInstancing = true;
+            EditorUtility.SetDirty(mat);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[JungleWater] 나무 줄기 셰이더 그래프 + 머티리얼(M_JungleBark) 생성 완료");
         }
     }
 }
