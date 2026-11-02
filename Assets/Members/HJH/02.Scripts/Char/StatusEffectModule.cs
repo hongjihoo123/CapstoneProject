@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char
 {
-    public class StatusEffectModule : Module
+    public class StatusEffectModule : AbstractModule
     {
         private readonly Dictionary<BuffType, float> _multipliers = new();
         private readonly List<(BuffType type, float expireAt)> _active = new();

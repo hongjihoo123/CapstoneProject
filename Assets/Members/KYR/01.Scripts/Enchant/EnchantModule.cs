@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Enchant
 {
-    public class EnchantModule : Module
+    public class EnchantModule : AbstractModule
     {
         private sealed class Progress
         {

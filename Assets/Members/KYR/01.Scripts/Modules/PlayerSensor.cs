@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerSensor : Module, ISensor
+    public class PlayerSensor : AbstractModule, ISensor
     {
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }
 

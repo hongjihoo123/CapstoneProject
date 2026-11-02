@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Modules
 {
-    public class AgentSensor : Module, ISensor
+    public class AgentSensor : AbstractModule, ISensor
     {
         [Header("Layer")]
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }

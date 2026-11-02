@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.FSM.Weapon
 {
-    public class WeaponStateModule : Module, IAfterInitModule
+    public class WeaponStateModule : AbstractModule, IAfterInitModule
     {
         private static readonly ReadyWeaponFallback Fallback = new();
 

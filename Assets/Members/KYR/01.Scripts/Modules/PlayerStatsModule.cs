@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerStatsModule : Module, ICombatStats
+    public class PlayerStatsModule : AbstractModule, ICombatStats
     {
         [Header("Formula")]
         [SerializeField] private CombatFormulaManagerSO combatFormula;

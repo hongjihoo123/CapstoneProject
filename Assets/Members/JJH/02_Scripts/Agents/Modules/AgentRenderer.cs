@@ -5,7 +5,7 @@ using UnityEngine.Events;
 
 namespace Members.JJH._02_Scripts.Agents
 {
-    public class AgentRenderer : Module, IRenderer
+    public class AgentRenderer : AbstractModule, IRenderer
     {
         [field: SerializeField] public UnityEvent OnDeadAnimation { get; private set; }
         [field: SerializeField] public UnityEvent OnDeadObject { get; private set; }

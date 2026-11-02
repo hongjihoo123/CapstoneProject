@@ -16,6 +16,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         [field: SerializeField] public float Range { get; private set; }
         [field: SerializeField] public float Damage { get; private set; }
         [field: SerializeField] public AnimParamSO AnimParam { get; private set; }
+        [field: SerializeField] public AnimParamSO VFXParam { get; private set; }
 
 
         [SerializeField] private MonoScript skillScript;

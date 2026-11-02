@@ -7,7 +7,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerHealth : Module, IHealth, IAfterInitModule
+    public class PlayerHealth : AbstractModule, IHealth, IAfterInitModule
     {
         [SerializeField] private float stunOnHitDuration;
         [Header("스탯 풀백 모듈 없을 때")]

@@ -4,7 +4,7 @@ using UnityEngine.AI;
 
 namespace Members.JJH._02_Scripts.Agents.Modules
 {
-    public class AgentNavMesh : Module, INavMesh
+    public class AgentNavMesh : AbstractModule, INavMesh
     {
         public NavMeshAgent NavMeshAgent { get; private set; }
 

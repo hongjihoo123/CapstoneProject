@@ -42,6 +42,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 yield return null;
             }
 
+            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
             Collider[] hits = Physics.OverlapSphere(center, skillRange, _skillModule.TargetLayer);
             foreach (Collider hit in hits)
                 ApplyDamage(hit);

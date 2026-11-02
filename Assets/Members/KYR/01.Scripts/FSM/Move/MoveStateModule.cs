@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.FSM.Move
 {
-    public class MoveStateModule : Module, IAfterInitModule
+    public class MoveStateModule : AbstractModule, IAfterInitModule
     {
         private static readonly AllowAllMoveFallback Fallback = new();
 

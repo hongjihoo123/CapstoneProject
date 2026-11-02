@@ -8,7 +8,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
-    public class EnemySkillModule : Module, IEnemySkillModule, IAfterInitModule
+    public class EnemySkillModule : AbstractModule, IEnemySkillModule, IAfterInitModule
     {
         [field: SerializeField] public AttackAreaVisualizer AreaVisualizer { get; private set; }
         [field: SerializeField] public LayerMask TargetLayer { get; private set; }

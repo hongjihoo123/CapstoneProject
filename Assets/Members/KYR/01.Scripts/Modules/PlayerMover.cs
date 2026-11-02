@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.Modules
 {
-    public class PlayerMover : Module
+    public class PlayerMover : AbstractModule
     {
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraPivot;

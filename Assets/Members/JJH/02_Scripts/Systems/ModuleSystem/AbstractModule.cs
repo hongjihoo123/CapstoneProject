@@ -2,7 +2,7 @@
 
 namespace Members.JJH._02_Scripts.Systems.ModuleSystem
 {
-    public abstract class Module : MonoBehaviour
+    public abstract class AbstractModule : MonoBehaviour
     {
         protected ModuleOwner _owner;
 

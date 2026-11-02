@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.KYR._01_Scripts.FSM.Control
 {
-    public class ControlStateModule : Module, IAfterInitModule
+    public class ControlStateModule : AbstractModule, IAfterInitModule
     {
         public PlayerAgent Player { get; private set; }
         public StateMachine Machine { get; private set; }
