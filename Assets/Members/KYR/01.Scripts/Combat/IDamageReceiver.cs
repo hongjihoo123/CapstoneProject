@@ -1,6 +1,6 @@
 using RobotWeapons;
 
-namespace Members.KYR._01_Scripts.Combat
+namespace Members.KYR._01.Scripts.Combat
 {
     public interface IDamageReceiver : IDamageable
     {

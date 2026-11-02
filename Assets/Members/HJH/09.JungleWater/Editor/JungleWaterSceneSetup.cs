@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using Members.KYR._01_Scripts;
+using Members.KYR._01.Scripts.Player;
 using Unity.AI.Navigation;
 using Unity.AI.Navigation.Editor;
 using UnityEditor;

@@ -1,4 +1,4 @@
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     public enum SpawnPointId
     {

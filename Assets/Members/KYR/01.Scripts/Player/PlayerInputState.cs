@@ -1,8 +1,9 @@
 using System;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Members.KYR._01_Scripts;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts
+namespace Members.KYR._01.Scripts.Player
 {
     public sealed class PlayerInputState : ISkillInputSource
     {

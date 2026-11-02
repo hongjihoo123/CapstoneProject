@@ -1,5 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using UnityEngine;
 

@@ -16,6 +16,8 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         public static readonly ToggleMapEvent ToggleMapEvent = new();
         public static readonly SelectRoomEvent SelectRoomEvent = new();
         public static readonly ChangeSceneEvent ChangeSceneEvent = new();
+
+        public static readonly EnemyKilledEvent EnemyKilledEvent = new();
     }
 
     #region Element System Events
@@ -131,4 +133,15 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
     }
 
     #endregion
+
+    public class EnemyKilledEvent : GameEvent
+    {
+        public int Amount { get; private set; }
+
+        public EnemyKilledEvent Init(int amount)
+        {
+            Amount = amount;
+            return this;
+        }
+    }
 }

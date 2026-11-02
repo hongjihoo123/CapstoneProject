@@ -1,8 +1,11 @@
-using Members.KYR._01_Scripts.Modules;
+using Members.JJH._02_Scripts.Agents.Enemies;
+using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01.Scripts.Modules;
 using UnityEngine;
 using UnityEngine.UI;
 
-namespace Members.KYR._01_Scripts.UI
+namespace Members.KYR._01.Scripts.UI
 {
     [DefaultExecutionOrder(10000)]
     public class HeadHealthBar : MonoBehaviour
@@ -11,18 +14,21 @@ namespace Members.KYR._01_Scripts.UI
         [SerializeField] private Image trail;
         [SerializeField] private Image shield;
         [SerializeField] private float clearance = 0.22f;
-         private bool hideWhenDead = true;
+        private bool hideWhenDead = true;
 
-        [Header("색")]
         [SerializeField] private Color highColor = new(0.32f, 0.82f, 0.38f, 1f);
         [SerializeField] private Color lowColor = new(0.86f, 0.22f, 0.18f, 1f);
         [SerializeField] private float trailSpeed = 0.85f;
 
-        private PlayerHealth _health;
+        private PlayerHealth _playerHealth;
+        private AgentHealth _agentHealth;
+        private AbstractEnemy _enemy;
+        private Transform _body;
         private Canvas _canvas;
         private float _height = -1f;
         private float _trailRatio = 1f;
         private float _lastHp;
+        private float _peakHp;
         private bool _trailReady;
 
         private void Awake()
@@ -35,9 +41,9 @@ namespace Members.KYR._01_Scripts.UI
 
         private void LateUpdate()
         {
-            if (_health == null)
+            if (_playerHealth == null && _agentHealth == null)
                 BindHealth();
-            if (_health == null || fill == null)
+            if ((_playerHealth == null && _agentHealth == null) || fill == null)
                 return;
 
             if (_height < 0f)
@@ -45,21 +51,15 @@ namespace Members.KYR._01_Scripts.UI
 
             Place();
 
-            float max = _health.MaxHealth;
-            float hp = Mathf.Max(0f, _health.CurrentHealth);
+            float hp = ReadHp();
+            float max = ReadMax(hp);
             if (max <= 0f)
             {
                 SetVisible(false);
                 return;
             }
 
-            bool show = !hideWhenDead || hp > 0f;
-            SetVisible(show);
-            if (!show)
-                return;
-
             float hpRatio = Mathf.Clamp01(hp / max);
-            float shieldAmount = Mathf.Max(0f, _health.CurrentShield);
             bool damaged = _trailReady && hp < _lastHp - 0.01f;
             _lastHp = hp;
 
@@ -69,6 +69,14 @@ namespace Members.KYR._01_Scripts.UI
                 _trailRatio = Mathf.MoveTowards(_trailRatio, hpRatio, trailSpeed * Time.deltaTime);
             _trailReady = true;
 
+            bool show = hp > 0f || !hideWhenDead;
+            if (_agentHealth != null && hp >= max - 0.01f)
+                show = false;
+            SetVisible(show);
+            if (!show)
+                return;
+
+            float shieldAmount = _playerHealth != null ? Mathf.Max(0f, _playerHealth.CurrentShield) : 0f;
             fill.fillAmount = hpRatio;
             fill.color = Color.Lerp(lowColor, highColor, hpRatio);
             if (trail != null)
@@ -78,6 +86,27 @@ namespace Members.KYR._01_Scripts.UI
                 shield.fillAmount = Mathf.Clamp01((hp + shieldAmount) / max);
                 shield.enabled = shieldAmount > 0.01f;
             }
+        }
+
+        private float ReadHp()
+        {
+            if (_playerHealth != null)
+                return Mathf.Max(0f, _playerHealth.CurrentHealth);
+            if (_agentHealth != null)
+                return Mathf.Max(0f, _agentHealth.CurrentHealth);
+            return 0f;
+        }
+
+        private float ReadMax(float hp)
+        {
+            if (_playerHealth != null)
+                return _playerHealth.MaxHealth;
+
+            if (hp > _peakHp)
+                _peakHp = hp;
+
+            float dataMax = _enemy != null && _enemy.EnemyData != null ? _enemy.EnemyData.Health : 0f;
+            return dataMax > 0f ? dataMax : _peakHp;
         }
 
         private void SetVisible(bool show)
@@ -96,12 +125,22 @@ namespace Members.KYR._01_Scripts.UI
             transform.SetPositionAndRotation(anchor + Vector3.up * lift, rotation);
         }
 
-        private Transform Body => _health != null ? _health.transform : transform.parent != null ? transform.parent : transform;
+        private Transform Body => _body != null ? _body : transform;
 
         private void BindHealth()
         {
-            _health = GetComponentInParent<PlayerHealth>()
-                ?? GetComponentInChildren<PlayerHealth>(true);
+            ModuleOwner owner = GetComponentInParent<ModuleOwner>();
+            _body = owner != null ? owner.transform : transform.parent != null ? transform.parent : transform;
+
+            _agentHealth = _body.GetComponentInChildren<AgentHealth>(true);
+            if (_agentHealth != null)
+            {
+                _enemy = _agentHealth.GetComponentInParent<AbstractEnemy>();
+                _playerHealth = null;
+                return;
+            }
+
+            _playerHealth = _body.GetComponentInChildren<PlayerHealth>(true);
         }
 
         private float MeasureHeight()

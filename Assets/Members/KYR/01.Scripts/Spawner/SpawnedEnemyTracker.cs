@@ -2,7 +2,7 @@ using System;
 using Members.JJH._02_Scripts.Agents.Modules;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Spawner
+namespace Members.KYR._01.Scripts.Spawner
 {
     public class SpawnedEnemyTracker : MonoBehaviour
     {
