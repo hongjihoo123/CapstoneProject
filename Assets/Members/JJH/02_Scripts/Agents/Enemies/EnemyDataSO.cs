@@ -10,13 +10,14 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         [Header("Information")]
         [field: SerializeField] public string EnemyName { get; private set; }
         [field: SerializeField] public float Health { get; private set; }
-        [field: SerializeField] public bool CanNormalAttack { get; private set; }
+        [field: SerializeField] public int Gold { get; private set; }
 
         [Header("NavMesh")]
         [field: SerializeField] public float Speed { get; private set; }
         [field: SerializeField] public float Acceleration { get; private set; }
 
         [Header("Combat")]
+        [field: SerializeField] public bool CanNormalAttack { get; private set; }
         [field: SerializeField] public float AttackSight { get; private set; }
         [field: SerializeField] public float DetectRange { get; private set; }
         [field: SerializeField] public float AttackRange { get; private set; }

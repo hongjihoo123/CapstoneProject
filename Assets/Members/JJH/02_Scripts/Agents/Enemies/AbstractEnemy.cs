@@ -2,6 +2,8 @@ using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System.Collections.Generic;
 using Unity.Behavior;
 using Unity.Behavior.GraphFramework;
@@ -13,6 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
     {
         [Header("Enemy Data")]
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
+        [field: SerializeField] public EventChannelSO SystemChannel { get; private set; }
 
         [SerializeField] private BTBlackboardTableSO btTableSO;
 
@@ -54,6 +57,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         public void HandleOnDead()
         {
             _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
+        }
+
+        public override void Dead()
+        {
+            SystemChannel.RaiseEvent(SystemEvents.EnemyKilledEvent.Init(EnemyData.Gold));
+            base.Dead();
         }
 
         public virtual void NormalAttack() { }
