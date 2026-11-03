@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyShoutSkill : AbstractEnemySkill
+    public class EnemyFireBreathSkill : AbstractEnemySkill
     {
-        [Header("Shout Settings")]
+        [Header("Fire Breath Settings")]
         [SerializeField] private float angle = 45f;
 
         protected override IEnumerator Execute()
@@ -23,7 +23,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             yield return new WaitForSeconds(prepare);
             yield return ExpandConeWarning(center, rotation, range, angle, expand);
 
+            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
             DamageInCone(center, rotation, range, angle);
+
             yield return new WaitForSeconds(SkillSO.AttackDutation);
         }
 
