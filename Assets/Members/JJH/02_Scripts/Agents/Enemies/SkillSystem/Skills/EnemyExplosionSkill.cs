@@ -22,5 +22,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
             DamageInCircle(center, range);
         }
+
+#if UNITY_EDITOR
+
+        protected override void DrawRangeGizmo()
+        {
+            Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
+            DrawGizmoCircle(transform.position, SkillSO.Range);
+        }
+
+#endif
     }
 }

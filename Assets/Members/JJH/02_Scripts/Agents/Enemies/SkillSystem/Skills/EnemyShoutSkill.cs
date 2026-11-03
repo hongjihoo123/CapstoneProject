@@ -26,5 +26,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             DamageInCone(center, rotation, range, angle);
             yield return new WaitForSeconds(SkillSO.AttackDutation);
         }
+
+#if UNITY_EDITOR
+
+        protected override void DrawRangeGizmo()
+        {
+            Gizmos.color = new Color(1f, 0.6f, 0.1f, 0.9f);
+            DrawGizmoCone(transform.position, transform.rotation, SkillSO.Range, angle);
+        }
+
+#endif
     }
 }

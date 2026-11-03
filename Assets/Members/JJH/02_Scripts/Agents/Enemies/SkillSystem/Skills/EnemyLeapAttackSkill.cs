@@ -62,5 +62,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             DamageInCircle(landing, leapDamageRange, ignoreSelf: true);
         }
+
+#if UNITY_EDITOR
+
+        protected override void DrawRangeGizmo()
+        {
+            Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
+            DrawGizmoCircle(transform.position, leapDamageRange);
+
+            Gizmos.color = new Color(1f, 1f, 0.2f, 0.9f);
+            Vector3 peak = transform.position + Vector3.up * leapHeight;
+            Gizmos.DrawLine(transform.position, peak);
+            Gizmos.DrawWireSphere(peak, 0.2f);
+
+            Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.4f);
+            DrawGizmoCircle(transform.position, SkillSO.Range);
+        }
+
+#endif
     }
 }

@@ -109,6 +109,64 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         #endregion
 
+        #region Skill Gizmo (Editor)
+
+#if UNITY_EDITOR
+
+        private void OnDrawGizmosSelected()
+        {
+            if (SkillSO == null)
+                return;
+
+            DrawRangeGizmo();
+        }
+
+        protected virtual void DrawRangeGizmo()
+        {
+            Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
+            DrawGizmoCircle(transform.position, SkillSO.Range);
+        }
+
+        protected static void DrawGizmoCircle(Vector3 center, float radius, int segments = 48)
+        {
+            Vector3 prev = center + new Vector3(radius, 0f, 0f);
+            for (int i = 1; i <= segments; i++)
+            {
+                float rad = i * Mathf.PI * 2f / segments;
+                Vector3 next = center + new Vector3(Mathf.Cos(rad), 0f, Mathf.Sin(rad)) * radius;
+                Gizmos.DrawLine(prev, next);
+                prev = next;
+            }
+        }
+
+        protected static void DrawGizmoCone(Vector3 center, Quaternion rotation, float range, float angle, int segments = 24)
+        {
+            float half = angle * 0.5f;
+            Vector3 prev = center + rotation * Quaternion.Euler(0f, -half, 0f) * Vector3.forward * range;
+
+            Gizmos.DrawLine(center, prev);
+            for (int i = 1; i <= segments; i++)
+            {
+                float a = Mathf.Lerp(-half, half, i / (float)segments);
+                Vector3 next = center + rotation * Quaternion.Euler(0f, a, 0f) * Vector3.forward * range;
+                Gizmos.DrawLine(prev, next);
+                prev = next;
+            }
+            Gizmos.DrawLine(prev, center);
+        }
+
+        protected static void DrawGizmoBox(Vector3 center, Quaternion rotation, Vector3 size)
+        {
+            Matrix4x4 old = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
+            Gizmos.DrawWireCube(Vector3.zero, size);
+            Gizmos.matrix = old;
+        }
+
+#endif
+
+        #endregion
+
         #region Damage
 
         protected void DamageInCircle(Vector3 center, float range, bool ignoreSelf = false)

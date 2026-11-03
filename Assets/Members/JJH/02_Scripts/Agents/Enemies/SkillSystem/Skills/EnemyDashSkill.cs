@@ -36,5 +36,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             foreach (Collider hit in hits)
                 ApplyDamage(hit);
         }
+
+#if UNITY_EDITOR
+
+        protected override void DrawRangeGizmo()
+        {
+            const float extra = 1.5f;
+            float length = SkillSO.Range + extra;
+
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.9f);
+            DrawGizmoBox(transform.position + transform.forward * (length * 0.5f),
+                         transform.rotation, new Vector3(2f, 0.1f, length));
+        }
+
+#endif
     }
 }
