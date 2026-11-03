@@ -39,6 +39,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             public AttackAreaKind Kind;
             public float StartTime;
             public float ExpireTime;
+
+            public bool HasFollow;
+            public Transform Follow;
+            public Vector3 LocalOffset;
+            public float YawOffset;
+            public bool FollowRotation;
         }
 
         [SerializeField, FormerlySerializedAs("player")]
@@ -119,10 +125,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             for (int i = _timed.Count - 1; i >= 0; i--)
             {
-                if (Time.time > _timed[i].ExpireTime)
+                TimedShape timed = _timed[i];
+
+                if (Time.time > timed.ExpireTime || (timed.HasFollow && timed.Follow == null))
+                {
                     _timed.RemoveAt(i);
-                else
-                    _frame.Add(_timed[i].Shape);
+                    continue;
+                }
+
+                if (timed.HasFollow)
+                {
+                    ApplyFollow(ref timed);
+                    _timed[i] = timed;
+                }
+
+                _frame.Add(timed.Shape);
             }
 
             // 플레이어가 나중에 생기거나 바뀌는 씬도 있어서, 비었으면 1초에 한 번 다시 찾아봄
@@ -144,18 +161,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 
         // 이 Visualizer 에 범위 하나 그림. 버스 듣는 애는 버스에서 자동으로 불림, 적은 직접 부르면 됨
-        public void Show(AttackArea area)
+        public void Show(AttackArea area) => Show(area, null, false);
+
+        public void Show(AttackArea area, Transform follow, bool followRotation = true)
         {
             if (IsDebug(area.Kind) && !showHitAreas)
                 return;
 
-            // 적 예고는 적마다 따로 떠야 해서 안 지움
             if (area.Kind == AttackAreaKind.WeaponWindup || area.Kind == AttackAreaKind.WeaponHit)
                 _timed.RemoveAll(timed => timed.Kind == area.Kind);
             else if (area.Kind == AttackAreaKind.Skill)
                 _timed.RemoveAll(timed => timed.Kind == area.Kind && Mathf.Approximately(timed.Shape.Size.x, area.Size.x) && Time.time - timed.StartTime < 0.1f);
 
-            _timed.Add(new TimedShape
+            float yaw = area.Rotation.eulerAngles.y;
+            var timedShape = new TimedShape
             {
                 Kind = area.Kind,
                 StartTime = Time.time,
@@ -165,13 +184,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     IsCircle = area.Shape == AttackAreaShape.Circle,
                     IsCone = area.Shape == AttackAreaShape.Cone,
                     Center = area.Center,
-                    Yaw = area.Rotation.eulerAngles.y,
+                    Yaw = yaw,
                     Size = area.Size,
                     Color = area.HasColor ? area.Color : GetColor(area.Kind),
                     HasGround = !followOwnerHeight,
                     GroundY = followOwnerHeight ? 0f : FindGroundY(area.Center)
                 }
-            });
+            };
+
+            if (follow != null)
+            {
+                timedShape.HasFollow = true;
+                timedShape.Follow = follow;
+                timedShape.FollowRotation = followRotation;
+                timedShape.LocalOffset = followRotation
+                    ? Quaternion.Inverse(follow.rotation) * (area.Center - follow.position)
+                    : area.Center - follow.position;
+                timedShape.YawOffset = yaw - follow.eulerAngles.y;
+            }
+
+            _timed.Add(timedShape);
         }
 
         private static readonly RaycastHit[] GroundHits = new RaycastHit[16];
@@ -258,6 +290,37 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float GroundY(Shape shape) =>
             (shape.HasGround ? shape.GroundY
                 : owner != null ? owner.transform.position.y : shape.Center.y) + groundOffset;
+
+        public void Translate(Vector3 delta)
+        {
+            for (int i = 0; i < _timed.Count; i++)
+            {
+                TimedShape timed = _timed[i];
+                timed.Shape.Center += delta;
+
+                if (timed.Shape.HasGround)
+                    timed.Shape.GroundY = FindGroundY(timed.Shape.Center);
+
+                _timed[i] = timed;
+            }
+        }
+
+        private void ApplyFollow(ref TimedShape timed)
+        {
+            Transform follow = timed.Follow;
+            Vector3 center = timed.FollowRotation
+                ? follow.position + follow.rotation * timed.LocalOffset
+                : follow.position + timed.LocalOffset;
+
+            timed.Shape.Center = center;
+
+            if (timed.FollowRotation)
+                timed.Shape.Yaw = follow.eulerAngles.y + timed.YawOffset;
+
+            // 밀려서 경사/단차 위로 이동해도 바닥에 붙도록 다시 찾음
+            if (timed.Shape.HasGround)
+                timed.Shape.GroundY = FindGroundY(center);
+        }
 
         private void Draw(Shape shape)
         {
