@@ -1,5 +1,3 @@
-using Members.KYR._01_Scripts.Stats;
-
 namespace Members.KYR._01.Scripts.Stats
 {
     public readonly struct StatModifier
