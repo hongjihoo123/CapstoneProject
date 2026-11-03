@@ -4358,6 +4358,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c3ba27bdb5fc47448d0215eb14d3e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.AgentRenderer
+  <OnDeadAnimation>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
+  <OnDeadObject>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!95 &519912066
 Animator:
   serializedVersion: 7
@@ -8453,6 +8459,10 @@ PrefabInstance:
     - target: {fileID: 1002, guid: 6b8e4d21a90c4f7e9c1b3a5d8e704216, type: 3}
       propertyPath: m_LocalScale.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2004, guid: 6b8e4d21a90c4f7e9c1b3a5d8e704216, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4284079103
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -15270,6 +15280,63 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 0
   m_IgnoreParentGroups: 0
+--- !u!1001 &1531422212
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 7.541929
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.61
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 8.250085
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2792491755160683338, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6962236216818172625, guid: f002405e7763a9444847ff57740055c3, type: 3}
+      propertyPath: m_Name
+      value: Poison_Bomb_Enemy
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f002405e7763a9444847ff57740055c3, type: 3}
 --- !u!1 &1567483866
 GameObject:
   m_ObjectHideFlags: 0
@@ -20606,6 +20673,8 @@ MonoBehaviour:
   pitch: 55
   yaw: 45
   smoothTime: 0.12
+  shakeFrequency: 22
+  shakeRollDegrees: 6
 --- !u!81 &2142679465
 AudioListener:
   m_ObjectHideFlags: 0
@@ -20819,3 +20888,4 @@ SceneRoots:
   - {fileID: 1488423930}
   - {fileID: 5064860568594268974}
   - {fileID: 899669648}
+  - {fileID: 1531422212}
