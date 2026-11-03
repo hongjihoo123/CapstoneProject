@@ -97,6 +97,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             _skillCooldowns[skillType] = Time.time + skillData.Cooltime;
         }
 
+        public void CancelAllSkills()
+        {
+            foreach (IEnemySkill skill in _skillDict.Values)
+                skill.CancelSkill();
+
+            AreaVisualizer.Hide();
+            LastSkillEndTime = Time.time;
+        }
+
         public bool IsSkillUsing()
         {
             return _skillDict.Values.Any(skill => skill.IsUsing);

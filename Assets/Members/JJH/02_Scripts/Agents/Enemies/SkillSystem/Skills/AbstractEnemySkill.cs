@@ -1,6 +1,7 @@
 ﻿using RobotWeapons;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
@@ -17,7 +18,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected AbstractEnemy _enemy;
         protected IEnemySkillModule _skillModule;
 
+        private readonly List<Coroutine> _subCoroutines = new List<Coroutine>();
         private Coroutine _skillCoroutine;
+
+        private int _playingVfxHash;
+        private bool _hasPlayingVfx;
 
         public virtual void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
         {
@@ -35,6 +40,21 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected abstract IEnumerator Execute();
 
+        public void CancelSkill()
+        {
+            if (!IsUsing)
+                return;
+
+            StopAllCoroutines();
+            _skillCoroutine = null;
+            IsUsing = false;
+
+            StopSkillVfx();
+            OnCancelled();
+        }
+
+        protected virtual void OnCancelled() { }
+
         private IEnumerator RunSkill()
         {
             IsUsing = true;
@@ -46,17 +66,32 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             {
                 IsUsing = false;
                 _skillCoroutine = null;
+                _hasPlayingVfx = false;
             }
+        }
+
+        protected void PlaySkillVfx()
+        {
+            if (SkillSO == null || SkillSO.VFXParam == null)
+                return;
+
+            _playingVfxHash = SkillSO.VFXParam.HashValue;
+            _hasPlayingVfx = true;
+            _enemy.VFXModule.PlayVfx(_playingVfxHash);
+        }
+
+        private void StopSkillVfx()
+        {
+            if (!_hasPlayingVfx)
+                return;
+
+            _enemy.VFXModule.StopVfx(_playingVfxHash);
+            _hasPlayingVfx = false;
         }
 
         protected virtual void OnDisable()
         {
-            if (_skillCoroutine != null)
-            {
-                StopCoroutine(_skillCoroutine);
-                _skillCoroutine = null;
-            }
-            IsUsing = false;
+            CancelSkill();
         }
 
         protected static IEnumerator Tick(float duration, Action<float> onTick)

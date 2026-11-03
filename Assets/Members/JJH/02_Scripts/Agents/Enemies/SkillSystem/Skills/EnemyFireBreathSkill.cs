@@ -23,7 +23,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             yield return new WaitForSeconds(prepare);
             yield return ExpandConeWarning(center, rotation, range, angle, expand);
 
-            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
+            PlaySkillVfx();
             DamageInCone(center, rotation, range, angle);
 
             yield return new WaitForSeconds(SkillSO.AttackDutation);

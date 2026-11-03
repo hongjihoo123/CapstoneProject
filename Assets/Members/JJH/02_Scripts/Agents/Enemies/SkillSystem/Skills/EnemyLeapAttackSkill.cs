@@ -60,8 +60,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             agent.enabled = true;
             agent.Warp(landing);
 
-            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
+            PlaySkillVfx();
             DamageInCircle(landing, leapDamageRange, ignoreSelf: true);
+        }
+
+        protected override void OnCancelled()
+        {
+            var agent = _skillModule.enemy.NavMeshAgent.NavMeshAgent;
+            if (agent != null && !agent.enabled)
+            {
+                agent.enabled = true;
+                if (agent.isOnNavMesh == false)
+                    agent.Warp(_enemy.transform.position);
+            }
         }
 
 #if UNITY_EDITOR

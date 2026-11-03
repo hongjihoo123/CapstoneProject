@@ -1,9 +1,8 @@
-using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.Agents;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -331,6 +330,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             for (int i = from; i < _pool.Count; i++)
                 _pool[i].gameObject.SetActive(false);
+        }
+
+        public void Hide()
+        {
+            _timed.Clear();
+            _frame.Clear();
+            HideUnused(0);
+        }
+
+        public void Hide(AttackAreaKind kind)
+        {
+            _timed.RemoveAll(timed => timed.Kind == kind);
+            _frame.Clear();
+            HideUnused(0);
         }
 
         private LineRenderer CreateLine()

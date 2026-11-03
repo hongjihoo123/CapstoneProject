@@ -12,7 +12,7 @@ namespace Members.JJH._02_Scripts.Agents
         public IRenderer Renderer { get; private set; }
         public ISensor Sensor { get; private set; }
         public IHealth Health { get; private set; }
-        public IVfxModule VFX { get; private set; }
+        public IVfxModule VFXModule { get; private set; }
 
         public virtual bool IsAlive { get => Health.CurrentHealth > 0; }
 
@@ -27,7 +27,7 @@ namespace Members.JJH._02_Scripts.Agents
             Health = GetModule<IHealth>();
             Debug.Assert(Health != null, $"{gameObject.name}에는 IHealth모듈이 필요합니다.");
 
-            VFX = GetModule<IVfxModule>();
+            VFXModule = GetModule<IVfxModule>();
         }
         public virtual void TakeDamage(float amount, GameObject source)
         {

@@ -56,6 +56,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         public void HandleOnDead()
         {
+            SkillModule.CancelAllSkills();
+            VFXModule?.StopAllVfx();
             _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
         }
 
@@ -86,6 +88,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             Debug.LogError($"BT???? ????? : {varName}");
             variable = null;
             return false;
+        }
+
+        public void StopBehavior()
+        {
+            if (BehaviorAgent != null)
+                BehaviorAgent.End();
         }
 
         #endregion
