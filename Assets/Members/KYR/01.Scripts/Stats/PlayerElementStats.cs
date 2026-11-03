@@ -1,6 +1,5 @@
 using System;
 using Members.JJH._02_Scripts.ElementsSystem;
-using Members.KYR._01_Scripts.Stats;
 
 namespace Members.KYR._01.Scripts.Stats
 {

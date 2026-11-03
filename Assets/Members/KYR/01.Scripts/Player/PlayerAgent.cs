@@ -9,6 +9,7 @@ using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Move;
 using Members.KYR._01_Scripts.FSM.Weapon;
 using Members.KYR._01.Scripts.Combat;
+using Members.KYR._01.Scripts.FSM.Control;
 using Members.KYR._01.Scripts.Modules;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;

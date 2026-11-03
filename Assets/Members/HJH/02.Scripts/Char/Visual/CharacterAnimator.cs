@@ -1,7 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01_Scripts;
-using Members.KYR._01_Scripts.Stats;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;

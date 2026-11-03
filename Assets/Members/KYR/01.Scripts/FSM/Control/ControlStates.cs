@@ -1,4 +1,5 @@
 using Members.KYR._01_Scripts.FSM.Core;
+using Members.KYR._01.Scripts.FSM.Control;
 using UnityEngine;
 
 namespace Members.KYR._01_Scripts.FSM.Control
