@@ -4358,6 +4358,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8c3ba27bdb5fc47448d0215eb14d3e80, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.AgentRenderer
+  <OnDeadAnimation>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
+  <OnDeadObject>k__BackingField:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!95 &519912066
 Animator:
   serializedVersion: 7
@@ -8453,6 +8459,10 @@ PrefabInstance:
     - target: {fileID: 1002, guid: 6b8e4d21a90c4f7e9c1b3a5d8e704216, type: 3}
       propertyPath: m_LocalScale.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2004, guid: 6b8e4d21a90c4f7e9c1b3a5d8e704216, type: 3}
+      propertyPath: m_fontColor32.rgba
+      value: 4284079103
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -20606,6 +20616,8 @@ MonoBehaviour:
   pitch: 55
   yaw: 45
   smoothTime: 0.12
+  shakeFrequency: 22
+  shakeRollDegrees: 6
 --- !u!81 &2142679465
 AudioListener:
   m_ObjectHideFlags: 0
@@ -20691,6 +20703,10 @@ PrefabInstance:
     - target: {fileID: 7361558277013265461, guid: d18c61cf9671e394b9c08c71bb912482, type: 3}
       propertyPath: m_Name
       value: TestEnemySpawner
+      objectReference: {fileID: 0}
+    - target: {fileID: 7361558277013265461, guid: d18c61cf9671e394b9c08c71bb912482, type: 3}
+      propertyPath: m_IsActive
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7460451474923687546, guid: d18c61cf9671e394b9c08c71bb912482, type: 3}
       propertyPath: m_LocalPosition.x
