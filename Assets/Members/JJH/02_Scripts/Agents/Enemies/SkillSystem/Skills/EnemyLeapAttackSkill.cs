@@ -60,6 +60,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             agent.enabled = true;
             agent.Warp(landing);
 
+            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
             DamageInCircle(landing, leapDamageRange, ignoreSelf: true);
         }
 
