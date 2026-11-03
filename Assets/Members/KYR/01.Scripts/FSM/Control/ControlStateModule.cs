@@ -1,10 +1,10 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01_Scripts.FSM.Control;
 using Members.KYR._01_Scripts.FSM.Core;
 using Members.KYR._01.Scripts.Player;
-using RobotWeapons;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.FSM.Control
+namespace Members.KYR._01.Scripts.FSM.Control
 {
     public class ControlStateModule : AbstractModule, IAfterInitModule
     {
