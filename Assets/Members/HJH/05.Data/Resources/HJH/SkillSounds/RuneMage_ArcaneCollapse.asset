@@ -1,0 +1,80 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: RuneMage_ArcaneCollapse
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: RuneMage_ArcaneCollapse
+  skill: {fileID: 11400000, guid: 1681823487d7aa840ad6015dc7e29d87, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Blink
+    trigger: 1
+    fxSlot: 
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.7
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'An arcane teleport: deep magical whoosh.'
+    promptDuration: 0.5
+    ambiguous: 0
+    note: "blinkDelay 0.25s \uC804"
+  - eventName: Blast
+    trigger: 1
+    fxSlot: 
+    time: 0.45
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.8
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'An arcane implosion blast: deep magical boom pulling inward.'
+    promptDuration: 0.8
+    ambiguous: 0
+    note: firstBlastTime 0.45s
+  - eventName: Blast
+    trigger: 1
+    fxSlot: 
+    time: 0.95
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.8
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'An arcane implosion blast: deep magical boom pulling inward.'
+    promptDuration: 0.8
+    ambiguous: 0
+    note: + blastInterval 0.5s
+  - eventName: Collapse
+    trigger: 1
+    fxSlot: 
+    time: 1.45
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.95
+    pitchRandom: 0.03
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A massive final arcane collapse: huge magical explosion with a deep
+      booming tail.'
+    promptDuration: 2
+    ambiguous: 0
+    note: "3\uBC88\uC9F8 = \uB9C8\uC9C0\uB9C9 \uD3ED\uBC1C x1.5"

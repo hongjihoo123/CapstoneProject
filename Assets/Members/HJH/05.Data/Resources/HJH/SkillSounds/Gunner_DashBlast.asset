@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Gunner_DashBlast
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Gunner_DashBlast
+  skill: {fileID: 11400000, guid: cec78dd4506eaee4c87e5bf5c3fba643, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Dash
+    trigger: 0
+    fxSlot: 
+    time: 0.083
+    fallbackDelay: 0.083
+    clip: {fileID: 0}
+    volume: 0.6
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A quick forward dash: short punchy whoosh.'
+    promptDuration: 0.5
+    ambiguous: 0
+    note: "WeaponSkill \uD074\uB9BD \uC190 \uC18D\uB3C4 \uAE09\uAC10 0.08s"
+  - eventName: Blast
+    trigger: 0
+    fxSlot: 
+    time: 0.208
+    fallbackDelay: 0.208
+    clip: {fileID: 0}
+    volume: 0.9
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A shotgun-like electric shock blast: powerful bang with crackling electricity.'
+    promptDuration: 1
+    ambiguous: 0
+    note: "\uC5C9\uB369\uC774 \uC774\uB3D9 \uBA48\uCDA4 0.21s = \uCF54\uB4DC dashTime
+      0.18s \uC640 \uAC70\uC758 \uAC19\uC74C"

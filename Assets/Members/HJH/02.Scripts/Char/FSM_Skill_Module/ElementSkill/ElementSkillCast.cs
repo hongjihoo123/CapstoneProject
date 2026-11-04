@@ -176,15 +176,35 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         // scale: 범위 있는 이펙트(폭발, 장판, 벽)는 프리팹을 반지름 2m 기준으로 만들어서 범위에 맞춰 키움
         public const float AuthoredRadius = 2f;
 
+        // 이펙트 칸이 터질 때마다 알림 (스킬, 칸, 위치). 스킬별 소리(SkillSoundPlayer)가 파티클 시점에 맞춰 울림
+        public static event System.Action<ElementSkillBase, FxSlot, Vector3> FxPlayed;
+
         public void Play(FxSlot slot, Vector3 position, Vector3 direction, float scale = 1f)
         {
-            if (slot != null && slot.IsSet)
-                Fx.Spawn(slot.prefab, position, Facing(direction), scale, TintOf(slot));
+            if (slot == null || !slot.IsSet)
+                return;
+            Fx.Spawn(slot.prefab, position, Facing(direction), scale, TintOf(slot));
+            NotifyFx(slot, position);
         }
 
         // 붙잡아두는 이펙트 (예고, 버프 오라). 다 쓰면 Kill() 해줘야 함
-        public FxHandle Hold(FxSlot slot, Vector3 position, Vector3 direction, float scale = 1f) =>
-            slot != null && slot.IsSet ? Fx.HoldPrefab(slot.prefab, position, Facing(direction), scale, TintOf(slot)) : null;
+        public FxHandle Hold(FxSlot slot, Vector3 position, Vector3 direction, float scale = 1f)
+        {
+            if (slot == null || !slot.IsSet)
+                return null;
+            FxHandle handle = Fx.HoldPrefab(slot.prefab, position, Facing(direction), scale, TintOf(slot));
+            NotifyFx(slot, position);
+            return handle;
+        }
+
+        // 듣는 쪽(소리) 오류가 스킬 코드로 올라오지 않게
+        private void NotifyFx(FxSlot slot, Vector3 position)
+        {
+            if (FxPlayed == null)
+                return;
+            try { FxPlayed(Skill, slot, position); }
+            catch (System.Exception e) { Debug.LogException(e); }
+        }
 
         public Color TintOf(FxSlot slot) => slot.tint ? Color : Color.white;
 

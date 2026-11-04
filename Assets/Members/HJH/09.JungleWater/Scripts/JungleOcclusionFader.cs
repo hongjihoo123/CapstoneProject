@@ -29,11 +29,37 @@ namespace Assets.Members.HJH.Environment
         private sealed class Entry
         {
             public Renderer Renderer;
+            // 나무는 안 움직이니 박스를 Scan 때 저장해 둠 (renderer.bounds 는 엔진 호출이라 매 프레임 부르면 비쌈)
+            public Bounds Bounds;
             public float Alpha = 1f;
         }
 
         [Tooltip("스킬이 터진 자리 위 나무를 반투명하게 두는 시간 (초)")]
         [SerializeField] private float impactFadeSeconds = 2f;
+
+        // ---- 바위 (2026-11-02): 큰 바위가 카메라를 가리면 반투명 머티리얼로 바꿔 끼움
+        //  - 바위 셰이더(SG_PBR)엔 _Fade 가 없어서, Resources/HJH/RockFade/<원본>_Fade 반투명 복사본으로 교체 (HJH/Map/Rocks 메뉴가 만듦)
+        //  - 큰 절벽은 바운딩 박스가 커서 상자 검사로는 늘 가린다고 나옴 → 실제 콜라이더에 광선을 쏴서 판정
+        [Header("Rocks")]
+        [Tooltip("이보다 작은 바위는 안 투명해짐 (m)")]
+        [SerializeField] private float rockMinSize = 3f;
+        [SerializeField, Range(0f, 1f)] private float rockFadedAlpha = 0.3f;
+
+        private sealed class RockEntry
+        {
+            public Renderer Renderer;
+            public Material[] Original;
+            public Material[] Faded;
+            public float Alpha = 1f;
+            public bool Swapped;
+            public bool Blocking;
+        }
+
+        private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
+        private readonly List<RockEntry> _rocks = new();
+        private readonly Dictionary<Collider, RockEntry> _rockByCollider = new();
+        private readonly Dictionary<Material, Material> _fadeCopies = new();
+        private readonly RaycastHit[] _rockHits = new RaycastHit[16];
 
         private readonly List<(Ray ray, float length, float width)> _sights = new();
         private readonly List<(Vector3 point, float radius, float until)> _impacts = new();
@@ -88,24 +114,31 @@ namespace Assets.Members.HJH.Environment
             _sights.Clear();
             AddSight(from, target.position + Vector3.up * targetHeight, margin);
             float now = Time.unscaledTime;
-            _impacts.RemoveAll(i => now > i.until);
+            for (int i = _impacts.Count - 1; i >= 0; i--)
+                if (now > _impacts[i].until)
+                    _impacts.RemoveAt(i);
             foreach ((Vector3 point, float radius, float _) in _impacts)
                 AddSight(from, point + Vector3.up, Mathf.Max(margin, radius));
+
+            // 모든 선을 감싸는 큰 상자. 이 밖의 나무는 정밀 검사(IntersectRay, 엔진 호출)를 건너뜀
+            var area = new Bounds(from, Vector3.zero);
+            float widest = 0f;
+            foreach ((Ray ray, float length, float width) in _sights)
+            {
+                area.Encapsulate(ray.GetPoint(length));
+                widest = Mathf.Max(widest, width);
+            }
+            area.Expand(widest * 2f);
 
             float step = fadeSpeed * Time.unscaledDeltaTime;
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 Entry e = _entries[i];
-                if (e.Renderer == null)
-                {
-                    _entries.RemoveAt(i);
-                    continue;
-                }
-
                 bool blocking = false;
+                if (area.Intersects(e.Bounds))
                 foreach ((Ray ray, float length, float width) in _sights)
                 {
-                    Bounds b = e.Renderer.bounds;
+                    Bounds b = e.Bounds;
                     b.Expand(width * 2f);
                     if (b.IntersectRay(ray, out float hitDistance) && hitDistance < length)
                     {
@@ -118,11 +151,116 @@ namespace Assets.Members.HJH.Environment
                 if (Mathf.Approximately(e.Alpha, goal))
                     continue;
 
+                // 지워진 렌더러는 값을 바꿀 때만 확인 (null 확인도 엔진 호출이라 전부에 매 프레임 하지 않음)
+                if (e.Renderer == null)
+                {
+                    _entries.RemoveAt(i);
+                    continue;
+                }
+
                 e.Alpha = Mathf.MoveTowards(e.Alpha, goal, step);
                 e.Renderer.GetPropertyBlock(_block);
                 _block.SetFloat(FadeId, e.Alpha);
                 e.Renderer.SetPropertyBlock(_block);
             }
+
+            UpdateRocks(step);
+        }
+
+        // 카메라 → 플레이어(·스킬 자리) 선마다 광선 3개(가운데·양옆)를 바위 콜라이더에 쏴서 가리는 바위를 찾음
+        private void UpdateRocks(float step)
+        {
+            if (_rocks.Count == 0)
+                return;
+
+            foreach (RockEntry rock in _rocks)
+                rock.Blocking = false;
+
+            // 카메라가 바위 속에 들어가 있어도 맞게 (메시 콜라이더 안쪽 면도 맞힘)
+            bool backfaces = Physics.queriesHitBackfaces;
+            Physics.queriesHitBackfaces = true;
+            Vector3 side = _camera != null ? _camera.transform.right : transform.right;
+            foreach ((Ray ray, float length, float width) in _sights)
+            {
+                Vector3 end = ray.GetPoint(length);
+                MarkBlocking(ray.origin, end);
+                MarkBlocking(ray.origin, end + side * width * 0.6f);
+                MarkBlocking(ray.origin, end - side * width * 0.6f);
+            }
+            Physics.queriesHitBackfaces = backfaces;
+
+            foreach (RockEntry rock in _rocks)
+            {
+                float goal = rock.Blocking ? rockFadedAlpha : 1f;
+                if (Mathf.Approximately(rock.Alpha, goal) || rock.Renderer == null)
+                    continue;
+
+                rock.Alpha = Mathf.MoveTowards(rock.Alpha, goal, step);
+                if (rock.Alpha >= 0.999f)
+                {
+                    // 다 돌아왔으면 원래 머티리얼로 (불투명 + SRP 배칭 그대로)
+                    rock.Renderer.sharedMaterials = rock.Original;
+                    rock.Renderer.SetPropertyBlock(null);
+                    rock.Swapped = false;
+                    continue;
+                }
+
+                if (!rock.Swapped)
+                {
+                    rock.Renderer.sharedMaterials = rock.Faded;
+                    rock.Swapped = true;
+                }
+                _block.Clear();
+                _block.SetColor(BaseColorId, new Color(1f, 1f, 1f, rock.Alpha));
+                rock.Renderer.SetPropertyBlock(_block);
+            }
+        }
+
+        private void MarkBlocking(Vector3 from, Vector3 to)
+        {
+            Vector3 dir = to - from;
+            float length = dir.magnitude;
+            if (length < 0.01f)
+                return;
+            int count = Physics.RaycastNonAlloc(from, dir / length, _rockHits, length, ~0, QueryTriggerInteraction.Ignore);
+            for (int i = 0; i < count; i++)
+                if (_rockByCollider.TryGetValue(_rockHits[i].collider, out RockEntry rock))
+                    rock.Blocking = true;
+        }
+
+        // 큰 바위 + 반투명 복사본이 있는 머티리얼 + 콜라이더가 있으면 등록
+        private bool TryAddRock(Renderer r)
+        {
+            if (r is not MeshRenderer || !r.TryGetComponent(out Collider collider))
+                return false;
+            Vector3 size = r.bounds.size;
+            if (Mathf.Max(size.x, size.y, size.z) < rockMinSize)
+                return false;
+
+            Material[] original = r.sharedMaterials;
+            var faded = new Material[original.Length];
+            bool any = false;
+            for (int i = 0; i < original.Length; i++)
+            {
+                faded[i] = FadeCopyOf(original[i]) ?? original[i];
+                any |= faded[i] != original[i];
+            }
+            if (!any)
+                return false;
+
+            var rock = new RockEntry { Renderer = r, Original = original, Faded = faded };
+            _rocks.Add(rock);
+            _rockByCollider[collider] = rock;
+            return true;
+        }
+
+        private Material FadeCopyOf(Material source)
+        {
+            if (source == null)
+                return null;
+            if (!_fadeCopies.TryGetValue(source, out Material copy))
+                _fadeCopies[source] = copy = Resources.Load<Material>("HJH/RockFade/" + source.name + "_Fade");
+            return copy;
         }
 
         private void AddSight(Vector3 from, Vector3 to, float width)
@@ -140,14 +278,37 @@ namespace Assets.Members.HJH.Environment
 
         private void Scan()
         {
+            // 이미 아는 것: 지워졌으면 빼고, 남은 건 박스를 새로 (옮겨진 나무가 있어도 다음 Scan 에 맞춰짐)
+            for (int i = _entries.Count - 1; i >= 0; i--)
+            {
+                Entry e = _entries[i];
+                if (e.Renderer == null)
+                    _entries.RemoveAt(i);
+                else
+                    e.Bounds = e.Renderer.bounds;
+            }
+            _known.RemoveWhere(r => r == null);
+
             foreach (Renderer r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                if (_known.Contains(r) || !HasFade(r))
+                if (_known.Contains(r))
                     continue;
-                _known.Add(r);
-                _entries.Add(new Entry { Renderer = r });
+                if (HasFade(r))
+                {
+                    _known.Add(r);
+                    _entries.Add(new Entry { Renderer = r, Bounds = r.bounds });
+                }
+                else if (!_rockRejected.Contains(r))
+                {
+                    if (TryAddRock(r))
+                        _known.Add(r);
+                    else
+                        _rockRejected.Add(r);   // 바위 아님 → 다음 Scan 때 다시 안 봄
+                }
             }
         }
+
+        private readonly HashSet<Renderer> _rockRejected = new();
 
         private static bool HasFade(Renderer r)
         {
@@ -168,6 +329,16 @@ namespace Assets.Members.HJH.Environment
                 _block.SetFloat(FadeId, 1f);
                 e.Renderer.SetPropertyBlock(_block);
                 e.Alpha = 1f;
+            }
+
+            foreach (RockEntry rock in _rocks)
+            {
+                if (rock.Renderer == null || !rock.Swapped)
+                    continue;
+                rock.Renderer.sharedMaterials = rock.Original;
+                rock.Renderer.SetPropertyBlock(null);
+                rock.Swapped = false;
+                rock.Alpha = 1f;
             }
         }
     }

@@ -46,6 +46,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _stopTime;
         private float _playTime;
 
+        // 타임라인 연출 프리팹 (이펙트·소리를 프레임 단위로 배치한 것). 있으면 파티클 재생·끝 판단을 타임라인이 맡음
+        private UnityEngine.Playables.PlayableDirector _director;
+        private AudioSource[] _audio;
+
         public bool Held { get; private set; }
 
         // Test tools (FxWorkbench) can hand back an edited copy to play instead of the prefab file.
@@ -208,6 +212,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         // Cut whatever is still showing so the copy can start over cleanly.
         private void ResetForReuse()
         {
+            if (_director != null)
+                _director.Stop();
             foreach (ParticleSystem system in _systems)
                 system.Stop(false, ParticleSystemStopBehavior.StopEmittingAndClear);
             foreach (TrailRenderer trail in _trails)
@@ -231,6 +237,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 trail.emitting = false;
             foreach (IFxDriver driver in _drivers)
                 driver.Stop();
+            // 유지형 타임라인(반복)은 여기서 멈춤. 한 번짜리는 끝까지 틀게 둠
+            if (_director != null && _director.extrapolationMode == UnityEngine.Playables.DirectorWrapMode.Loop)
+                _director.Stop();
         }
 
         private void Play(in FxParams parameters)
@@ -243,6 +252,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             foreach (IFxDriver driver in _drivers)
                 driver.Play(parameters);
+
+            // 이펙트에 붙은 소리: 공통 효과음 음소거(muted)와 따로 켜고 끔 (muteFxSounds)
+            bool muted = Audio.Sfx.Bank != null && Audio.Sfx.Bank.muteFxSounds;
+            foreach (AudioSource source in _audio)
+                source.mute = muted;
+
+            if (_director != null)
+            {
+                // 파티클 켜고 끄기·소리는 타임라인 트랙이 프레임에 맞춰 함
+                _director.time = 0;
+                _director.Play();
+                return;
+            }
 
             foreach (ParticleSystem system in _systems)
             {
@@ -286,6 +308,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private bool IsFinished()
         {
+            if (_director != null && _director.state == UnityEngine.Playables.PlayState.Playing)
+                return false;
+
             foreach (ParticleSystem system in _systems)
             {
                 if (system.IsAlive(false))
@@ -390,6 +415,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _meshes = GetComponentsInChildren<MeshRenderer>(true);
             _drivers = GetComponentsInChildren<IFxDriver>(true);
             _block = new MaterialPropertyBlock();
+
+            _director = GetComponent<UnityEngine.Playables.PlayableDirector>();
+            _audio = GetComponentsInChildren<AudioSource>(true);
+            if (_director != null)
+            {
+                _director.playOnAwake = false;
+                _director.timeUpdateMode = UnityEngine.Playables.DirectorUpdateMode.GameTime;   // 히트스톱·슬로모션 따라감
+            }
         }
 
         private static ParticleSystem.MinMaxGradient Multiply(ParticleSystem.MinMaxGradient gradient, Color tint)

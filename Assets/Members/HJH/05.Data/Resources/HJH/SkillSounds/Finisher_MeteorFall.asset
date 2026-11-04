@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Finisher_MeteorFall
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Finisher_MeteorFall
+  skill: {fileID: 11400000, guid: 565770da0cf091176c9a56c9774a6d13, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Release
+    trigger: 0
+    fxSlot: 
+    time: 0.6
+    fallbackDelay: 0.14999995
+    clip: {fileID: 0}
+    volume: 0.6
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A fire spell summoning upward: rising flame whoosh.'
+    promptDuration: 0.5
+    ambiguous: 1
+    note: "Cast_Sky \uBD09\uC6B0\uB9AC \uC5C6\uC74C \u2192 release 0.60"
+  - eventName: Fall
+    trigger: 2
+    fxSlot: windupFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.7
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A meteor whistling down from the sky: burning roar growing louder.'
+    promptDuration: 0.7
+    ambiguous: 0
+    note: "windupFx 0s, delay 0.6s \uB4A4 \uCDA9\uB3CC"
+  - eventName: Impact
+    trigger: 2
+    fxSlot: impactFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.95
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A massive meteor impact explosion: deep boom with a fiery blast and
+      rock debris.'
+    promptDuration: 1.5
+    ambiguous: 0
+    note: impactFx burst 0s

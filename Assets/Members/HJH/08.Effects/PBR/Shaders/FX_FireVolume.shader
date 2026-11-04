@@ -22,6 +22,9 @@ Shader "HJH/FX/FireVolume"
         [Toggle] _Toon ("Toon (계단 색 + 또렷한 외곽)", Float) = 0
         _SootShadow ("Soot Shadow (카툰 연기 그림자 면)", Color) = (0.1, 0.07, 0.11, 1)
         _AlphaCut ("Alpha Cut (카툰 외곽 위치)", Range(0.05, 0.9)) = 0.3
+        _GlowCut ("Glow Cut", Range(0.02, 0.6)) = 0.08
+        _StepSoft ("Toon Step Softness (계단 경계 부드럽게)", Range(0.005, 0.2)) = 0.02
+        _HotCut ("Toon Hot Cut (흰 심지 시작 온도)", Range(0.2, 0.95)) = 0.55
     }
 
     SubShader
@@ -60,6 +63,9 @@ Shader "HJH/FX/FireVolume"
                 float _Toon;
                 half4 _SootShadow;
                 float _AlphaCut;
+                float _GlowCut;
+                float _StepSoft;
+                float _HotCut;
             CBUFFER_END
 
             half4 frag(FxVaryings i) : SV_Target
@@ -76,14 +82,14 @@ Shader "HJH/FX/FireVolume"
                 {
                     // 카툰(젠존제 풍): 색이 계단으로 끊기고 가장자리가 또렷함
                     //  불 = 흰노랑 심지 / 주황 / 진한 빨강 3단, 연기 = 밝은 면·그림자 면 2단
-                    half w = 0.02;
+                    half w = _StepSoft;
                     fire = _CoolColor.rgb;
                     fire = lerp(fire, _MidColor.rgb, smoothstep(0.22 - w, 0.22 + w, temp));
-                    fire = lerp(fire, _HotColor.rgb, smoothstep(0.55 - w, 0.55 + w, temp));
+                    fire = lerp(fire, _HotColor.rgb, smoothstep(_HotCut - w, _HotCut + w, temp));
                     fire *= _Intensity * i.color.rgb;
-                    glow = smoothstep(0.08 - w, 0.08 + w, temp);
+                    glow = smoothstep(_GlowCut - w, _GlowCut + w, temp);
                     soot = lerp(_SootShadow.rgb, _SmokeColor.rgb, smoothstep(0.45 - w, 0.45 + w, shade));
-                    alpha = smoothstep(_AlphaCut - 0.03, _AlphaCut + 0.03, alpha);   // 만화처럼 칼같은 외곽
+                    alpha = smoothstep(_AlphaCut - 0.03 - w, _AlphaCut + 0.03 + w, alpha);   // 만화처럼 칼같은 외곽
                 }
                 else
                 {

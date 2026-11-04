@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Electric_Flash
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Electric_Flash
+  skill: {fileID: 11400000, guid: 747f9ab8114ba4bfe32b93c11f417be3, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Depart
+    trigger: 2
+    fxSlot: castFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.75
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'An instant lightning teleport: sharp electric zap with a thunder snap.'
+    promptDuration: 0.5
+    ambiguous: 0
+    note: "\uC21C\uAC04\uC774\uB3D9\uC774\uB77C \uBAB8 \uB3D9\uC791 \uB300\uC2E0
+      castFx 0s"
+  - eventName: Arrive
+    trigger: 2
+    fxSlot: impactFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.85
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A lightning strike landing burst: electric explosion crackle.'
+    promptDuration: 0.8
+    ambiguous: 0
+    note: "\uB3C4\uCC29 impactFx burst 0s"

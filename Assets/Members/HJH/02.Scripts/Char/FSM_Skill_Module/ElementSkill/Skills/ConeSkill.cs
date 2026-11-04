@@ -14,6 +14,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField] private float length = 5f;
         [SerializeField, Tooltip("전체 각도")] private float angle = 70f;
 
+        protected override CastMotion DefaultMotion => CastMotion.Sweep;
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             Vector3 apex = cast.Position;

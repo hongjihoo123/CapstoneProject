@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Char.Audio;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using UnityEngine;
@@ -74,6 +75,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Vector3 feet = caster.transform.position;
 
             LightFlash.Flash(feet + Vector3.up * 1.2f, color, 3f + 2f * w, 2f + 2f * w, 0.25f);
+            PlayCastSound(skill, feet, w);
 
             if (w >= 1.2f)
             {
@@ -107,6 +109,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Color color = skill != null ? skill.FxColor : Color.white;
 
             LightFlash.Flash(position + Vector3.up * 1.2f, color, radius * 2.5f + 3f, 3f + 3f * w, 0.32f);
+            PlayImpactSound(skill, position, w);
             ScreenPulse.Play(color, Mathf.Clamp(0.12f * w + radius * 0.05f, 0.15f, 0.7f), 0.3f);
 
             // 원소 스킬은 원소별 겹 연출(ElementFlair)이 따로 있어서 기본 링은 원소 아닌 스킬만
@@ -122,5 +125,46 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (w >= 1.9f && radius >= 2f)
                 HitFeel.SlowMo(0.4f, 0.25f);
         }
+
+        // ------------------------------------------------ 소리
+        // 원소 스킬은 원소별 소리, 그 밖(궁극기·캐릭터 전용 스킬)은 공통 소리. 무거운 스킬일수록 크고 낮게
+
+        // 이펙트 칸에 타임라인 연출(소리 포함)이 들어 있으면 그게 소리를 내니까 공통 소리는 안 냄 (겹침 방지)
+        private static readonly Dictionary<GameObject, bool> OwnAudio = new();
+
+        private static bool HasOwnAudio(FxSlot slot)
+        {
+            if (slot == null || slot.prefab == null)
+                return false;
+            if (!OwnAudio.TryGetValue(slot.prefab, out bool has))
+                OwnAudio[slot.prefab] = has = slot.prefab.GetComponentInChildren<AudioSource>(true) != null;
+            return has;
+        }
+
+        private static void PlayCastSound(SkillData skill, Vector3 at, float w)
+        {
+            SfxBank bank = Sfx.Bank;
+            if (bank == null || skill is ElementSkillBase e && HasOwnAudio(e.CastFx) || SkillSoundPlayer.ReplacesGenericCast(skill))
+                return;   // 이 스킬 전용 소리(SkillSoundData)가 있으면 그게 냄
+            SfxCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.cast : null;
+            SfxCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 시전음
+            Sfx.Play(cue ?? bank.skillCast, at, Mathf.Clamp(0.6f + 0.25f * w, 0.6f, 1f), PitchOf(w));
+            Sfx.Announce(own);   // 소리 고르기 창: 대신 쓴 공통 소리가 아니라 이 원소 칸으로 따라가게
+        }
+
+        private static void PlayImpactSound(SkillData skill, Vector3 at, float w)
+        {
+            SfxBank bank = Sfx.Bank;
+            if (bank == null || skill is ElementSkillBase e && HasOwnAudio(e.ImpactFx) || SkillSoundPlayer.ReplacesGenericImpact(skill))
+                return;
+            SfxCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.impact : null;
+            SfxCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 폭발음
+            Sfx.Play(cue ?? bank.skillImpact, at, Mathf.Clamp(0.65f + 0.2f * w, 0.65f, 1f), PitchOf(w));
+            if (w >= 1.5f)
+                Sfx.Play(bank.heavyImpact, at, Mathf.Clamp01(w - 1f));
+            Sfx.Announce(own);
+        }
+
+        private static float PitchOf(float w) => Mathf.Clamp(1.12f - 0.12f * w, 0.85f, 1.08f);
     }
 }

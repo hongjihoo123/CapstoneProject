@@ -14,6 +14,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         public bool IsSet => prefab != null;
     }
 
+    // 스킬 쓸 때 캐릭터 몸 동작 (Gunner.controller 의 Cast_<이름> 상태). Auto = 스킬 모양에 맞춰 자동
+    public enum CastMotion { Auto, None, Forward, Sweep, Ground, Sky, Self }
+
     // 원소 스킬(교체 스킬) 공통 부모. 스킬 모양마다 자식 클래스 하나씩 있음 (Skills 폴더)
     //   CircleSkill, ProjectileSkill, LineSkill, ConeSkill, ZoneSkill, DashSkill, SelfSkill
     // 여기엔 모든 모양이 다 쓰는 것만 있음: 맞은 적한테 할 것, 손맛, 이펙트
@@ -32,6 +35,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("맞았을 때 화면 멈추는 시간 (많이 맞히면 더 길어짐)")] private float hitStop = 0.05f;
         [SerializeField, Tooltip("맞았을 때 화면 흔들림")] private float shake = 0.2f;
         [SerializeField, Tooltip("쓰는 순간 화면 흔들림 + 살짝 줌 (맞든 안 맞든). 0 = 없음")] private float castShake;
+
+        [Header("몸 동작")]
+        [SerializeField, Tooltip("Auto: 투사체·직선 = 앞으로 쏘기, 부채꼴 = 휩쓸기, 낙하(지연) = 하늘 부르기, 원·장판 = 땅 찍기, 자기 강화 = 두 손 모으기, 돌진 = 대시 동작")]
+        private CastMotion castMotion = CastMotion.Auto;
 
         [Header("이펙트")]
         [SerializeField, Tooltip("쓸 때 내 손/몸에서")] private FxSlot castFx = new();
@@ -53,6 +60,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         public FxSlot HitFx => hitFx;
         public FxSlot StatusFx => statusFx;
         public bool HideMagicCircle => hideMagicCircle;
+        public CastMotion Motion => castMotion != CastMotion.Auto ? castMotion : DefaultMotion;
+
+        // 스킬 모양별 기본 몸 동작 (모양 클래스에서 바꿈)
+        protected virtual CastMotion DefaultMotion => CastMotion.Forward;
 
         // 이펙트 색 = 원소 색 (에셋에서 fxColor 따로 정하면 그거)
         protected override Color DefaultFxColor =>

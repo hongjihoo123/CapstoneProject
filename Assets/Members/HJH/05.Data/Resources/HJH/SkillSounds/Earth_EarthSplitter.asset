@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Earth_EarthSplitter
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Earth_EarthSplitter
+  skill: {fileID: 11400000, guid: 7a8ac3d2a74a275fcc3974f90f6b015c, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Release
+    trigger: 0
+    fxSlot: 
+    time: 0.8
+    fallbackDelay: 0.14999992
+    clip: {fileID: 0}
+    volume: 0.65
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A forceful earth magic thrust: short stone crack and low ground thump.'
+    promptDuration: 0.6
+    ambiguous: 0
+    note: Cast_Forward 0.80s
+  - eventName: Eruption
+    trigger: 2
+    fxSlot: impactFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.85
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.5
+    prompt: A line of jagged stone spikes erupting from the ground in rapid sequence,
+      rock ripping and cracking, rumbling tail.
+    promptDuration: 1.2
+    ambiguous: 0
+    note: "\uCCAB impactFx(burst 0s)\uC5D0\uC11C \uD55C \uBC88\uB9CC (minInt 0.5)"

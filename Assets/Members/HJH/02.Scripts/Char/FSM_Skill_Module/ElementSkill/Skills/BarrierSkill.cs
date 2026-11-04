@@ -27,6 +27,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("벽 모양 이펙트. 벽 기준 앞 = +Z, 폭 = X")] private FxSlot barrierFx = new();
         [SerializeField, Tooltip("투사체 막을 때 그 자리에서")] private FxSlot blockFx = new();
 
+        protected override CastMotion DefaultMotion => CastMotion.Self;
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             Vector3 aim = cast.Aim(distance, out float reach);
