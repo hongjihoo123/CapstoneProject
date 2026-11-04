@@ -1,298 +1,300 @@
-# 스킬 효과음 배치 결과 (2026-11-03)
+# 스킬 효과음 배치 결과 (2026-11-04)
 
-시점 = 기준 순간 + 초. **Anim** = 몸 동작 클립 이벤트 `PlaySkillSound(이벤트)` (클립 안 시각. Cast_* 클립은 게임에서 손 뻗기 0.15s 전부터 틀어서, 실제로는 시전 0.15s 뒤에 울림) · **Fx** = 그 이펙트 칸이 터진 뒤 · **시전** = 스킬 쓴 뒤 · **충돌** = 범위 공격이 닿은 뒤
+소리는 ElevenLabs 생성 대신 **받아 둔 무료 효과음을 잘라서** 넣음 (ElevenLabs 무료 사용이 계정에서 막힘). 원본·자른 구간: `SkillSoundSources.tsv`
 
-파일 위치: `Assets/Audio/SFX/Skills/` · ⚠ = 타이밍 추정이 애매했던 소리
+시점: **Anim** = 몸 동작 클립 이벤트 `PlaySkillSound(이벤트)` (클립 안 시각. Cast_* 클립은 손 뻗기 0.15s 전부터 틀어서 실제로는 시전 0.15s 뒤) · **칸 +s** = 그 이펙트가 터진 뒤 · **시전 +s** = 스킬 쓴 뒤 · **충돌 +s** = 범위 공격이 닿은 뒤
+
+파일: `Assets/Audio/SFX/Skills/` · ⚠ = 타이밍 추정이 애매했던 소리 · 출처 MS = Magic Spell SFX(CC BY 4.0), Hove = Hove Audio, Kenney = CC0, SciFiUI = Hove Sci-Fi UI
 
 
 ### Earth_Boulder
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A heavy boulder hurled forward: deep stone grinding scrape into a low rumbling whoosh. (0.8s) | `Earth_Boulder_Release.wav` | Cast_Forward 손 끝 속도 급감 0.80s (CastMotions release 0.80과 일치) |
-| 시전 +0.05s | A large rock rolling and tumbling fast across the ground, gravel crunching, about one second. (1s, 0.9s 유지) | `Earth_Boulder_Roll.wav` | ⚠ 비행시간 = 거리/11 (최대 0.9s) — 커서 거리마다 달라서 길이 고정이 애매 |
-| hitFx +0s | A boulder slamming into a body: heavy stone thud followed by crumbling rock debris. (0.7s) | `Earth_Boulder_Hit.wav` | FX_Earth_PbrHit burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 흙 마법 휙 | `Earth_Boulder_Release.wav` | MS earth_spell_cast_magic_whoosh_01.ogg | Cast_Forward 손 끝 속도 급감 0.80s (CastMotions release 0.80과 일치) |
+| 시전 +0.05s | 돌 굴러가는 소리 (비행 0.9s) | `Earth_Boulder_Roll.wav` | MS earth_spell_cast_falling_rocks_02.ogg | ⚠ 비행시간 = 거리/11 (최대 0.9s) — 커서 거리마다 달라서 길이 고정이 애매 |
+| hitFx +0s | 돌 둔탁한 충돌 | `Earth_Boulder_Hit.wav` | MS earth_spell_cast_stone_dry_impact_01.ogg | FX_Earth_PbrHit burst 0s |
 
 ### Earth_EarthSplitter
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A forceful earth magic thrust: short stone crack and low ground thump. (0.6s) | `Earth_EarthSplitter_Release.wav` | Cast_Forward 0.80s |
-| impactFx +0s | A line of jagged stone spikes erupting from the ground in rapid sequence, rock ripping and cracking, rumbling tail. (1.2s) | `Earth_EarthSplitter_Eruption.wav` | 첫 impactFx(burst 0s)에서 한 번만 (minInt 0.5) |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 흙 마법 휙 | `Earth_EarthSplitter_Release.wav` | MS earth_spell_cast_magic_whoosh_02.ogg | Cast_Forward 0.80s |
+| impactFx +0s | 바위 솟구침 | `Earth_EarthSplitter_Eruption.wav` | MS earth_spell_cast_rise_rocks_03.ogg | 첫 impactFx(burst 0s)에서 한 번만 (minInt 0.5) |
 
 ### Earth_Earthquake
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.367s | A heavy foot stomp on stone ground: deep thump with a sharp earth crack. (0.7s) | `Earth_Earthquake_Stomp.wav` | Cast_Ground 엉덩이 하강 멈춤(착지) 1.37s |
-| zoneFx +0s | A continuous earthquake: deep ground rumble, rocks rattling and cracking, steady shaking for three seconds then fading out. (3s, 3s 유지) | `Earth_Earthquake_Quake.wav` | zoneFx 반복 파티클 zoneTime 3s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.367s | 땅 내려찍기 + 돌 부스러기 | `Earth_Earthquake_Stomp.wav` | MS earth_spell_cast_impact_ground_rock_debris_02.ogg | Cast_Ground 엉덩이 하강 멈춤(착지) 1.37s |
+| zoneFx +0s | 지진 울림 (장판 3s) | `Earth_Earthquake_Quake.wav` | MS earth_spell_cast_earthquake_power_03.ogg | zoneFx 반복 파티클 zoneTime 3s |
 
 ### Earth_EarthSmash
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A massive fist smash into the earth: explosive rock burst, stone spikes erupting, debris raining down. (1.2s) | `Earth_EarthSmash_Slam.wav` | ⚠ 손이 땅 치는 1.27s(게임 +0.15s) vs impactFx burst 0s — 0.15s 어긋나서 손 동작 쪽으로 맞춤 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 큰 땅 폭발 | `Earth_EarthSmash_Slam.wav` | MS earth_spell_cast_meteor_explosion_02.ogg | ⚠ 손이 땅 치는 1.27s(게임 +0.15s) vs impactFx burst 0s — 0.15s 어긋나서 손 동작 쪽으로 맞춤 |
 
 ### Earth_GraspOfEarth
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.6s | A summoning magic gesture: low earthy rumble swelling up with a soft stone grind. (0.6s) | `Earth_GraspOfEarth_Release.wav` | ⚠ Cast_Sky 는 손 속도 급감이 없음(봉우리 없이 서서히) → CastMotions release 0.60 사용 |
-| windupFx +0s | The ground cracking open with pebbles shaking, a short building rumble. (0.5s) | `Earth_GraspOfEarth_Rumble.wav` | windupFx burst 0s, 0.4s 뒤 손이 솟음 |
-| impactFx +0s | Giant stone hands bursting out of the ground and clamping shut: rock crunch and grinding grip. (0.9s) | `Earth_GraspOfEarth_Grab.wav` | impactFx burst 0s (delay 0.4) |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.6s | 흙·잎 휙 (소환 동작) | `Earth_GraspOfEarth_Release.wav` | MS earth_spell_cast_leaves_whoosh_02.ogg | ⚠ Cast_Sky 는 손 속도 급감이 없음(봉우리 없이 서서히) → CastMotions release 0.60 사용 |
+| windupFx +0s | 땅 갈라지며 올라오는 소리 앞부분 | `Earth_GraspOfEarth_Rumble.wav` | MS earth_spell_cast_rise_ground_02.ogg | windupFx burst 0s, 0.4s 뒤 손이 솟음 |
+| impactFx +0s | 바위가 모양 바꾸며 조임 | `Earth_GraspOfEarth_Grab.wav` | MS earth_spell_cast_morph_rocks_01.ogg | impactFx burst 0s (delay 0.4) |
 
 ### Earth_RockWall
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | A short forceful earth magic gesture with a low stone resonance. (0.5s) | `Earth_RockWall_Release.wav` | Cast_Self 0.63s |
-| barrierFx +0s | A thick rock wall erupting from the ground: heavy grinding stone rising fast, crunch and dust. (1.2s) | `Earth_RockWall_Rise.wav` | barrierFx spikes burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 짧은 흙 마법 휙 | `Earth_RockWall_Release.wav` | MS earth_spell_cast_magic_whoosh_01.ogg | Cast_Self 0.63s |
+| barrierFx +0s | 땅이 솟는 벽 | `Earth_RockWall_Rise.wav` | MS earth_spell_cast_rise_ground_04.ogg | barrierFx spikes burst 0s |
 
 ### Earth_StoneShield
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | Stone armor forming around a body: rocks clattering and locking together with a solid thunk. (0.8s) | `Earth_StoneShield_Release.wav` | Cast_Self 0.63s |
-| impactFx +0s | A stone shield shattering outward: rock explosion blasting enemies away, debris scattering. (1s) | `Earth_StoneShield_Burst.wav` | explodeDelay 3s 뒤 impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 돌이 몸에 붙는 소리 | `Earth_StoneShield_Release.wav` | MS earth_spell_cast_morph_rocks_04.ogg | Cast_Self 0.63s |
+| impactFx +0s | 돌 갑옷 터짐 | `Earth_StoneShield_Burst.wav` | MS earth_spell_cast_impact_ground_rock_debris_01.ogg | explodeDelay 3s 뒤 impactFx burst 0s |
 
 ### Electric_ChainLightning
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A sharp electric discharge from the hand: crackling lightning zap release. (0.6s) | `Electric_ChainLightning_Release.wav` | Cast_Forward 0.80s |
-| hitFx +0s | A quick lightning arc striking a target: snapping electric crack. (0.5s) | `Electric_ChainLightning_Hit.wav` | 적마다 hitFx (jumpDelay 0.08s 간격) — minInt 0.05 라 튈 때마다 울림 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 전기 시전 | `Electric_ChainLightning_Release.wav` | Hove MAGSpel_SpellCast_HoveAud_LightningMagic_01.wav | Cast_Forward 0.80s |
+| hitFx +0s | 짧은 번개 튐 | `Electric_ChainLightning_Hit.wav` | MS lighting_spell_electric_zap_blast_sparkle_bright_01.ogg | 적마다 hitFx (jumpDelay 0.08s 간격) — minInt 0.05 라 튈 때마다 울림 |
 
 ### Electric_ElectricNet
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | An electric net thrown: buzzing crackle with a quick whoosh. (0.5s) | `Electric_ElectricNet_Release.wav` | Cast_Forward 0.80s |
-| impactFx +0s | An electric net snapping open and wrapping around enemies: three rapid zaps then a sustained buzzing crackle. (1s) | `Electric_ElectricNet_Snare.wav` | impactFx strikes 0/0.07/0.14s + current 1.2s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 짧은 지직 던짐 | `Electric_ElectricNet_Release.wav` | MS lighting_spell_electric_zap_blast_sparkle_dark_03.ogg | Cast_Forward 0.80s |
+| impactFx +0s | 전기 터지며 지직거림 | `Electric_ElectricNet_Snare.wav` | MS lighting_spell_electric_impact_static_light_explode_01.ogg | impactFx strikes 0/0.07/0.14s + current 1.2s |
 
 ### Electric_Flash
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| castFx +0s | An instant lightning teleport: sharp electric zap with a thunder snap. (0.5s) | `Electric_Flash_Depart.wav` | 순간이동이라 몸 동작 대신 castFx 0s |
-| impactFx +0s | A lightning strike landing burst: electric explosion crackle. (0.8s) | `Electric_Flash_Arrive.wav` | 도착 impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| castFx +0s | 순간 번개 출발 | `Electric_Flash_Depart.wav` | MS lighting_spell_electric_zap_blast_sparkle_bright_02.ogg | 순간이동이라 몸 동작 대신 castFx 0s |
+| impactFx +0s | 도착 전기 폭발 | `Electric_Flash_Arrive.wav` | MS lighting_spell_electric_impact_static_light_explode_short_01.ogg | 도착 impactFx burst 0s |
 
 ### Electric_LightningSpear
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A lightning spear thrown: electric charge snapping into a fast zapping whoosh. (0.6s) | `Electric_LightningSpear_Release.wav` | Cast_Forward 0.80s |
-| hitFx +0s | A lightning spear piercing through a target: sharp electric crack. (0.5s) | `Electric_LightningSpear_Hit.wav` | 관통이라 폭발 대신 맞을 때마다 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 전기 창 시전 | `Electric_LightningSpear_Release.wav` | Hove MAGSpel_SpellCast_HoveAud_LightningMagic_05.wav | Cast_Forward 0.80s |
+| hitFx +0s | 관통 지직 | `Electric_LightningSpear_Hit.wav` | MS lighting_spell_electric_zap_blast_sparkle_dark_01.ogg | 관통이라 폭발 대신 맞을 때마다 |
 
 ### Electric_Overcharge
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | An electric power-up surge: buzzing charge rising to a high-pitched energy hum with crackles. (1.5s) | `Electric_Overcharge_Release.wav` | Cast_Self 0.63s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 전기 충전 상승음 | `Electric_Overcharge_Release.wav` | Hove MAGElem_ElectricCharge_HoveAud_LightningMagic.wav | Cast_Self 0.63s |
 
 ### Electric_StaticShell
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | An electric shield dome forming: crackling static field hum. (1s) | `Electric_StaticShell_Release.wav` | Cast_Self 0.63s |
-| hitFx +0s | A quick electric counter shock zap. (0.5s) | `Electric_StaticShell_Shock.wav` | retaliate 5s 동안 때린 적에게 hitFx |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 정전기 막 앞부분 | `Electric_StaticShell_Release.wav` | MS lighting_spell_electric_loop_static_sparkle_bright_02.ogg | Cast_Self 0.63s |
+| hitFx +0s | 반격 지직 | `Electric_StaticShell_Shock.wav` | MS lighting_spell_electric_zap_blast_sparkle_bright_03.ogg | retaliate 5s 동안 때린 적에게 hitFx |
 
 ### Electric_Thunderbolt
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.6s | Electric charge gathering overhead: rising crackle. (0.5s) | `Electric_Thunderbolt_Release.wav` | ⚠ Cast_Sky 봉우리 없음 → release 0.60 |
-| impactFx +0s | A lightning bolt striking the ground: loud thunder crack with a booming rumble tail. (1.2s) | `Electric_Thunderbolt_Strike.wav` | delay 0.25s 뒤 impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.6s | 전기 모이는 지직 | `Electric_Thunderbolt_Release.wav` | MS lighting_spell_electric_zap_blast_sparkle_dark_04.ogg | ⚠ Cast_Sky 봉우리 없음 → release 0.60 |
+| impactFx +0s | 큰 천둥 낙뢰 | `Electric_Thunderbolt_Strike.wav` | MS lighting_spell_electric_impact_thunder_loud_dark_01.ogg | delay 0.25s 뒤 impactFx burst 0s |
 
 ### Water_BubblePrison
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A watery bubble launched: wobbly bloop with a splashy whoosh. (0.6s) | `Water_BubblePrison_Release.wav` | Cast_Forward 0.80s |
-| impactFx +0s | A big water bubble engulfing a target: gloopy splash then a muffled underwater wobble. (0.9s) | `Water_BubblePrison_Trap.wav` | impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 물 공 발사 | `Water_BubblePrison_Release.wav` | MS water_spell_cast_fast_ball_power_01.ogg | Cast_Forward 0.80s |
+| impactFx +0s | 거품에 갇힘 | `Water_BubblePrison_Trap.wav` | MS water_spell_cast_drown_bubble_01.ogg | impactFx burst 0s |
 
 ### Water_HealingRain
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A water magic gesture with a sparkling splash. (0.6s) | `Water_HealingRain_Release.wav` | Cast_Ground 1.27s |
-| zoneFx +0s | Gentle magical rain shower: soft raindrops with twinkling healing chimes, four seconds, fading out. (4s, 4s 유지) | `Water_HealingRain_Rain.wav` | zoneTime 4s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 부드러운 물방울 | `Water_HealingRain_Release.wav` | MS water_spell_cast_soft_drop_02.ogg | Cast_Ground 1.27s |
+| zoneFx +0s | 치유 반짝임 (빗소리 전용 파일은 없음) | `Water_HealingRain_Rain.wav` | MS Holy_spell_heal_cast_long_01.ogg | zoneTime 4s |
 
 ### Water_WaterCannon
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A high-pressure water jet blast: powerful gushing spray. (1s) | `Water_WaterCannon_Release.wav` | Cast_Forward 0.80s |
-| impactFx +0s | A water jet impact: heavy spray burst splash. (0.7s) | `Water_WaterCannon_Splash.wav` | 끝점 impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 물줄기 휙 | `Water_WaterCannon_Release.wav` | MS water_spell_cast_splash_whoosh_01.ogg | Cast_Forward 0.80s |
+| impactFx +0s | 물 충돌 | `Water_WaterCannon_Splash.wav` | MS water_spell_cast_impact_ball_01.ogg | 끝점 impactFx burst 0s |
 
 ### Water_WaterVeil
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | Water surging upward: splashy rising whoosh. (0.6s) | `Water_WaterVeil_Release.wav` | Cast_Self 0.63s |
-| barrierFx +0s | A waterfall curtain: continuous rushing falling water, four seconds, fading out. (4s, 4s 유지) | `Water_WaterVeil_Falls.wav` | barrier lifetime 4s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 물이 솟는 소리 | `Water_WaterVeil_Release.wav` | MS water_spell_cast_rise_smooth_impact_01.ogg | Cast_Self 0.63s |
+| barrierFx +0s | 흐르는 물 (벽 4s) | `Water_WaterVeil_Falls.wav` | MS water_spell_cast_flowing_loop_02.ogg | barrier lifetime 4s |
 
 ### Water_Wave
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A forceful water throw: splash whoosh. (0.5s) | `Water_Wave_Release.wav` | Cast_Forward 0.80s |
-| 시전 +0.05s | A rolling ocean wave rushing forward and crashing surf, about one second. (1s, 0.9s 유지) | `Water_Wave_Surge.wav` | ⚠ travelFx 는 칸 이벤트가 없어 시전 기준. 비행 = 9/10 = 0.9s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 물 던지는 휙 | `Water_Wave_Release.wav` | MS water_spell_cast_double_splash_whoosh_02.ogg | Cast_Forward 0.80s |
+| 시전 +0.05s | 파도 밀려옴 | `Water_Wave_Surge.wav` | MS water_spell_cast_rise_impact_wave_03.ogg | ⚠ travelFx 는 칸 이벤트가 없어 시전 기준. 비행 = 9/10 = 0.9s |
 
 ### Water_Whirlpool
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A water spell cast: swirling splash. (0.5s) | `Water_Whirlpool_Release.wav` | Cast_Ground 1.27s |
-| zoneFx +0s | A swirling whirlpool vortex: churning water sucking inward and gurgling, four seconds, fading out. (4s, 4s 유지) | `Water_Whirlpool_Vortex.wav` | zoneTime 4s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 물 휙 | `Water_Whirlpool_Release.wav` | MS water_spell_cast_splash_whoosh_02.ogg | Cast_Ground 1.27s |
+| zoneFx +0s | 부글부글 소용돌이 (장판 4s) | `Water_Whirlpool_Vortex.wav` | MS water_spell_cast_boil_loop_01.ogg | zoneTime 4s |
 
 ### Wind_Gust
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.567s | A powerful gust of wind sweeping forward: strong whoosh with rustling leaves. (0.8s) | `Wind_Gust_Release.wav` | ⚠ Cast_Sweep 는 휘두르기가 이어져서 급감 봉우리 없음 → release 0.57 |
-| hitFx +0s | A wind blast hitting a body: punchy air thump. (0.5s) | `Wind_Gust_Hit.wav` | hitFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.567s | 강한 바람 휙 | `Wind_Gust_Release.wav` | MS wind_spell_cast_air_transient_whoosh_01.ogg | ⚠ Cast_Sweep 는 휘두르기가 이어져서 급감 봉우리 없음 → release 0.57 |
+| hitFx +0s | 바람 충격 | `Wind_Gust_Hit.wav` | MS wind_spell_cast_air_impact_splash_01.ogg | hitFx burst 0s |
 
 ### Wind_Headwind
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A wind spell gesture: sharp air burst. (0.5s) | `Wind_Headwind_Release.wav` | Cast_Ground 1.27s |
-| zoneFx +0s | A howling strong wind zone: continuous gale with swirling gusts, four seconds, fading out. (4s, 4s 유지) | `Wind_Headwind_Gale.wav` | zoneTime 4s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 짧은 바람 | `Wind_Headwind_Release.wav` | MS wind_spell_cast_air_short_whoosh_03.ogg | Cast_Ground 1.27s |
+| zoneFx +0s | 계속 부는 바람 (장판 4s) | `Wind_Headwind_Gale.wav` | MS wind_spell_cast_air_long_loop_01.ogg | zoneTime 4s |
 
 ### Wind_Leap
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.083s | A wind-powered leap: fast rising air whoosh. (0.5s) | `Wind_Leap_Jump.wav` | ⚠ Dash 클립 손·발 속도 시작 0.08s, 봉우리가 약하고 여러 개라 애매 |
-| impactFx +0s | Landing with a burst of wind: air shockwave thump and swirling dust. (0.8s) | `Wind_Leap_Land.wav` | 착지 impactFx burst 0s (dashTime 0.3) |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.083s | 올라가는 휙 | `Wind_Leap_Jump.wav` | MS wind_spell_cast_air_short_rise_whoosh_01.ogg | ⚠ Dash 클립 손·발 속도 시작 0.08s, 봉우리가 약하고 여러 개라 애매 |
+| impactFx +0s | 바람 착지 충격 | `Wind_Leap_Land.wav` | MS wind_spell_cast_air_impact_splash_02.ogg | 착지 impactFx burst 0s (dashTime 0.3) |
 
 ### Wind_Tailwind
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | Swirling wind wrapping around a body: speed boost whoosh rising and spinning. (1s) | `Wind_Tailwind_Release.wav` | Cast_Self 0.63s, castFx 폭발 3.5m 도 같이 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 바람이 감아 올라감 | `Wind_Tailwind_Release.wav` | MS wind_spell_cast_air_rise_cut_01.ogg | Cast_Self 0.63s, castFx 폭발 3.5m 도 같이 |
 
 ### Wind_Tornado
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | A wind spell thrust: short air burst. (0.5s) | `Wind_Tornado_Release.wav` | Cast_Forward 0.80s |
-| 시전 +0.05s | A small tornado roaring and spinning: swirling wind howl moving forward for two seconds. (2s, 2s 유지) | `Wind_Tornado_Twister.wav` | ⚠ 비행 = 12/6 = 2s (커서 거리와 무관, 관통) |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 짧은 바람 터짐 | `Wind_Tornado_Release.wav` | MS wind_spell_cast_air_short_noisy_whoosh_02.ogg | Cast_Forward 0.80s |
+| 시전 +0.05s | 길게 휘도는 바람 (비행 2s) | `Wind_Tornado_Twister.wav` | MS wind_spell_cast_frost_air_long_02.ogg | ⚠ 비행 = 12/6 = 2s (커서 거리와 무관, 관통) |
 
 ### Wind_WindCutter
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.8s | Several sharp wind blades slicing the air: rapid whistling swishes. (0.5s) | `Wind_WindCutter_Release.wav` | Cast_Forward 0.80s, 칼날 5개 |
-| hitFx +0s | A wind blade slicing hit: sharp cutting swish. (0.5s) | `Wind_WindCutter_Hit.wav` | 적마다 hitFx |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.8s | 날카로운 바람 발사 | `Wind_WindCutter_Release.wav` | MS wind_spell_cast_air_sharp_shoot_01.ogg | Cast_Forward 0.80s, 칼날 5개 |
+| hitFx +0s | 베는 바람 | `Wind_WindCutter_Hit.wav` | MS wind_spell_cast_air_sharp_shoot_02.ogg | 적마다 hitFx |
 
 ### Wind_WindVeil
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | A wind spell gesture: quick swirling whoosh. (0.5s) | `Wind_WindVeil_Release.wav` | Cast_Self 0.63s |
-| barrierFx +0s | A spinning wind barrier dome: steady whooshing air vortex, three seconds, fading out. (3s, 3s 유지) | `Wind_WindVeil_Dome.wav` | lifetime 3s |
-| blockFx +0s | A projectile deflected by wind: sharp air whoosh with a light ping. (0.5s) | `Wind_WindVeil_Block.wav` | 막을 때 blockFx |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 바람 휙 | `Wind_WindVeil_Release.wav` | MS wind_spell_cast_air_short_spacious_whoosh_03.ogg | Cast_Self 0.63s |
+| barrierFx +0s | 계속 부는 바람 (장막 3s, Headwind 와 다른 구간) | `Wind_WindVeil_Dome.wav` | MS wind_spell_cast_air_long_loop_01.ogg | lifetime 3s |
+| blockFx +0s | 튕겨내는 휙 | `Wind_WindVeil_Block.wav` | MS wind_spell_cast_air_short_whoosh_02.ogg | 막을 때 blockFx |
 
 ### Finisher_Blessing
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.633s | A divine water blessing: shimmering sparkling chime swell with a gentle splash. (1.5s) | `Finisher_Blessing_Release.wav` | Cast_Self 0.63s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.633s | 밝은 축복 | `Finisher_Blessing_Release.wav` | MS Holy_spell_heal_cast_bright_02.ogg | Cast_Self 0.63s |
 
 ### Finisher_MeteorFall
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.6s | A fire spell summoning upward: rising flame whoosh. (0.5s) | `Finisher_MeteorFall_Release.wav` | ⚠ Cast_Sky 봉우리 없음 → release 0.60 |
-| windupFx +0s | A meteor whistling down from the sky: burning roar growing louder. (0.7s) | `Finisher_MeteorFall_Fall.wav` | windupFx 0s, delay 0.6s 뒤 충돌 |
-| impactFx +0s | A massive meteor impact explosion: deep boom with a fiery blast and rock debris. (1.5s) | `Finisher_MeteorFall_Impact.wav` | impactFx burst 0s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.6s | 불 소환 앞부분 | `Finisher_MeteorFall_Release.wav` | MS fire_spell_long_soft_01.ogg | ⚠ Cast_Sky 봉우리 없음 → release 0.60 |
+| windupFx +0s | 불덩이 떨어지는 소리 대신 (휘파람 낙하음 없음) | `Finisher_MeteorFall_Fall.wav` | MS fire_spell_long_warm_01.ogg | windupFx 0s, delay 0.6s 뒤 충돌 |
+| impactFx +0s | 운석 폭발 | `Finisher_MeteorFall_Impact.wav` | MS earth_spell_cast_meteor_explosion_01.ogg | impactFx burst 0s |
 
 ### Finisher_PlasmaBurst
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A huge plasma explosion: electric fire blast with a crackling energy boom. (1.5s) | `Finisher_PlasmaBurst_Burst.wav` | ⚠ 손이 땅 치는 1.27s(+0.15s) vs impactFx 0s — 손 동작 쪽으로 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 큰 불 폭발 | `Finisher_PlasmaBurst_Burst.wav` | MS fire_spell_charge_explosion_dark_01.ogg | ⚠ 손이 땅 치는 1.27s(+0.15s) vs impactFx 0s — 손 동작 쪽으로 |
 
 ### Finisher_Storm
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A storm being summoned: thunder rumble swell with wind. (0.8s) | `Finisher_Storm_Release.wav` | Cast_Ground 1.27s |
-| impactFx +0s | A lightning bolt strike: short thunder snap crack. (0.6s) | `Finisher_Storm_Strike.wav` | 0.45s 마다 번개 1개 impactFx |
-| 시전 +0.15s | Thunderstorm ambience: rain and distant thunder rumbles, four seconds, fading out. (4s, 4s 유지) | `Finisher_Storm_Ambience.wav` | zoneTime 4s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 천둥 시작 | `Finisher_Storm_Release.wav` | MS lighting_spell_electric_impact_thunder_static_warm_01.ogg | Cast_Ground 1.27s |
+| impactFx +0s | 짧은 낙뢰 | `Finisher_Storm_Strike.wav` | MS lighting_spell_electric_impact_thunder_dark_dry_01.ogg | 0.45s 마다 번개 1개 impactFx |
+| 시전 +0.15s | 계속 지직거림 (비 소리는 없음) | `Finisher_Storm_Ambience.wav` | MS lighting_spell_electric_loop_static_warm_02.ogg | zoneTime 4s |
 
 ### Finisher_Tsunami
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 1.267s | A giant tsunami wave crashing outward: massive water roar and surf explosion. (2s) | `Finisher_Tsunami_Wave.wav` | ⚠ 손이 땅 치는 1.27s(+0.15s) vs impactFx 0s — 손 동작 쪽으로 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 1.267s | 큰 파도 | `Finisher_Tsunami_Wave.wav` | MS water_spell_cast_rise_impact_wave_02.ogg | ⚠ 손이 땅 치는 1.27s(+0.15s) vs impactFx 0s — 손 동작 쪽으로 |
 
 ### Gunner_Dash
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.083s | A quick tactical dash: short air whoosh with light gear rattle. (0.5s) | `Gunner_Dash_DashStart.wav` | ⚠ Dash 클립 시작 0.08s, 봉우리 약함 |
-| 시전 +0.2s | A fast gun magazine reload: crisp click and clack. (0.6s) | `Gunner_Dash_Reload.wav` | reloadOnDash, duration 0.2s 끝 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.083s | 짧은 휙 | `Gunner_Dash_DashStart.wav` | MS wind_spell_cast_air_short_whoosh_01.ogg | ⚠ Dash 클립 시작 0.08s, 봉우리 약함 |
+| 시전 +0.2s | 딸깍 (탄창 소리는 없음) | `Gunner_Dash_Reload.wav` | SciFiUI Click_Combo.wav | reloadOnDash, duration 0.2s 끝 |
 
 ### Gunner_DashBlast
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| Anim 0.083s | A quick forward dash: short punchy whoosh. (0.5s) | `Gunner_DashBlast_Dash.wav` | WeaponSkill 클립 손 속도 급감 0.08s |
-| Anim 0.208s | A shotgun-like electric shock blast: powerful bang with crackling electricity. (1s) | `Gunner_DashBlast_Blast.wav` | 엉덩이 이동 멈춤 0.21s = 코드 dashTime 0.18s 와 거의 같음 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| Anim 0.083s | 짧은 휙 | `Gunner_DashBlast_Dash.wav` | MS wind_spell_cast_air_short_noisy_whoosh_01.ogg | WeaponSkill 클립 손 속도 급감 0.08s |
+| Anim 0.208s | 전기 충격 폭발 | `Gunner_DashBlast_Blast.wav` | Hove MAGElem_LightningStrikeSolo_HoveAud_LightningMagic_08.wav | 엉덩이 이동 멈춤 0.21s = 코드 dashTime 0.18s 와 거의 같음 |
 
 ### Gunner_ShockCannon
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | An energy cannon charging: rising electric whine. (0.5s) | `Gunner_ShockCannon_Charge.wav` | ⚠ 코드 chargeTime 0.3s. Ultimate 클립 급감(0.08/0.21s)과 안 맞아 코드 값 사용 |
-| 시전 +0.3s | A massive energy cannon shot: heavy boom with recoil and a long echo. (1.5s) | `Gunner_ShockCannon_Fire.wav` | ⚠ chargeTime 0.3s 뒤 발사 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 에너지 충전 | `Gunner_ShockCannon_Charge.wav` | Kenney forceField_000.ogg | ⚠ 코드 chargeTime 0.3s. Ultimate 클립 급감(0.08/0.21s)과 안 맞아 코드 값 사용 |
+| 시전 +0.3s | 낮은 큰 폭발 | `Gunner_ShockCannon_Fire.wav` | Kenney lowFrequency_explosion_000.ogg | ⚠ chargeTime 0.3s 뒤 발사 |
 
 ### RuneMage_Blink
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | An arcane blink teleport: magical whoosh with a shimmering pop. (0.6s) | `RuneMage_Blink_Blink.wav` | 모델 없음 → 코드 값 (즉시) |
-| 시전 +1s | An arcane rune trap detonating: magical burst with sparkles. (0.8s) | `RuneMage_Blink_Trap.wav` | trapDelay 1s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 순간이동 | `RuneMage_Blink_Blink.wav` | MS dark_spell_cast_warp_0-001.ogg | 모델 없음 → 코드 값 (즉시) |
+| 시전 +1s | 룬 함정 터짐 | `RuneMage_Blink_Trap.wav` | MS Holy_spell_blast_cast_01.ogg | trapDelay 1s |
 
 ### RuneMage_RuneBurst
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | Rapid arcane runes launched in quick succession: magical zips. (0.7s) | `RuneMage_RuneBurst_Launch.wav` | launchInterval 0.05s |
-| 충돌 +0s | An arcane rune explosion: magical pop burst with sparkle. (0.7s) | `RuneMage_RuneBurst_Blast.wav` | 룬 폭발 반경 2m 마다 SkillImpacts |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 마법 구슬 발사 | `RuneMage_RuneBurst_Launch.wav` | MS dark_spell_cast_energy_ball_01.ogg | launchInterval 0.05s |
+| 충돌 +0s | 룬 폭발 | `RuneMage_RuneBurst_Blast.wav` | MS Holy_spell_blast_cast_02.ogg | 룬 폭발 반경 2m 마다 SkillImpacts |
 
 ### RuneMage_ArcaneCollapse
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | An arcane teleport: deep magical whoosh. (0.5s) | `RuneMage_ArcaneCollapse_Blink.wav` | blinkDelay 0.25s 전 |
-| 시전 +0.45s | An arcane implosion blast: deep magical boom pulling inward. (0.8s) | `RuneMage_ArcaneCollapse_Blast.wav` | firstBlastTime 0.45s |
-| 시전 +0.95s | An arcane implosion blast: deep magical boom pulling inward. (0.8s) | `RuneMage_ArcaneCollapse_Blast.wav` | + blastInterval 0.5s |
-| 시전 +1.45s | A massive final arcane collapse: huge magical explosion with a deep booming tail. (2s) | `RuneMage_ArcaneCollapse_Collapse.wav` | 3번째 = 마지막 폭발 x1.5 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 순간이동 | `RuneMage_ArcaneCollapse_Blink.wav` | MS dark_spell_cast_warp_0-002.ogg | blinkDelay 0.25s 전 |
+| 시전 +0.45s | 마법 폭발 | `RuneMage_ArcaneCollapse_Blast.wav` | MS dark_spell_cast_charge_impact_01.ogg | firstBlastTime 0.45s |
+| 시전 +0.95s | 마법 폭발 | `RuneMage_ArcaneCollapse_Blast.wav` | MS dark_spell_cast_charge_impact_01.ogg | + blastInterval 0.5s |
+| 시전 +1.45s | 큰 마법 폭발 | `RuneMage_ArcaneCollapse_Collapse.wav` | MS dark_spell_cast_energy_wave_01.ogg | 3번째 = 마지막 폭발 x1.5 |
 
 ### ChainDash
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | A quick chain dash: whoosh with metal chain rattle. (0.5s) | `ChainDash_Dash.wav` | 모델 없음 → 코드 값 |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 짧은 휙 (사슬 소리는 없음) | `ChainDash_Dash.wav` | MS wind_spell_cast_air_short_whoosh_02.ogg | 모델 없음 → 코드 값 |
 
 ### ChainDashStrike
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | A chain blade slash: metallic whoosh with a fiery edge. (0.5s) | `ChainDashStrike_Slash.wav` | tick 0s |
-| 시전 +0.3s | A chain blade slash: metallic whoosh with a fiery edge. (0.5s) | `ChainDashStrike_Slash.wav` | tick 0.3s |
-| 시전 +0.6s | A chain strike landing: heavy fiery slam. (0.9s) | `ChainDashStrike_Land.wav` | dashDuration 0.6s 끝 착지 tick |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 베는 휙 | `ChainDashStrike_Slash.wav` | MS wind_spell_cast_air_sharp_shoot_03.ogg | tick 0s |
+| 시전 +0.3s | 베는 휙 | `ChainDashStrike_Slash.wav` | MS wind_spell_cast_air_sharp_shoot_03.ogg | tick 0.3s |
+| 시전 +0.6s | 불 착지 충격 | `ChainDashStrike_Land.wav` | MS fire_spell_burst_impact_short_01.ogg | dashDuration 0.6s 끝 착지 tick |
 
 ### ChainPullSpin
 
-| 시점 | 사운드 설명 | 파일명 | 비고 |
-|---|---|---|---|
-| 시전 +0s | A chain yank pulling upward: rising whoosh. (0.5s) | `ChainPullSpin_Rise.wav` | riseDuration 0.35s |
-| 시전 +0.65s | A diving slam: heavy ground impact with electric crackle. (1s) | `ChainPullSpin_Slam.wav` | rise 0.35 + dive 0.3 |
-| 시전 +0.65s | A spinning chain whirlwind: continuous metallic whooshing with an electric buzz for two and a half seconds. (2.5s, 2.5s 유지) | `ChainPullSpin_Spin.wav` | spinDuration 2.5s |
+| 시점 | 사운드 설명 | 파일명 | 원본 | 비고 |
+|---|---|---|---|---|
+| 시전 +0s | 올라가는 휙 | `ChainPullSpin_Rise.wav` | MS wind_spell_cast_air_rise_sharp_shoot_03.ogg | riseDuration 0.35s |
+| 시전 +0.65s | 전기 내려찍기 | `ChainPullSpin_Slam.wav` | Hove MAGElem_LightningStrikeWoutRum_HoveAud_LightningMagic_13.wav | rise 0.35 + dive 0.3 |
+| 시전 +0.65s | 계속 지직거리는 회전 (2.5s) | `ChainPullSpin_Spin.wav` | Hove MAGElem_LightningShockHold_HoveAud_LightningMagic.wav | spinDuration 2.5s |
 
 ## 이미 소리가 있던 스킬 — 비교 후 건너뜀
 

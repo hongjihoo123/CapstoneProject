@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Earth_StoneShield
   skill: {fileID: 11400000, guid: c2e97a08804392f503d7c533d0ac3b4f, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.633
     fallbackDelay: 0.14966664
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: c66295ac0a1d4335a281226940f41013, type: 3}
     volume: 0.7
     pitchRandom: 0.05
     loop: 0
@@ -38,7 +38,7 @@ MonoBehaviour:
     fxSlot: impactFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: fd9998a2944c0b4958198de4b3a75507, type: 3}
     volume: 0.85
     pitchRandom: 0.05
     loop: 0

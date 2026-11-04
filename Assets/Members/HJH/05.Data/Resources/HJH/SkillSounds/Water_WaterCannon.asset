@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Water_WaterCannon
   skill: {fileID: 11400000, guid: a339343bab95d8a64a206941a5bdb2f0, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.8
     fallbackDelay: 0.14999992
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 073cf838c5119ea7e2db4083de71578c, type: 3}
     volume: 0.8
     pitchRandom: 0.04
     loop: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
     fxSlot: impactFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 8b0c0076527b24e8f398252f9a4e3813, type: 3}
     volume: 0.75
     pitchRandom: 0.05
     loop: 0

@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Earth_EarthSplitter
   skill: {fileID: 11400000, guid: 7a8ac3d2a74a275fcc3974f90f6b015c, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.8
     fallbackDelay: 0.14999992
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: bafbcdb8429079eaf6f92e959e950734, type: 3}
     volume: 0.65
     pitchRandom: 0.05
     loop: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
     fxSlot: impactFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 18d9e460a4c72eca9e9af377ff90d7c4, type: 3}
     volume: 0.85
     pitchRandom: 0.04
     loop: 0

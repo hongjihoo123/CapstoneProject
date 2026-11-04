@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Electric_Thunderbolt
   skill: {fileID: 11400000, guid: f77fe2e9e8b2e528ab33850122e24fa6, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.6
     fallbackDelay: 0.14999995
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 2da343909a898451787a233a1b669018, type: 3}
     volume: 0.55
     pitchRandom: 0.05
     loop: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
     fxSlot: impactFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 76321e3c6511b2dcd46906b47c6e5127, type: 3}
     volume: 0.9
     pitchRandom: 0.05
     loop: 0
