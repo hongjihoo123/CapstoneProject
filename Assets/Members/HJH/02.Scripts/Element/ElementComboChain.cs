@@ -51,7 +51,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         [SerializeField, Min(1), Tooltip("Inputs kept for matching and display. At least the longest combo.")]
         private int maxInputs = 4;
         [SerializeField, Min(0.1f), Tooltip("Seconds allowed between casts before the chain breaks.")]
-        private float chainWindow = 3f;
+        private float chainWindow = 5f;
         [SerializeField, Min(1)] private int maxStock = 3;
         [SerializeField, Tooltip("완성된 콤보를 JJH 버프로 보냄. 같은 씬에 JJH ElementStackManager 가 켜져 있으면 그쪽이 보내니까 끔 (안 끄면 버프 두 번)")]
         private bool sendBuffEvents = true;
