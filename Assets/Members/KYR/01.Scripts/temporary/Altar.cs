@@ -87,8 +87,8 @@ namespace Members.KYR._01.Scripts.temporary
             SetPrompt(false);
             Instantiate(prefab, transform.position, prefab.transform.rotation);
 
-            foreach (Collider collider in GetComponentsInChildren<Collider>())
-                collider.enabled = false;
+            foreach (Collider colorlider in GetComponentsInChildren<Collider>())
+                GetComponent<Collider>().enabled = false;
 
             StartCoroutine(Sink());
         }
