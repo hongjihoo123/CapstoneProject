@@ -2,12 +2,13 @@
 using System.Collections.Generic;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts;
+using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char
 {
-    public class StatusEffectModule : Module
+    public class StatusEffectModule : AbstractModule
     {
         private readonly Dictionary<BuffType, float> _multipliers = new();
         private readonly List<(BuffType type, float expireAt)> _active = new();

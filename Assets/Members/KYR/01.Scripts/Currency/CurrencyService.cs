@@ -7,12 +7,11 @@ namespace Members.KYR._01.Scripts.Currency
     {
         public event Action<CurrencyType, int> OnChanged;
 
-        private int _runGold;
-        private int _metaSoul;
+        private readonly int[] _values = new int[Enum.GetValues(typeof(CurrencyType)).Length];
 
         public int Get(CurrencyType type)
         {
-            return type == CurrencyType.RunGold ? _runGold : _metaSoul;
+            return _values[(int)type];
         }
 
         public bool CanAfford(CurrencyType type, int amount)
@@ -60,11 +59,10 @@ namespace Members.KYR._01.Scripts.Currency
 
         private void Set(CurrencyType type, int value)
         {
-            if (type == CurrencyType.RunGold)
-                _runGold = value;
-            else
-                _metaSoul = value;
+            if (_values[(int)type] == value)
+                return;
 
+            _values[(int)type] = value;
             OnChanged?.Invoke(type, value);
         }
     }

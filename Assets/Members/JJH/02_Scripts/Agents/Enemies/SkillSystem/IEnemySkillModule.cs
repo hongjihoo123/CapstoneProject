@@ -15,6 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         IEnemySkill GetSkill<T>() where T : IEnemySkill;
         void UseSkill(Type skillType);
+        void CancelAllSkills();
         bool IsSkillUsing();
         bool HasAvailableSkill(float distance);
         bool HasSkillInRange(float distance);

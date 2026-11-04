@@ -3,8 +3,9 @@ using System.Collections.Generic;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.FSM.Core;
-using Members.KYR._01_Scripts.Modules;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Modules;
+using Members.KYR._01.Scripts.Player;
+using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using UnityEngine;
 
@@ -14,7 +15,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     // resolves input every frame (press / hold-aim / release / cancel), runs the active skill through a StateMachine
     // and raises events for everything else: SkillUsed, LoadoutChanged, SkillDenied, SkillReady.
     // Swap / UI / combo code only talk to it through Equip(...), the Get* queries and those events.
-    public class SkillStateModule : Module, IAfterInitModule, ISkillHost, IPassiveHost
+    public class SkillStateModule : AbstractModule, IAfterInitModule, ISkillHost, IPassiveHost
     {
         [Serializable]
         public struct SlotBinding

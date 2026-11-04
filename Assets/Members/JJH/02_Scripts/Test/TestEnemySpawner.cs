@@ -14,9 +14,30 @@ namespace Assets.Members.JJH._02_Scripts.Test
         [SerializeField] private int spawnCount = 5;
         [SerializeField] private bool randomSpawn = true;
 
-        private void Start()
+        [Header("Detect Settings")]
+        [SerializeField] private float detectRadius = 10f;
+        [SerializeField] private LayerMask playerLayer; 
+        private float checkInterval = 0.2f;
+        private bool spawn = true;
+
+        private bool hasSpawned;
+        private float checkTimer;
+
+        private void Update()
         {
-            SpawnEnemies();
+            if (spawn && hasSpawned)
+                return;
+
+            checkTimer += Time.deltaTime;
+            if (checkTimer < checkInterval)
+                return;
+            checkTimer = 0f;
+
+            if (Physics.CheckSphere(transform.position, detectRadius, playerLayer))
+            {
+                SpawnEnemies();
+                hasSpawned = true;
+            }
         }
 
         public void SpawnEnemies()
@@ -45,6 +66,12 @@ namespace Assets.Members.JJH._02_Scripts.Test
 
                 Instantiate(enemyPrefabs[prefabIndex], spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
             }
+        }
+
+        private void OnDrawGizmosSelected()
+        {
+            Gizmos.color = new Color(1f, 0.3f, 0.3f, 0.8f);
+            Gizmos.DrawWireSphere(transform.position, detectRadius);
         }
     }
 }

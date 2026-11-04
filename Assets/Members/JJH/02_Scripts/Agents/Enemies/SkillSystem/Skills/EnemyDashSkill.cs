@@ -6,55 +6,49 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
     public class EnemyDashSkill : AbstractEnemySkill
     {
-        private Coroutine _dashCoroutine;
+        private const float ExtraDistance = 1.5f;
 
-        public override void UseSkill()
+        protected override IEnumerator Execute()
         {
-            base.UseSkill();
-
-            _dashCoroutine = StartCoroutine(UseSkillCoroutine());
-        }
-
-        private IEnumerator UseSkillCoroutine()
-        {
-            IsUsing = true;
-
-            float prepareTime = SkillSO.PrepareTime;
-            float expandTime = SkillSO.ExpandTime;
-            float skillRange = SkillSO.Range;
+            float prepare = SkillSO.PrepareTime;
+            float expand = SkillSO.ExpandTime;
+            float range = SkillSO.Range;
+            float length = range + ExtraDistance;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
-                                                     _enemy.transform.position + _enemy.transform.forward * (skillRange * 0.5f),
-                                                     _enemy.transform.rotation, new Vector3(2f, 0f, skillRange + 1.5f), prepareTime));
+                _enemy.transform.position + _enemy.transform.forward * (range * 0.5f),
+                _enemy.transform.rotation, new Vector3(2f, 0f, length), prepare));
 
-            yield return new WaitForSeconds(prepareTime);
+            yield return new WaitForSeconds(prepare);
 
-            Vector3 startPosition = _enemy.transform.position;
-            Vector3 direction = _enemy.transform.forward;
-            direction.y = 0f;
-            direction.Normalize();
+            Vector3 start = _enemy.transform.position;
+            Vector3 dir = _enemy.transform.forward;
+            dir.y = 0f;
+            dir.Normalize();
+            Vector3 target = start + dir * length;
 
-            Vector3 targetPosition = startPosition + direction * (skillRange + 1.5f);
-            float elapsed = 0f;
+            yield return Tick(expand, t => _enemy.transform.position = Vector3.Lerp(start, target, t));
+            _enemy.transform.position = target;
 
-            while (elapsed < expandTime)
-            {
-                elapsed += Time.deltaTime;
-                float progress = Mathf.Clamp01(elapsed / expandTime);
-                _enemy.transform.position = Vector3.Lerp(startPosition, targetPosition, progress);
-                yield return null;
-            }
-
-            _enemy.transform.position = targetPosition;
-
-            Collider[] hits = Physics.OverlapBox((startPosition + targetPosition) * 0.5f,
-                            new Vector3(1f, 1f, Vector3.Distance(startPosition, targetPosition) * 0.5f),
-                            _enemy.transform.rotation, _skillModule.TargetLayer);
+            Collider[] hits = Physics.OverlapBox((start + target) * 0.5f,
+                new Vector3(1f, 1f, Vector3.Distance(start, target) * 0.5f),
+                _enemy.transform.rotation, _skillModule.TargetLayer);
             foreach (Collider hit in hits)
                 ApplyDamage(hit);
-
-            IsUsing = false;
-            _dashCoroutine = null;
         }
+
+#if UNITY_EDITOR
+
+        protected override void DrawRangeGizmo()
+        {
+            const float extra = 1.5f;
+            float length = SkillSO.Range + extra;
+
+            Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.9f);
+            DrawGizmoBox(transform.position + transform.forward * (length * 0.5f),
+                         transform.rotation, new Vector3(2f, 0.1f, length));
+        }
+
+#endif
     }
 }

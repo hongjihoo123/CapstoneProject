@@ -2,6 +2,8 @@ using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System.Collections.Generic;
 using Unity.Behavior;
 using Unity.Behavior.GraphFramework;
@@ -13,6 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
     {
         [Header("Enemy Data")]
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
+        [field: SerializeField] public EventChannelSO SystemChannel { get; private set; }
 
         [SerializeField] private BTBlackboardTableSO btTableSO;
 
@@ -29,11 +32,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             base.InitializeModules();
 
             SkillModule = GetModule<IEnemySkillModule>();
-            Debug.Assert(SkillModule != null, $"{gameObject.name}에는 IEnemySkillModule모듈이 필요합니다.");
+            Debug.Assert(SkillModule != null, $"{gameObject.name}???? IEnemySkillModule????? ???????.");
             NavMeshAgent = GetModule<INavMesh>();
-            Debug.Assert(NavMeshAgent != null, $"{gameObject.name}에는 INavMesh모듈이 필요합니다.");
+            Debug.Assert(NavMeshAgent != null, $"{gameObject.name}???? INavMesh????? ???????.");
             BehaviorAgent = GetComponent<BehaviorGraphAgent>();
-            Debug.Assert(BehaviorAgent != null, $"{gameObject.name}에는 BehaviorGraphAgent가 필요합니다.");
+            Debug.Assert(BehaviorAgent != null, $"{gameObject.name}???? BehaviorGraphAgent?? ???????.");
         }
 
         private void Start()
@@ -53,7 +56,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         public void HandleOnDead()
         {
+            SkillModule.CancelAllSkills();
+            VFXModule?.StopAllVfx();
             _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
+        }
+
+        public override void Dead()
+        {
+            SystemChannel.RaiseEvent(SystemEvents.EnemyKilledEvent.Init(EnemyData.Gold));
+            base.Dead();
         }
 
         public virtual void NormalAttack() { }
@@ -65,7 +76,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.SetVariableValue(guid, value);
 
-            Debug.LogError($"BT변수 미해결 : {varName}");
+            Debug.LogError($"BT???? ????? : {varName}");
             return false;
         }
 
@@ -74,9 +85,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             if (_guids != null && _guids.TryGetValue(varName, out var guid))
                 return BehaviorAgent.GetVariable(guid, out variable);
 
-            Debug.LogError($"BT변수 미해결 : {varName}");
+            Debug.LogError($"BT???? ????? : {varName}");
             variable = null;
             return false;
+        }
+
+        public void StopBehavior()
+        {
+            if (BehaviorAgent != null)
+                BehaviorAgent.End();
         }
 
         #endregion

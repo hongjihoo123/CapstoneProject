@@ -1,10 +1,10 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01.Scripts.Modules
 {
-    public class PlayerMover : Module
+    public class PlayerMover : AbstractModule
     {
         [SerializeField] private CharacterController characterController;
         [SerializeField] private Transform cameraPivot;

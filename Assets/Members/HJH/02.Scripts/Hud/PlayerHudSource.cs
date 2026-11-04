@@ -6,6 +6,7 @@ using Assets.Members.HJH._02.Scripts.Element;
 using Assets.Members.HJH._02.Scripts.SkillSwap;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01_Scripts;
+using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Hud

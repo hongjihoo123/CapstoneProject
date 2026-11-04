@@ -1,11 +1,11 @@
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Combat;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Combat;
+using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01.Scripts.Modules
 {
-    public class PlayerStatsModule : Module, ICombatStats
+    public class PlayerStatsModule : AbstractModule, ICombatStats
     {
         [Header("Formula")]
         [SerializeField] private CombatFormulaManagerSO combatFormula;

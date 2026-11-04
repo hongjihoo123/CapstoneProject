@@ -1,3 +1,4 @@
+using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace RobotWeapons
@@ -34,7 +35,7 @@ namespace RobotWeapons
                 return existing;
 
             // 플레이어한테는 안 붙임 (플레이어 스킬이 플레이어를 칠 일은 없지만 혹시 몰라서)
-            if (component.GetComponent<Members.KYR._01_Scripts.PlayerAgent>() != null)
+            if (component.GetComponent<PlayerAgent>() != null)
                 return null;
 
             return component.gameObject.AddComponent<CrowdControlReceiver>();

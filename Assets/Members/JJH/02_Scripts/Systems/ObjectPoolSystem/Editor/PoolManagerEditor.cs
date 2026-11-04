@@ -15,7 +15,7 @@ namespace Members.JJH._02_Scripts.Systems.ObjectPoolSystem.Editor
         [SerializeField] private PoolManagerSO poolManager = default;
         [SerializeField] private VisualTreeAsset itemAsset = default;
 
-        private string _rootFolder = "Assets/ObjectPool";
+        private string _rootFolder = "Members/JJH/_02_Scripts/Systems/ObjectPoolSystem";
 
         private Button _createBtn;
         private ScrollView _itemView;

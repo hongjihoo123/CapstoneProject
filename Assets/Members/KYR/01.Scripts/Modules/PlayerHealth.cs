@@ -1,13 +1,13 @@
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts.Combat;
-using Members.KYR._01_Scripts.Stats;
+using Members.KYR._01.Scripts.Combat;
+using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
-namespace Members.KYR._01_Scripts.Modules
+namespace Members.KYR._01.Scripts.Modules
 {
-    public class PlayerHealth : Module, IHealth, IAfterInitModule
+    public class PlayerHealth : AbstractModule, IHealth, IAfterInitModule
     {
         [SerializeField] private float stunOnHitDuration;
         [Header("스탯 풀백 모듈 없을 때")]

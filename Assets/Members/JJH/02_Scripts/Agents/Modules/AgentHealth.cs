@@ -3,7 +3,7 @@ using UnityEngine;
 using UnityEngine.Events;
 namespace Members.JJH._02_Scripts.Agents.Modules
 {
-    public class AgentHealth : Module, IHealth
+    public class AgentHealth : AbstractModule, IHealth
     {
         public UnityEvent OnDeathEvent;
 

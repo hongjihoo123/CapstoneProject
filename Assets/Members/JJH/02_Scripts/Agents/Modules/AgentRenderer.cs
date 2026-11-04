@@ -1,11 +1,15 @@
 ﻿using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using UnityEngine;
+using UnityEngine.Events;
 
 namespace Members.JJH._02_Scripts.Agents
 {
-    public class AgentRenderer : Module, IRenderer
+    public class AgentRenderer : AbstractModule, IRenderer
     {
+        [field: SerializeField] public UnityEvent OnDeadAnimation { get; private set; }
+        [field: SerializeField] public UnityEvent OnDeadObject { get; private set; }
+
         public Animator Animator { get; private set; }
 
         public override void Initialize(ModuleOwner owner)
@@ -45,9 +49,10 @@ namespace Members.JJH._02_Scripts.Agents
             Animator.SetBool(hash, value);
         }
 
-        public void Dead()
-        {
-            ((Agent)_owner).Dead();
-        }
+        public void OnAnimationDead()
+            => OnDeadAnimation?.Invoke();
+
+        public void OnObjectDead()
+          => OnDeadObject?.Invoke();
     }
 }

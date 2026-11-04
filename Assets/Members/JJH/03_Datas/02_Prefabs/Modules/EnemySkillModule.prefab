@@ -45,6 +45,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 437372765bbb8de46a24908766d9ebd2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillModule
+  <AreaVisualizer>k__BackingField: {fileID: 3082390325053784490}
+  <TargetLayer>k__BackingField:
+    serializedVersion: 2
+    m_Bits: 0
 --- !u!114 &3082390325053784490
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -60,6 +64,14 @@ MonoBehaviour:
   owner: {fileID: 0}
   listenToBus: 0
   groundOffset: 0.06
+  followOwnerHeight: 0
+  groundProbeDistance: 50
   lineWidth: 0.08
   guideLineWidth: 0.03
   showHitAreas: 0
+  previewColor: {r: 0.4, g: 0.9, b: 1, a: 0.95}
+  guideColor: {r: 0.4, g: 0.9, b: 1, a: 0.45}
+  enemyWarningColor: {r: 1, g: 0.15, b: 0.35, a: 0.9}
+  weaponWindupColor: {r: 1, g: 0.65, b: 0.2, a: 0.5}
+  weaponHitColor: {r: 1, g: 0.2, b: 0.2, a: 0.95}
+  skillHitColor: {r: 1, g: 0.5, b: 0, a: 0.95}
