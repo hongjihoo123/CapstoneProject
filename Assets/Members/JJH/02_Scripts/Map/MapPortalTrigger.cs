@@ -9,8 +9,15 @@ namespace Members.JJH._02_Scripts.Map
     {
         [SerializeField] private EventChannelSO eventChannel;
         [SerializeField] private LayerMask playerLayer;
+        [SerializeField] private GameObject keyImage;
 
         private bool isPlayerInRange;
+
+        private void Awake()
+        {
+            if (keyImage != null)
+                keyImage.SetActive(false);
+        }
 
         private void Update()
         {
@@ -22,14 +29,22 @@ namespace Members.JJH._02_Scripts.Map
 
         private void OnTriggerEnter(Collider other)
         {
-            if ((playerLayer.value & (1 << other.gameObject.layer)) != 0)
-                isPlayerInRange = true;
+            if ((playerLayer.value & (1 << other.gameObject.layer)) == 0)
+                return;
+
+            isPlayerInRange = true;
+            if (keyImage != null)
+                keyImage.SetActive(true);
         }
 
         private void OnTriggerExit(Collider other)
         {
-            if ((playerLayer.value & (1 << other.gameObject.layer)) != 0)
-                isPlayerInRange = false;
+            if ((playerLayer.value & (1 << other.gameObject.layer)) == 0)
+                return;
+
+            isPlayerInRange = false;
+            if (keyImage != null)
+                keyImage.SetActive(false);
         }
     }
 }
