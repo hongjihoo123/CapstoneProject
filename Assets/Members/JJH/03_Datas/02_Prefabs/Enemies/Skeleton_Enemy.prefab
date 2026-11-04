@@ -1316,6 +1316,7 @@ GameObject:
   - component: {fileID: 6607348679926133894}
   - component: {fileID: 3359876293572287583}
   - component: {fileID: 8826985774723819450}
+  - component: {fileID: 841308583834613801}
   m_Layer: 9
   m_Name: Skeleton_Enemy
   m_TagString: Untagged
@@ -1453,6 +1454,21 @@ MonoBehaviour:
   tier: 0
   stunImmunity: 1
   knockbackTime: 0.15
+--- !u!114 &841308583834613801
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6977966061365344412}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1290e458d7b4ac442a2f7cdff70c24ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.EnemyOutline
+  normal: {r: 0.95, g: 0.12, b: 0.1, a: 1}
+  hover: {r: 1, g: 1, b: 1, a: 1}
+  pickRadius: 0.35
 --- !u!1 &7054368244349551600
 GameObject:
   m_ObjectHideFlags: 0

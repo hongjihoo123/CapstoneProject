@@ -299,6 +299,37 @@ MonoBehaviour:
   cropToFit:
     m_OverrideState: 1
     m_Value: 1
+--- !u!114 &-1598065151829304697
+MonoBehaviour:
+  m_ObjectHideFlags: 3
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69e2ff915e3ae3844bc077d582c873dc, type: 3}
+  m_Name: StylizeVolume
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Map.StylizeVolume
+  active: 1
+  intensity:
+    m_OverrideState: 1
+    m_Value: 0
+  paintRadius:
+    m_OverrideState: 1
+    m_Value: 3
+  bands:
+    m_OverrideState: 1
+    m_Value: 3
+  bandStrength:
+    m_OverrideState: 1
+    m_Value: 0.45
+  outline:
+    m_OverrideState: 1
+    m_Value: 0.7
+  outlineDistance:
+    m_OverrideState: 1
+    m_Value: 45
 --- !u!114 &-1410297666881709256
 MonoBehaviour:
   m_ObjectHideFlags: 3
@@ -468,6 +499,7 @@ MonoBehaviour:
   - {fileID: -6288072647309666549}
   - {fileID: 7518938298396184218}
   - {fileID: -1410297666881709256}
+  - {fileID: -1598065151829304697}
 --- !u!114 &853819529557874667
 MonoBehaviour:
   m_ObjectHideFlags: 3
