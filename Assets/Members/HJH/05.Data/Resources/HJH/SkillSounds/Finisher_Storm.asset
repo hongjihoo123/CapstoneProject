@@ -1,0 +1,65 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Finisher_Storm
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Finisher_Storm
+  skill: {fileID: 11400000, guid: 9c96c2dfd21760c0072dce3830b464f4, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Release
+    trigger: 0
+    fxSlot: 
+    time: 1.267
+    fallbackDelay: 0.15033317
+    clip: {fileID: 0}
+    volume: 0.65
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A storm being summoned: thunder rumble swell with wind.'
+    promptDuration: 0.8
+    ambiguous: 0
+    note: Cast_Ground 1.27s
+  - eventName: Strike
+    trigger: 2
+    fxSlot: impactFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.6
+    pitchRandom: 0.1
+    loop: 0
+    holdTime: 0
+    minInterval: 0.2
+    prompt: 'A lightning bolt strike: short thunder snap crack.'
+    promptDuration: 0.6
+    ambiguous: 0
+    note: "0.45s \uB9C8\uB2E4 \uBC88\uAC1C 1\uAC1C impactFx"
+  - eventName: Ambience
+    trigger: 1
+    fxSlot: 
+    time: 0.15
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.4
+    pitchRandom: 0.02
+    loop: 0
+    holdTime: 4
+    minInterval: 0.3
+    prompt: 'Thunderstorm ambience: rain and distant thunder rumbles, four seconds,
+      fading out.'
+    promptDuration: 4
+    ambiguous: 0
+    note: zoneTime 4s

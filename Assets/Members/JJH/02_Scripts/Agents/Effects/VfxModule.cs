@@ -47,5 +47,11 @@ namespace Members.JJH._02_Scripts.Agents.Effects
                 vfx.StopVfx();
             }
         }
+
+        public void StopAllVfx()
+        {
+            foreach (IPlayableVFX vfx in _vfxDict.Values)
+                vfx.StopVfx();
+        }
     }
 }

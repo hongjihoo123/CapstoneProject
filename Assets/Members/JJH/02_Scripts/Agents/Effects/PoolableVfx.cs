@@ -9,10 +9,12 @@ namespace Members.JJH._02_Scripts.Agents.Effects
     {
         [SerializeField] private GameObject effectObject;
 
-        private IPlayableVFX _playableVfx;
-
         public IPlayableVFX PlayableVFX => _playableVfx;
         public event Action<PoolableVfx> OnVfxEnd;
+
+        private IPlayableVFX _playableVfx;
+
+        private Coroutine _playCoroutine;
 
         private void Awake()
         {
@@ -29,22 +31,33 @@ namespace Members.JJH._02_Scripts.Agents.Effects
 
         public override void ResetItem()
         {
+            if (_playCoroutine != null)
+            {
+                StopCoroutine(_playCoroutine);
+                _playCoroutine = null;
+            }
             _playableVfx?.StopVfx();
         }
 
         public void PlayVfx(Vector3 position, Quaternion rotation)
         {
             transform.SetPositionAndRotation(position, rotation);
-            StartCoroutine(PlayVfxCoroutine());
+            PlayVfx();
         }
 
-        public void PlayVfx() => StartCoroutine(PlayVfxCoroutine());
+        public void PlayVfx()
+        {
+            if (_playCoroutine != null)
+                StopCoroutine(_playCoroutine);
+            _playCoroutine = StartCoroutine(PlayVfxCoroutine());
+        }
 
         private IEnumerator PlayVfxCoroutine()
         {
             if (_playableVfx == null) yield break;
             _playableVfx.PlayVfx();
             yield return new WaitForSeconds(_playableVfx.VfxDuration);
+            _playCoroutine = null;
             OnVfxEnd?.Invoke(this);
         }
     }

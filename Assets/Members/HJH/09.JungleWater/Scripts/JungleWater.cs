@@ -40,13 +40,14 @@ namespace Assets.Members.HJH.Environment
         }
 
         // 스킬 명중 위치처럼 공중일 수도 있는 지점: 아래 바닥이 물에 잠겨 있으면 튄다
-        public static bool Splash(Vector3 position, float radius = 1.5f, float strength = 1f)
+        // rippleRadius: 물결 크기만 따로 (음수면 radius 와 같음). 물보라 파티클은 항상 radius 크기
+        public static bool Splash(Vector3 position, float radius = 1.5f, float strength = 1f, float rippleRadius = -1f)
         {
             if (_simulation == null || !_simulation.IsOverWater(position))
                 return false;
 
             var surface = new Vector3(position.x, _simulation.WaterHeight, position.z);
-            _simulation.AddDrop(surface, radius, -strength);
+            _simulation.AddDrop(surface, rippleRadius > 0f ? rippleRadius : radius, -strength);
 
             if (_splashPool != null)
                 _splashPool.Spawn(surface, radius);

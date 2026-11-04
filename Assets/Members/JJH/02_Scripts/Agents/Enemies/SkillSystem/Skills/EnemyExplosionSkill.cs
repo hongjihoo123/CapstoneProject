@@ -19,7 +19,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             yield return new WaitForSeconds(prepare);
             yield return ExpandCircleWarning(center, range, expand);
 
-            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
+            PlaySkillVfx();
             DamageInCircle(center, range);
         }
 

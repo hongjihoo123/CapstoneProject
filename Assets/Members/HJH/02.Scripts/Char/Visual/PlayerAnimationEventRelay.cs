@@ -23,5 +23,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_player != null && _player.Weapon != null && _player.Weapon.Weapon is IAnimationTimedShots gun)
                 gun.OnFireFrame();
         }
+
+        // 스킬 몸 동작 클립(Cast_*, Dash ...)의 소리 시점. 같은 클립을 여러 스킬이 쓰니까 이벤트 이름만 주고,
+        // 어떤 소리를 낼지는 지금 쓰는 스킬의 SkillSoundData 가 정함
+        public void PlaySkillSound(string eventName) =>
+            Audio.SkillSoundPlayer.OnAnimationEvent(_player != null ? _player.SkillFsm : null, eventName);
     }
 }

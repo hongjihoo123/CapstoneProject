@@ -25,6 +25,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
         protected override IReadOnlyList<SelfEffect> SelfEffects => onSelf;
 
+        protected override CastMotion DefaultMotion => CastMotion.Self;
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             cast.ApplySelf(onSelf);

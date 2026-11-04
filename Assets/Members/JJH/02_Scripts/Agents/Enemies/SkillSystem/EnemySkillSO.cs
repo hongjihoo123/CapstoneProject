@@ -1,7 +1,9 @@
 ﻿using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using System;
+#if UNITY_EDITOR
 using UnityEditor;
+#endif
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
@@ -19,15 +21,24 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         [field: SerializeField] public AnimParamSO VFXParam { get; private set; }
 
 
+#if UNITY_EDITOR
+        // MonoScript 는 에디터에만 있음 → 빌드(exe)에서는 아래 skillTypeName 으로 타입을 찾음
         [SerializeField] private MonoScript skillScript;
+#endif
+        [SerializeField, HideInInspector] private string skillTypeName;
+        [NonSerialized] private Type _skillType;
 
-        public Type SkillType => skillScript != null ? skillScript.GetClass() : null;
+        public Type SkillType => _skillType ??= string.IsNullOrEmpty(skillTypeName) ? null : Type.GetType(skillTypeName);
 
 #if UNITY_EDITOR
         private void OnValidate()
         {
+            _skillType = null;
             if (skillScript == null)
+            {
+                skillTypeName = null;
                 return;
+            }
 
             Type type = skillScript.GetClass();
 
@@ -35,7 +46,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             {
                 Debug.LogError($"{name}: EnemySkillSO에 넣는 스크립트는 IEnemySkill을 구현해야 합니다.");
                 skillScript = null;
+                skillTypeName = null;
+                return;
             }
+
+            skillTypeName = type.AssemblyQualifiedName;
         }
 #endif
     }

@@ -33,19 +33,22 @@ MonoBehaviour:
   scaling: 1
   hitStop: 0
   shake: 0.06
+  castShake: 0
+  castMotion: 0
   castFx:
-    prefab: {fileID: 1386926668693803928, guid: e1a1b8580d21d9242a66446273cfd073, type: 3}
+    prefab: {fileID: 7146945434090332656, guid: 0cb3fe7969f64564ca1f9667d20f724a, type: 3}
     tint: 0
   impactFx:
-    prefab: {fileID: 9130970898775799216, guid: 59dea2ec114510c4cb03675e13e173e8, type: 3}
+    prefab: {fileID: 3465055817773430732, guid: 8a64a7628eb430242886213a67ec08b7, type: 3}
     tint: 0
-  impactStyle: 3
+  impactStyle: 0
   hitFx:
-    prefab: {fileID: 760382576433012311, guid: 783a113eddbd7864da61a04830b6166d, type: 3}
+    prefab: {fileID: 5088834381675182628, guid: 90ec117c9b7934841a31dd2461dea140, type: 3}
     tint: 0
   statusFx:
     prefab: {fileID: 0}
     tint: 0
+  hideMagicCircle: 1
   aroundSelf: 0
   range: 6
   radius: 3
@@ -55,8 +58,9 @@ MonoBehaviour:
   pulseShake: 0
   strikesPerPulse: 0
   strikeRadius: 1.2
+  pushFromCaster: 0
   zoneFx:
-    prefab: {fileID: 0}
+    prefab: {fileID: 242556173792471292, guid: 15eba1e36b0a45f4eaec5b46d30677cd, type: 3}
     tint: 0
   onSelf:
   - kind: 0

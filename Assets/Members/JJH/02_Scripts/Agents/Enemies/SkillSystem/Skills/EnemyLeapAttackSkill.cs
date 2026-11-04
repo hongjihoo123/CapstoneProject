@@ -16,6 +16,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         [Tooltip("멈추는 시간 비율"), SerializeField, Min(0f)] private float hangRatio = 0.2f;
         [Tooltip("하강 시간 비율"), SerializeField, Min(0.01f)] private float fallRatio = 0.45f;
 
+        protected override bool followEnemy => false;
+
         protected override IEnumerator Execute()
         {
             _skillModule.enemy.GetBTVariable(BTVars.Target, out BlackboardVariable<GameObject> target);
@@ -60,8 +62,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             agent.enabled = true;
             agent.Warp(landing);
 
-            _enemy.VFX.PlayVfx(SkillSO.VFXParam.HashValue);
+            PlaySkillVfx();
             DamageInCircle(landing, leapDamageRange, ignoreSelf: true);
+        }
+
+        protected override void OnCancelled()
+        {
+            var agent = _skillModule.enemy.NavMeshAgent.NavMeshAgent;
+            if (agent != null && !agent.enabled)
+            {
+                agent.enabled = true;
+                if (agent.isOnNavMesh == false)
+                    agent.Warp(_enemy.transform.position);
+            }
         }
 
 #if UNITY_EDITOR

@@ -21,6 +21,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("0 = 도착해도 안 터짐")] private float landRadius;
         [SerializeField, Tooltip("돌진하는 동안 몸에 붙어 따라오는 이펙트 (앞에서 공기가 갈라지는 막 등). 앞 = +Z")] private FxSlot dashFx = new();
 
+        protected override CastMotion DefaultMotion => CastMotion.None;   // 돌진은 대시 동작 그대로
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             Vector3 direction = cast.Aim(distance, out float reach);

@@ -30,6 +30,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
         protected override IReadOnlyList<SelfEffect> SelfEffects => onSelf;
 
+        protected override CastMotion DefaultMotion => CastMotion.Ground;
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             Vector3 center = cast.Target(range, aroundSelf);

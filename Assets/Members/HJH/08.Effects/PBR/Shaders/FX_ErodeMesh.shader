@@ -30,6 +30,13 @@ Shader "HJH/FX/ErodeMesh"
         _FresnelPower ("Fresnel Power", Range(0.5, 6)) = 1.5
         _SoftDistance ("Soft Distance (m)", Float) = 0.4
         [Toggle] _Toon ("Toon (색 계단 + 또렷한 외곽)", Float) = 0
+        _StepSoft ("Toon Step Softness", Range(0.005, 0.25)) = 0.03
+        [Header(Toon Lighting)]
+        _LitShade ("Light Shade (빛 받는 면 / 그늘 면, 입체감)", Range(0, 1)) = 0
+        _ShadeColor ("Shade Color (그늘 면 곱)", Color) = (0.55, 0.62, 0.8, 1)
+        _Highlight ("Highlight (물 반짝임 띠)", Range(0, 2)) = 0
+        _HighlightSize ("Highlight Size", Range(0.8, 0.999)) = 0.93
+        _Solid ("Solid (살아 있는 동안 구멍 없이 꽉 참, 사라질 때만 갉아먹힘)", Range(0, 1)) = 0
         [Header(Ground Layer)]
         [Enum(UnityEngine.Rendering.CompareFunction)] _ZTest ("ZTest (바닥 원판 = Always)", Float) = 4
         _DepthTolerance ("Depth Tolerance (m, 0 = 끔). 이만큼 땅에 묻혀도 보임", Float) = 0
@@ -81,6 +88,12 @@ Shader "HJH/FX/ErodeMesh"
                 float _SoftDistance;
                 float _DepthTolerance;
                 float _Toon;
+                float _StepSoft;
+                float _LitShade;
+                half4 _ShadeColor;
+                float _Highlight;
+                float _HighlightSize;
+                float _Solid;
             CBUFFER_END
 
             struct Attributes
@@ -115,7 +128,7 @@ Shader "HJH/FX/ErodeMesh"
                 return o;
             }
 
-            half4 frag(Varyings i) : SV_Target
+            half4 frag(Varyings i, bool front : SV_IsFrontFace) : SV_Target
             {
                 float t = _Time.y;
                 float2 uv1 = i.uv * _Noise1.xy + _Noise1.zw * t + i.seed * 3.7;
@@ -160,7 +173,7 @@ Shader "HJH/FX/ErodeMesh"
                 if (_Toon > 0.5)
                 {
                     // 카툰(젠존제 풍): 색 계단 + 칼같은 외곽. h 를 그대로 계단으로
-                    half w = 0.03;
+                    half w = _StepSoft;
                     half shape = smoothstep(0.12 - w, 0.12 + w, h);
                     if (_Mode < 0.5)
                     {
@@ -171,7 +184,19 @@ Shader "HJH/FX/ErodeMesh"
                     {
                         col = lerp(_TintColor.rgb * 0.75, _TintColor.rgb * 1.35, smoothstep(0.55 - w, 0.55 + w, h));
                     }
-                    alpha = shape * saturate(_Opacity);
+                    alpha = max(shape, _Solid * smoothstep(0.3, 0.6, life)) * saturate(_Opacity);
+                    if (_LitShade > 0.001)
+                    {
+                        // 만화풍 명암: 빛 받는 면 / 그늘 면 2단 + 물 반짝임 띠 → 막이 아니라 덩어리로 보이게
+                        Light mainLight = GetMainLight();
+                        float3 nrm = normalize(i.normalWS) * (front ? 1.0 : -1.0);
+                        half ndl = dot(nrm, mainLight.direction) * 0.5 + 0.5;
+                        half litStep = smoothstep(0.45 - w, 0.45 + w, ndl);
+                        col *= lerp(lerp(1.0, _ShadeColor.rgb, _LitShade), 1.0, litStep);
+                        float3 vdir = normalize(_WorldSpaceCameraPos - i.positionWS);
+                        half spec = dot(nrm, normalize(mainLight.direction + vdir));
+                        col += _Highlight * smoothstep(_HighlightSize - w * 0.3, _HighlightSize + w * 0.3, spec) * mainLight.color;
+                    }
                 }
                 col *= i.color.rgb;
                 if (_SoftDistance > 0.0 || _DepthTolerance > 0.0)

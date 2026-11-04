@@ -6,5 +6,6 @@
 
         void Initialize(AbstractEnemy owner, EnemySkillModule skillModule);
         void UseSkill();
+        void CancelSkill();
     }
 }

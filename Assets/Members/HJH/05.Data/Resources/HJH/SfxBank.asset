@@ -1,0 +1,150 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7d8d51e933458d74fb7e6c66f2c0f764, type: 3}
+  m_Name: SfxBank
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SfxBank
+  muted: 0
+  swing:
+    clips: []
+    volume: 0.45
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.04
+  swingHit:
+    clips: []
+    volume: 0.9
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.04
+  finisherHit:
+    clips: []
+    volume: 1
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.06
+  shot:
+    clips: []
+    volume: 0.35
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.04
+  empoweredShot:
+    clips: []
+    volume: 0.6
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.08
+  hit:
+    clips: []
+    volume: 0.55
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.05
+  weakpointHit:
+    clips: []
+    volume: 0.6
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.06
+  kill:
+    clips: []
+    volume: 0.5
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.06
+  dash:
+    clips: []
+    volume: 0.5
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.1
+  skillCast:
+    clips:
+    - {fileID: 8300000, guid: 4d15d340d2edb1448ac4d8c92e96b6f1, type: 3}
+    - {fileID: 8300000, guid: a2b599d7e5816c240acbdeae1bb27668, type: 3}
+    - {fileID: 8300000, guid: 533be2107f257cc48837fe0187c90223, type: 3}
+    volume: 0.55
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.1
+  skillImpact:
+    clips:
+    - {fileID: 8300000, guid: 16213354932fcc348b8306415364a0d2, type: 3}
+    - {fileID: 8300000, guid: ed5d9bf18bf95e442a8b03fc9c8f3018, type: 3}
+    - {fileID: 8300000, guid: 3c94e6aab92ee0946ba50973199898ea, type: 3}
+    volume: 0.75
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.1
+  heavyImpact:
+    clips:
+    - {fileID: 8300000, guid: 26850a6e35643524b82dca93d66a8286, type: 3}
+    - {fileID: 8300000, guid: 079f947b86d13684c8c4f8e79d9d9f91, type: 3}
+    volume: 0.8
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.2
+  elements:
+  - element: 0
+    cast:
+      clips: []
+      volume: 0.6
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.08
+    impact:
+      clips:
+      - {fileID: 8300000, guid: 2fafd7591f9f32d448fee4a39229a405, type: 3}
+      - {fileID: 8300000, guid: d1d46b1799c3e064fbf0f5b9e73c202b, type: 3}
+      - {fileID: 8300000, guid: c09c225ffac48a74081e9fb92999c6a6, type: 3}
+      volume: 0.7
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.1
+  - element: 1
+    cast:
+      clips:
+      - {fileID: 8300000, guid: 9c06f27bf31b7b444a685285a9f99b49, type: 3}
+      volume: 0.6
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.08
+    impact:
+      clips:
+      - {fileID: 8300000, guid: dfd4f437bd9d1f64499823bb87373b8c, type: 3}
+      - {fileID: 8300000, guid: 5339502985a19fd419e44f6397ec6bd5, type: 3}
+      volume: 0.7
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.1
+  - element: 2
+    cast:
+      clips: []
+      volume: 0.6
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.08
+    impact:
+      clips: []
+      volume: 0.8
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.1
+  - element: 3
+    cast:
+      clips:
+      - {fileID: 8300000, guid: c018a87fd39f08541bf1f825d870b84b, type: 3}
+      - {fileID: 8300000, guid: c118179c88e7abb42988ee6c4631e70a, type: 3}
+      volume: 0.6
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.08
+    impact:
+      clips:
+      - {fileID: 8300000, guid: 4f97e965cf3ab3848a77093d991d55a6, type: 3}
+      - {fileID: 8300000, guid: d2de330865d3d514282341bae66cd9fb, type: 3}
+      - {fileID: 8300000, guid: e20d4796d1f87ec44b6d4d714633f56d, type: 3}
+      volume: 0.7
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.1
+  - element: 4
+    cast:
+      clips: []
+      volume: 0.6
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.08
+    impact:
+      clips: []
+      volume: 0.9
+      pitch: {x: 0.94, y: 1.06}
+      minInterval: 0.1

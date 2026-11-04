@@ -1,0 +1,49 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: RuneMage_RuneBurst
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: RuneMage_RuneBurst
+  skill: {fileID: 11400000, guid: b97d89a3b4d252f40ab47edce6dc122e, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Launch
+    trigger: 1
+    fxSlot: 
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.7
+    pitchRandom: 0.04
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'Rapid arcane runes launched in quick succession: magical zips.'
+    promptDuration: 0.7
+    ambiguous: 0
+    note: launchInterval 0.05s
+  - eventName: Blast
+    trigger: 3
+    fxSlot: 
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.7
+    pitchRandom: 0.08
+    loop: 0
+    holdTime: 0
+    minInterval: 0.1
+    prompt: 'An arcane rune explosion: magical pop burst with sparkle.'
+    promptDuration: 0.7
+    ambiguous: 0
+    note: "\uB8EC \uD3ED\uBC1C \uBC18\uACBD 2m \uB9C8\uB2E4 SkillImpacts"

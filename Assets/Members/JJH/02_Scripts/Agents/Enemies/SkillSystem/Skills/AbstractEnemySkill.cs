@@ -1,6 +1,7 @@
 ﻿using RobotWeapons;
 using System;
 using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
@@ -17,12 +18,37 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected AbstractEnemy _enemy;
         protected IEnemySkillModule _skillModule;
 
+        protected virtual bool followEnemy => true;
+
+        private readonly List<Coroutine> _subCoroutines = new List<Coroutine>();
         private Coroutine _skillCoroutine;
+
+        private int _playingVfxHash;
+        private bool _hasPlayingVfx;
+
+        private Vector3 _lastEnemyPos;
+        private Vector3 _followOffset;
 
         public virtual void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
         {
             _enemy = owner;
             _skillModule = skillModule;
+        }
+
+        protected virtual void LateUpdate()
+        {
+            if (!IsUsing || !followEnemy)
+                return;
+
+            Vector3 delta = _enemy.transform.position - _lastEnemyPos;
+            delta.y = 0f;
+            _lastEnemyPos = _enemy.transform.position;
+
+            if (delta.sqrMagnitude < 0.000001f)
+                return;
+
+            _followOffset += delta;
+            _skillModule.AreaVisualizer.Translate(delta);
         }
 
         public void UseSkill()
@@ -35,9 +61,26 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected abstract IEnumerator Execute();
 
+        public void CancelSkill()
+        {
+            if (!IsUsing)
+                return;
+
+            StopAllCoroutines();
+            _skillCoroutine = null;
+            IsUsing = false;
+
+            StopSkillVfx();
+            OnCancelled();
+        }
+
+        protected virtual void OnCancelled() { }
+
         private IEnumerator RunSkill()
         {
             IsUsing = true;
+            _followOffset = Vector3.zero;
+            _lastEnemyPos = _enemy.transform.position;
             try
             {
                 yield return Execute();
@@ -46,17 +89,32 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             {
                 IsUsing = false;
                 _skillCoroutine = null;
+                _hasPlayingVfx = false;
             }
+        }
+
+        protected void PlaySkillVfx()
+        {
+            if (SkillSO == null || SkillSO.VFXParam == null)
+                return;
+
+            _playingVfxHash = SkillSO.VFXParam.HashValue;
+            _hasPlayingVfx = true;
+            _enemy.VFXModule.PlayVfx(_playingVfxHash);
+        }
+
+        private void StopSkillVfx()
+        {
+            if (!_hasPlayingVfx)
+                return;
+
+            _enemy.VFXModule.StopVfx(_playingVfxHash);
+            _hasPlayingVfx = false;
         }
 
         protected virtual void OnDisable()
         {
-            if (_skillCoroutine != null)
-            {
-                StopCoroutine(_skillCoroutine);
-                _skillCoroutine = null;
-            }
-            IsUsing = false;
+            CancelSkill();
         }
 
         protected static IEnumerator Tick(float duration, Action<float> onTick)
@@ -94,17 +152,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         }
 
         protected IEnumerator ExpandCircleWarning(Vector3 center, float maxRadius,
-                                                                                float duration, float startRadius = 0.1f)
+                                               float duration, float startRadius = 0.1f)
         {
             return ExpandWarning((t, life) => AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                center, Mathf.Lerp(startRadius, maxRadius, t), life), duration);
+                center + _followOffset, Mathf.Lerp(startRadius, maxRadius, t), life), duration);
         }
 
         protected IEnumerator ExpandConeWarning(Vector3 center, Quaternion rotation, float maxRange,
                                                 float angle, float duration, float startRange = 0.1f)
         {
             return ExpandWarning((t, life) => AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                center, rotation, Mathf.Lerp(startRange, maxRange, t), angle, life), duration);
+                center + _followOffset, rotation, Mathf.Lerp(startRange, maxRange, t), angle, life), duration);
         }
 
         #endregion
@@ -171,6 +229,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected void DamageInCircle(Vector3 center, float range, bool ignoreSelf = false)
         {
+            center += _followOffset;
             Collider[] hits = Physics.OverlapSphere(center, range, _skillModule.TargetLayer);
             foreach (Collider hit in hits)
             {
@@ -188,6 +247,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected void DamageInCone(Vector3 center, Quaternion rotation, float range, float angle)
         {
+            center += _followOffset;
             Vector3 forward = rotation * Vector3.forward;
             Collider[] hits = Physics.OverlapSphere(center, range, _skillModule.TargetLayer);
             foreach (Collider hit in hits)

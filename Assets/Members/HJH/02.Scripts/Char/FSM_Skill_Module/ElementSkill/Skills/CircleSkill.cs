@@ -15,6 +15,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("떨어지기까지 (초). 0 = 바로")] private float delay;
         [SerializeField, Tooltip("떨어지기 전 바닥 예고 이펙트")] private FxSlot windupFx = new();
 
+        protected override CastMotion DefaultMotion => delay > 0f ? CastMotion.Sky : CastMotion.Ground;   // 지연 낙하(메테오) = 하늘 부르기
+
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
             Vector3 center = cast.Target(range, aroundSelf);

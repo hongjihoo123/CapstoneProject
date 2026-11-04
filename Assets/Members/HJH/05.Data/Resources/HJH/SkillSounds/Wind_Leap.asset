@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Wind_Leap
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Wind_Leap
+  skill: {fileID: 11400000, guid: 91d13db215ae51a9f565bedc10df7dbf, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Jump
+    trigger: 0
+    fxSlot: 
+    time: 0.083
+    fallbackDelay: 0.083
+    clip: {fileID: 0}
+    volume: 0.7
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A wind-powered leap: fast rising air whoosh.'
+    promptDuration: 0.5
+    ambiguous: 1
+    note: "Dash \uD074\uB9BD \uC190\xB7\uBC1C \uC18D\uB3C4 \uC2DC\uC791 0.08s, \uBD09\uC6B0\uB9AC\uAC00
+      \uC57D\uD558\uACE0 \uC5EC\uB7EC \uAC1C\uB77C \uC560\uB9E4"
+  - eventName: Land
+    trigger: 2
+    fxSlot: impactFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.8
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'Landing with a burst of wind: air shockwave thump and swirling dust.'
+    promptDuration: 0.8
+    ambiguous: 0
+    note: "\uCC29\uC9C0 impactFx burst 0s (dashTime 0.3)"

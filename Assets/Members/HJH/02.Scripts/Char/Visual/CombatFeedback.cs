@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Char.Audio;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
@@ -29,6 +30,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Tooltip("근접 평타가 맞았을 때 멈추는 시간 (마지막 타는 finisherHitStop)")]
         private float swingHitStop = 0.04f;
         [SerializeField] private float finisherHitStop = 0.08f;
+        [SerializeField, Tooltip("평타가 맞았을 때 카메라가 때린 방향으로 툭 밀리는 거리 (마지막 타는 2.2배)")]
+        private float swingKick = 0.07f;
+        [SerializeField, Tooltip("마지막 타가 맞았을 때 카메라가 다가가는 정도 (0.04 = 4%)")]
+        private float finisherZoom = 0.04f;
         [SerializeField, Tooltip("A jump longer than this in one frame (blink, scripted flight) draws a streak.")]
         private float teleportStreakDistance = 1.5f;
 
@@ -40,6 +45,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _lastHitShakeTime;
         private bool _hitParticles = true;
         private bool _killBurst = true;
+        private bool _wasDashing;
 
         private void Awake()
         {
@@ -145,6 +151,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 HitFeel.Shake(Mathf.Clamp(info.Amount / 220f, 0.03f, 0.2f), 0.12f);
             }
 
+            SfxBank sounds = Sfx.Bank;
+            if (sounds != null)
+            {
+                Sfx.Play(info.IsWeakpoint ? sounds.weakpointHit : sounds.hit, impact, big ? 1f : 0.8f);
+                if (info.Killed)
+                    Sfx.Play(sounds.kill, impact);
+            }
+
             if (info.Killed)
             {
                 if (_killBurst)
@@ -177,6 +191,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             Vector3 direction = shot.End - shot.Start;
             Fx.Muzzle(shot.Start, direction, shot.Color, shot.Empowered);
+            if (Sfx.Bank != null)
+                Sfx.Play(shot.Empowered ? Sfx.Bank.empoweredShot : Sfx.Bank.shot, shot.Start);
 
             // Travelling shots get their orb from HandleProjectileLaunched; instant shots get a tracer.
             if (!shot.Projectile)
@@ -228,14 +244,39 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             SwingShape shape = swing.Shape ?? new SwingShape();
             Fx.Swipe(swing.Origin, swing.Reach, shape, swing.Color, swing.Delay, swing.Duration);
+
+            // 휘두르는 소리는 칼날이 실제로 지나갈 때 (Delay 뒤). 마지막 타는 낮고 크게
+            SfxBank sounds = Sfx.Bank;
+            if (sounds == null || swing.Origin == null)
+                return;
+            bool finisher = swing.Step == swing.StepCount - 1;
+            Transform origin = swing.Origin;
+            Fx.After(swing.Delay, () =>
+            {
+                if (origin != null)
+                    Sfx.Play(sounds.swing, origin.position, finisher ? 1f : 0.8f, finisher ? 0.85f : 1f + 0.05f * swing.Step);
+            });
         }
 
-        // 허공에 휘두르면 아무것도 없고, 맞았을 때만 멈칫 + 흔들림. 마지막 타는 더 세게
+        // 허공에 휘두르면 아무것도 없고, 맞았을 때만 멈칫 + 흔들림 + 때린 방향으로 카메라 툭. 마지막 타는 더 세게
         private void HandleSwingHit(SwingHitVisual hit)
         {
             bool finisher = hit.Step == hit.StepCount - 1;
             float shake = hit.ShakeForce * (finisher ? 0.7f : 0.4f);
             HitFeel.Play(finisher ? finisherHitStop : swingHitStop, shake);
+
+            // 여러 명을 한 번에 맞히면 조금 더 세게 (최대 1.5배)
+            float more = 1f + 0.1f * (Mathf.Min(hit.Targets, 6) - 1);
+            Vector3 forward = transform.forward;
+            forward.y = 0f;
+            if (forward.sqrMagnitude > 0.0001f)
+                HitFeel.Kick(forward.normalized * swingKick * (finisher ? 2.2f : 1f) * more, finisher ? 0.22f : 0.14f);
+            if (finisher)
+                HitFeel.Zoom(finisherZoom, 0.26f);
+
+            SfxBank sounds = Sfx.Bank;
+            if (sounds != null)
+                Sfx.Play(finisher ? sounds.finisherHit : sounds.swingHit, transform.position + forward, Mathf.Min(more, 1.2f));
         }
 
         private void UpdateMovementTrails()
@@ -243,6 +284,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _dashTrail ??= Fx.DashTrail(transform, themeColor);
             bool dashing = player != null && player.Mover != null && player.Mover.IsDashing;
             _dashTrail.SetValue(dashing ? 1f : 0f);
+            if (dashing && !_wasDashing && Sfx.Bank != null)
+                Sfx.Play(Sfx.Bank.dash, transform.position);
+            _wasDashing = dashing;
 
             // 스킬 돌진이면 잔상을 원소 색으로 (아니면 캐릭터 테마색)
             Color trailColor = DashTint.TryGet(out Color skillColor) ? skillColor : themeColor;

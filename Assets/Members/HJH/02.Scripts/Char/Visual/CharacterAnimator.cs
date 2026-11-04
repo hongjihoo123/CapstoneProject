@@ -84,6 +84,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             _weapon.Clear();
             BindGun(null);
+            BindSkills(null);
         }
 
         // 총은 캐릭터 바뀔 때마다 새로 생겨서 매 프레임 확인함
@@ -100,10 +101,32 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void OnShotIntercepted() => _passiveShotRequested = true;
 
+        // 원소 스킬은 누르는 순간 끝나는 게 많아서(지속 0초) 스킬 상태만 보면 동작을 못 틂 → "스킬 씀" 알림으로 틂
+        private SkillStateModule _skills;
+        private SkillData _castRequested;
+
+        private void BindSkills(SkillStateModule skills)
+        {
+            if (ReferenceEquals(skills, _skills))
+                return;
+            if (_skills != null)
+                _skills.SkillUsed -= OnSkillUsed;
+            _skills = skills;
+            if (_skills != null)
+                _skills.SkillUsed += OnSkillUsed;
+        }
+
+        private void OnSkillUsed(SkillUsedInfo info)
+        {
+            if (info.Slot is SkillSlotId.Basic1 or SkillSlotId.Basic2 && info.Data is FSM_Skill_Module.ElementSkill.ElementSkillBase)
+                _castRequested = info.Data;
+        }
+
         private void LateUpdate()
         {
             _weapon.Track(_player);
             BindGun(_player.Weapon != null ? _player.Weapon.Weapon as IShotInterceptable : null);
+            BindSkills(_player.SkillFsm);
 
             Animator animator = _model != null ? _model.Animator : null;
             if (animator == null || animator.runtimeAnimatorController == null)
@@ -123,7 +146,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 UpdateMoveDir(animator);
 
             int locomotion = _player.Mover.PlanarSpeed > runSpeed ? Run : Idle;
-            int action = Action();
+            int action = Action(animator);
             _attackRequested = false;
             _passiveShotRequested = false;
 
@@ -186,8 +209,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 
         // 지금 틀어야 할 한 번짜리 동작. 없으면 0
-        private int Action()
+        private int Action(Animator animator)
         {
+            if (_castRequested != null)
+            {
+                SkillData data = _castRequested;
+                _castRequested = null;
+                return CastState(animator, data);
+            }
+
             SkillStateModule skills = _player.SkillFsm;
             if (skills != null && skills.Machine?.Current is GenericSkillState state && !state.IsFinished)
             {
@@ -196,7 +226,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     SkillSlotId.Dash => Dash,
                     SkillSlotId.Weapon => WeaponSkill,
                     SkillSlotId.Ultimate => Ultimate,
-                    _ => Skill
+                    _ => CastState(animator, state.Data)
                 };
             }
 
@@ -205,6 +235,28 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_attackRequested)
                 return Attack;
             return 0;
+        }
+
+        // 원소 스킬 몸 동작: 스킬 모양에 맞는 Cast_<동작> 상태 (컨트롤러에 없으면 예전처럼 Skill).
+        // 손 뻗는 순간 직전부터 틀도록 시작 시각을 기억해 둠 (스킬은 누르는 즉시 나가니까)
+        private readonly System.Collections.Generic.Dictionary<int, float> _startAt = new();
+
+        private int CastState(Animator animator, SkillData data)
+        {
+            if (data is not FSM_Skill_Module.ElementSkill.ElementSkillBase element)
+                return Skill;
+            FSM_Skill_Module.ElementSkill.CastMotion motion = element.Motion;
+            if (motion == FSM_Skill_Module.ElementSkill.CastMotion.None)
+                return Dash;   // 돌진 스킬은 대시 동작
+
+            CastMotionSet.Entry entry = CastMotionSet.Default != null ? CastMotionSet.Default.Of(motion) : null;
+            if (entry == null || string.IsNullOrEmpty(entry.state))
+                return Skill;
+            int hash = Animator.StringToHash(entry.state);
+            if (!animator.HasState(0, hash))
+                return Skill;
+            _startAt[hash] = Mathf.Max(0f, entry.release - entry.lead);
+            return hash;
         }
 
         private void Drive(Animator animator, Track track, int wanted, bool oneShot)
@@ -227,6 +279,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             // 상체가 Idle/Run 으로 돌아올 땐 하체랑 같은 지점부터 (안 그러면 팔다리 박자 어긋남)
             float offset = track == _base || oneShot ? 0f : BaseTimeIn(animator, state);
+            if (oneShot && _startAt.TryGetValue(state, out float startAt))
+                offset = startAt;   // 시전 동작: 준비 동작 앞부분은 건너뛰고 손 뻗기 직전부터
             animator.CrossFadeInFixedTime(state, fade, track.Layer, offset);
             track.Playing = state;
             track.OneShot = oneShot && state != Idle;

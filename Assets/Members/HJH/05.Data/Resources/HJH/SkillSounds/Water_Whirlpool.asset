@@ -1,0 +1,50 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2efcf02e6c17fb847918d87e65b4f990, type: 3}
+  m_Name: Water_Whirlpool
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
+  skillId: Water_Whirlpool
+  skill: {fileID: 11400000, guid: a401ed54823c6fcdec7c2a537a5937fc, type: 2}
+  replacesGenericCast: 0
+  replacesGenericImpact: 0
+  entries:
+  - eventName: Release
+    trigger: 0
+    fxSlot: 
+    time: 1.267
+    fallbackDelay: 0.15033317
+    clip: {fileID: 0}
+    volume: 0.55
+    pitchRandom: 0.05
+    loop: 0
+    holdTime: 0
+    minInterval: 0.06
+    prompt: 'A water spell cast: swirling splash.'
+    promptDuration: 0.5
+    ambiguous: 0
+    note: Cast_Ground 1.27s
+  - eventName: Vortex
+    trigger: 2
+    fxSlot: zoneFx
+    time: 0
+    fallbackDelay: 0
+    clip: {fileID: 0}
+    volume: 0.55
+    pitchRandom: 0.02
+    loop: 0
+    holdTime: 4
+    minInterval: 0.3
+    prompt: 'A swirling whirlpool vortex: churning water sucking inward and gurgling,
+      four seconds, fading out.'
+    promptDuration: 4
+    ambiguous: 0
+    note: zoneTime 4s
