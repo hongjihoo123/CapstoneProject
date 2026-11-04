@@ -291,8 +291,13 @@ namespace Assets.Members.HJH.Environment
 
             foreach (Renderer r in FindObjectsByType<Renderer>(FindObjectsSortMode.None))
             {
-                if (_known.Contains(r))
+                if (_known.Contains(r) || _rockRejected.Contains(r))
                     continue;
+                if (IsNeverFade(r))
+                {
+                    _rockRejected.Add(r);   // 바닥 취급 → 다음 Scan 때 다시 안 봄
+                    continue;
+                }
                 if (HasFade(r))
                 {
                     _known.Add(r);
@@ -309,6 +314,23 @@ namespace Assets.Members.HJH.Environment
         }
 
         private readonly HashSet<Renderer> _rockRejected = new();
+
+        [Tooltip("재질 이름에 이 글자가 들어가면 절대 투명해지지 않음 (바닥 역할: 뿌리 둔덕 MagrobeWood = M_Roots_Toon 등). 쉼표로 여러 개")]
+        [SerializeField] private string neverFadeMaterials = "Roots";
+
+        private bool IsNeverFade(Renderer r)
+        {
+            Material m = r.sharedMaterial;
+            if (m == null || string.IsNullOrEmpty(neverFadeMaterials))
+                return false;
+            foreach (string key in neverFadeMaterials.Split(','))
+            {
+                string k = key.Trim();
+                if (k.Length > 0 && m.name.Contains(k))
+                    return true;
+            }
+            return false;
+        }
 
         private static bool HasFade(Renderer r)
         {
