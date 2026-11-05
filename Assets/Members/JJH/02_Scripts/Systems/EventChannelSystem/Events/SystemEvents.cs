@@ -5,26 +5,9 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
 {
     public static class SystemEvents
     {
-        public static readonly EnemyKilledEvent EnemyKilledEvent = new();
-
         public static readonly PlayerStatsChangedEvent PlayerStatsChangedEvent = new();
         public static readonly PlayerStatsRequestEvent PlayerStatsRequestEvent = new();
     }
-
-    #region Money System SO
-
-    public class EnemyKilledEvent : GameEvent
-    {
-        public int Amount { get; private set; }
-
-        public EnemyKilledEvent Init(int amount)
-        {
-            Amount = amount;
-            return this;
-        }
-    }
-
-    #endregion
 
     #region Player Stat Events
 
