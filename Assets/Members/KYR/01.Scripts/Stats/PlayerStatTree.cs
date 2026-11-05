@@ -43,7 +43,6 @@ namespace Members.KYR._01.Scripts.Stats
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, combat);
             Add(PlayerStatId.ReloadSpeed, bases.ReloadSpeed, combat);
             Add(PlayerStatId.RecoilControl, bases.RecoilControl, combat);
-            Add(PlayerStatId.WeakpointMultiplier, bases.WeakpointMultiplier, combat);
             Add(PlayerStatId.ArmorPenetration, bases.ArmorPenetration, combat);
             Add(PlayerStatId.Omnivamp, bases.Omnivamp, combat);
 
