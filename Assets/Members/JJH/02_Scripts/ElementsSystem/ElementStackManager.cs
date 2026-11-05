@@ -16,7 +16,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
     public class ElementStackManager : MonoBehaviour
     {
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO elementsChannel;
         [SerializeField, Min(1)] private int maxStack = 4;
         [SerializeField, Min(0.1f)] private float triggerDelay = 3f;
 
@@ -31,14 +31,14 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void OnEnable()
         {
-            systemChannel.AddListener<UseSkillEvent>(HandleUseSkill);
-            systemChannel.AddListener<ElementBuffTriggeredEvent>(HandleBuffTriggered);
+            elementsChannel.AddListener<UseSkillEvent>(HandleUseSkill);
+            elementsChannel.AddListener<ElementBuffTriggeredEvent>(HandleBuffTriggered);
         }
 
         private void OnDisable()
         {
-            systemChannel.RemoveListener<UseSkillEvent>(HandleUseSkill);
-            systemChannel.RemoveListener<ElementBuffTriggeredEvent>(HandleBuffTriggered);
+            elementsChannel.RemoveListener<UseSkillEvent>(HandleUseSkill);
+            elementsChannel.RemoveListener<ElementBuffTriggeredEvent>(HandleBuffTriggered);
         }
 
         private void Update()
@@ -65,7 +65,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             if (_model.IsFull)
             {
                 List<ElementType> stacks = new List<ElementType>(_model.Stacks);
-                systemChannel.RaiseEvent(SystemEvents.ElementBuffTriggeredEvent.Init(stacks));
+                elementsChannel.RaiseEvent(ElementEvents.ElementBuffTriggeredEvent.Init(stacks));
             }
         }
 
@@ -87,7 +87,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void RaiseStackChanged(float timerDuration)
         {
-            systemChannel.RaiseEvent(SystemEvents.ElementStackChangedEvent.Init(_model.Stacks, _model.MaxStack, timerDuration));
+            elementsChannel.RaiseEvent(ElementEvents.ElementStackChangedEvent.Init(_model.Stacks, _model.MaxStack, timerDuration));
         }
     }
 }

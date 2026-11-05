@@ -18,11 +18,6 @@ namespace Members.KYR._01.Scripts.Combat
             switch (id)
             {
                 case PlayerStatId.Damage:
-                case PlayerStatId.FireDamage:
-                case PlayerStatId.WaterDamage:
-                case PlayerStatId.WindDamage:
-                case PlayerStatId.ElectricDamage:
-                case PlayerStatId.EarthDamage:
                 case PlayerStatId.IncomingDamageTaken:
                 case PlayerStatId.HealReceived:
                     return 1f;

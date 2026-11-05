@@ -1,6 +1,6 @@
-﻿using Members.KYR._01_Scripts.EffectBuffs;
-using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using Members.KYR._01_Scripts.EffectBuffs;
 using System;
 using System.Collections.Generic;
 using UnityEngine;
@@ -23,7 +23,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         }
 
         [Header("Event")]
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO elementsChannel;
 
         [Header("Combos")]
         [SerializeField]
@@ -57,14 +57,14 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void OnEnable()
         {
-            systemChannel.AddListener<ElementStackChangedEvent>(HandleStackChanged);
-            systemChannel.AddListener<ElementBuffTriggeredEvent>(HandleTriggered);
+            elementsChannel.AddListener<ElementStackChangedEvent>(HandleStackChanged);
+            elementsChannel.AddListener<ElementBuffTriggeredEvent>(HandleTriggered);
         }
 
         private void OnDisable()
         {
-            systemChannel.RemoveListener<ElementStackChangedEvent>(HandleStackChanged);
-            systemChannel.RemoveListener<ElementBuffTriggeredEvent>(HandleTriggered);
+            elementsChannel.RemoveListener<ElementStackChangedEvent>(HandleStackChanged);
+            elementsChannel.RemoveListener<ElementBuffTriggeredEvent>(HandleTriggered);
         }
 
         private void HandleStackChanged(ElementStackChangedEvent evt)
@@ -74,8 +74,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
             if (TryFindCombo(evt.Stacks, out ElementCombo combo))
             {
-                systemChannel.RaiseEvent(
-                    SystemEvents.ElementBuffTriggeredEvent.Init(evt.Stacks));
+                elementsChannel.RaiseEvent(ElementEvents.ElementBuffTriggeredEvent.Init(evt.Stacks));
 
                 return;
             }
@@ -84,8 +83,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             {
                 ElementType nextElement = nextCombo.sequence[progress];
 
-                systemChannel.RaiseEvent(SystemEvents.ElementComboNextEvent
-                    .Init(nextElement, nextCombo.name, progress, nextCombo.sequence.Length));
+                elementsChannel.RaiseEvent(ElementEvents.ElementComboNextEvent
+                                                    .Init(nextElement, nextCombo.name, progress, nextCombo.sequence.Length));
             }
         }
 
@@ -98,10 +97,8 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             {
                 ApplyCombo(combo);
 
-                systemChannel.RaiseEvent(
-                    SystemEvents.ElementComboCompleteEvent.Init(
-                        combo.name,
-                        combo.sequence));
+                elementsChannel.RaiseEvent(ElementEvents.ElementComboCompleteEvent
+                                                                                    .Init(combo.name, combo.sequence));
 
                 return;
             }

@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
@@ -99,8 +99,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                         AddBuff(context, PlayerStatId.DamageReduction, StatModifierType.Flat, effect, source);
                         break;
                     case SelfEffectKind.MoveSpeed:
-                        AddBuff(context, PlayerStatId.WalkSpeed, StatModifierType.PercentAdd, effect, source);
-                        AddBuff(context, PlayerStatId.RunSpeed, StatModifierType.PercentAdd, effect, source);
+                        AddBuff(context, PlayerStatId.MoveSpeed, StatModifierType.PercentAdd, effect, source);
                         break;
                     case SelfEffectKind.AttackSpeed:
                         AddBuff(context, PlayerStatId.AttackSpeed, StatModifierType.PercentAdd, effect, source);
@@ -161,7 +160,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                     SelfEffectKind.CooldownSpeed => new SkillStat("쿨타임 가속", $"+{e.value:0}% · {e.duration:0.#}초"),
                     SelfEffectKind.DashCharge => new SkillStat("대쉬 충전", $"{e.value:0}회"),
                     SelfEffectKind.Shield => new SkillStat("쉴드", $"{e.value:0}"),
-                    SelfEffectKind.Vulnerability =>new SkillStat("받는 피해", $"+{e.value:0}% · {e.duration:0.#}초"),
+                    SelfEffectKind.Vulnerability => new SkillStat("받는 피해", $"+{e.value:0}% · {e.duration:0.#}초"),
                     _ => default
                 });
             }
