@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 
 namespace Assets.Members.JJH._02_Scripts.Test
 {
@@ -13,10 +14,16 @@ namespace Assets.Members.JJH._02_Scripts.Test
         [Header("Spawn Settings")]
         [SerializeField] private int spawnCount = 5;
         [SerializeField] private bool randomSpawn = true;
+        [Tooltip("적 사이 스폰 간격"), SerializeField] private float spawnDelay = 0.3f;
+        [Tooltip("간격에 더해질 랜덤 편차 (0이면 고정)"), SerializeField] private float randomDelayRange = 0.1f;
+
+        [Header("Spawn Effect")]
+        [SerializeField] private GameObject spawnParticlePrefab;
+        [Tooltip("파티클 재생 후 적이 나타나기까지 시간"), SerializeField] private float particleLeadTime = 0.3f;
 
         [Header("Detect Settings")]
         [SerializeField] private float detectRadius = 10f;
-        [SerializeField] private LayerMask playerLayer; 
+        [SerializeField] private LayerMask playerLayer;
         private float checkInterval = 0.2f;
         private bool spawn = true;
 
@@ -35,8 +42,8 @@ namespace Assets.Members.JJH._02_Scripts.Test
 
             if (Physics.CheckSphere(transform.position, detectRadius, playerLayer))
             {
-                SpawnEnemies();
                 hasSpawned = true;
+                SpawnEnemies();
             }
         }
 
@@ -54,6 +61,11 @@ namespace Assets.Members.JJH._02_Scripts.Test
                 return;
             }
 
+            StartCoroutine(SpawnRoutine());
+        }
+
+        private IEnumerator SpawnRoutine()
+        {
             int count = Mathf.Min(spawnCount, spawnPoints.Length);
 
             for (int i = 0; i < count; i++)
@@ -61,11 +73,38 @@ namespace Assets.Members.JJH._02_Scripts.Test
                 int prefabIndex = Random.Range(0, enemyPrefabs.Length);
                 int spawnIndex = randomSpawn ? Random.Range(0, spawnPoints.Length) : i;
 
-                if (enemyPrefabs[prefabIndex] == null || spawnPoints[spawnIndex] == null)
+                GameObject prefab = enemyPrefabs[prefabIndex];
+                Transform point = spawnPoints[spawnIndex];
+
+                if (prefab == null || point == null)
                     continue;
 
-                Instantiate(enemyPrefabs[prefabIndex], spawnPoints[spawnIndex].position, spawnPoints[spawnIndex].rotation);
+                PlayParticle(point);
+
+                if (particleLeadTime > 0f)
+                    yield return new WaitForSeconds(particleLeadTime);
+
+                Instantiate(prefab, point.position, point.rotation);
+
+                if (i < count - 1)
+                {
+                    float delay = spawnDelay + Random.Range(0f, randomDelayRange);
+                    if (delay > 0f)
+                        yield return new WaitForSeconds(delay);
+                }
             }
+        }
+
+        private void PlayParticle(Transform point)
+        {
+            if (spawnParticlePrefab == null)
+                return;
+
+            GameObject fx = Instantiate(spawnParticlePrefab, point.position, point.rotation);
+
+            ParticleSystem[] particles = fx.GetComponentsInChildren<ParticleSystem>(true);
+            foreach (ParticleSystem ps in particles)
+                ps.Play();
         }
 
         private void OnDrawGizmosSelected()
