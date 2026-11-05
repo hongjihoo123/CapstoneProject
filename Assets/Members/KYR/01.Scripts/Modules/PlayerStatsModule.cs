@@ -15,7 +15,7 @@ namespace Members.KYR._01.Scripts.Modules
         [SerializeField] private CombatFormulaManagerSO combatFormula;
 
         [Header("Event")]
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO playerStatsChannel;
 
         [Header("공격")]
         [SerializeField] private float damage = 1f;                 // 공격력
@@ -83,16 +83,16 @@ namespace Members.KYR._01.Scripts.Modules
 
             _snapshot = new float[Enum.GetNames(typeof(PlayerStatId)).Length];
 
-            if (systemChannel != null)
-                systemChannel.AddListener<PlayerStatsRequestEvent>(HandleStatsRequest);
+            if (playerStatsChannel != null)
+                playerStatsChannel.AddListener<PlayerStatsRequestEvent>(HandleStatsRequest);
 
             Publish(true);
         }
 
         private void OnDestroy()
         {
-            if (systemChannel != null)
-                systemChannel.RemoveListener<PlayerStatsRequestEvent>(HandleStatsRequest);
+            if (playerStatsChannel != null)
+                playerStatsChannel.RemoveListener<PlayerStatsRequestEvent>(HandleStatsRequest);
         }
 
         private void HandleStatsRequest(PlayerStatsRequestEvent evt)
@@ -116,8 +116,8 @@ namespace Members.KYR._01.Scripts.Modules
                 changed = true;
             }
 
-            if (changed && systemChannel != null)
-                systemChannel.RaiseEvent(SystemEvents.PlayerStatsChangedEvent.Init(_snapshot));
+            if (changed && playerStatsChannel != null)
+                playerStatsChannel.RaiseEvent(PlayerStatsEvents.PlayerStatsChangedEvent.Init(_snapshot));
         }
 
         public float Get(PlayerStatId id)

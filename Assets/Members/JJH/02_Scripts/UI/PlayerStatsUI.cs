@@ -52,7 +52,7 @@ namespace Members.KYR._01.Scripts.UI
         }
 
         [Header("Event")]
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO playerStatsChannel;
 
         [Header("UI")]
         [SerializeField] private GameObject panel;
@@ -104,21 +104,21 @@ namespace Members.KYR._01.Scripts.UI
 
         private void OnEnable()
         {
-            if (systemChannel == null)
+            if (playerStatsChannel == null)
             {
                 Debug.LogWarning($"{name}: systemChannel이 연결되지 않았습니다.", this);
                 return;
             }
 
-            systemChannel.AddListener<PlayerStatsChangedEvent>(HandleStatsChanged);
+            playerStatsChannel.AddListener<PlayerStatsChangedEvent>(HandleStatsChanged);
             // 켜지기 전에 발행된 값을 놓쳤을 수 있으니 현재 값을 요청
-            systemChannel.RaiseEvent(SystemEvents.PlayerStatsRequestEvent);
+            playerStatsChannel.RaiseEvent(PlayerStatsEvents.PlayerStatsRequestEvent);
         }
 
         private void OnDisable()
         {
-            if (systemChannel != null)
-                systemChannel.RemoveListener<PlayerStatsChangedEvent>(HandleStatsChanged);
+            if (playerStatsChannel != null)
+                playerStatsChannel.RemoveListener<PlayerStatsChangedEvent>(HandleStatsChanged);
         }
 
         public void Toggle()

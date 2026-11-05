@@ -3,13 +3,11 @@ using System.Collections.Generic;
 
 namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
 {
-    public static class SystemEvents
+    public static class PlayerStatsEvents
     {
         public static readonly PlayerStatsChangedEvent PlayerStatsChangedEvent = new();
         public static readonly PlayerStatsRequestEvent PlayerStatsRequestEvent = new();
     }
-
-    #region Player Stat Events
 
     public class PlayerStatsChangedEvent : GameEvent
     {
@@ -25,6 +23,4 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
     }
 
     public class PlayerStatsRequestEvent : GameEvent { }
-
-    #endregion
 }
