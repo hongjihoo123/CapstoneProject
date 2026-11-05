@@ -1,0 +1,87 @@
+# 로컬 효과음으로 채운 기록 (2026-11-04, ElevenLabs 생성 대신). 탭 구분
+# name = Assets/Audio/SFX/Skills/<name>.wav / source = 원본 파일 이름 / start = 숫자(초) · onset(소리 시작 직전부터) · peak(가장 큰 순간 0.04s 전부터) · peak:x(가장 큰 순간 x초 전부터), length = 길이(초), 끝 20%는 페이드아웃, 최대 음량 -1dB 로 맞춤
+# 출처: MS = Magic Spell SFX (The Sound Rack, CC BY 4.0 — 크레딧 표기 필수) / Hove = Hove Audio Lightning Magic (로열티 프리)
+#       Kenney = Kenney Sci-Fi/Impact Sounds (CC0) / SciFiUI = Hove Audio Free Sci-Fi UI (로열티 프리, 크레딧 권장)
+name	source	start	length	pack	why
+Earth_Boulder_Release	earth_spell_cast_magic_whoosh_01.ogg	onset	1.0	MS	흙 마법 휙
+Earth_Boulder_Roll	earth_spell_cast_falling_rocks_02.ogg	onset	1.1	MS	돌 굴러가는 소리 (비행 0.9s)
+Earth_Boulder_Hit	earth_spell_cast_stone_dry_impact_01.ogg	peak	1.0	MS	돌 둔탁한 충돌
+Earth_EarthSplitter_Release	earth_spell_cast_magic_whoosh_02.ogg	peak:0.15	0.8	MS	흙 마법 휙
+Earth_EarthSplitter_Eruption	earth_spell_cast_rise_rocks_03.ogg	peak	1.6	MS	바위 솟구침
+Earth_Earthquake_Stomp	earth_spell_cast_impact_ground_rock_debris_02.ogg	peak	1.0	MS	땅 내려찍기 + 돌 부스러기
+Earth_Earthquake_Quake	earth_spell_cast_earthquake_power_03.ogg	onset	3.4	MS	지진 울림 (장판 3s)
+Earth_EarthSmash_Slam	earth_spell_cast_meteor_explosion_02.ogg	peak	2.0	MS	큰 땅 폭발
+Earth_GraspOfEarth_Release	earth_spell_cast_leaves_whoosh_02.ogg	onset	0.8	MS	흙·잎 휙 (소환 동작)
+Earth_GraspOfEarth_Rumble	earth_spell_cast_rise_ground_02.ogg	onset	0.6	MS	땅 갈라지며 올라오는 소리 앞부분
+Earth_GraspOfEarth_Grab	earth_spell_cast_morph_rocks_01.ogg	peak	1.2	MS	바위가 모양 바꾸며 조임
+Earth_RockWall_Release	earth_spell_cast_magic_whoosh_01.ogg	peak:0.15	0.6	MS	짧은 흙 마법 휙
+Earth_RockWall_Rise	earth_spell_cast_rise_ground_04.ogg	onset	1.6	MS	땅이 솟는 벽
+Earth_StoneShield_Release	earth_spell_cast_morph_rocks_04.ogg	onset	1.0	MS	돌이 몸에 붙는 소리
+Earth_StoneShield_Burst	earth_spell_cast_impact_ground_rock_debris_01.ogg	peak	1.4	MS	돌 갑옷 터짐
+Electric_ChainLightning_Release	MAGSpel_SpellCast_HoveAud_LightningMagic_01.wav	onset	0.8	Hove	전기 시전
+Electric_ChainLightning_Hit	lighting_spell_electric_zap_blast_sparkle_bright_01.ogg	peak	0.5	MS	짧은 번개 튐
+Electric_ElectricNet_Release	lighting_spell_electric_zap_blast_sparkle_dark_03.ogg	onset	0.5	MS	짧은 지직 던짐
+Electric_ElectricNet_Snare	lighting_spell_electric_impact_static_light_explode_01.ogg	peak	1.4	MS	전기 터지며 지직거림
+Electric_Flash_Depart	lighting_spell_electric_zap_blast_sparkle_bright_02.ogg	onset	0.6	MS	순간 번개 출발
+Electric_Flash_Arrive	lighting_spell_electric_impact_static_light_explode_short_01.ogg	peak	1.0	MS	도착 전기 폭발
+Electric_LightningSpear_Release	MAGSpel_SpellCast_HoveAud_LightningMagic_05.wav	onset	0.8	Hove	전기 창 시전
+Electric_LightningSpear_Hit	lighting_spell_electric_zap_blast_sparkle_dark_01.ogg	peak	0.6	MS	관통 지직
+Electric_Overcharge_Release	MAGElem_ElectricCharge_HoveAud_LightningMagic.wav	onset	1.8	Hove	전기 충전 상승음
+Electric_StaticShell_Release	lighting_spell_electric_loop_static_sparkle_bright_02.ogg	onset	1.3	MS	정전기 막 앞부분
+Electric_StaticShell_Shock	lighting_spell_electric_zap_blast_sparkle_bright_03.ogg	peak	0.5	MS	반격 지직
+Electric_Thunderbolt_Release	lighting_spell_electric_zap_blast_sparkle_dark_04.ogg	onset	0.6	MS	전기 모이는 지직
+Electric_Thunderbolt_Strike	lighting_spell_electric_impact_thunder_loud_dark_01.ogg	peak	1.8	MS	큰 천둥 낙뢰
+Water_BubblePrison_Release	water_spell_cast_fast_ball_power_01.ogg	onset	0.9	MS	물 공 발사
+Water_BubblePrison_Trap	water_spell_cast_drown_bubble_01.ogg	peak	1.4	MS	거품에 갇힘
+Water_HealingRain_Release	water_spell_cast_soft_drop_02.ogg	onset	0.8	MS	부드러운 물방울
+Water_HealingRain_Rain	Holy_spell_heal_cast_long_01.ogg	onset	4.3	MS	치유 반짝임 (빗소리 전용 파일은 없음)
+Water_WaterCannon_Release	water_spell_cast_splash_whoosh_01.ogg	onset	1.2	MS	물줄기 휙
+Water_WaterCannon_Splash	water_spell_cast_impact_ball_01.ogg	peak	1.0	MS	물 충돌
+Water_WaterVeil_Release	water_spell_cast_rise_smooth_impact_01.ogg	onset	0.9	MS	물이 솟는 소리
+Water_WaterVeil_Falls	water_spell_cast_flowing_loop_02.ogg	onset	4.3	MS	흐르는 물 (벽 4s)
+Water_Wave_Release	water_spell_cast_double_splash_whoosh_02.ogg	onset	0.8	MS	물 던지는 휙
+Water_Wave_Surge	water_spell_cast_rise_impact_wave_03.ogg	onset	1.4	MS	파도 밀려옴
+Water_Whirlpool_Release	water_spell_cast_splash_whoosh_02.ogg	peak:0.15	0.8	MS	물 휙
+Water_Whirlpool_Vortex	water_spell_cast_boil_loop_01.ogg	onset	4.3	MS	부글부글 소용돌이 (장판 4s)
+Wind_Gust_Release	wind_spell_cast_air_transient_whoosh_01.ogg	onset	1.2	MS	강한 바람 휙
+Wind_Gust_Hit	wind_spell_cast_air_impact_splash_01.ogg	peak	0.7	MS	바람 충격
+Wind_Headwind_Release	wind_spell_cast_air_short_whoosh_03.ogg	onset	0.7	MS	짧은 바람
+Wind_Headwind_Gale	wind_spell_cast_air_long_loop_01.ogg	onset	4.3	MS	계속 부는 바람 (장판 4s)
+Wind_Leap_Jump	wind_spell_cast_air_short_rise_whoosh_01.ogg	onset	0.8	MS	올라가는 휙
+Wind_Leap_Land	wind_spell_cast_air_impact_splash_02.ogg	peak	1.0	MS	바람 착지 충격
+Wind_Tailwind_Release	wind_spell_cast_air_rise_cut_01.ogg	onset	1.5	MS	바람이 감아 올라감
+Wind_Tornado_Release	wind_spell_cast_air_short_noisy_whoosh_02.ogg	onset	0.6	MS	짧은 바람 터짐
+Wind_Tornado_Twister	wind_spell_cast_frost_air_long_02.ogg	onset	2.3	MS	길게 휘도는 바람 (비행 2s)
+Wind_WindCutter_Release	wind_spell_cast_air_sharp_shoot_01.ogg	onset	0.8	MS	날카로운 바람 발사
+Wind_WindCutter_Hit	wind_spell_cast_air_sharp_shoot_02.ogg	peak	0.5	MS	베는 바람
+Wind_WindVeil_Release	wind_spell_cast_air_short_spacious_whoosh_03.ogg	onset	0.7	MS	바람 휙
+Wind_WindVeil_Dome	wind_spell_cast_air_long_loop_01.ogg	5	3.4	MS	계속 부는 바람 (장막 3s, Headwind 와 다른 구간)
+Wind_WindVeil_Block	wind_spell_cast_air_short_whoosh_02.ogg	onset	0.5	MS	튕겨내는 휙
+Finisher_Blessing_Release	Holy_spell_heal_cast_bright_02.ogg	onset	2.2	MS	밝은 축복
+Finisher_MeteorFall_Release	fire_spell_long_soft_01.ogg	onset	0.8	MS	불 소환 앞부분
+Finisher_MeteorFall_Fall	fire_spell_long_warm_01.ogg	onset	0.9	MS	불덩이 떨어지는 소리 대신 (휘파람 낙하음 없음)
+Finisher_MeteorFall_Impact	earth_spell_cast_meteor_explosion_01.ogg	peak	2.2	MS	운석 폭발
+Finisher_PlasmaBurst_Burst	fire_spell_charge_explosion_dark_01.ogg	peak	2.0	MS	큰 불 폭발
+Finisher_Storm_Release	lighting_spell_electric_impact_thunder_static_warm_01.ogg	onset	1.0	MS	천둥 시작
+Finisher_Storm_Strike	lighting_spell_electric_impact_thunder_dark_dry_01.ogg	peak	0.9	MS	짧은 낙뢰
+Finisher_Storm_Ambience	lighting_spell_electric_loop_static_warm_02.ogg	onset	4.3	MS	계속 지직거림 (비 소리는 없음)
+Finisher_Tsunami_Wave	water_spell_cast_rise_impact_wave_02.ogg	onset	2.6	MS	큰 파도
+Gunner_Dash_DashStart	wind_spell_cast_air_short_whoosh_01.ogg	onset	0.6	MS	짧은 휙
+Gunner_Dash_Reload	Click_Combo.wav	onset	0.6	SciFiUI	딸깍 (탄창 소리는 없음)
+Gunner_DashBlast_Dash	wind_spell_cast_air_short_noisy_whoosh_01.ogg	onset	0.5	MS	짧은 휙
+Gunner_DashBlast_Blast	MAGElem_LightningStrikeSolo_HoveAud_LightningMagic_08.wav	peak	1.2	Hove	전기 충격 폭발
+Gunner_ShockCannon_Charge	forceField_000.ogg	onset	0.6	Kenney	에너지 충전
+Gunner_ShockCannon_Fire	lowFrequency_explosion_000.ogg	peak	1.6	Kenney	낮은 큰 폭발
+RuneMage_Blink_Blink	dark_spell_cast_warp_0-001.ogg	onset	0.7	MS	순간이동
+RuneMage_Blink_Trap	Holy_spell_blast_cast_01.ogg	peak	1.0	MS	룬 함정 터짐
+RuneMage_RuneBurst_Launch	dark_spell_cast_energy_ball_01.ogg	onset	0.8	MS	마법 구슬 발사
+RuneMage_RuneBurst_Blast	Holy_spell_blast_cast_02.ogg	peak	0.8	MS	룬 폭발
+RuneMage_ArcaneCollapse_Blink	dark_spell_cast_warp_0-002.ogg	onset	0.6	MS	순간이동
+RuneMage_ArcaneCollapse_Blast	dark_spell_cast_charge_impact_01.ogg	peak	1.0	MS	마법 폭발
+RuneMage_ArcaneCollapse_Collapse	dark_spell_cast_energy_wave_01.ogg	peak	2.4	MS	큰 마법 폭발
+ChainDash_Dash	wind_spell_cast_air_short_whoosh_02.ogg	onset	0.5	MS	짧은 휙 (사슬 소리는 없음)
+ChainDashStrike_Slash	wind_spell_cast_air_sharp_shoot_03.ogg	onset	0.6	MS	베는 휙
+ChainDashStrike_Land	fire_spell_burst_impact_short_01.ogg	peak	1.1	MS	불 착지 충격
+ChainPullSpin_Rise	wind_spell_cast_air_rise_sharp_shoot_03.ogg	onset	0.6	MS	올라가는 휙
+ChainPullSpin_Slam	MAGElem_LightningStrikeWoutRum_HoveAud_LightningMagic_13.wav	peak	1.2	Hove	전기 내려찍기
+ChainPullSpin_Spin	MAGElem_LightningShockHold_HoveAud_LightningMagic.wav	onset	2.8	Hove	계속 지직거리는 회전 (2.5s)

@@ -7,7 +7,7 @@ namespace Members.JJH._02_Scripts.Map
 {
     public class MapPortalTrigger : MonoBehaviour
     {
-        [SerializeField] private EventChannelSO eventChannel;
+        [SerializeField] private EventChannelSO mapChannel;
         [SerializeField] private LayerMask playerLayer;
         [SerializeField] private GameObject keyImage;
 
@@ -24,7 +24,7 @@ namespace Members.JJH._02_Scripts.Map
             if (!isPlayerInRange || Keyboard.current == null || !Keyboard.current.fKey.wasPressedThisFrame)
                 return;
 
-            eventChannel.RaiseEvent(SystemEvents.ToggleMapEvent);
+            mapChannel.RaiseEvent(MapEvents.ToggleMapEvent);
         }
 
         private void OnTriggerEnter(Collider other)

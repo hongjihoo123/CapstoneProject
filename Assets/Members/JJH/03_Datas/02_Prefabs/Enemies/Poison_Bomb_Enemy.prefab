@@ -391,6 +391,7 @@ GameObject:
   - component: {fileID: 5692621741452848357}
   - component: {fileID: 8777008819907541724}
   - component: {fileID: 2902831558652669252}
+  - component: {fileID: 3494824641604769570}
   m_Layer: 9
   m_Name: Poison_Bomb_Enemy
   m_TagString: Untagged
@@ -529,6 +530,21 @@ MonoBehaviour:
   tier: 0
   stunImmunity: 1
   knockbackTime: 0.15
+--- !u!114 &3494824641604769570
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6962236216818172625}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 1290e458d7b4ac442a2f7cdff70c24ce, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.EnemyOutline
+  normal: {r: 0.95, g: 0.12, b: 0.1, a: 1}
+  hover: {r: 1, g: 1, b: 1, a: 1}
+  pickRadius: 0.35
 --- !u!1 &6996510411028286630
 GameObject:
   m_ObjectHideFlags: 0

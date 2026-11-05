@@ -1,10 +1,10 @@
-using System;
-using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -45,13 +45,13 @@ namespace Assets.Members.HJH._02.Scripts.Element
         }
 
         [SerializeField] private SkillStateModule skills;
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO elementsChannel;
         [SerializeField, Tooltip("Combo table source (its combos list).")]
         private ElementBuffController buffController;
         [SerializeField, Min(1), Tooltip("Inputs kept for matching and display. At least the longest combo.")]
         private int maxInputs = 4;
         [SerializeField, Min(0.1f), Tooltip("Seconds allowed between casts before the chain breaks.")]
-        private float chainWindow = 3f;
+        private float chainWindow = 5f;
         [SerializeField, Min(1)] private int maxStock = 3;
         [SerializeField, Tooltip("완성된 콤보를 JJH 버프로 보냄. 같은 씬에 JJH ElementStackManager 가 켜져 있으면 그쪽이 보내니까 끔 (안 끄면 버프 두 번)")]
         private bool sendBuffEvents = true;
@@ -141,7 +141,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 finisherBook = FinisherBook.Default;
             maxInputs = Mathf.Max(maxInputs, Book.LongestLength);
             Debug.Assert(skills != null, $"{name}: ElementComboChain needs the player's SkillStateModule.");
-            Debug.Assert(systemChannel != null, $"{name}: ElementComboChain needs the System event channel.");
+            Debug.Assert(elementsChannel != null, $"{name}: ElementComboChain needs the System event channel.");
         }
 
         private void OnEnable()
@@ -227,7 +227,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 HitFeel.Play(comboHitStop, comboShake);
                 ComboLanded?.Invoke(new LandedCombo(combo, _inputs.Count - combo.Length));
                 if (sendBuffEvents)
-                    systemChannel.RaiseEvent(SystemEvents.ElementBuffTriggeredEvent.Init(combo.Sequence));
+                    elementsChannel.RaiseEvent(ElementEvents.ElementBuffTriggeredEvent.Init(combo.Sequence));
                 if (combo.Length > 1)   // 원소 하나짜리 콤보는 스킬마다 터져서 스택은 안 줌
                     AddToStock(combo);
             }
@@ -317,7 +317,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         private void Break()
         {
             if (sendBuffEvents && buffLeftoverOnBreak && _elements.Count > 0)
-                systemChannel.RaiseEvent(SystemEvents.ElementBuffTriggeredEvent.Init(_elements.ToArray()));
+                elementsChannel.RaiseEvent(ElementEvents.ElementBuffTriggeredEvent.Init(_elements.ToArray()));
 
             int finalCount = ChainCount;
             ChainBroken?.Invoke(finalCount);

@@ -15,6 +15,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         [Tooltip("이펙트 프리팹에 붙은 소리(타임라인·FxSound)만 끄기. 공통 효과음(muted)과 따로 (2026-11-03: Mixkit 불 소리는 켜 둠)")]
         public bool muteFxSounds;
 
+        [Tooltip("스킬별 전용 소리(Resources/HJH/SkillSounds) 켜기. 끄면 예전처럼 원소 공통 소리만 남 (2026-11-04: 테스트해 보니 별로라 꺼 둠)")]
+        public bool skillSounds;
+
         [Header("평타 (근접)")]
         public SfxCue swing = new();
         public SfxCue swingHit = new();

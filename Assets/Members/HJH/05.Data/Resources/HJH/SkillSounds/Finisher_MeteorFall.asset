@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Finisher_MeteorFall
   skill: {fileID: 11400000, guid: 565770da0cf091176c9a56c9774a6d13, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.6
     fallbackDelay: 0.14999995
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 2d8d7da3a3346cba4c146d98425ae731, type: 3}
     volume: 0.6
     pitchRandom: 0.05
     loop: 0
@@ -37,7 +37,7 @@ MonoBehaviour:
     fxSlot: windupFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 2d26f0a98bafb85175edc9a42d91386f, type: 3}
     volume: 0.7
     pitchRandom: 0.04
     loop: 0
@@ -52,7 +52,7 @@ MonoBehaviour:
     fxSlot: impactFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 4435c27dbb0d5e44f0135393da55a978, type: 3}
     volume: 0.95
     pitchRandom: 0.04
     loop: 0

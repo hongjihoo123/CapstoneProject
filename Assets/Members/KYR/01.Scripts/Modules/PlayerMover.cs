@@ -14,14 +14,15 @@ namespace Members.KYR._01.Scripts.Modules
         [SerializeField] private float maxPitch = 80f;
         [SerializeField] private float crouchHeight = 1.2f;
         [SerializeField] private float acceleration = 18f;
-        
-        [Header("스탯 풀백 모듈 없을 때만")]
-        [SerializeField] private float walkSpeed = 4.5f;
-        [SerializeField] private float runSpeed = 7.5f;
-        [SerializeField] private float crouchSpeed = 2.2f;
+
+        [Header("이동 (MoveSpeed 스탯 기준)")]
+        [SerializeField] private float moveSpeed = 4.5f;
+        [SerializeField] private float runMultiplier = 1.67f;
+        [SerializeField] private float crouchMultiplier = 0.49f;
+
+        [Header("점프/공중 (스탯에서 제외됨)")]
         [SerializeField] private float jumpHeight = 1.2f;
         [SerializeField] private float airControl = 0.7f;
-        
 
         private float _targetPlanarSpeed;
 
@@ -45,11 +46,12 @@ namespace Members.KYR._01.Scripts.Modules
         private const float DashMinSpeedFactor = 0.35f;
         private PlayerStatsModule _stats;
 
-        public float WalkSpeed => GetStat(PlayerStatId.WalkSpeed, walkSpeed);
-        public float RunSpeed => GetStat(PlayerStatId.RunSpeed, runSpeed);
-        public float CrouchSpeed => GetStat(PlayerStatId.CrouchSpeed, crouchSpeed);
-        public float JumpHeight => GetStat(PlayerStatId.JumpHeight, jumpHeight);
-        public float AirControl => GetStat(PlayerStatId.AirControl, airControl);
+        private float BaseMoveSpeed => GetStat(PlayerStatId.MoveSpeed, moveSpeed);
+        public float WalkSpeed => BaseMoveSpeed;
+        public float RunSpeed => BaseMoveSpeed * runMultiplier;
+        public float CrouchSpeed => BaseMoveSpeed * crouchMultiplier;
+        public float JumpHeight => jumpHeight;
+        public float AirControl => airControl;
         public float OwnerSpeedMultiplier { get; private set; } = 1f;
         public Transform MoveReference { get; set; }
         public bool IsGrounded => characterController != null && characterController.isGrounded;
@@ -221,7 +223,7 @@ namespace Members.KYR._01.Scripts.Modules
         }
 
         public CharacterController Body => characterController;
-        
+
         public void SetScriptedPosition(Vector3 position)
         {
             Teleport(position);

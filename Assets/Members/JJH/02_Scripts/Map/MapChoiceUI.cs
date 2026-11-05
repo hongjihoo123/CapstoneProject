@@ -5,6 +5,7 @@ using TMPro;
 using UnityEngine;
 using UnityEngine.EventSystems;
 using UnityEngine.UI;
+using static Members.JJH._02_Scripts.Map.MapUI;
 
 namespace Members.JJH._02_Scripts.Map
 {
@@ -21,11 +22,11 @@ namespace Members.JJH._02_Scripts.Map
         [SerializeField] private Vector2 outlineEffectDistance = new(4f, 4f);
 
         [Header("Event")]
-        [SerializeField] private EventChannelSO eventChannel;
+        [SerializeField] private EventChannelSO mapChannel;
 
-        private MapUI.RoomOption _roomOption;
+        private RoomOption _roomOption;
 
-        public void Initialize(MapUI.RoomOption roomOption)
+        public void Initialize(RoomOption roomOption)
         {
             _roomOption = roomOption;
 
@@ -60,7 +61,7 @@ namespace Members.JJH._02_Scripts.Map
 
         private void OnClick()
         {
-            eventChannel.RaiseEvent(SystemEvents.SelectRoomEvent.Init(this, _roomOption));
+            mapChannel.RaiseEvent(MapEvents.SelectRoomEvent.Init(this, _roomOption));
         }
     }
 }

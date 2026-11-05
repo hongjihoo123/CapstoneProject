@@ -52,7 +52,7 @@ namespace Members.JJH._02_Scripts.Map
         [SerializeField] private RoomOption bossRoom;
 
         [Header("Data")]
-        [SerializeField] private EventChannelSO eventChannel;
+        [SerializeField] private EventChannelSO mapChannel;
         [SerializeField] private MapChoiceUI choicePrefab;
 
         private readonly List<MapChoiceUI> _choices = new();
@@ -71,14 +71,14 @@ namespace Members.JJH._02_Scripts.Map
 
         private void OnEnable()
         {
-            eventChannel.AddListener<ToggleMapEvent>(OnToggleMap);
-            eventChannel.AddListener<SelectRoomEvent>(OnSelectRoom);
+            mapChannel.AddListener<ToggleMapEvent>(OnToggleMap);
+            mapChannel.AddListener<SelectRoomEvent>(OnSelectRoom);
         }
 
         private void OnDisable()
         {
-            eventChannel.RemoveListener<ToggleMapEvent>(OnToggleMap);
-            eventChannel.RemoveListener<SelectRoomEvent>(OnSelectRoom);
+            mapChannel.RemoveListener<ToggleMapEvent>(OnToggleMap);
+            mapChannel.RemoveListener<SelectRoomEvent>(OnSelectRoom);
         }
 
         private void Start()
@@ -281,7 +281,7 @@ namespace Members.JJH._02_Scripts.Map
                 return;
             }
 
-            eventChannel.RaiseEvent(SystemEvents.ChangeSceneEvent.Init(option.sceneName));
+            mapChannel.RaiseEvent(MapEvents.ChangeSceneEvent.Init(option.sceneName));
         }
 
         private void UpdateProgressUI()

@@ -13,14 +13,14 @@ namespace Members.KYR._01.Scripts.Combat
         public static float Outgoing(in DamageInfo info)
         {
             ICombatStats attacker = info.Attacker ?? NeutralCombatStats.Instance;
-            float elementDamage = info.Element.HasValue
-                ? attacker.Get(PlayerElementStats.DamageStat(info.Element.Value))
-                : 0f;
+            float damage = attacker.Get(PlayerStatId.Damage);
+
+            float elementDamage = info.Element.HasValue ? damage : 0f;
 
             return StatFormulas.Outgoing(
                 info.Amount,
                 info.AttackCoefficient,
-                attacker.Get(PlayerStatId.Damage),
+                damage,
                 info.ElementCoefficient,
                 elementDamage);
         }
@@ -38,13 +38,15 @@ namespace Members.KYR._01.Scripts.Combat
             float elePen = 0f;
             if (hasElement)
             {
-                eleDef = defender.Get(PlayerElementStats.DefenseStat(info.Element.Value));
-                elePen = attacker.Get(PlayerElementStats.PenetrationStat(info.Element.Value));
+                eleDef = defender.Get(PlayerStatId.MagicDefense);
+
+                elePen = attacker.Get(PlayerStatId.MagicPenetration)
+                         + attacker.Get(PlayerElementStats.PenetrationStat(info.Element.Value));
             }
 
             return StatFormulas.Incoming(
                 dealt,
-                defender.Get(PlayerStatId.Defense),
+                defender.Get(PlayerStatId.ArmorDefense),
                 attacker.Get(PlayerStatId.ArmorPenetration),
                 eleDef,
                 elePen,

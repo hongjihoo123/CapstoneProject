@@ -1,0 +1,118 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &3772845346760196326
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 4831958308042910113}
+  - component: {fileID: 1360893518725208187}
+  - component: {fileID: 6883057510844762662}
+  - component: {fileID: 788631093461858920}
+  m_Layer: 0
+  m_Name: Elements_Stack_Manager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &4831958308042910113
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3772845346760196326}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1360893518725208187
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3772845346760196326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7a16fbb7017b3d41bfbc44bcb764d0d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EventChannelSystem::Members.JJH._02_Scripts.ElementsSystem.ElementsStackManager
+  elementsChannel: {fileID: 11400000, guid: 16f6fa92395d5b04997ba6c0d72c22e9, type: 2}
+  maxStack: 4
+  triggerDelay: 3
+--- !u!114 &6883057510844762662
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3772845346760196326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 23d67a6072c19a341afad2b69905e8c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: EventChannelSystem::Members.JJH._02_Scripts.ElementsSystem.ElementBuffController
+  elementsChannel: {fileID: 11400000, guid: 16f6fa92395d5b04997ba6c0d72c22e9, type: 2}
+  combos:
+  - name: "\uBD88-\uBC88\uAC1C"
+    sequence: 0000000003000000
+    effect: "\uACF5\uACA9 \uC99D\uAC00 10%"
+    effectBuff: {fileID: 0}
+    duration: 10
+  - name: "\uBB3C-\uBB3C"
+    sequence: 0100000001000000
+    effect: "\uCCB4\uB825 \uD68C\uBCF5 8%"
+    effectBuff: {fileID: 0}
+    duration: 10
+  - name: "\uB545-\uBB3C"
+    sequence: 0400000001000000
+    effect: "\uC274\uB4DC 20"
+    effectBuff: {fileID: 0}
+    duration: 20
+  - name: "\uBC88\uAC1C-\uBC88\uAC1C"
+    sequence: 0300000003000000
+    effect: "\uACF5\uACA9 \uC18D\uB3C4 \uC99D\uAC00 20%"
+    effectBuff: {fileID: 0}
+    duration: 15
+--- !u!114 &788631093461858920
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3772845346760196326}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 29b4158113c8d3f4e9342a991ee9e383, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Element.ElementSongStaff
+  skills: {fileID: 0}
+  elementsChannel: {fileID: 11400000, guid: 16f6fa92395d5b04997ba6c0d72c22e9, type: 2}
+  buffController: {fileID: 6883057510844762662}
+  maxInputs: 4
+  chainWindow: 5
+  maxStock: 3
+  sendBuffEvents: 1
+  finisherKey: 17
+  finisherBook: {fileID: 0}
+  maxStored: 3
+  readyTime: 5
+  stackScale:
+  - 1.3
+  - 1.6
+  - 2
+  empowerTime: 4
+  comboHitStop: 0.03
+  comboShake: 0.12
+  finisherHitStop: 0.08
+  finisherShake: 0.35
+  buffLeftoverOnBreak: 0

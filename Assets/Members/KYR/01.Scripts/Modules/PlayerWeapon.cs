@@ -1,8 +1,8 @@
-using System;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
+using System;
 using Unity.Cinemachine;
 using UnityEngine;
 
@@ -115,13 +115,9 @@ namespace Members.KYR._01.Scripts.Modules
             if (_weapon == null) return;
 
             float attackSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.AttackSpeed) : 1f;
-            float reloadSpeed = _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.ReloadSpeed) : 1f;
 
             if (_weapon is IAttackSpeedScalable attackSpeedScalable)
                 attackSpeedScalable.AttackSpeedMultiplier = attackSpeed;
-
-            if (_weapon is IReloadSpeedScalable reloadSpeedScalable)
-                reloadSpeedScalable.ReloadSpeedMultiplier = reloadSpeed;
         }
 
         public void TryFire(bool fireHeld, bool firePressed)

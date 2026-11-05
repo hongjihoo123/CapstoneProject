@@ -13,9 +13,15 @@ namespace Members.KYR._01.Scripts.UI
         [SerializeField] private Image fill;
         [SerializeField] private Image trail;
         [SerializeField] private Image shield;
-        [SerializeField] private float clearance = 0.22f;
+
+        [Header("Position")]
+        [SerializeField] private float fixedHeight = 2f;               // 몸 기준 높이 (위로 올릴수록 값 증가)
+        [SerializeField] private Vector3 worldOffset = Vector3.zero;   // 월드 기준 추가 오프셋
+        [SerializeField] private Vector3 screenOffset = Vector3.zero;  // 카메라 기준 오프셋 (x:좌우, y:상하, z:앞뒤)
+
         private bool hideWhenDead = true;
 
+        [Header("Color")]
         [SerializeField] private Color highColor = new(0.32f, 0.82f, 0.38f, 1f);
         [SerializeField] private Color lowColor = new(0.86f, 0.22f, 0.18f, 1f);
         [SerializeField] private float trailSpeed = 0.85f;
@@ -25,7 +31,6 @@ namespace Members.KYR._01.Scripts.UI
         private AbstractEnemy _enemy;
         private Transform _body;
         private Canvas _canvas;
-        private float _height = -1f;
         private float _trailRatio = 1f;
         private float _lastHp;
         private float _peakHp;
@@ -35,7 +40,6 @@ namespace Members.KYR._01.Scripts.UI
         {
             _canvas = GetComponent<Canvas>();
             BindHealth();
-            _height = MeasureHeight();
             Place();
         }
 
@@ -45,9 +49,6 @@ namespace Members.KYR._01.Scripts.UI
                 BindHealth();
             if ((_playerHealth == null && _agentHealth == null) || fill == null)
                 return;
-
-            if (_height < 0f)
-                _height = MeasureHeight();
 
             Place();
 
@@ -118,11 +119,13 @@ namespace Members.KYR._01.Scripts.UI
         private void Place()
         {
             Transform body = Body;
-            Vector3 anchor = body.position;
-            float lift = Mathf.Max(0f, _height);
             Camera cam = Camera.main;
             Quaternion rotation = cam != null ? cam.transform.rotation : transform.rotation;
-            transform.SetPositionAndRotation(anchor + Vector3.up * lift, rotation);
+
+            Vector3 pos = body.position + Vector3.up * fixedHeight + worldOffset;
+            pos += rotation * screenOffset;
+
+            transform.SetPositionAndRotation(pos, rotation);
         }
 
         private Transform Body => _body != null ? _body : transform;
@@ -141,32 +144,6 @@ namespace Members.KYR._01.Scripts.UI
             }
 
             _playerHealth = _body.GetComponentInChildren<PlayerHealth>(true);
-        }
-
-        private float MeasureHeight()
-        {
-            Transform body = Body;
-            float top = float.NegativeInfinity;
-            Renderer[] renderers = body.GetComponentsInChildren<Renderer>(true);
-            for (int i = 0; i < renderers.Length; i++)
-            {
-                Renderer renderer = renderers[i];
-                if (renderer is not MeshRenderer && renderer is not SkinnedMeshRenderer)
-                    continue;
-                if (!renderer.enabled)
-                    continue;
-
-                top = Mathf.Max(top, renderer.bounds.max.y);
-            }
-
-            if (top > float.NegativeInfinity)
-                return top - body.position.y + clearance;
-
-            CharacterController controller = body.GetComponent<CharacterController>();
-            if (controller != null)
-                return controller.center.y + controller.height * 0.5f + clearance;
-
-            return 2f;
         }
     }
 }

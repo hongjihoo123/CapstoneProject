@@ -69,6 +69,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         {
             if (skill == null)
                 return null;
+            // SfxBank 의 skillSounds 가 꺼져 있으면 전용 소리 없음 → 재생도 안 하고, 공통 소리도 안 막음
+            if (Sfx.Bank == null || !Sfx.Bank.skillSounds)
+                return null;
             if (_bySkill == null)
             {
                 _bySkill = new Dictionary<SkillData, SkillSoundData>();

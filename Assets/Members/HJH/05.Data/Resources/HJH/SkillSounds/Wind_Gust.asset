@@ -14,15 +14,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SkillSoundData
   skillId: Wind_Gust
   skill: {fileID: 11400000, guid: 04ca07e9789bcbc13a29053b818622c8, type: 2}
-  replacesGenericCast: 0
-  replacesGenericImpact: 0
+  replacesGenericCast: 1
+  replacesGenericImpact: 1
   entries:
   - eventName: Release
     trigger: 0
     fxSlot: 
     time: 0.567
     fallbackDelay: 0.15033332
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: f2fb0d5326dbac372a05deba69e050e9, type: 3}
     volume: 0.75
     pitchRandom: 0.05
     loop: 0
@@ -39,7 +39,7 @@ MonoBehaviour:
     fxSlot: hitFx
     time: 0
     fallbackDelay: 0
-    clip: {fileID: 0}
+    clip: {fileID: 8300000, guid: 49e7a1d693fb0ab7ddc2a596b7d1c3db, type: 3}
     volume: 0.45
     pitchRandom: 0.08
     loop: 0

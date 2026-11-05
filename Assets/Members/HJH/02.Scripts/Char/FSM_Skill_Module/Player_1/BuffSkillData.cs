@@ -1,5 +1,5 @@
-using System;
 using Members.KYR._01.Scripts.Stats;
+using System;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
@@ -44,11 +44,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
                 case BuffType.Damage:
                     id = PlayerStatId.Damage;
                     return true;
-                case BuffType.ReloadSpeed:
-                    id = PlayerStatId.ReloadSpeed;
-                    return true;
                 case BuffType.MoveSpeed:
-                    id = PlayerStatId.Mobility;
+                    id = PlayerStatId.MoveSpeed;
                     return true;
                 default:
                     id = default;
