@@ -10,7 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
     public class SkillElementBridge : MonoBehaviour
     {
         [SerializeField] private SkillStateModule skillModule;
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO elementsChannel;
 
         private void Awake()
         {
@@ -18,7 +18,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 skillModule = GetComponentInChildren<SkillStateModule>();
 
             Debug.Assert(skillModule != null, $"{name}: SkillElementBridge needs a SkillStateModule.");
-            Debug.Assert(systemChannel != null, $"{name}: SkillElementBridge needs the System event channel.");
+            Debug.Assert(elementsChannel != null, $"{name}: SkillElementBridge needs the System event channel.");
         }
 
         private void OnEnable()
@@ -35,10 +35,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private void HandleSkillUsed(SkillUsedInfo info)
         {
-            if (systemChannel == null || info.Data == null || !info.Data.TryGetElement(out ElementType element))
+            if (elementsChannel == null || info.Data == null || !info.Data.TryGetElement(out ElementType element))
                 return;
 
-            systemChannel.RaiseEvent(SystemEvents.UseSkillEvent.Init(element));
+            elementsChannel.RaiseEvent(ElementEvents.UseSkillEvent.Init(element));
         }
     }
 }

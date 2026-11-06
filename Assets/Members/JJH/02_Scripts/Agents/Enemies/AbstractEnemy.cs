@@ -15,7 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
     {
         [Header("Enemy Data")]
         [field: SerializeField] public EnemyDataSO EnemyData { get; private set; }
-        [field: SerializeField] public EventChannelSO SystemChannel { get; private set; }
+        [SerializeField] private EventChannelSO moneyChannel;
 
         [SerializeField] private BTBlackboardTableSO btTableSO;
 
@@ -63,7 +63,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         public override void Dead()
         {
-            SystemChannel.RaiseEvent(SystemEvents.EnemyKilledEvent.Init(EnemyData.Gold));
+            moneyChannel.RaiseEvent(MoneyEvents.EnemyKilledEvent.Init(EnemyData.Gold));
             base.Dead();
         }
 

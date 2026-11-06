@@ -13,54 +13,32 @@ namespace Members.KYR._01.Scripts.Stats
         {
             Root = new StatNode(PlayerStatId.None, 0f);
 
-            StatNode survival = Add(PlayerStatId.Survival, 0f, Root);
-            Add(PlayerStatId.MaxHp, bases.MaxHp, survival);
-            Add(PlayerStatId.Defense, bases.Defense, survival);
-            Add(PlayerStatId.DamageReduction, bases.DamageReduction, survival);
-            Add(PlayerStatId.IncomingDamageTaken, bases.IncomingDamageTaken, survival);
-            Add(PlayerStatId.MaxStamina, bases.MaxStamina, survival);
-            Add(PlayerStatId.StaminaRegen, bases.StaminaRegen, survival);
-            Add(PlayerStatId.HealReceived, bases.HealReceived, survival);
-            Add(PlayerStatId.Tenacity, bases.Tenacity, survival);
-            Add(PlayerStatId.Unflinching, bases.Unflinching, survival);
-            Add(PlayerStatId.FireDefense, bases.FireDefense, survival);
-            Add(PlayerStatId.WaterDefense, bases.WaterDefense, survival);
-            Add(PlayerStatId.WindDefense, bases.WindDefense, survival);
-            Add(PlayerStatId.ElectricDefense, bases.ElectricDefense, survival);
-            Add(PlayerStatId.EarthDefense, bases.EarthDefense, survival);
+            //----------공격----------
+            Add(PlayerStatId.Damage, bases.Damage, Root);
+            Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, Root);
+            Add(PlayerStatId.ArmorPenetration, bases.ArmorPenetration, Root);
+            Add(PlayerStatId.MagicPenetration, bases.MagicPenetration, Root);
+            Add(PlayerStatId.Omnivamp, bases.Omnivamp, Root);
+            Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, Root);
+            Add(PlayerStatId.FirePenetration, bases.FirePenetration, Root);
+            Add(PlayerStatId.WaterPenetration, bases.WaterPenetration, Root);
+            Add(PlayerStatId.WindPenetration, bases.WindPenetration, Root);
+            Add(PlayerStatId.ElectricPenetration, bases.ElectricPenetration, Root);
+            Add(PlayerStatId.EarthPenetration, bases.EarthPenetration, Root);
 
-            StatNode mobility = Add(PlayerStatId.Mobility, 0f, Root);
-            Add(PlayerStatId.WalkSpeed, bases.WalkSpeed, mobility);
-            Add(PlayerStatId.RunSpeed, bases.RunSpeed, mobility);
-            Add(PlayerStatId.CrouchSpeed, bases.CrouchSpeed, mobility);
-            Add(PlayerStatId.JumpHeight, bases.JumpHeight, mobility);
-            Add(PlayerStatId.DashSpeed, bases.DashSpeed, mobility);
-            Add(PlayerStatId.DashDuration, bases.DashDuration, mobility);
-            Add(PlayerStatId.AirControl, bases.AirControl, mobility);
+            //----------방어----------
+            Add(PlayerStatId.MaxHp, bases.MaxHp, Root);
+            Add(PlayerStatId.DamageReduction, bases.DamageReduction, Root);
+            Add(PlayerStatId.IncomingDamageTaken, bases.IncomingDamageTaken, Root);
+            Add(PlayerStatId.HealReceived, bases.HealReceived, Root);
+            Add(PlayerStatId.Tenacity, bases.Tenacity, Root);
+            Add(PlayerStatId.ArmorDefense, bases.ArmorDefense, Root);
+            Add(PlayerStatId.MagicDefense, bases.MagicDefense, Root);
 
-            StatNode combat = Add(PlayerStatId.Combat, 0f, Root);
-            Add(PlayerStatId.Damage, bases.Damage, combat);
-            Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, combat);
-            Add(PlayerStatId.ReloadSpeed, bases.ReloadSpeed, combat);
-            Add(PlayerStatId.RecoilControl, bases.RecoilControl, combat);
-            Add(PlayerStatId.WeakpointMultiplier, bases.WeakpointMultiplier, combat);
-            Add(PlayerStatId.ArmorPenetration, bases.ArmorPenetration, combat);
-            Add(PlayerStatId.Omnivamp, bases.Omnivamp, combat);
-
-            StatNode skill = Add(PlayerStatId.Skill, 0f, Root);
-            Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, skill);
-
-            StatNode element = Add(PlayerStatId.Element, 0f, Root);
-            Add(PlayerStatId.FireDamage, bases.FireDamage, element);
-            Add(PlayerStatId.WaterDamage, bases.WaterDamage, element);
-            Add(PlayerStatId.WindDamage, bases.WindDamage, element);
-            Add(PlayerStatId.ElectricDamage, bases.ElectricDamage, element);
-            Add(PlayerStatId.EarthDamage, bases.EarthDamage, element);
-            Add(PlayerStatId.FirePenetration, bases.FirePenetration, element);
-            Add(PlayerStatId.WaterPenetration, bases.WaterPenetration, element);
-            Add(PlayerStatId.WindPenetration, bases.WindPenetration, element);
-            Add(PlayerStatId.ElectricPenetration, bases.ElectricPenetration, element);
-            Add(PlayerStatId.EarthPenetration, bases.EarthPenetration, element);
+            //----------이동----------
+            Add(PlayerStatId.MoveSpeed, bases.MoveSpeed, Root);
+            Add(PlayerStatId.DashSpeed, bases.DashSpeed, Root);
+            Add(PlayerStatId.DashDuration, bases.DashDuration, Root);
         }
 
         public float Get(PlayerStatId id)
@@ -91,7 +69,7 @@ namespace Members.KYR._01.Scripts.Stats
         {
             if (!_nodes.TryGetValue(id, out StatNode node))
                 throw new ArgumentException($"Unknown stat {id}.", nameof(id));
-            
+
             return node;
         }
 

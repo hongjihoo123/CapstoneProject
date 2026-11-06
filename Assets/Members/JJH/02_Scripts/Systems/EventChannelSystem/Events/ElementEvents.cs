@@ -1,26 +1,16 @@
 ﻿using Members.JJH._02_Scripts.ElementsSystem;
-using Members.JJH._02_Scripts.Map;
 using System.Collections.Generic;
-using static Members.JJH._02_Scripts.Map.MapUI;
 
 namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
 {
-    public static class SystemEvents
+    public static class ElementEvents
     {
         public static readonly UseSkillEvent UseSkillEvent = new();
         public static readonly ElementStackChangedEvent ElementStackChangedEvent = new();
         public static readonly ElementBuffTriggeredEvent ElementBuffTriggeredEvent = new();
         public static readonly ElementComboNextEvent ElementComboNextEvent = new();
         public static readonly ElementComboCompleteEvent ElementComboCompleteEvent = new();
-
-        public static readonly ToggleMapEvent ToggleMapEvent = new();
-        public static readonly SelectRoomEvent SelectRoomEvent = new();
-        public static readonly ChangeSceneEvent ChangeSceneEvent = new();
-
-        public static readonly EnemyKilledEvent EnemyKilledEvent = new();
     }
-
-    #region Element System Events
 
     /// <summary>
     /// 스킬 사용 시 발생
@@ -98,49 +88,6 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem.Events
         {
             ComboName = comboName;
             Sequence = sequence;
-            return this;
-        }
-    }
-
-    #endregion
-
-    #region Map System Events
-
-    public class ToggleMapEvent : GameEvent { }
-
-    public class SelectRoomEvent : GameEvent
-    {
-        public MapChoiceUI Choice;
-        public RoomOption RoomOption;
-
-        public SelectRoomEvent Init(MapChoiceUI choice, MapUI.RoomOption roomOption)
-        {
-            Choice = choice;
-            RoomOption = roomOption;
-            return this;
-        }
-    }
-
-    public class ChangeSceneEvent : GameEvent
-    {
-        public string SceneName { get; private set; }
-
-        public ChangeSceneEvent Init(string sceneName)
-        {
-            SceneName = sceneName;
-            return this;
-        }
-    }
-
-    #endregion
-
-    public class EnemyKilledEvent : GameEvent
-    {
-        public int Amount { get; private set; }
-
-        public EnemyKilledEvent Init(int amount)
-        {
-            Amount = amount;
             return this;
         }
     }

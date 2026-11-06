@@ -13,7 +13,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 {
     public class ElementStackView : MonoBehaviour
     {
-        [SerializeField] private EventChannelSO systemChannel;
+        [SerializeField] private EventChannelSO elementsChannel;
         [SerializeField] private ElementBuffController buffController;
 
         [Header("Slots")]
@@ -124,9 +124,9 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void OnEnable()
         {
-            systemChannel.AddListener<ElementStackChangedEvent>(HandleStackChanged);
-            systemChannel.AddListener<ElementComboNextEvent>(HandleComboNext);
-            systemChannel.AddListener<ElementComboCompleteEvent>(HandleComboComplete);
+            elementsChannel.AddListener<ElementStackChangedEvent>(HandleStackChanged);
+            elementsChannel.AddListener<ElementComboNextEvent>(HandleComboNext);
+            elementsChannel.AddListener<ElementComboCompleteEvent>(HandleComboComplete);
 
             ClearSlots();
             SetTimer(0f);
@@ -137,9 +137,9 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void OnDisable()
         {
-            systemChannel.RemoveListener<ElementStackChangedEvent>(HandleStackChanged);
-            systemChannel.RemoveListener<ElementComboNextEvent>(HandleComboNext);
-            systemChannel.RemoveListener<ElementComboCompleteEvent>(HandleComboComplete);
+            elementsChannel.RemoveListener<ElementStackChangedEvent>(HandleStackChanged);
+            elementsChannel.RemoveListener<ElementComboNextEvent>(HandleComboNext);
+            elementsChannel.RemoveListener<ElementComboCompleteEvent>(HandleComboComplete);
 
             if (_clearRoutine != null)
             {
