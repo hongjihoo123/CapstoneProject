@@ -11,16 +11,22 @@ namespace Members.KYR._01.Scripts.Currency
         private void OnEnable()
         {
             systemChannel?.AddListener<EnemyKilledEvent>(Handle);
+            systemChannel?.AddListener<GainGoldEvent>(HandleGain);
         }
 
         private void OnDisable()
         {
             systemChannel?.RemoveListener<EnemyKilledEvent>(Handle);
+            systemChannel?.RemoveListener<GainGoldEvent>(HandleGain);
         }
 
-        private void Handle(EnemyKilledEvent evt)
+        private void Handle(EnemyKilledEvent evt) => Add(evt.Amount);
+
+        private void HandleGain(GainGoldEvent evt) => Add(evt.Amount);
+
+        private static void Add(int amount)
         {
-            GameBootstrap.Currency?.Add(CurrencyType.RunGold, evt.Amount);
+            GameBootstrap.Currency?.Add(CurrencyType.RunGold, amount);
         }
     }
 }

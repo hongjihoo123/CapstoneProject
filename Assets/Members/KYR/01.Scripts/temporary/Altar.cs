@@ -1,4 +1,6 @@
 ﻿using System.Collections;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem;
+using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,6 +9,9 @@ namespace Members.KYR._01.Scripts.temporary
     public class Altar : MonoBehaviour
     {
         [SerializeField] private LayerMask playerLayer;
+        [SerializeField] private EventChannelSO moneyChannel;
+        [SerializeField] private bool receiveGold;
+        [SerializeField, Min(0)] private int price;
         [SerializeField] private GameObject[] rewards;
         [SerializeField] private GameObject fkeyImage;
         [SerializeField, Min(0.1f)] private float detectRadius = 2.2f;
@@ -85,12 +90,27 @@ namespace Members.KYR._01.Scripts.temporary
 
             _used = true;
             SetPrompt(false);
+            GrantGold();
             Instantiate(prefab, transform.position, prefab.transform.rotation);
 
             foreach (Collider colorlider in GetComponentsInChildren<Collider>())
                 GetComponent<Collider>().enabled = false;
 
             StartCoroutine(Sink());
+        }
+
+        private void GrantGold()
+        {
+            if (!receiveGold || price <= 0)
+                return;
+
+            if (moneyChannel == null)
+            {
+                Debug.LogWarning($"{name}: 돈 채널이 없습니다.", this);
+                return;
+            }
+
+            moneyChannel.RaiseEvent(MoneyEvents.GainGoldEvent.Init(price));
         }
 
         private GameObject PickReward()
