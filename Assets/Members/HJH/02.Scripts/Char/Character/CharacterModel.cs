@@ -20,12 +20,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
 
         public Animator Animator { get; private set; }
 
+        // 지금 보이는 모델 (없으면 null = 캡슐)
+        public GameObject Current => _current;
+
+        // 모델·캡슐이 붙어 있는 Visual 오브젝트 (피격 때 몸만 살짝 밀 때 씀)
+        public Transform Visual => VisualRoot();
+
         public static CharacterModel For(PlayerAgent player)
         {
             if (!player.TryGetComponent(out CharacterModel model))
                 model = player.gameObject.AddComponent<CharacterModel>();
             if (!player.TryGetComponent(out CharacterAnimator _))
                 player.gameObject.AddComponent<CharacterAnimator>();
+            if (!player.TryGetComponent(out PlayerHitReaction _))
+                player.gameObject.AddComponent<PlayerHitReaction>();
+            if (!player.TryGetComponent(out RobotWeapons.HitStagger _))
+                player.gameObject.AddComponent<RobotWeapons.HitStagger>();
             return model;
         }
 

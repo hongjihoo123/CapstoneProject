@@ -19,6 +19,13 @@ namespace RobotWeapons
         [SerializeField, Tooltip("기절 끝나고 기절 안 걸리는 시간")] private float stunImmunity = 1f;
         [SerializeField, Tooltip("밀려나는 데 걸리는 시간")] private float knockbackTime = 0.15f;
 
+        [Header("경직 (맞을 때마다 잠깐 멈칫, 연타하면 이어짐)")]
+        [SerializeField, Tooltip("연타로 경직이 이어질 수 있는 최대 시간. 넘으면 잠깐 경직 면역 (무한 경직 방지)")]
+        private float flinchChainMax = 0.6f;
+        [SerializeField, Tooltip("경직이 최대까지 이어진 뒤 면역 시간")] private float flinchImmunity = 0.5f;
+        [SerializeField, Range(0f, 1f), Tooltip("경직 중 애니메이션 속도 (0 = 완전 정지)")]
+        private float flinchAnimSpeed = 0.15f;
+
         private float _slowEnd;
         private float _slowPercent;
         private float _rootEnd;
@@ -26,6 +33,13 @@ namespace RobotWeapons
         private float _stunImmuneEnd;
         private Vector3 _knockback;      // 남은 밀림 거리 (방향 포함)
         private float _knockbackSpeed;
+
+        private float _flinchEnd;
+        private float _flinchChainStart;
+        private float _flinchImmuneEnd;
+        private Animator _animator;
+        private float _animBaseSpeed = 1f;
+        private bool _animSlowed;
 
         private NavMeshAgent _agent;
         private float _baseSpeed;
@@ -107,6 +121,25 @@ namespace RobotWeapons
                 Changed?.Invoke(CrowdControlType.Knockback, true);
         }
 
+        // 맞을 때마다 들어오는 짧은 경직. 기절(Stun)과 따로 둠 → 평타 맞은 뒤에도 스킬 기절은 면역 없이 걸림.
+        // 연타하면 이어지지만 한 번에 flinchChainMax 까지만, 그 뒤 flinchImmunity 동안 경직 안 걸림
+        public bool IsFlinching => Time.time < _flinchEnd;
+
+        public void ApplyFlinch(float duration)
+        {
+            if (!Scale(ref duration) || Time.time < _flinchImmuneEnd)
+                return;
+
+            float now = Time.time;
+            if (now >= _flinchEnd)
+                _flinchChainStart = now;   // 새 연쇄 시작
+
+            float chainEnd = _flinchChainStart + flinchChainMax;
+            _flinchEnd = Mathf.Min(Mathf.Max(_flinchEnd, now + duration), chainEnd);
+            if (_flinchEnd >= chainEnd - 0.0001f)
+                _flinchImmuneEnd = chainEnd + flinchImmunity;
+        }
+
         // 보스는 속박/기절 안 걸림, 엘리트는 절반. false = 안 걸림
         private bool Scale(ref float duration)
         {
@@ -124,6 +157,38 @@ namespace RobotWeapons
             CheckEnded(CrowdControlType.Root, ref _rootEnd);
             CheckEnded(CrowdControlType.Stun, ref _stunEnd);
             ApplyToAgent();
+            ApplyFlinchAnimation();
+        }
+
+        private void OnDisable() => RestoreAnimation();
+
+        // 경직 중엔 애니메이션을 거의 멈춰서 "멈칫" 하게
+        private void ApplyFlinchAnimation()
+        {
+            bool flinching = IsFlinching;
+            if (flinching && !_animSlowed)
+            {
+                if (_animator == null)
+                    _animator = GetComponentInChildren<Animator>();
+                if (_animator == null)
+                    return;
+                _animBaseSpeed = _animator.speed;
+                _animator.speed = _animBaseSpeed * flinchAnimSpeed;
+                _animSlowed = true;
+            }
+            else if (!flinching)
+            {
+                RestoreAnimation();
+            }
+        }
+
+        private void RestoreAnimation()
+        {
+            if (!_animSlowed)
+                return;
+            if (_animator != null)
+                _animator.speed = _animBaseSpeed;
+            _animSlowed = false;
         }
 
         private void UpdateKnockback()
@@ -158,7 +223,7 @@ namespace RobotWeapons
             if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
                 return;
 
-            bool stopped = Has(CrowdControlType.Stun) || Has(CrowdControlType.Root) || Has(CrowdControlType.Knockback);
+            bool stopped = Has(CrowdControlType.Stun) || Has(CrowdControlType.Root) || Has(CrowdControlType.Knockback) || IsFlinching;
             if (stopped)
             {
                 // 적 AI 가 추적하면서 매 프레임 isStopped = false 로 되돌리기 때문에, 걸려 있는 동안은 매 프레임 다시 멈춤

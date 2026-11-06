@@ -94,11 +94,73 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
                 return;
 
             source.clip = clip;
-            source.volume = Mathf.Clamp01(cue.volume * volumeScale * MasterVolume);
+            float volume = cue.volume * volumeScale * MasterVolume;
+            BaseVolumes[source] = volume;
+            source.volume = Mathf.Clamp01(volume * PunchGain);
             source.pitch = UnityEngine.Random.Range(cue.pitch.x, cue.pitch.y) * pitchScale;
             source.panStereo = PanOf(position);
             source.Play();
             PlayedCount++;
+        }
+
+        // ------------------------------------------------ 볼륨 펀치
+        // 강한 처치 같은 순간에 효과음 전체를 gain 배로 확 키웠다가(hold 동안 유지) release 초 동안 부드럽게 원래대로.
+        // 지금 울리고 있는 소리 + 그동안 새로 나는 소리 모두에 적용. 시간은 실제 시간 (슬로모션과 상관없이)
+        private static readonly Dictionary<AudioSource, float> BaseVolumes = new();
+        private static float _punchGain = 1f;
+        private static float _punchStart = -999f;
+        private static float _punchHold;
+        private static float _punchRelease;
+
+        public static void Punch(float gain, float hold, float release)
+        {
+            if (gain <= 1f)
+                return;
+            // 센 쪽이 이김
+            if (PunchGain > gain)
+                return;
+
+            _punchGain = gain;
+            _punchStart = Time.unscaledTime;
+            _punchHold = Mathf.Max(0f, hold);
+            _punchRelease = Mathf.Max(0.01f, release);
+            EnsureVoices();
+            ApplyVolumes();
+        }
+
+        public static float PunchGain
+        {
+            get
+            {
+                float t = Time.unscaledTime - _punchStart;
+                if (t < 0f || t >= _punchHold + _punchRelease)
+                    return 1f;
+                if (t <= _punchHold)
+                    return _punchGain;
+                return Mathf.Lerp(_punchGain, 1f, Mathf.SmoothStep(0f, 1f, (t - _punchHold) / _punchRelease));
+            }
+        }
+
+        private static void ApplyVolumes()
+        {
+            float gain = PunchGain;
+            foreach (AudioSource source in Sources)
+                if (source != null && source.isPlaying && BaseVolumes.TryGetValue(source, out float baseVolume))
+                    source.volume = Mathf.Clamp01(baseVolume * gain);
+        }
+
+        // 펀치가 끝날 때까지 매 프레임 볼륨을 다시 계산 (끝난 뒤 한 번 더 → 정확히 원래 볼륨으로)
+        private sealed class VoiceTicker : MonoBehaviour
+        {
+            private bool _wasPunching;
+
+            private void Update()
+            {
+                bool punching = PunchGain > 1f;
+                if (punching || _wasPunching)
+                    ApplyVolumes();
+                _wasPunching = punching;
+            }
         }
 
         private static float PanOf(Vector3 position)
@@ -113,21 +175,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         // 쉬고 있는 소리 통을 찾고, 다 바쁘면 가장 오래된 걸 끊고 씀
         private static AudioSource NextSource()
         {
-            if (_root == null)
-            {
-                Sources.Clear();
-                var go = new GameObject("[Sfx]");
-                UnityEngine.Object.DontDestroyOnLoad(go);
-                _root = go.transform;
-                for (int i = 0; i < Voices; i++)
-                {
-                    var source = go.AddComponent<AudioSource>();
-                    source.playOnAwake = false;
-                    source.spatialBlend = 0f;
-                    source.ignoreListenerPause = false;
-                    Sources.Add(source);
-                }
-            }
+            EnsureVoices();
 
             for (int i = 0; i < Sources.Count; i++)
             {
@@ -145,6 +193,27 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             return oldest;
         }
 
+        private static void EnsureVoices()
+        {
+            if (_root == null)
+            {
+                Sources.Clear();
+                BaseVolumes.Clear();
+                var go = new GameObject("[Sfx]");
+                UnityEngine.Object.DontDestroyOnLoad(go);
+                go.AddComponent<VoiceTicker>();
+                _root = go.transform;
+                for (int i = 0; i < Voices; i++)
+                {
+                    var source = go.AddComponent<AudioSource>();
+                    source.playOnAwake = false;
+                    source.spatialBlend = 0f;
+                    source.ignoreListenerPause = false;
+                    Sources.Add(source);
+                }
+            }
+        }
+
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
@@ -152,6 +221,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             _bankLoaded = false;
             _root = null;
             Sources.Clear();
+            BaseVolumes.Clear();
+            _punchGain = 1f;
+            _punchStart = -999f;
             _next = 0;
             PlayedCount = 0;
         }

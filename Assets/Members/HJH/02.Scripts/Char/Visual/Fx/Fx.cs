@@ -27,8 +27,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void GroundSlam(Vector3 center, Color color, float radius) =>
             Play(Library?.groundSlam, center, Quaternion.identity, radius, color);
 
-        public static void DamageNumber(Vector3 position, float amount, Color color, float scale = 1f) =>
-            Play(Library?.damageNumber, position, Quaternion.identity, 1f, color, new FxParams { Value = amount, Radius = scale });
+        public static void DamageNumber(Vector3 position, float amount, Color color, float scale = 1f,
+            DamageNumberStyle style = DamageNumberStyle.Normal) =>
+            Play(Library?.damageNumber, position, Quaternion.identity, 1f, color,
+                new FxParams { Value = amount, Radius = scale, NumberStyle = style });
 
         // 짧은 글자 팝업 ("2단!", "격파!"). 데미지 숫자와 같은 움직임
         public static void PopText(Vector3 position, string text, Color color, float scale = 1f) =>
@@ -155,7 +157,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static FxHandle FrenzyAura(Transform target, Color color, int stacks) =>
             Hold(Library?.frenzyAura, target.position, Quaternion.identity, 1f, color, new FxParams { Follow = target, Value = stacks });
 
-        public static void Punch(Transform target, Vector3 direction, float strength) => PunchFx.Play(target, direction, strength);
+        // move = 실제로 밀리는 거리 배율 (1 = 기존). 찌그러짐(맞은 자세)은 strength 그대로
+        public static void Punch(Transform target, Vector3 direction, float strength, float move = 1f) =>
+            PunchFx.Play(target, direction, strength, move);
 
         // 라이브러리에 없는 프리팹 아무거나 (스킬마다 따로 정한 이펙트). 풀링은 똑같이 됨. 색 그대로 쓰려면 Color.white
         public static void Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>

@@ -17,6 +17,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private readonly bool _agent;
         private Vector3 _direction;
         private float _strength;
+        private float _move = 1f;
         private Vector3 _applied;
         private float _time;
 
@@ -27,7 +28,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _agent = target.TryGetComponent(out NavMeshAgent agent) && agent.enabled;
         }
 
-        public static void Play(Transform target, Vector3 direction, float strength)
+        public static void Play(Transform target, Vector3 direction, float strength, float move = 1f)
         {
             if (target == null)
                 return;
@@ -42,10 +43,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             direction.y = 0f;
             punch._direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : Vector3.zero;
             punch._strength = Mathf.Max(punch._time < Duration ? punch._strength * (1f - punch._time / Duration) : 0f, strength);
+            punch._move = Mathf.Max(0f, move);
             punch._time = 0f;
 
             if (punch._agent && target.TryGetComponent(out NavMeshAgent navAgent) && navAgent.isOnNavMesh)
-                navAgent.Move(punch._direction * strength * 0.6f);
+                navAgent.Move(punch._direction * strength * 0.6f * punch._move);
         }
 
         public override bool Tick(float deltaTime)
@@ -59,7 +61,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float knock = t < 0.2f ? t / 0.2f : 1f - (t - 0.2f) / 0.8f;
             if (!_agent)
             {
-                Vector3 offset = _direction * _strength * knock;
+                Vector3 offset = _direction * _strength * _move * knock;
                 _target.position += offset - _applied;
                 _applied = offset;
             }

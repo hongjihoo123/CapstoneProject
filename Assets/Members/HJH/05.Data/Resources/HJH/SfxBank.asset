@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7d8d51e933458d74fb7e6c66f2c0f764, type: 3}
   m_Name: SfxBank
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Audio.SfxBank
-  muted: 1
+  muted: 0
   muteFxSounds: 1
   skillSounds: 0
   swing:
@@ -31,33 +31,56 @@ MonoBehaviour:
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.06
   shot:
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 07d3a2dc864fe6dfdef7e09204895738, type: 3}
+    - {fileID: 8300000, guid: 48a23631aee6d4e9369199522fb95e3f, type: 3}
+    - {fileID: 8300000, guid: 010ec99bc5225cbf1e6e271b267a3f17, type: 3}
     volume: 0.35
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.04
   empoweredShot:
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: d0c6effd50feee1655c524e9663a26a9, type: 3}
+    - {fileID: 8300000, guid: 361775355fedbfcfbc4ab34c755bac9d, type: 3}
     volume: 0.6
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.08
   hit:
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: d6723360bf5ec6969dfa314f8b4fa9d8, type: 3}
+    - {fileID: 8300000, guid: e2f7d6e4a0574fa4997cb4b17b832443, type: 3}
+    - {fileID: 8300000, guid: 4a5cf3895aafb9f16f213d4bf90b6a56, type: 3}
+    - {fileID: 8300000, guid: ac85bf6e2e2adce56c39e09e69c7ab65, type: 3}
     volume: 0.55
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.05
   weakpointHit:
-    clips: []
+    clips:
+    - {fileID: 8300000, guid: 8d0a89633416e84167f62d71ede50f68, type: 3}
+    - {fileID: 8300000, guid: 5da6a44c085dbcf93d320d9182f54d97, type: 3}
+    - {fileID: 8300000, guid: f80d024a9f9f8bda87e3edd2a3dfff64, type: 3}
     volume: 0.6
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.06
   kill:
-    clips: []
-    volume: 0.5
+    clips:
+    - {fileID: 8300000, guid: 75ba0152bb37ba9e0bd89aa91ac1a751, type: 3}
+    - {fileID: 8300000, guid: c11a601d47cf3ffe3b01e2570f893f1b, type: 3}
+    volume: 0.35
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.06
+  playerHurt:
+    clips:
+    - {fileID: 8300000, guid: fc9f9089be3634ea5f27fd8961ad0bc6, type: 3}
+    - {fileID: 8300000, guid: 414d2ce96af33fda300aaac628330f5a, type: 3}
+    volume: 0.4
+    pitch: {x: 0.94, y: 1.06}
+    minInterval: 0.08
   dash:
-    clips: []
-    volume: 0.5
+    clips:
+    - {fileID: 8300000, guid: e1b95fb7052c925e751ff1999510f252, type: 3}
+    - {fileID: 8300000, guid: bb0716e820442a9f77df0c777cb4fdb5, type: 3}
+    volume: 0.35
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.1
   skillCast:
@@ -78,8 +101,8 @@ MonoBehaviour:
     minInterval: 0.1
   heavyImpact:
     clips:
-    - {fileID: 8300000, guid: 26850a6e35643524b82dca93d66a8286, type: 3}
-    - {fileID: 8300000, guid: 079f947b86d13684c8c4f8e79d9d9f91, type: 3}
+    - {fileID: 8300000, guid: 399fdfabb66f38b610871a7b1a9e620e, type: 3}
+    - {fileID: 8300000, guid: 424634e0d36305c2a8e2fb61b891d934, type: 3}
     volume: 0.8
     pitch: {x: 0.94, y: 1.06}
     minInterval: 0.2

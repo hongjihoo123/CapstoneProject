@@ -14,7 +14,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     //   스킬 FSM 에서 스킬 도는 중  -> Space: Dash / 우클릭: WeaponSkill / R: Ultimate / Q,E: Skill
     //   평타 쏘거나 휘두름          -> Attack
     //   패시브가 평타를 바꿔치기함  -> PassiveShot (건슬링어 충전 충격포)
-    //   나머지                      -> 움직이면 Run, 아니면 Idle
+    //   맞음 (PlayerHitReaction)    -> Hit (스킬·평타보다 순위 낮음. 상체 레이어에 있으면 상체만 → 뛰면서 움찔)
+    //   죽음 (HP 0)                 -> Dead 한 번 틀고 마지막 자세로 누워 있음. 다른 건 다 무시 (없으면 그냥 멈춤)
+    //   나머지                    -> 움직이면 Run, 아니면 Idle
     //
     // Dash, Attack 같은 한 번짜리 동작은 클립 끝까지 틀고 나서 Idle/Run 으로 돌아감 (중간에 다른 동작 들어오면 바로 바뀜)
     // 컨트롤러에 없는 상태 이름이면 Idle 로 대신함. 캐릭터 모델 생기면 CharacterModel 이 붙여줌
@@ -33,6 +35,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static readonly int WeaponSkill = Animator.StringToHash("WeaponSkill");
         private static readonly int Ultimate = Animator.StringToHash("Ultimate");
         private static readonly int PassiveShot = Animator.StringToHash("PassiveShot");
+        private static readonly int Hit = Animator.StringToHash("Hit");
+        private static readonly int Dead = Animator.StringToHash("Dead");
         private static readonly int AttackSpeed = Animator.StringToHash("AttackSpeed");
         private static readonly int MoveX = Animator.StringToHash("MoveX");
         private static readonly int MoveY = Animator.StringToHash("MoveY");
@@ -64,6 +68,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private readonly Track _upper = new() { Layer = -1 };
         private bool _attackRequested;
         private bool _passiveShotRequested;
+        private bool _hitRequested;
+        private bool _dead;
         private IShotInterceptable _gun;
         private RuntimeAnimatorController _checkedController;
         private bool _hasAttackSpeed;
@@ -100,6 +106,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 
         private void OnShotIntercepted() => _passiveShotRequested = true;
+
+        // 맞는 모션 틀어달라고 함. 컨트롤러에 "Hit" 상태 없으면 아무 일 없음
+        public void PlayHit() => _hitRequested = true;
 
         // 원소 스킬은 누르는 순간 끝나는 게 많아서(지속 0초) 스킬 상태만 보면 동작을 못 틂 → "스킬 씀" 알림으로 틂
         private SkillStateModule _skills;
@@ -139,6 +148,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (animator.runtimeAnimatorController != _checkedController)
                 CheckController(animator);
 
+            if (!_player.IsAlive)
+            {
+                PlayDead(animator);
+                return;
+            }
+            if (_dead)
+            {
+                // 되살아남 → 처음부터 다시
+                _dead = false;
+                _base.Reset();
+                _upper.Reset();
+            }
+
             // 공격 속도 스탯 올라가면 공격 모션도 빨라지게 (컨트롤러에 AttackSpeed 파라미터 있을 때만)
             if (_hasAttackSpeed)
                 animator.SetFloat(AttackSpeed, CurrentAttackSpeed());
@@ -149,9 +171,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             int action = Action(animator);
             _attackRequested = false;
             _passiveShotRequested = false;
+            _hitRequested = false;
 
-            // 상체 레이어 있으면 평타는 상체에서만 -> 하체는 계속 Idle/Run
-            bool upperAttack = action == Attack && _upper.Layer >= 0 && animator.HasState(_upper.Layer, Attack);
+            // 상체 레이어 있으면 평타·맞는 모션은 상체에서만 -> 하체는 계속 Idle/Run
+            bool upperAttack = (action == Attack || action == Hit) && _upper.Layer >= 0 && animator.HasState(_upper.Layer, action);
             int body = action != 0 && !upperAttack ? action : locomotion;
             Drive(animator, _base, body, body != locomotion);
 
@@ -168,7 +191,25 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _upper.Reset();
                 return;
             }
-            Drive(animator, _upper, upperAttack ? Attack : locomotion, upperAttack);
+            Drive(animator, _upper, upperAttack ? action : locomotion, upperAttack);
+        }
+
+        // 쓰러지는 동작 한 번 (클립이 반복 안 해서 끝나면 누운 채로 멈춤). 상체 레이어는 끔
+        private void PlayDead(Animator animator)
+        {
+            _attackRequested = _passiveShotRequested = _hitRequested = false;
+            _castRequested = null;
+            if (_upper.Layer >= 0)
+                animator.SetLayerWeight(_upper.Layer, Mathf.MoveTowards(animator.GetLayerWeight(_upper.Layer), 0f, Time.deltaTime / Mathf.Max(0.01f, fade)));
+            if (_dead)
+                return;
+
+            _dead = true;
+            _upper.Reset();
+            if (animator.HasState(0, Dead))   // 상태 없으면 지금 동작 그대로 둠 (예전처럼)
+                animator.CrossFadeInFixedTime(Dead, 0.1f, 0, 0f);
+            _base.Playing = Dead;
+            _base.OneShot = true;
         }
 
         private void CheckController(Animator animator)
@@ -234,6 +275,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 return PassiveShot;
             if (_attackRequested)
                 return Attack;
+            // 맞는 모션은 상태가 있을 때만 (없는데 넘기면 Idle 로 바뀌어서 뛰다가 멈춰 보임).
+            // 대시·시전 같은 전신 동작 도는 중엔 안 끊음
+            bool busy = _base.OneShot && !Finished(animator, _base.Layer);
+            if (_hitRequested && !busy && (animator.HasState(0, Hit) || (_upper.Layer >= 0 && animator.HasState(_upper.Layer, Hit))))
+                return Hit;
             return 0;
         }
 
@@ -266,7 +312,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 return;
 
             // 같은 한 번짜리 동작이 또 들어오면(연사 등) 처음부터 다시
-            if (wanted == track.Playing && !(oneShot && (wanted == Attack || wanted == PassiveShot)))
+            if (wanted == track.Playing && !(oneShot && (wanted == Attack || wanted == PassiveShot || wanted == Hit)))
                 return;
 
             Play(animator, track, wanted, oneShot);

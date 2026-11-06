@@ -21,6 +21,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public SwingShape Shape;
         // 데미지 숫자 대신 글자를 띄울 때 ("2단!" 등). 비어 있으면 Value 숫자
         public string Text;
+        // 데미지 숫자 모양 (일반 / 크리 / 내가 받은 피해)
+        public DamageNumberStyle NumberStyle;
+    }
+
+    public enum DamageNumberStyle
+    {
+        Normal,   // 작은 주황
+        Crit,     // 큰 빨강 + 흰 외곽선 (큰 타격, 약점, 처치)
+        Taken     // 플레이어가 받은 피해 (흰색)
     }
 
     // A component on an effect prefab that needs runtime values. Play is called right after spawning.

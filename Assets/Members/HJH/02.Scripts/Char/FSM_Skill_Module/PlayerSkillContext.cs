@@ -369,18 +369,28 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     _boosts.Remove(skill);
             }
 
-            if (skill == null)
+            // 연출(CombatFeedback)이 "스킬로 맞았나 / 패시브로 맞았나"를 알 수 있게 출처를 표시.
+            // 스킬 상태 밖에서 이 통로로 들어오는 피해 = 패시브 (충전 관통탄, 룬 공명 등)
+            HitSource.Push(skill != null ? HitSourceKind.Skill : HitSourceKind.Passive);
+            try
             {
-                _player.ApplyDamageTo(target, amount);
-                return;
-            }
+                if (skill == null)
+                {
+                    _player.ApplyDamageTo(target, amount);
+                    return;
+                }
 
-            _player.ApplyDamageTo(
-                target,
-                amount,
-                skill.Element,
-                skill.AttackCoefficient,
-                skill.ElementCoefficient);
+                _player.ApplyDamageTo(
+                    target,
+                    amount,
+                    skill.Element,
+                    skill.AttackCoefficient,
+                    skill.ElementCoefficient);
+            }
+            finally
+            {
+                HitSource.Pop();
+            }
         }
 
         public void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration)

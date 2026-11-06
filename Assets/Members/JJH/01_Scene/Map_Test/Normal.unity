@@ -747,6 +747,9 @@ MonoBehaviour:
   aimPlaneHeight: 1
   turnSpeed: 1080
   dashTurnMultiplier: 3
+  faceMoveDirection: 1
+  combatFacingHold: 0.5
+  moveTurnMultiplier: 1
 --- !u!1 &10039
 GameObject:
   m_ObjectHideFlags: 0
@@ -55464,14 +55467,6 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 4377878369929996749, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
-      propertyPath: m_LocalScale.y
-      value: 1.594825
-      objectReference: {fileID: 0}
-    - target: {fileID: 4377878369929996749, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 0.29735088
-      objectReference: {fileID: 0}
     - target: {fileID: 981968256360153736, guid: fe3534231bd00a4449563f6c30f3dfcf, type: 3}
       propertyPath: m_LocalPosition.x
       value: -9.7
@@ -55519,6 +55514,14 @@ PrefabInstance:
     - target: {fileID: 2850809806078080452, guid: fe3534231bd00a4449563f6c30f3dfcf, type: 3}
       propertyPath: m_IsActive
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4377878369929996749, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 1.594825
+      objectReference: {fileID: 0}
+    - target: {fileID: 4377878369929996749, guid: e24a00c7aeea1f544b5da37486d8b2f4, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.29735088
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
@@ -62078,14 +62081,17 @@ MonoBehaviour:
   player: {fileID: 10037}
   themeColor: {r: 1, g: 0.7, b: 0.3, a: 1}
   bigHitThreshold: 30
-  normalNumber: {r: 1, g: 1, b: 1, a: 1}
-  bigNumber: {r: 1, g: 0.85, b: 0.2, a: 1}
-  killNumber: {r: 1, g: 0.35, b: 0.25, a: 1}
+  normalNumberColor: {r: 1, g: 0.62, b: 0.22, a: 1}
+  critNumberColor: {r: 1, g: 0.22, b: 0.16, a: 1}
+  numberDelay: 0.033
+  enemyFlashTime: {x: 0.05, y: 0.07}
+  elementFlashTint: 0.65
+  knockbackMove: 0.4
   shotShake: 0.025
   killHitStop: 0.05
   killShake: 0.3
   swingHitStop: 0.04
-  finisherHitStop: 0.08
+  finisherFreeze: 0.06
   swingKick: 0.07
   finisherZoom: 0.04
   teleportStreakDistance: 1.5
@@ -62132,15 +62138,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.PlayerDamageScreenFx
   player: {fileID: 10037}
   hitColor: {r: 1, g: 0.15, b: 0.1, a: 1}
-  hitBloom: 6
-  hitVignette: 0.4
-  hitFadeTime: 0.35
+  hitFlashBloom: 1
+  hitEdgeVignette: 0.3
+  hitCenterTint: 0
+  hitPeakTime: 0.1
+  hitFadeOutTime: 0.8
+  bloomFadeTime: 0.2
   fullHitRatio: 0.2
   minHitStrength: 0.4
   hitShake: 0.15
-  dangerRatio: 0.3
-  dangerVignette: 0.45
-  dangerSaturation: -45
+  lowHpRatio: 0.35
+  lowHpVignette: 0.55
+  lowHpSaturation: -60
+  lowHpHitExtra: 0.2
   heartbeatRate: {x: 1.1, y: 2.2}
 --- !u!114 &954100106
 MonoBehaviour:

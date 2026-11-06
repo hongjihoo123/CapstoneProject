@@ -32,6 +32,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         public SfxCue weakpointHit = new();
         public SfxCue kill = new();
 
+        [Tooltip("플레이어가 맞았을 때 (비어 있으면 hit 소리를 씀)")]
+        public SfxCue playerHurt = new();
+
         [Header("이동")]
         public SfxCue dash = new();
 
