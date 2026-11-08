@@ -1,5 +1,6 @@
 ﻿using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using Members.KYR._01_Scripts;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -7,11 +8,13 @@ namespace Members.JJH._02_Scripts.Map
 {
     public class MapPortalTrigger : MonoBehaviour
     {
+        [SerializeField] private PlayerInputSO playerInput;
         [SerializeField] private EventChannelSO mapChannel;
         [SerializeField] private LayerMask playerLayer;
         [SerializeField] private GameObject keyImage;
 
         private bool isPlayerInRange;
+        private bool isMapOpen;
 
         private void Awake()
         {
@@ -24,6 +27,8 @@ namespace Members.JJH._02_Scripts.Map
             if (!isPlayerInRange || Keyboard.current == null || !Keyboard.current.fKey.wasPressedThisFrame)
                 return;
 
+            isMapOpen = !isMapOpen;
+            playerInput.SetMoveAndClickInput(!isMapOpen);
             mapChannel.RaiseEvent(MapEvents.ToggleMapEvent);
         }
 
