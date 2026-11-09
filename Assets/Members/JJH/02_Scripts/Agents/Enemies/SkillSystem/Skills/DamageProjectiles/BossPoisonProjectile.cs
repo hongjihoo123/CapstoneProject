@@ -5,6 +5,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
     [RequireComponent(typeof(Rigidbody))]
     public class BossPoisonProjectile : MonoBehaviour
     {
+        [SerializeField] private BossPoisonProjectile projectilePrefab;
         [SerializeField] private float lifeTime = 5f;
 
         private Rigidbody _rigidbody;
@@ -41,6 +42,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
             _splashSpeed = splashSpeed;
 
             _initialized = true;
+            _hasHit = false;
             _rigidbody.linearVelocity = direction.normalized * speed;
 
             Destroy(gameObject, lifeTime);
@@ -66,6 +68,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
 
         private void Hit(Vector3 position)
         {
+            if (_hasHit)
+                return;
+
             _hasHit = true;
 
             SpawnArea(position, _areaRadius);
@@ -87,14 +92,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
 
         private void SpawnSplashes(Vector3 position)
         {
+            if (projectilePrefab == null || _splashCount <= 0)
+                return;
+
             for (int i = 0; i < _splashCount; i++)
             {
                 float angle = 360f / _splashCount * i;
                 Vector3 direction = Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
 
-                BossPoisonProjectile projectile = Instantiate(this, position + Vector3.up * 0.3f, Quaternion.identity);
-                projectile.Initialize(direction, _splashSpeed, _owner, _areaPrefab, _damage,
-                                                _areaRadius * 0.65f, _areaDuration, _damageInterval, 0, 0f);
+                BossPoisonProjectile projectile = Instantiate(projectilePrefab,
+                    position + Vector3.up * 0.3f, Quaternion.identity);
+
+                projectile.Initialize(direction, _splashSpeed, _owner, _areaPrefab,
+                    _damage, _areaRadius * 0.65f, _areaDuration, _damageInterval, 0, 0f);
             }
         }
     }

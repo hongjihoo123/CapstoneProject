@@ -7,7 +7,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     {
         protected BossEnemy Boss => _enemy as BossEnemy;
 
+        protected bool IsPhase1 => Boss != null && Boss.Phase == BossPhase.Phase1;
+        protected bool IsTransition => Boss != null && Boss.Phase == BossPhase.Transition;
         protected bool IsPhase2 => Boss != null && Boss.Phase == BossPhase.Phase2;
+
         protected override bool followEnemy => false;
 
         protected bool TryGetTargetPosition(out Vector3 position)
@@ -15,7 +18,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
             position = Vector3.zero;
 
             Collider[] hits = Physics.OverlapSphere(_enemy.transform.position, SkillSO.Range,
-                                                                             _skillModule.TargetLayer);
+                _skillModule.TargetLayer);
+
             IDamageable closest = null;
             float closestSqr = float.MaxValue;
 
@@ -44,7 +48,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 return true;
 
             position = Vector3.zero;
-
             return false;
         }
     }

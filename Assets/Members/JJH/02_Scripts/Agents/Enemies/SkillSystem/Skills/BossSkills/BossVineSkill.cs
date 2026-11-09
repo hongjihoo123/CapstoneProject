@@ -8,19 +8,30 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     public class BossVineSkill : AbstractBossSkill
     {
         [Header("Vine Settings")]
-        [SerializeField] private float angle = 120f;
-        [SerializeField] private float secondSwingDelay = 0.4f;
-
-        [Header("Projectile Settings")]
         [SerializeField] private BossDamageProjectile vinePrefab;
+        [SerializeField] private Transform projectileSpawnPoint;
+
+        [Header("Phase 1")]
+        [SerializeField] private int phase1SwingCount = 1;
+        [SerializeField] private float phase1SwingInterval = 0.4f;
+        [SerializeField] private float phase1Angle = 120f;
+
+        [Header("Phase 2")]
+        [SerializeField] private int phase2SwingCount = 2;
+        [SerializeField] private float phase2SwingInterval = 0.4f;
+        [SerializeField] private float phase2Angle = 120f;
         [SerializeField] private int projectileCount = 5;
         [SerializeField] private float projectileSpeed = 7f;
         [SerializeField] private float projectileSpread = 100f;
-        [SerializeField] private Transform projectileSpawnPoint;
 
         protected override IEnumerator Execute()
         {
-            int swingCount = IsPhase2 ? 2 : 1;
+            if (IsTransition)
+                yield break;
+
+            int swingCount = IsPhase2 ? phase2SwingCount : phase1SwingCount;
+            float swingInterval = IsPhase2 ? phase2SwingInterval : phase1SwingInterval;
+            float angle = IsPhase2 ? phase2Angle : phase1Angle;
 
             for (int i = 0; i < swingCount; i++)
             {
@@ -28,7 +39,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 Quaternion rotation = _enemy.transform.rotation;
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                                                    center, rotation, SkillSO.Range, angle, SkillSO.PrepareTime));
+                    center, rotation, SkillSO.Range, angle, SkillSO.PrepareTime));
 
                 yield return new WaitForSeconds(SkillSO.PrepareTime);
 
@@ -38,7 +49,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                     FireVines();
 
                 if (i < swingCount - 1)
-                    yield return new WaitForSeconds(secondSwingDelay);
+                    yield return new WaitForSeconds(swingInterval);
             }
 
             yield return new WaitForSeconds(SkillSO.AttackDutation);
@@ -46,7 +57,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
         private void FireVines()
         {
-            if (vinePrefab == null)
+            if (vinePrefab == null || projectileCount <= 0)
                 return;
 
             Vector3 origin = projectileSpawnPoint != null
@@ -55,10 +66,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
             for (int i = 0; i < projectileCount; i++)
             {
-                float angle = projectileCount == 1 ? 0f : Mathf.Lerp(-projectileSpread * 0.5f, projectileSpread * 0.5f,
-                                                                                                 i / (float)(projectileCount - 1));
-                Vector3 direction = _enemy.transform.rotation * Quaternion.Euler(0f, angle, 0f)
-                                                * Vector3.forward;
+                float angle = projectileCount == 1 ? 0f :
+                    Mathf.Lerp(-projectileSpread * 0.5f, projectileSpread * 0.5f,
+                        i / (float)(projectileCount - 1));
+
+                Vector3 direction = _enemy.transform.rotation *
+                    Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
 
                 BossDamageProjectile projectile = Instantiate(vinePrefab, origin, Quaternion.identity);
                 projectile.Initialize(direction, projectileSpeed, SkillSO.Damage, _enemy.gameObject);

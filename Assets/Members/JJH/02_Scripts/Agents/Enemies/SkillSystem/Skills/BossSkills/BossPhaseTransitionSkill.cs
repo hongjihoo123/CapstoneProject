@@ -11,7 +11,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [SerializeField] private BossDamageProjectile rootPrefab;
         [SerializeField] private GameObject warningPrefab;
 
-        [SerializeField] private int rootCount = 7;
+        [SerializeField, Min(2)] private int rootCount = 7;
         [SerializeField] private float fanAngle = 100f;
         [SerializeField] private float rootSpeed = 12f;
         [SerializeField] private float rootHeight = 0.3f;
@@ -20,6 +20,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
         protected override IEnumerator Execute()
         {
+            if (!IsTransition || Boss == null)
+                yield break;
+
             Vector3 origin = _enemy.transform.position;
             Quaternion rotation = _enemy.transform.rotation;
 
@@ -52,7 +55,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 if (i == safeLane)
                     continue;
 
-                float angle = Mathf.Lerp(-fanAngle * 0.5f, fanAngle * 0.5f, (i + 0.5f) / rootCount);
+                float angle = Mathf.Lerp(-fanAngle * 0.5f, fanAngle * 0.5f,
+                    (i + 0.5f) / rootCount);
 
                 Vector3 direction = rotation * Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
                 Vector3 center = origin + direction * (range * 0.5f);
@@ -75,12 +79,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 if (i == safeLane)
                     continue;
 
-                float angle = Mathf.Lerp(-fanAngle * 0.5f, fanAngle * 0.5f, (i + 0.5f) / rootCount);
-                Vector3 direction = rotation * Quaternion.Euler(0f, angle, 0f)
-                                    * Vector3.forward;
+                float angle = Mathf.Lerp(-fanAngle * 0.5f, fanAngle * 0.5f,
+                    (i + 0.5f) / rootCount);
 
-                BossDamageProjectile root = Instantiate(rootPrefab, origin + Vector3.up * rootHeight,
-                                                                                    Quaternion.LookRotation(direction));
+                Vector3 direction = rotation * Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
+
+                BossDamageProjectile root = Instantiate(rootPrefab,
+                    origin + Vector3.up * rootHeight, Quaternion.LookRotation(direction));
 
                 root.Initialize(direction, rootSpeed, SkillSO.Damage, _enemy.gameObject);
             }
