@@ -1,6 +1,7 @@
 ﻿using DG.Tweening;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using Members.KYR._01_Scripts;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -9,6 +10,7 @@ namespace Members.JJH._02_Scripts.Map
 {
     public class SceneTransitionManager : MonoBehaviour
     {
+        [SerializeField] private PlayerInputSO playerInput;
         [SerializeField] private EventChannelSO eventChannel;
         [SerializeField] private CanvasGroup fadeCanvasGroup;
         [SerializeField] private float fadeDuration = 0.5f;
@@ -35,6 +37,8 @@ namespace Members.JJH._02_Scripts.Map
 
         private void Start()
         {
+            playerInput.SetMoveAndClickInput(true);
+
             fadeCanvasGroup.DOFade(0f, fadeDuration).OnComplete(() => fadeCanvasGroup.blocksRaycasts = false);
         }
 
@@ -63,6 +67,8 @@ namespace Members.JJH._02_Scripts.Map
             }
 
             yield return operation;
+
+            playerInput.SetMoveAndClickInput(true);
 
             yield return fadeCanvasGroup.DOFade(0f, fadeDuration).WaitForCompletion();
 

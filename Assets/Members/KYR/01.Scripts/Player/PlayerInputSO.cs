@@ -1,7 +1,7 @@
-using System;
-using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.KYR._01.Scripts.Player;
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
@@ -158,7 +158,7 @@ namespace Members.KYR._01_Scripts
             AimHeld = false;
         }
 
-         private void ApplyTopDownBindings()
+        private void ApplyTopDownBindings()
         {
             Controls.PlayerActions player = _controls.Player;
             DisableBinding(player.Aim, "<Mouse>/rightButton");
@@ -175,7 +175,7 @@ namespace Members.KYR._01_Scripts
             }
         }
 
-         private void BindSkillActions()
+        private void BindSkillActions()
         {
             InputActionMap map = _controls.asset.FindActionMap("Player");
             _skillActions.Clear();
@@ -191,6 +191,29 @@ namespace Members.KYR._01_Scripts
                 }
 
                 _skillActions[slot] = action;
+            }
+        }
+
+        public void SetMoveAndClickInput(bool enabled)
+        {
+            if (_controls == null)
+                return;
+
+            if (enabled)
+            {
+                _controls.Player.Move.Enable();
+                _controls.Player.Attack.Enable();
+
+                foreach (InputAction action in _skillActions.Values)
+                    action.Enable();
+            }
+            else
+            {
+                _controls.Player.Move.Disable();
+                _controls.Player.Attack.Disable();
+
+                foreach (InputAction action in _skillActions.Values)
+                    action.Disable();
             }
         }
     }
