@@ -20,7 +20,6 @@ namespace HJH.EditorTools
         private static readonly HashSet<string> NoShadowProps = new HashSet<string> { "GlowFlowers", "GlowVine" };
 
         // ───────────────────────── 1. LOD ─────────────────────────
-        [MenuItem("HJH/맵/최적화/1 프랍 LOD 만들기 (폴리 줄이기)")]
         private static void MakeLods()
         {
             if (EditorApplication.isPlaying) { Debug.LogWarning("[Optimize] 플레이 중에는 못 합니다."); return; }
@@ -137,12 +136,15 @@ namespace HJH.EditorTools
             }
 
             // 라이트 프로브: 플레이어·적처럼 움직이는 것이 베이크 빛을 받게 5m 격자
+            var pts = new List<Vector3>();
+            // L맵 전용: 다른 맵은 빌더가 만든 프로브를 그대로 둔다 (아래 격자는 ㄴ자 윤곽 기준)
+            if (EditorSceneManager.GetActiveScene().name == "Map_L_Normal")
+            {
             var old = GameObject.Find("LightProbes_Map");
             if (old != null) Undo.DestroyObjectImmediate(old);
             var pg = new GameObject("LightProbes_Map");
             Undo.RegisterCreatedObjectUndo(pg, "Probes");
             var group = pg.AddComponent<LightProbeGroup>();
-            var pts = new List<Vector3>();
             for (float x = 0f; x <= 60f; x += 5f)
                 for (float z = 0f; z <= 60f; z += 5f)
                 {
@@ -152,6 +154,7 @@ namespace HJH.EditorTools
                     pts.Add(new Vector3(x, gy + 1.0f, z)); pts.Add(new Vector3(x, gy + 3.0f, z));
                 }
             group.probePositions = pts.ToArray();
+            }
 
             // 라이팅 설정 에셋
             const string lsPath = "Assets/Members/HJH/05.Data/Map/MapL_Lighting.lighting";
@@ -177,7 +180,6 @@ namespace HJH.EditorTools
 
         // ───────────────────────── 밝기 복구 ─────────────────────────
         // 점광원을 Baked 로 바꿨더니 베이크 후 어두워진 경우: Mixed(직접광은 실시간 그대로 + 간접광만 베이크)로 되돌린다. 다시 베이크 필요.
-        [MenuItem("HJH/맵/최적화/밝기 복구 (점광원 Mixed + 지형 라이트맵 밀도 올림)")]
         private static void RestoreBrightness()
         {
             if (EditorApplication.isPlaying) return;
@@ -231,7 +233,6 @@ namespace HJH.EditorTools
         }
 
         // 진단 결과 그림자 캐스터의 대부분(Forest_Fill 732개)이 바깥 숲 채움. 플레이 공간에서 먼 것만 그림자를 끈다 (가까운 것은 바닥의 어른거리는 그림자용으로 유지).
-        [MenuItem("HJH/맵/최적화/숲 채움 그림자 줄이기 (플레이 공간에서 먼 것만 끔)")]
         private static void ThinForestShadows()
         {
             if (EditorApplication.isPlaying) return;

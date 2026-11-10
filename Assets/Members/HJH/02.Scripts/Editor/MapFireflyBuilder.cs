@@ -146,7 +146,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 2. 놓기 ─────────────────────────
-        [MenuItem("HJH/맵/반딧불이/2 가장자리 나무 쪽에 놓기")]
         private static void Place()
         {
             if (EditorApplication.isPlaying) return;

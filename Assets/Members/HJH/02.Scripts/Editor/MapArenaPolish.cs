@@ -34,7 +34,6 @@ namespace HJH.EditorTools
         private static float Smooth(float a, float b, float x) => Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((x - a) / (b - a)));
 
         // ───────────────────────── 1. 내 연못 지우기 ─────────────────────────
-        [MenuItem("HJH/맵/가장자리/0 내가 판 연못 지우기 (평평하게 메움)")]
         private static void RemoveMine()
         {
             if (!Guard()) return;
@@ -85,7 +84,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 2. 기존 웅덩이 옆으로 넓히기 ─────────────────────────
-        [MenuItem("HJH/맵/가장자리/1 기존 웅덩이 옆으로 넓히기 (이미 판 곳에 이어서)")]
         private static void WidenExisting()
         {
             if (!Guard()) return;
@@ -241,7 +239,6 @@ namespace HJH.EditorTools
             return (Mathf.PerlinNoise(p.x * 0.07f + 10f, p.y * 0.07f + 3f) - 0.5f) * 0.22f * Smooth(6f, 9f, d);
         }
 
-        [MenuItem("HJH/맵/가장자리/2 메인 광장 지형 꾸미기 (2단 턱+굴곡+바닥 얼룩)")]
         private static void Arena()
         {
             if (!Guard()) return;

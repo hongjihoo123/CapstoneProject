@@ -52,7 +52,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 1. 연못 ─────────────────────────
-        [MenuItem("HJH/맵/가장자리/1 연못 더 뿌리기 (자연스러운 곡선, 가장자리만)")]
         private static void Ponds()
         {
             if (!Guard()) return;
@@ -202,7 +201,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 2. 나무 가까이 ─────────────────────────
-        [MenuItem("HJH/맵/가장자리/2 나무 가까이 한 줄 더")]
         private static void NearTrees()
         {
             if (!Guard()) return;
@@ -287,7 +285,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 3. 흙길 옅게 ─────────────────────────
-        [MenuItem("HJH/맵/가장자리/3 흙길 옅게")]
         private static void LightenPath()
         {
             if (!Guard()) return;
