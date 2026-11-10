@@ -15,6 +15,14 @@ namespace Members.KYR._01.Scripts.temporary
         [SerializeField] private LayerMask playerLayer;
         [SerializeField] private bool receiveGold;
         [SerializeField, Min(0)] private int price;
+
+        public int Price => price;
+
+        public void SetPrice(int value)
+        {
+            price = Mathf.Max(0, value);
+            RefreshPrice();
+        }
         [SerializeField] private GameObject[] rewards;
         [SerializeField] private GameObject fkeyImage;
         [SerializeField] private TMP_Text priceLabel;
