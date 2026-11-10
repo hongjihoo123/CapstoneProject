@@ -32,6 +32,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
                 model = player.gameObject.AddComponent<CharacterModel>();
             if (!player.TryGetComponent(out CharacterAnimator _))
                 player.gameObject.AddComponent<CharacterAnimator>();
+            if (!player.TryGetComponent(out GunHoldIK _))
+                player.gameObject.AddComponent<GunHoldIK>();
             if (!player.TryGetComponent(out PlayerHitReaction _))
                 player.gameObject.AddComponent<PlayerHitReaction>();
             if (!player.TryGetComponent(out RobotWeapons.HitStagger _))

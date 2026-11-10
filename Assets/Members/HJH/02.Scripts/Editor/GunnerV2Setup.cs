@@ -35,7 +35,7 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
         private const string OldCastFolder = "Assets/Members/HJH/05.Data/Character/Gunner/Mixamo";
         private const string CharacterAsset = "Assets/Members/HJH/05.Data/Character/Char1_Gunner.asset";
         private const string VersionKey = "HJH.GunnerV2Setup.Version";
-        private const string SetupVersion = "v3.5";   // 클립 설정·이벤트 바꾸면 이 값을 올림 -> 다음 컴파일 때 자동으로 다시 세팅
+        private const string SetupVersion = "v3.9";   // 클립 설정·이벤트 바꾸면 이 값을 올림 -> 다음 컴파일 때 자동으로 다시 세팅
 
         // 클립 설정: 이름, 시작/끝 프레임(-1 = 전체), 반복, 이벤트(프레임, 함수)
         private sealed class ClipSpec
@@ -212,6 +212,10 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
                 AnimationClip clip = AssetDatabase.LoadAllAssetsAtPath(path).OfType<AnimationClip>().FirstOrDefault(a => !a.name.StartsWith("__preview"));
                 if (clip != null) result[spec.File] = clip;
                 log.Add($"클립 {spec.File}: {(clip != null ? clip.length.ToString("0.00") + "초" : "실패")}{(spec.Events.Length > 0 ? " 이벤트 " + string.Join(",", spec.Events.Select(e => e.fn)) : "")}");
+                // 검증: 설정이 중간에 끊겨 비어 있거나 Loop 가 어긋나면 바로 경고 (예전에 FRun_F 가 이렇게 빠져 달리기가 안 이어졌음)
+                var check = (ModelImporter)AssetImporter.GetAtPath(path);
+                if (clip == null || check.clipAnimations.Length != 1 || check.clipAnimations[0].loopTime != spec.Loop)
+                    Debug.LogWarning($"[GunnerV2] 클립 {spec.File} 설정 확인 필요 (Loop 기대값 {spec.Loop}). 메뉴로 다시 세팅하세요.");
             }
             return result;
         }
@@ -284,8 +288,11 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
             ac.layers = layers;
             AnimatorStateMachine up = ac.layers[1].stateMachine;
             // 평소엔 총 내린 자세, 쏠 때(Attack)만 견착 -> 상체 분리
+            // v3.7: 몸통은 힘 뺀 Carry 자세(견착처럼 비틀지 않음). 총·팔은 GunHoldIK 가 덮어씀(몸 흔들림 따라 총이 딸려오고 양손이 총을 잡음)
             up.defaultState = Add(up, "Idle", C("C_CarryIdle"));
             Add(up, "Run", C("C_CarryRun"));
+            // 재생은 안 함. GunHoldIK 가 견착 자세(기준 파지)를 읽으려고 컨트롤러에서 이 클립을 찾으니 넣어 둠 (빠지면 IK 가 통째로 꺼짐)
+            Add(up, "AimRef", C("C_AimIdle"));
             Add(up, "Attack", C("C_Attack"), 1f, true);
             Add(up, "Hit", C("Hit"), 2f);
             EditorUtility.SetDirty(ac);

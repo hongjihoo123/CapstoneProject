@@ -297,7 +297,27 @@ namespace HJH.EditorTools
                 finally { PrefabUtility.UnloadPrefabContents(c); }
             }
 
-            // 3) 씬: 통나무·버섯은 전부, 돌은 가로 0.8m 이상인 것만 콜라이더 켬 (아주 작은 돌은 끔: 대시·탄이 걸리지 않게)
+            // 2b) 암반 덩어리 프리팹: 조약돌(Chip*)만 끄고 나머지(Base/Flank/Tier2/Side*/Rune)는 콜라이더 켬 → 새 맵에 놓아도 처음부터 적용
+            foreach (var n in new[] { "RockMass_A", "RockMass_B", "RockMass_C" })
+            {
+                string mp = LegacyDir + n + ".prefab";
+                if (!File.Exists(mp)) continue;
+                var c = PrefabUtility.LoadPrefabContents(mp);
+                try
+                {
+                    foreach (var mc in c.GetComponentsInChildren<MeshCollider>(true))
+                    {
+                        // 이 콜라이더를 가진 돌 조각(바로 위 프리팹 인스턴스 루트 또는 이 오브젝트)의 이름
+                        var piece = PrefabUtility.GetNearestPrefabInstanceRoot(mc.gameObject);
+                        string pn = piece != null && piece != c ? piece.name : mc.transform.parent != null ? mc.transform.parent.name : mc.name;
+                        mc.enabled = true;   // Chip 도 0.3m 이상이라 조약돌 아님 -> 켬
+                    }
+                    PrefabUtility.SaveAsPrefabAsset(c, mp);
+                }
+                finally { PrefabUtility.UnloadPrefabContents(c); }
+            }
+
+            // 3) 씬: 통나무·버섯은 전부, 돌은 가로 0.8m 이상인 것만 콜라이더 켬 (조약돌 = 0.8m 미만은 끔: 대시·탄이 걸리지 않게)
             Undo.IncrementCurrentGroup(); int grp = Undo.GetCurrentGroup();
             int logsN = 0, mushN = 0, rocksOn = 0, rocksOff = 0;
             foreach (var col in Object.FindObjectsByType<Collider>(FindObjectsSortMode.None))
@@ -308,21 +328,23 @@ namespace HJH.EditorTools
                 if (skip) continue;
                 var rootGo = PrefabUtility.GetOutermostPrefabInstanceRoot(col.gameObject);
                 string rn = rootGo != null ? rootGo.name : col.transform.root.name;
+                // 프리팹 풀거나 그룹 밑에 넣은 돌도 잡도록: 위로 올라가며 이름이 돌/통나무/버섯인 첫 오브젝트를 씀
+                for (var t = col.transform; t != null; t = t.parent)
+                    if (t.name.StartsWith("Stone_") || t.name.StartsWith("Rock") || t.name.StartsWith("FallenLog") || t.name.StartsWith("Mushroom_")) { rn = t.name; break; }
                 bool want;
                 if (rn.StartsWith("FallenLog")) { want = true; logsN++; }
                 else if (rn.StartsWith("Mushroom_")) { want = true; mushN++; }
                 else if (rn.StartsWith("Stone_") || rn.StartsWith("Rock"))
                 {
-                    var r = col.GetComponent<MeshRenderer>();
-                    float ext = r != null ? Mathf.Max(r.bounds.size.x, r.bounds.size.z) : 1f;
-                    want = ext >= 0.8f; if (want) rocksOn++; else rocksOff++;
+                    want = Assets.Members.HJH.Environment.StoneScale.WantsCollider(col.transform);   // Scale 0.2 이하 = 조약돌
+                    if (want) rocksOn++; else rocksOff++;
                 }
                 else continue;
                 if (col.enabled != want) { Undo.RecordObject(col, "Colliders"); col.enabled = want; }
             }
             Undo.CollapseUndoOperations(grp);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log($"[Stones] 콜라이더 켬: 통나무 {logsN}, 버섯 {mushN}, 돌 {rocksOn}개 (0.8m 미만 {rocksOff}개는 끔). 이어서 가려진 콜라이더를 정리합니다.");
+            Debug.Log($"[Stones] 콜라이더 켬: 통나무 {logsN}, 버섯 {mushN}, 돌 {rocksOn}개 (Scale 0.2 이하 {rocksOff}개는 끔). 이어서 맵 밖·닿지 않는 콜라이더를 정리합니다.");
             PruneHiddenColliders();
         }
 
@@ -344,20 +366,38 @@ namespace HJH.EditorTools
             var terrain = Terrain.activeTerrain;
             Physics.SyncTransforms();
 
-            var cands = new List<MeshCollider>();
-            foreach (var c in Object.FindObjectsByType<MeshCollider>(FindObjectsSortMode.None))
+            // 대상: 맵에 놓인 모든 콜라이더 (돌·통나무·버섯·나무 등). 지형·벽·다리·플레이어·트리거·물리 오브젝트는 건드리지 않음
+            var cands = new List<Collider>();
+            foreach (var c in Object.FindObjectsByType<Collider>(FindObjectsSortMode.None))
             {
-                if (!c.enabled || c.sharedMesh == null) continue;
+                if (!c.enabled || c.isTrigger || c is TerrainCollider) continue;
+                if (c is MeshCollider mcol && mcol.sharedMesh == null) continue;
+                if (c.GetComponentInParent<Rigidbody>() != null || c.GetComponentInParent<CharacterController>() != null) continue;
                 bool skip = false;
-                for (var t = c.transform; t != null; t = t.parent) if (t.name == "Boundary_Walls" || t.name == "Bridge" || t.name.StartsWith("Terrain")) { skip = true; break; }
+                for (var t = c.transform; t != null; t = t.parent)
+                {
+                    string n = t.name;
+                    if (n == "Boundary_Walls" || n == "Bridge" || n.StartsWith("Terrain") || n.StartsWith("Wall_") || n == "PlayerRig" || n == "Player"
+                        || n.Contains("Portal") || n.Contains("Spawn") || n.Contains("Shop") || n.Contains("Door")) { skip = true; break; }
+                }
                 if (!skip) cands.Add(c);
             }
 
             Undo.IncrementCurrentGroup(); int grp = Undo.GetCurrentGroup();
-            int off = 0, kept = 0;
+            int off = 0, kept = 0, farOff = 0;
             foreach (var c in cands)
             {
                 var b = c.bounds; var center = b.center;
+                // 맵 밖: 바닥 면적 어느 점도 플레이 공간에서 1.5m 넘게 떨어져 있으면 플레이어·탄이 닿을 수 없음 -> 끔
+                bool near = false;
+                for (int ix = -1; ix <= 1 && !near; ix++)
+                    for (int iz = -1; iz <= 1 && !near; iz++)
+                    {
+                        var q = new Vector2(center.x + ix * b.extents.x, center.z + iz * b.extents.z);
+                        if (playDist(q) <= 1.5f) near = true;
+                    }
+                if (!near) { Undo.RecordObject(c, "Prune collider"); c.enabled = false; farOff++; off++; continue; }
+
                 float rad = Mathf.Max(b.extents.x, b.extents.z);
                 bool exposed = false;
                 for (int k = 0; k < 16 && !exposed; k++)
@@ -383,7 +423,7 @@ namespace HJH.EditorTools
             }
             Undo.CollapseUndoOperations(grp);
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
-            Debug.Log($"[Stones] 콜라이더 {cands.Count}개 검사: 닿는 {kept}개 유지, 가려진 {off}개 끔 (Ctrl+Z 로 되돌릴 수 있음). 플레이 공간 어디에서도 레이가 닿지 않는 것(다른 돌·벽 뒤)이 대상입니다.");
+            Debug.Log($"[Stones] 콜라이더 {cands.Count}개 검사: 닿는 {kept}개 유지, {off}개 끔 (그중 맵 밖 {farOff}개) (Ctrl+Z 로 되돌릴 수 있음). 플레이 공간 어디에서도 레이가 닿지 않는 것(다른 돌·벽 뒤)이 대상입니다.");
         }
     }
 }

@@ -41,7 +41,7 @@ namespace Assets.Members.HJH.Environment
         //  - 바위 셰이더(SG_PBR)엔 _Fade 가 없어서, Resources/HJH/RockFade/<원본>_Fade 반투명 복사본으로 교체 (HJH/Map/Rocks 메뉴가 만듦)
         //  - 큰 절벽은 바운딩 박스가 커서 상자 검사로는 늘 가린다고 나옴 → 실제 콜라이더에 광선을 쏴서 판정
         [Header("Rocks")]
-        [Tooltip("이보다 작은 바위는 안 투명해짐 (m)")]
+        [Tooltip("더 이상 쓰지 않음. 이제 돌 Scale 0.7 미만은 안 투명해짐 (StoneScale.FadeMin)")]
         [SerializeField] private float rockMinSize = 3f;
         [SerializeField, Range(0f, 1f)] private float rockFadedAlpha = 0.3f;
 
@@ -53,6 +53,23 @@ namespace Assets.Members.HJH.Environment
             public float Alpha = 1f;
             public bool Swapped;
             public bool Blocking;
+            public Transform Group;   // 같은 묶음(RockFadeGroup / RockMass_*)이면 함께 투명해짐
+        }
+
+        // 묶음 → 그 안의 바위들. 하나라도 가리면 전원 투명
+        private readonly Dictionary<Transform, List<RockEntry>> _groups = new();
+
+        // 가장 가까운 위쪽의 묶음 루트: RockFadeGroup 이 붙었거나 이름이 RockMass_ 로 시작 (RockMass_Auto 같은 컨테이너는 제외)
+        private static Transform FindGroupRoot(Transform t)
+        {
+            for (Transform p = t; p != null; p = p.parent)
+            {
+                if (p.GetComponent<RockFadeGroup>() != null)
+                    return p;
+                if (p.name.StartsWith("RockMass_") && p.name != "RockMass_Auto")
+                    return p;
+            }
+            return null;
         }
 
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -189,6 +206,18 @@ namespace Assets.Members.HJH.Environment
             }
             Physics.queriesHitBackfaces = backfaces;
 
+            // 묶음 안에서 하나라도 가리면 묶음 전체(자식 조각 포함)를 투명하게
+            foreach (var members in _groups.Values)
+            {
+                bool any = false;
+                foreach (RockEntry m in members)
+                    if (m.Blocking) { any = true; break; }
+                if (!any)
+                    continue;
+                foreach (RockEntry m in members)
+                    m.Blocking = true;
+            }
+
             foreach (RockEntry rock in _rocks)
             {
                 float goal = rock.Blocking ? rockFadedAlpha : 1f;
@@ -231,11 +260,16 @@ namespace Assets.Members.HJH.Environment
         // 큰 바위 + 반투명 복사본이 있는 머티리얼 + 콜라이더가 있으면 등록
         private bool TryAddRock(Renderer r)
         {
-            if (r is not MeshRenderer || !r.TryGetComponent(out Collider collider))
+            if (r is not MeshRenderer)
                 return false;
-            Vector3 size = r.bounds.size;
-            if (Mathf.Max(size.x, size.y, size.z) < rockMinSize)
+            // 작은 돌(Scale 0.7 미만)은 가려도 투명해지지 않음 (StoneScale 기준)
+            if (!StoneScale.CanFade(r.transform))
                 return false;
+            Transform group = FindGroupRoot(r.transform);
+            bool hasCollider = r.TryGetComponent(out Collider collider);
+            if (group == null && !hasCollider)
+                return false;   // 낱개 바위는 콜라이더가 있을 때만 (콜라이더로 가림을 판정함)
+            // 묶음의 일원이면 콜라이더가 없어도 등록 (직접 가리는지는 콜라이더 있는 조각이 판정하고 나머지는 따라감)
 
             Material[] original = r.sharedMaterials;
             var faded = new Material[original.Length];
@@ -248,9 +282,16 @@ namespace Assets.Members.HJH.Environment
             if (!any)
                 return false;
 
-            var rock = new RockEntry { Renderer = r, Original = original, Faded = faded };
+            var rock = new RockEntry { Renderer = r, Original = original, Faded = faded, Group = group };
             _rocks.Add(rock);
-            _rockByCollider[collider] = rock;
+            if (hasCollider)
+                _rockByCollider[collider] = rock;
+            if (group != null)
+            {
+                if (!_groups.TryGetValue(group, out List<RockEntry> list))
+                    _groups[group] = list = new List<RockEntry>();
+                list.Add(rock);
+            }
             return true;
         }
 
