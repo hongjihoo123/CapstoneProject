@@ -81,6 +81,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                     _barrel.SetPoints(start, tip);
                     _barrel.SetValue(Mathf.Lerp(0.35f, 1f, charge));
                     _context.PlayShake(_data.chargeRumble * charge * charge, 0.06f);
+                    GunnerFx.CannonCharging(tip, _data.FxColor, charge);
                     return;
                 }
 
@@ -125,8 +126,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                         context.PlayShake(data.missShake, 0.2f);
                     }));
 
-                Fx.CannonMuzzle(tip, direction, color);
-                Fx.Shockwave(context.Transform.position, color, 2.2f);
+                GunnerFx.CannonFire(tip, context.Transform.position, direction, color);
 
                 context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration, 0f, faceDirection: false);   // 반동이라 조준 방향 유지
                 context.PlayHitFeel(0.04f, 0f);
@@ -149,7 +149,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             context.PlayCameraKick(Vector3.down * 0.5f, 0.25f);
 
             Vector3 ground = point - Vector3.up;
-            Fx.Explosion(ground, 3.5f, color, 2f);
+            GunnerFx.CannonExplode(ground, color);
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, point, 1.5f, 0.2f));
 
             var settings = new SkillProjectile.Settings

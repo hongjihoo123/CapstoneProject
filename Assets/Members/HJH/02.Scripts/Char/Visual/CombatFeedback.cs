@@ -318,21 +318,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void HandleShot(ShotVisual shot)
         {
             Vector3 direction = shot.End - shot.Start;
-            Fx.Muzzle(shot.Start, direction, shot.Color, shot.Empowered);
+            GunnerFx.Shot(shot.Start, direction, shot.Color, shot.Empowered);   // 총구 섬광 + 하얀 심 + 순간 조명 (강화탄은 파동·화면 펄스)
             if (Sfx.Bank != null)
                 Sfx.Play(shot.Empowered ? Sfx.Bank.empoweredShot : Sfx.Bank.shot, shot.Start);
 
             // Travelling shots get their orb from HandleProjectileLaunched; instant shots get a tracer.
             if (!shot.Projectile)
             {
-                Fx.Tracer(shot.Start, shot.End, shot.Color, shot.Empowered ? 0.24f : 0.09f, shot.Empowered ? 0.12f : 0.06f);
+                Fx.Tracer(shot.Start, shot.End, shot.Color, shot.Empowered ? 0.24f : 0.11f, shot.Empowered ? 0.12f : 0.07f);
+                Fx.Tracer(shot.Start, shot.End, GunnerFx.Hot(shot.Color, 0.8f), shot.Empowered ? 0.1f : 0.04f, shot.Empowered ? 0.08f : 0.045f);   // 하얀 심
                 if (!shot.Hit)
                     Fx.ProjectileImpact(shot.End, direction, shot.Color, 0.4f, false);
             }
 
             if (shot.Empowered)
             {
-                Fx.Shockwave(shot.Start - Vector3.up * 0.9f, shot.Color, 0.9f);
+                // 파동은 GunnerFx.Shot 이 그림
                 HitFeel.Shake(0.08f, 0.1f);
             }
             else

@@ -179,9 +179,10 @@ namespace RobotWeapons
 
         private int MuzzleCount => Mathf.Max(1, Mathf.Max(data.muzzleIds.Length, data.muzzleSideOffsets.Length));
 
-        private static Vector3 Facing(Transform origin)
+        // 캐릭터가 바라보는 방향 (AimOrigin 이 손·총 뼈에 붙어 있으면 그 뼈 방향은 모션 따라 제멋대로라 몸 기준으로 씀)
+        private Vector3 Facing(Transform origin)
         {
-            Vector3 facing = origin.forward;
+            Vector3 facing = owner is Component body ? body.transform.forward : origin.forward;
             facing.y = 0f;
             return facing.sqrMagnitude > 0.0001f ? facing.normalized : Vector3.forward;
         }
@@ -248,9 +249,18 @@ namespace RobotWeapons
             if (aimSource == null)
                 return facing;
 
-            Vector3 toAim = aimSource.AimPoint - start;
-            toAim.y = 0f;
-            return toAim.sqrMagnitude > 1f ? toAim.normalized : facing;
+            // 몸 중심 -> 조준점 방향이 기본. 조준점이 충분히 멀고 거의 같은 쪽이면 총구 -> 조준점으로 (멀리 찍은 곳에 정확히 맞게).
+            // 가까이 찍으면 총구가 몸 옆에 있어서 총구 기준 방향이 크게 틀어지거나 뒤로 갈 수 있음 -> 몸 기준
+            Vector3 aim = aimSource.AimPoint;
+            Vector3 center = owner is Component body ? body.transform.position : start;
+            Vector3 fromBody = aim - center; fromBody.y = 0f;
+            if (fromBody.sqrMagnitude < 0.04f)
+                return facing;
+            fromBody.Normalize();
+            Vector3 fromMuzzle = aim - start; fromMuzzle.y = 0f;
+            if (fromMuzzle.sqrMagnitude > 9f && Vector3.Dot(fromMuzzle.normalized, fromBody) > 0.97f)
+                return fromMuzzle.normalized;
+            return fromBody;
         }
 
         // The shot leaves the gun on the model and travels along the aim direction at the muzzle's height.

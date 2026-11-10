@@ -112,11 +112,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             Fx.Beam(start, end, _s.color, _s.width * 1.1f, 0.3f);
             Fx.Shockwave(start - Vector3.up * 0.9f, _s.color, 1.4f);
+            GunnerFx.ChargedShot(start, end, _s.color, _s.width);
 
             int hits = 0;
             foreach (IDamageable target in _context.OverlapCapsule(start, end, _s.width * 0.5f))
             {
                 _context.DealDamage(target, _s.damage);
+                if (target is Component hitPart)
+                    GunnerFx.BlastHit(hitPart.transform.position + Vector3.up, _direction, _s.color);
                 _context.Knockback(target, _direction, _s.knockback);
                 hits++;
             }
