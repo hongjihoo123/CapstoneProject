@@ -1,3 +1,4 @@
+using System.Linq;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
@@ -13,6 +14,32 @@ namespace HJH.EditorTools
     {
         [MenuItem("HJH/맵/돌/7 레이어 정리 (지형=Ground, 돌·통나무·버섯·암벽=Obstacle)")]
         private static void Menu() => Assign();
+
+        // HJH 씬 폴더의 모든 맵 씬에 한 번에 적용 (Shader 테스트 씬 제외). 씬은 먼저 _RemovedBackup 에 복사해 둠.
+        [MenuItem("HJH/맵/돌/8 레이어 정리 (HJH 폴더의 모든 맵 씬)")]
+        private static void MenuAll()
+        {
+            if (EditorApplication.isPlaying) return;
+            if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
+
+            const string sceneDir = "Assets/Members/HJH/01.Scene/";
+            string original = EditorSceneManager.GetActiveScene().path;
+            var paths = System.IO.Directory.GetFiles(sceneDir, "*.unity").Select(p => p.Replace('\\', '/'))
+                .Where(p => !System.IO.Path.GetFileName(p).StartsWith("Shader") && !System.IO.Path.GetFileName(p).StartsWith("_Shader")).ToList();
+
+            string backup = "_RemovedBackup/" + System.DateTime.Now.ToString("yyyy-MM-dd") + "/" + sceneDir;
+            System.IO.Directory.CreateDirectory(backup);
+            foreach (string p in paths) System.IO.File.Copy(p, backup + System.IO.Path.GetFileName(p), true);
+
+            foreach (string p in paths)
+            {
+                var sc = EditorSceneManager.OpenScene(p, OpenSceneMode.Single);
+                Assign();
+                if (sc.isDirty) EditorSceneManager.SaveScene(sc);
+            }
+            if (!string.IsNullOrEmpty(original)) EditorSceneManager.OpenScene(original, OpenSceneMode.Single);
+            Debug.Log($"[Layers] 모든 맵 씬 {paths.Count}개 정리 완료 (씬 백업: {backup}). 씬별 결과는 위 로그를 보세요.");
+        }
 
         internal static void Assign()
         {
