@@ -325,6 +325,9 @@ MonoBehaviour:
   aimPlaneHeight: 1
   turnSpeed: 1080
   dashTurnMultiplier: 3
+  faceMoveDirection: 1
+  combatFacingHold: 0.5
+  moveTurnMultiplier: 1
 --- !u!114 &7726647455628315966
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -369,17 +372,60 @@ MonoBehaviour:
   player: {fileID: 5943250634871901731}
   themeColor: {r: 1, g: 0.7, b: 0.3, a: 1}
   bigHitThreshold: 30
-  normalNumber: {r: 1, g: 1, b: 1, a: 1}
-  bigNumber: {r: 1, g: 0.85, b: 0.2, a: 1}
-  killNumber: {r: 1, g: 0.35, b: 0.25, a: 1}
+  normalNumberColor: {r: 1, g: 0.62, b: 0.22, a: 1}
+  critNumberColor: {r: 1, g: 0.22, b: 0.16, a: 1}
+  numberDelay: 0.033
+  enemyFlashTime: {x: 0.05, y: 0.07}
+  elementFlashTint: 0.65
+  knockbackMove: 0.4
   shotShake: 0.025
   killHitStop: 0.05
   killShake: 0.3
   swingHitStop: 0.04
-  finisherHitStop: 0.08
+  finisherFreeze: 0.06
   swingKick: 0.07
   finisherZoom: 0.04
   teleportStreakDistance: 1.5
+  passiveHitShake: 0.4
+  passiveHitShakeTime: 0.28
+  passiveHitInterval: 0.3
+  passiveHitKick: 0.25
+  strongKill:
+    enabled: 1
+    minDamage: 40
+    skillKills: 1
+    passiveKills: 0
+    weakpointKills: 0
+    cooldown: 0.8
+    hitStop: 0.07
+    shake: 0.4
+    zoom: 0.15
+    zoomHold: 0.25
+    zoomTime: 0.8
+    postFx:
+      enabled: 1
+      chromaticAberration: 0.7
+      lensDistortion: 0.28
+      lensScale: 1.02
+      vignette: 0.4
+      vignetteSmoothness: 0.45
+      saturation: -40
+      contrast: 20
+      exposure: 0.1
+      motionBlur: 0.4
+      hold: 0.22
+      duration: 0.8
+    impactFrame: 1
+    impactFrameTime: 0.05
+    slowScale: 0.2
+    slowTime: 0.6
+    slowRecover: 0.5
+    volumeGain: 2
+    volumeHold: 0.12
+    volumeRelease: 0.5
+    killVolume: 1.6
+    killPitch: 0.85
+    layerHeavyImpact: 1
 --- !u!114 &322130268088581870
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -423,16 +469,26 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.PlayerDamageScreenFx
   player: {fileID: 5943250634871901731}
   hitColor: {r: 1, g: 0.15, b: 0.1, a: 1}
-  hitBloom: 6
-  hitVignette: 0.4
-  hitFadeTime: 0.35
+  highlightColor: {r: 1, g: 0.96, b: 0.94, a: 1}
+  redEdgeWidth: 0.28
+  highlightWidth: 0.08
+  overlaySortingOrder: -50
+  hitRedAlpha: 0.45
+  hitHighlightAlpha: 0.7
+  hitHighlightTime: 0.15
+  hitFlashBloom: 1
+  hitPeakTime: 0.1
+  hitFadeOutTime: 0.8
+  bloomFadeTime: 0.2
   fullHitRatio: 0.2
   minHitStrength: 0.4
   hitShake: 0.15
-  dangerRatio: 0.3
-  dangerVignette: 0.45
-  dangerSaturation: -45
-  heartbeatRate: {x: 1.1, y: 2.2}
+  lowHpRatio: 0.35
+  lowHpRedAlpha: {x: 0.22, y: 0.5}
+  lowHpHitBoost: 1.4
+  throbSeconds: {x: 2.6, y: 1.6}
+  deathRedAlpha: 0.6
+  deathSaturation: -80
 --- !u!114 &390142273731347141
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -685,7 +741,7 @@ Transform:
   m_GameObject: {fileID: 5221500427689914510}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 5, y: 0.05, z: 32.5}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 3, y: 3, z: 3}
   m_ConstrainProportionsScale: 0
   m_Children: []
