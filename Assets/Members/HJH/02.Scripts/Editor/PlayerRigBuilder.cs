@@ -95,6 +95,46 @@ namespace HJH.EditorTools
             return true;
         }
 
+        // 지금 열린(활성) 씬에 적용. 저장은 안 함 -> 확인하고 직접 저장하세요. (_HJH_Map 처럼 위 두 맵이 아닌 씬용)
+        // 플레이어가 설 자리: 하이어라키에서 선택한 오브젝트 > 옛 Player > Portal_Start > Portals 첫 자식 > 지금 씬 뷰가 보는 자리 > (0,0,0)
+        [MenuItem("HJH/맵/플레이어/3 지금 열린 씬에 플레이어 세트 적용 (선택한 오브젝트 자리 우선)")]
+        private static void ApplyToActiveScene()
+        {
+            if (EditorApplication.isPlaying) return;
+            if (AssetDatabase.LoadAssetAtPath<GameObject>(RigPath) == null) { Debug.LogWarning("[Rig] 먼저 1번으로 프리팹을 만드세요."); return; }
+            var scene = EditorSceneManager.GetActiveScene();
+            Vector3 pos = FindStartPos(scene, out string how);
+
+            Terrain terrain = Terrain.activeTerrain;
+            if (terrain != null && how != "옛 Player")   // 땅에 닿게 (옛 Player 위치는 그대로 믿음)
+                pos.y = terrain.SampleHeight(pos) + terrain.transform.position.y + 0.1f;
+
+            bool ok = PlaceRigAt(pos);
+            if (ok) EditorSceneManager.MarkSceneDirty(scene);
+            Debug.Log($"[Rig] {scene.name}: {(ok ? "플레이어 세트 적용" : "실패")} — 위치 {pos} ({how}). 저장은 하지 않았습니다. 다른 자리에 두려면 PlayerRig 를 옮기거나, 원하는 자리의 오브젝트를 선택하고 다시 실행하세요. (옛 Main Camera / Player / EventSystem 은 치웠습니다)");
+        }
+
+        private static Vector3 FindStartPos(UnityEngine.SceneManagement.Scene scene, out string how)
+        {
+            Transform sel = Selection.activeTransform;
+            if (sel != null && sel.gameObject.scene == scene && sel.root.name != "PlayerRig")
+            {
+                how = "선택한 오브젝트 " + sel.name;
+                return sel.position;
+            }
+            var all = Object.FindObjectsByType<Transform>(FindObjectsSortMode.None);
+            var oldPlayer = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "Player");
+            if (oldPlayer != null) { how = "옛 Player"; return oldPlayer.transform.position; }
+            var portal = all.FirstOrDefault(t => t.gameObject.scene == scene && t.name.ToLower().Contains("portal") && t.name.ToLower().Contains("start"));
+            if (portal != null) { how = "Portal_Start"; return portal.position + new Vector3(1.5f, 0.1f, 1.5f); }
+            var portals = all.FirstOrDefault(t => t.gameObject.scene == scene && t.name == "Portals");
+            if (portals != null && portals.childCount > 0) { how = "Portals 첫 자식 " + portals.GetChild(0).name; return portals.GetChild(0).position + new Vector3(1.5f, 0.1f, 1.5f); }
+            var view = SceneView.lastActiveSceneView;
+            if (view != null) { how = "지금 씬 뷰가 보는 자리"; return view.pivot; }
+            how = "기본값(0,0,0)";
+            return Vector3.zero;
+        }
+
         [MenuItem("HJH/맵/플레이어/2 맵 씬들에 플레이어 세트 적용 (L맵·다리 맵)")]
         private static void ApplyToMapScenes()
         {

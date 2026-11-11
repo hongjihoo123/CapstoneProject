@@ -364,7 +364,9 @@ namespace RobotWeapons
             if (distance <= 0f)
                 return false;
 
-            int mask = (data.hitMask.value | data.environmentMask.value) & ~AimUtility.IgnoreLayerMask.value;
+            // 총알은 Obstacle / Ground / Enemy(Weakpoint) 에만 닿음 -> Default 레이어의 보이지 않는 경계 벽은 통과
+            // (데이터의 hitMask 는 Enemy/Weakpoint 만이라 환경 레이어는 항상 더해 줌. 안 그러면 Obstacle/Ground 에 안 맞음)
+            int mask = (data.hitMask.value | data.environmentMask.value | BulletLayers.Environment) & BulletLayers.All & ~AimUtility.IgnoreLayerMask.value;
             int count = Physics.SphereCastNonAlloc(start, data.shotRadius, direction, HitBuffer, distance, mask, QueryTriggerInteraction.Collide);
             Array.Sort(HitBuffer, 0, count, DistanceComparer);
 

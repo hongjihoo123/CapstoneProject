@@ -126,12 +126,12 @@ namespace HJH.EditorTools
         {
             if (EditorApplication.isPlaying) return;
             var terrain = Terrain.activeTerrain;
-            if (terrain == null || EditorSceneManager.GetActiveScene().name != "Map_Bridge_Normal") { Debug.LogWarning("[Mushroom] Map_Bridge_Normal 씬에서만 동작합니다."); return; }
+            if (terrain == null || !M.UseSpecFor(EditorSceneManager.GetActiveScene().name)) { Debug.LogWarning("[Mushroom] 맵 스펙이 있는 씬에서만 동작합니다."); return; }
             var log = AssetDatabase.LoadAssetAtPath<GameObject>(LogPrefab);
             var mush = new List<GameObject>();
             foreach (var n in new[] { "Mushroom_A", "Mushroom_B", "Mushroom_C" }) { var g = AssetDatabase.LoadAssetAtPath<GameObject>(Dir + n + ".prefab"); if (g != null) mush.Add(g); }
             if (mush.Count == 0) { Debug.LogWarning("[Mushroom] 먼저 '야광 버섯 프리팹 만들기'를 실행하세요."); return; }
-            M.UseBridgeSpec();
+            // (스펙은 위에서 씬 이름으로 골랐음)
             float waterY = M.SpecWaterY;
 
             var old = GameObject.Find(Group); if (old != null) Undo.DestroyObjectImmediate(old);
@@ -150,7 +150,7 @@ namespace HJH.EditorTools
             float R() => (float)rng.NextDouble();
             float L(float lo, float hi) => Mathf.Lerp(lo, hi, R());
             float Ground(Vector2 p) => terrain.SampleHeight(new Vector3(p.x, 0, p.y)) + terrain.transform.position.y;
-            bool Ok(Vector2 p, float lane) => M.InEnd(p) && M.EndDepth(p) > 0.8f && M.RouteDist(p) > lane && Ground(p) > waterY + 0.05f;
+            bool Ok(Vector2 p, float lane) => M.InEnd(p) && M.EndDepth(p) > 0.8f && M.RouteDist(p) > lane && Ground(p) > waterY + 0.05f && !M.SpecBlocked(p, 0.5f);
 
             int logs = 0, clusters = 0;
             void Cluster(Vector2 p)

@@ -379,12 +379,13 @@ namespace HJH.EditorTools
                     float x = -(width + 5f) * 0.5f + (c + 0.5f) * step + R(-0.6f, 0.6f);
                     float y = -0.8f + r * step + R(-0.5f, 0.5f);
                     bool flank = Mathf.Abs(x) > width * 0.5f && !NextToOtherPanel(panel.TransformPoint(new Vector3(x, 0f, 0f)), self);   // 바깥쪽 끝의 기둥만 앞으로 나와 가장자리를 감쌈
-                    float z = flank ? R(-0.6f, 0.9f) : -(thick * 0.5f + R(1.0f, 1.9f));
-                    Place(Stones, new Vector3(x, y, z), R(4.2f, 5.6f));
+                    float size = R(4.2f, 5.6f);
+                    float z = flank ? R(-0.6f, 0.9f) : -(size * 0.45f + R(0.3f, 0.9f));   // 돌 앞면이 물줄기를 뚫고 나오지 않게 반지름만큼 뒤로
+                    Place(Stones, new Vector3(x, y, z), size);
                 }
             // 윗변 턱: 물이 바위 사이로 넘어오게 살짝 앞으로
             for (float x = -width * 0.5f; x <= width * 0.5f; x += 2.4f)
-                Place(Stones, new Vector3(x + R(-0.4f, 0.4f), fall + R(0.3f, 0.9f), -R(0.9f, 1.5f)), R(2.8f, 3.8f));
+                Place(Stones, new Vector3(x + R(-0.4f, 0.4f), fall + R(0.6f, 1.2f), -R(1.3f, 1.9f)), R(2.8f, 3.8f));
             // 발치: 물을 맞는 바위 몇 개
             var small = StonesSmall != null && StonesSmall.Count > 0 ? StonesSmall : Stones;
             int feet = Mathf.Max(2, Mathf.RoundToInt(width / 3f));

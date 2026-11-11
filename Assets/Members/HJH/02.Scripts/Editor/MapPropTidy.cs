@@ -156,6 +156,89 @@ namespace HJH.EditorTools
             Debug.Log($"[Tidy] {moved}개 옮김, {stuck}개는 빈자리 없어 그대로, 따라간 조명 {movedLights.Count}개. 씬은 저장하지 않았습니다 (Ctrl+Z 가능). 목록: {Path.GetFullPath(OutPath)}");
         }
 
+        // 시작 구역 한가운데처럼 아무것도 없는 넓은 바닥에 발광 꽃 무리(꽃 2~3 + 조명 1 + 조약돌 1~2)를 드문드문 놓는다.
+        // 길에서 3.5m 이상, 기존 프랍에서 4m 이상, 무리끼리 9m 이상 떨어진 곳만. 콜라이더 없음(전투 공간을 막지 않음). 다시 돌리면 FillDeco 만 새로 만든다.
+        [MenuItem("HJH/맵/정리/빈 바닥에 발광 꽃 무리 놓기 (플레이 구역)")]
+        public static void Fill()
+        {
+            if (EditorApplication.isPlaying) return;
+            Scene scene = SceneManager.GetActiveScene();
+            if (!MapSpecBuilder.UseSpecFor(scene.name)) { Debug.LogWarning("[Fill] 맵 스펙이 있는 씬에서만 됩니다."); return; }
+            BackupActiveScene();
+            // (스펙은 위에서 씬 이름으로 골랐음)
+            GameObject old = GameObject.Find("FillDeco");
+            if (old != null) Undo.DestroyObjectImmediate(old);
+
+            Terrain terrain = Terrain.activeTerrain;
+            float Ground(Vector2 p) => terrain != null ? terrain.SampleHeight(new Vector3(p.x, 0f, p.y)) + terrain.transform.position.y : 0f;
+            List<Item> items = MapAudit.Collect(true).Where(i => i.cat != "fx" && i.cat != "light" && i.cat != "other").ToList();
+            Item flower = items.FirstOrDefault(i => i.name == "GlowFlowers" && i.play <= 0f);
+            Item pebble = items.FirstOrDefault(i => i.name == "Rock_A");
+            if (flower == null) { Debug.LogWarning("[Fill] 씬에 GlowFlowers 가 없어 복사할 원본이 없습니다."); return; }
+            Light lightSrc = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None)
+                .Where(l => l.type == LightType.Point && !l.transform.IsChildOf(flower.go.transform))
+                .OrderBy(l => Vector2.Distance(new Vector2(l.transform.position.x, l.transform.position.z), flower.xz)).FirstOrDefault();
+            Light glowSrc = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Where(l => l.name.StartsWith("GlowLight_"))
+                .OrderBy(l => Vector3.Distance(l.transform.position, flower.go.transform.position)).FirstOrDefault();   // 원본 꽃을 비추는 조명 색을 따름
+            if (glowSrc != null && Vector3.Distance(glowSrc.transform.position, flower.go.transform.position) > 3.2f) glowSrc = null;
+            Color glowColor = glowSrc != null ? glowSrc.color : new Color(0.35f, 0.65f, 1f);
+            float flowerLift = flower.go.transform.position.y - flower.ground;
+
+            var root = new GameObject("FillDeco");
+            Undo.RegisterCreatedObjectUndo(root, "Fill deco");
+            var rng = new System.Random(4242);
+            float R(float a, float b) => a + (float)rng.NextDouble() * (b - a);
+            var spots = new List<Vector2>();
+            int flowers = 0;
+            for (int tries = 0; tries < 6000 && spots.Count < 14; tries++)
+            {
+                var p = new Vector2(R(10f, 105f), R(5f, 110f));
+                if (MapSpecBuilder.PlayDist(p) > 0f || MapSpecBuilder.SpecInWater(p)) continue;
+                if (MapSpecBuilder.PlayDist(p + new Vector2(4f, 0f)) > 0f || MapSpecBuilder.PlayDist(p - new Vector2(4f, 0f)) > 0f
+                    || MapSpecBuilder.PlayDist(p + new Vector2(0f, 4f)) > 0f || MapSpecBuilder.PlayDist(p - new Vector2(0f, 4f)) > 0f) continue;   // 가장자리에서 4m 안쪽
+                if (MapSpecBuilder.RouteDist(p) < 3.5f || MapSpecBuilder.SpecBridgeDist(p) < 6f || MapSpecBuilder.SpecBlocked(p, 2f)) continue;
+                if (spots.Any(s => Vector2.Distance(s, p) < 9f)) continue;
+                if (items.Any(i => Vector2.Distance(i.xz, p) < 4f + i.ext)) continue;
+                spots.Add(p);
+
+                int n = rng.Next(2, 4);
+                for (int k = 0; k < n; k++)
+                {
+                    Vector2 q = p + new Vector2(R(-0.7f, 0.7f), R(-0.7f, 0.7f));
+                    var src = PrefabUtility.GetCorrespondingObjectFromSource(flower.go);
+                    GameObject go = src != null ? (GameObject)PrefabUtility.InstantiatePrefab(src, root.transform) : UnityEngine.Object.Instantiate(flower.go, root.transform);
+                    go.transform.SetPositionAndRotation(new Vector3(q.x, Ground(q) + flowerLift, q.y), Quaternion.Euler(0f, R(0f, 360f), 0f));
+                    go.transform.localScale = flower.go.transform.lossyScale * R(0.8f, 1.2f);
+                    flowers++;
+                }
+                {
+                    // MapLightTools 의 발광 무리 조명과 같은 규칙 (점광원, 그림자 없음, 꽃 수에 따라 밝기)
+                    var lg = new GameObject("GlowLight_Fill");
+                    lg.transform.SetParent(root.transform, false);
+                    lg.transform.position = new Vector3(p.x, Ground(p) + 0.6f, p.y);
+                    var l = lg.AddComponent<Light>();
+                    l.type = LightType.Point; l.color = glowColor; l.range = 4.5f; l.intensity = 1.6f + 0.5f * n;
+                    l.shadows = LightShadows.None; l.lightmapBakeType = LightmapBakeType.Mixed;
+                }
+                if (pebble != null)
+                    for (int k = rng.Next(1, 3); k > 0; k--)
+                    {
+                        Vector2 q = p + new Vector2(R(-1.4f, 1.4f), R(-1.4f, 1.4f));
+                        var src = PrefabUtility.GetCorrespondingObjectFromSource(pebble.go);
+                        if (src == null) break;
+                        var go = (GameObject)PrefabUtility.InstantiatePrefab(src, root.transform);
+                        go.transform.SetPositionAndRotation(new Vector3(q.x, Ground(q), q.y), Quaternion.Euler(0f, R(0f, 360f), 0f));
+                        Renderer rr = go.GetComponentInChildren<Renderer>();
+                        float native = rr != null ? Mathf.Max(rr.bounds.size.x, rr.bounds.size.z) : 1f;
+                        go.transform.localScale *= R(0.35f, 0.6f) / Mathf.Max(0.01f, native);
+                        foreach (Collider c in go.GetComponentsInChildren<Collider>()) c.enabled = false;
+                    }
+            }
+            EditorSceneManager.MarkSceneDirty(scene);
+            File.WriteAllText("Captures/_fill.txt", $"clusters {spots.Count} flowers {flowers} light color {glowColor}\n" + string.Join("\n", spots.Select(s => $"({s.x:0.0},{s.y:0.0})")));
+            Debug.Log($"[Fill] 발광 꽃 무리 {spots.Count}곳 (꽃 {flowers}송이) 을 FillDeco 아래에 놓았습니다. 맘에 안 들면 FillDeco 를 지우거나 Ctrl+Z. 씬은 저장하지 않았습니다.");
+        }
+
         [MenuItem("HJH/맵/정리/방금 한 작업 되돌리기 (Undo 한 번)")]
         public static void UndoOnce() { if (!EditorApplication.isPlaying) Undo.PerformUndo(); }
 

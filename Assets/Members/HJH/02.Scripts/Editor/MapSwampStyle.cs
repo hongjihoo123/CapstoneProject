@@ -28,8 +28,8 @@ namespace HJH.EditorTools
         {
             if (EditorApplication.isPlaying) return;
             var terrain = Terrain.activeTerrain;
-            if (terrain == null || EditorSceneManager.GetActiveScene().name != "Map_Bridge_Normal") { Debug.LogWarning("[Swamp] Map_Bridge_Normal 씬에서만 동작합니다."); return; }
-            M.UseBridgeSpec();
+            if (terrain == null || !M.UseSpecFor(EditorSceneManager.GetActiveScene().name)) { Debug.LogWarning("[Swamp] 맵 스펙이 있는 씬(Map_Bridge_Normal / _HJH_Map / Map_Shop)에서만 동작합니다."); return; }
+            // (스펙은 위에서 씬 이름으로 골랐음)
             float waterY = M.SpecWaterY;
 
             var old = GameObject.Find(Group);
@@ -63,6 +63,7 @@ namespace HJH.EditorTools
             {
                 var c = new Vector2(L(mn.x, mx.x), L(mn.y, mx.y));
                 if (!M.InEnd(c)) continue;
+                if (M.SpecBlocked(c, 4f)) continue;   // 상점 자리·폭포 물길은 비움
                 var pd = new E.Pond { c = c, ax = L(1.8f, 4.4f), az = L(1.3f, 3.0f), yaw = R() * Mathf.PI, p1 = R() * 6.28f, p2 = R() * 6.28f, p3 = R() * 6.28f };
                 float rr = pd.R;
                 if (M.EndDepth(c) < 2.4f + rr * 0.4f) continue;
@@ -151,7 +152,7 @@ namespace HJH.EditorTools
             }
 
             // ── 맹그로브 나무: 지터 격자, 길·스폰·포탈 피해서. 일부는 물속에 서 있음.
-            var mangrove = Load(JwDir + "MangrovePlaceholder.prefab");
+            var mangrove = Load(JwDir + "PF_JungleTree.prefab") ?? Load(JwDir + "MangrovePlaceholder.prefab");   // 다리 맵처럼 잎 달린 나무를 먼저 씀 (없으면 임시 모델)
             int trees = 0;
             if (mangrove != null)
                 for (float x = mn.x; x < mx.x; x += 4.4f)
@@ -159,7 +160,7 @@ namespace HJH.EditorTools
                     {
                         var p = new Vector2(x + R() * 4.4f, z + R() * 4.4f);
                         if (!M.InEnd(p) || M.EndDepth(p) < 1.0f) continue;
-                        if (M.RouteDist(p) < 4.2f) continue;
+                        if (M.RouteDist(p) < 4.2f || M.SpecBlocked(p, 1.5f)) continue;
                         bool bad = false; foreach (var a in avoid) if (Vector2.Distance(a, p) < 5.5f) { bad = true; break; }
                         if (bad) continue;
                         bool inWater = InAnyPool(p, 1.0f);
@@ -180,7 +181,7 @@ namespace HJH.EditorTools
                 {
                     float a = (i + L(-0.3f, 0.3f)) / n * Mathf.PI * 2f;
                     var p = pd.c + new Vector2(Mathf.Cos(a) * pd.ax * L(1.0f, 1.5f), Mathf.Sin(a) * pd.az * L(1.0f, 1.5f));
-                    if (!M.InEnd(p) || M.EndDepth(p) < 0.8f || M.RouteDist(p) < 2.2f) continue;
+                    if (!M.InEnd(p) || M.EndDepth(p) < 0.8f || M.RouteDist(p) < 2.2f || M.SpecBlocked(p, 0.5f)) continue;
                     float roll = R();
                     if (roll < 0.55f && (rootsA != null || rootsB != null)) { var pf = (rootsB != null && R() < 0.5f) ? rootsB : rootsA; float s = L(0.35f, 0.7f); Put(pf, gDeco, p, 0.08f, new Vector3(s, s * L(0.8f, 1.2f), s), 6f); deco++; }
                     else if (rock != null) { float s = L(0.25f, 0.6f); Put(rock, gDeco, p, 0.1f, new Vector3(s * L(0.9f, 1.4f), s * L(0.6f, 0.9f), s * L(0.9f, 1.4f)), 10f); deco++; }
