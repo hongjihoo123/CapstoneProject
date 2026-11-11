@@ -16,9 +16,10 @@ namespace HJH.EditorTools
         private const string GroupName = "StartCliff";
 
         // 겹별: 윤곽선에서 바깥으로 떨어진 거리(m), 돌 Scale 범위
-        private static readonly float[] RowDist = { 0.5f, 2.4f, 4.6f };
-        private static readonly Vector2[] RowScale = { new Vector2(0.95f, 1.35f), new Vector2(1.25f, 1.7f), new Vector2(1.6f, 2.1f) };
-        private const float Spacing = 2.8f;
+        // 겹별 돌 Scale 범위 (뒤로 갈수록 조금 커져서 산처럼 올라감). 너무 크면 벽에서 튀어나와 보여서 작게 유지
+        private static readonly Vector2[] RowScale = { new Vector2(0.85f, 1.1f), new Vector2(0.95f, 1.25f), new Vector2(1.05f, 1.4f), new Vector2(1.2f, 1.6f) };
+        private const float Spacing = 2.3f;
+        private const float FlushGap = 0.2f;   // 1겹 돌의 안쪽 면이 구역 윤곽선보다 이만큼 바깥에 오게 (구역 안으로 튀어나오지 않음)
 
         [MenuItem("HJH/맵/돌/6 시작 구역 암벽 쌓기 (지형 벽을 돌산으로)")]
         private static void Build()
@@ -71,28 +72,43 @@ namespace HJH.EditorTools
                         skipped++;
                         continue;
                     }
-                    for (int row = 0; row < RowDist.Length; row++)
+                    // 한 칸(edge)에서 바깥으로 겹겹이: 앞 겹 돌과 25% 겹치게 붙여서 틈 없이 벽처럼 쌓음
+                    float prevOut = 0f, prevHalf = 0f;
+                    for (int row = 0; row < RowScale.Length; row++)
                     {
-                        Vector2 p = edge + normal * (RowDist[row] + R(-0.3f, 0.3f)) + dir * R(-0.8f, 0.8f);
-                        if (MapSpecBuilder.SpecInBlob(0, p) || MapSpecBuilder.SpecInWater(p)) continue;
-
-                        bool useMid = row < 2 && mids.Count > 0 && rng.NextDouble() < 0.4;
+                        bool useMid = row < 2 && mids.Count > 0 && rng.NextDouble() < 0.35;
                         List<GameObject> pool = useMid ? mids : bigs;
                         GameObject prefab = pool[rng.Next(pool.Count)];
-
                         float sc = R(RowScale[row].x, RowScale[row].y) * (useMid ? 1.3f : 1f);   // 중간 돌은 작아서 키워서 비슷한 덩치로
+
                         var go = (GameObject)PrefabUtility.InstantiatePrefab(prefab, group.transform);
                         Undo.RegisterCreatedObjectUndo(go, "Cliff stone");
                         go.name = $"Cliff_{row}_{placed}";
-                        go.transform.rotation = Quaternion.Euler(R(-7f, 7f), R(0f, 360f), R(-7f, 7f));
                         go.transform.localScale = Vector3.one * sc;
+
+                        // 가로(바깥 방향) 반폭을 재고, 구역 쪽으로 튀어나오지 않게 위치를 정함
+                        go.transform.rotation = Quaternion.Euler(0f, R(0f, 360f), 0f);
+                        go.transform.position = new Vector3(edge.x, 0f, edge.y);
+                        Bounds b0 = BoundsOf(go);
+                        float half = b0.extents.x * Mathf.Abs(normal.x) + b0.extents.z * Mathf.Abs(normal.y);
+                        float outDist = row == 0 ? half + FlushGap : prevOut + (prevHalf + half) * 0.75f;   // 바깥 방향 중심 거리
+                        Vector2 p = edge + normal * outDist + dir * R(-0.5f, 0.5f);
+                        if (MapSpecBuilder.SpecInBlob(0, p) || MapSpecBuilder.SpecInWater(p)) { Undo.DestroyObjectImmediate(go); break; }
+
+                        // 사면에 눕히기: 지형 법선 쪽으로 55% 기울이고 (돌이 벽에서 비어져 나와 보이지 않게) 약간만 흔듦
+                        float u = Mathf.InverseLerp(terrain.transform.position.x, terrain.transform.position.x + terrain.terrainData.size.x, p.x);
+                        float v = Mathf.InverseLerp(terrain.transform.position.z, terrain.transform.position.z + terrain.terrainData.size.z, p.y);
+                        Vector3 slope = terrain.terrainData.GetInterpolatedNormal(u, v);
+                        Quaternion lay = Quaternion.FromToRotation(Vector3.up, Vector3.Slerp(Vector3.up, slope, 0.55f));
+                        go.transform.rotation = lay * Quaternion.Euler(R(-4f, 4f), R(0f, 360f), R(-4f, 4f));
 
                         float ty = terrain.SampleHeight(new Vector3(p.x, 0f, p.y)) + terrain.transform.position.y;
                         go.transform.position = new Vector3(p.x, ty, p.y);
-                        // 돌 피벗이 어디든 상관없게: 돌 아래쪽 40% 를 땅에 묻음
+                        // 피벗이 어디든 상관없게: 돌 높이의 50% 를 땅에 묻음
                         Bounds bb = BoundsOf(go);
-                        go.transform.position += Vector3.up * (ty - bb.min.y - bb.size.y * 0.4f);
+                        go.transform.position += Vector3.up * (ty - bb.min.y - bb.size.y * 0.5f);
 
+                        prevOut = outDist; prevHalf = half;
                         bool front = row == 0;
                         foreach (var col in go.GetComponentsInChildren<Collider>(true)) col.enabled = front;
                         if (!front) GameObjectUtility.SetStaticEditorFlags(go, StaticEditorFlags.BatchingStatic | StaticEditorFlags.OccludeeStatic);

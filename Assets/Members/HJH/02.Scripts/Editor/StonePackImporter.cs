@@ -346,6 +346,7 @@ namespace HJH.EditorTools
             EditorSceneManager.MarkSceneDirty(EditorSceneManager.GetActiveScene());
             Debug.Log($"[Stones] 콜라이더 켬: 통나무 {logsN}, 버섯 {mushN}, 돌 {rocksOn}개 (Scale 0.2 이하 {rocksOff}개는 끔). 이어서 맵 밖·닿지 않는 콜라이더를 정리합니다.");
             PruneHiddenColliders();
+            MapLayers.Assign();   // 총알이 닿는 레이어(Obstacle/Ground)로 정리
         }
 
         // ───────────────────────── 4. 가려진 콜라이더 빼기 ─────────────────────────

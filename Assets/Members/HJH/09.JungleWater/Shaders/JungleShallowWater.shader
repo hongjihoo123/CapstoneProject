@@ -34,6 +34,8 @@ Shader "HJH/JungleWater/ShallowWater"
         _ReflectionStrength ("Reflection Strength", Range(0, 1)) = 0.5
         _SpecularPower ("Specular Power", Range(8, 512)) = 180
         _SpecularStrength ("Specular Strength", Range(0, 3)) = 0.7
+        _AddLightDiffuse ("Point Light Glow (랜턴·꽃·Spot 이 물 색에 번지는 정도)", Range(0, 3)) = 1
+        _AddLightGlint ("Point Light Glint (광원 반짝임)", Range(0, 3)) = 1
 
         [Header(Cloud Reflection)]
         _CloudColor ("Cloud Color", Color) = (0.9, 0.97, 0.95, 1)
@@ -68,6 +70,9 @@ Shader "HJH/JungleWater/ShallowWater"
             #pragma fragment frag
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            // 추가 광원(랜턴·발광 꽃·플레이어 Spot): 이 프로젝트는 Forward+ 라서 클러스터 루프로 돎
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS_VERTEX _ADDITIONAL_LIGHTS
+            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
 
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Core.hlsl"
             #include "Packages/com.unity.render-pipelines.universal/ShaderLibrary/Lighting.hlsl"
@@ -94,6 +99,8 @@ Shader "HJH/JungleWater/ShallowWater"
                 float _ReflectionStrength;
                 float _SpecularPower;
                 float _SpecularStrength;
+                float _AddLightDiffuse;
+                float _AddLightGlint;
                 half4 _CloudColor;
                 float _CloudStrength;
                 float _CloudScale;
@@ -157,6 +164,30 @@ Shader "HJH/JungleWater/ShallowWater"
                 JW_MainLight(posWS, n, lightDir, lightColor, shadow, ambient);
                 float3 diffuse = lightColor * saturate(dot(n, lightDir)) * shadow + ambient;
 
+                // [SGS_AdditionalLights] 랜턴·발광 꽃·플레이어 Spot: 물 색에 빛이 번지고(glow), 광원 모양 반짝임(glint)이 비침
+                float3 viewDir = normalize(_WorldSpaceCameraPos - posWS);
+                float3 diffuseBase = diffuse;   // 태양 + 환경광만 (거품 색에 씀)
+                float3 addGlint = 0;
+                float3 addGlow = 0;
+                #if defined(_ADDITIONAL_LIGHTS)
+                    InputData inputData = (InputData)0;
+                    inputData.positionWS = posWS;
+                    inputData.normalizedScreenSpaceUV = screenUV;
+                    uint addCount = GetAdditionalLightsCount();
+                    LIGHT_LOOP_BEGIN(addCount)
+                        Light al = GetAdditionalLight(lightIndex, posWS);
+                        // 광원 바로 밑은 밝기가 수십 배로 터지니 한 광원당 상한을 둠 (반딧불이 같은 작은 광원이 원판으로 찍히지 않게)
+                        float3 lc = min(al.color * al.distanceAttenuation, 1.0);
+                        addGlow += lc * saturate(dot(n, al.direction) * 0.5 + 0.5);   // 낮게 비추는 광원도 물 색에 닿게 (감싸는 조명)
+                        float3 aH = normalize(al.direction + viewDir);
+                        float aNH = saturate(dot(n, aH));
+                        // 계단식(카툰) 하이라이트가 아니라 부드럽게 사라지는 반짝임 -> 광원 빛이 물에 자연스럽게 녹음
+                        addGlint += lc * (0.9 * pow(aNH, 70.0) + 0.12 * pow(aNH, 16.0));
+                    LIGHT_LOOP_END
+                    diffuse += addGlow * _AddLightDiffuse;
+                #endif
+                float3 foamLight = diffuseBase + addGlow * _AddLightDiffuse * 0.25;   // 거품은 추가 광원을 약하게만 받음 (하얗게 터지지 않게)
+
                 // [SGS_WaterColor] 얕으면 바닥이 비치고, 깊을수록 탁한 물 색
                 float murk = depth * _Murkiness;
                 float absorb = JW_SoftBands(1.0 - exp(-murk), 3.0, 0.05);   // 카툰: 또렷한 4단계 색 띠
@@ -183,10 +214,11 @@ Shader "HJH/JungleWater/ShallowWater"
                 float3 H = normalize(lightDir + V);
                 float glint = smoothstep(0.45, 0.5, pow(saturate(dot(n, H)), _SpecularPower));   // 카툰: 하얀 반짝임 덩어리
                 float3 spec = lightColor * glint * _SpecularStrength * shadow * (1.0 - foam);
+                spec += addGlint * _AddLightGlint * (1.0 - foam);   // 추가 광원 반짝임
 
                 // [SGS_FinalComposite]
                 float foamAmount = foam * _FoamColor.a;
-                col = lerp(col, _FoamColor.rgb * diffuse, foamAmount) + spec;
+                col = lerp(col, _FoamColor.rgb * foamLight, foamAmount) + spec;
                 float alpha = saturate(depth / _EdgeFade + foamAmount);
                 return half4(col, alpha);
             }

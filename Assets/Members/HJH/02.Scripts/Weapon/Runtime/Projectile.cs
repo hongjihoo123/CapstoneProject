@@ -71,7 +71,9 @@ namespace RobotWeapons
         
         private bool TryFindClosestHit(Vector3 direction, float distance, out RaycastHit result)
         {
-            int count = Physics.RaycastNonAlloc(_previousPosition, direction, HitBuffer, distance, hitMask, QueryTriggerInteraction.Collide);
+            // Obstacle / Ground / Enemy(Weakpoint) 에만 닿음. 적 투사체가 플레이어를 맞출 수 있게 Player 레이어는 남김 (보이지 않는 경계 벽은 통과)
+            int mask = (hitMask.value | BulletLayers.Environment) & (BulletLayers.All | LayerMask.GetMask("Player"));   // 환경 레이어(Obstacle/Ground)는 항상 포함
+            int count = Physics.RaycastNonAlloc(_previousPosition, direction, HitBuffer, distance, mask, QueryTriggerInteraction.Collide);
             if (count == 0)
             {
                 result = default;
