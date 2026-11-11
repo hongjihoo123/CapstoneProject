@@ -68,6 +68,7 @@ namespace HJH.EditorTools
                 }
 
                 MapLightTools.AddPlayerSpot(rig.transform);   // 플레이어 Spot 라이트 (다시 만들어도 유지)
+                EnsureWaterEmitter(rig.transform);            // 물속을 걸을 때 물결 (예전 Player.prefab 에만 있었음)
                 var prefab = PrefabUtility.SaveAsPrefabAsset(rig, RigPath);
                 Debug.Log($"[Rig] PlayerRig 프리팹 생성: {RigPath}\n  포함 {included.Count}개: {string.Join(", ", included)}\n  Start 씬에 없어 빠진 것: {(missing.Count == 0 ? "없음" : string.Join(", ", missing))}\n  세트 밖 참조(끊김) {outside.Count}개{(outside.Count > 0 ? ":\n    " + string.Join("\n    ", outside) : "")}");
                 if (prefab == null) Debug.LogError("[Rig] 프리팹 저장 실패");
@@ -93,6 +94,30 @@ namespace HJH.EditorTools
             var delta = player != null ? playerPos - player.position : playerPos;
             rig.transform.position += delta;
             return true;
+        }
+
+        // 플레이어가 물속(발 높이 <= 수면)을 걸을 때 물결을 만드는 컴포넌트. 옛 Player.prefab 에는 있었는데 Start 씬 플레이어로 만든 PlayerRig 에는 빠져 있었음.
+        internal static bool EnsureWaterEmitter(Transform rigRoot)
+        {
+            Transform player = rigRoot.name == "Player" ? rigRoot : rigRoot.Find("Player");
+            if (player == null) return false;
+            if (player.GetComponent<Assets.Members.HJH.Environment.WaterRippleEmitter>() == null)
+                player.gameObject.AddComponent<Assets.Members.HJH.Environment.WaterRippleEmitter>();   // 기본값 = 옛 Player 설정 (반지름 0.45, 세기 0.12, 간격 0.7, 허용 0.05)
+            return true;
+        }
+
+        [MenuItem("HJH/맵/플레이어/4 물결 발생기 달기 (PlayerRig 프리팹, 모든 맵에 적용)")]
+        private static void AddWaterEmitterMenu()
+        {
+            if (EditorApplication.isPlaying) return;
+            var root = PrefabUtility.LoadPrefabContents(RigPath);
+            try
+            {
+                if (!EnsureWaterEmitter(root.transform)) { Debug.LogWarning("[Rig] PlayerRig 안에서 Player 를 못 찾았습니다."); return; }
+                PrefabUtility.SaveAsPrefabAsset(root, RigPath);
+                Debug.Log("[Rig] PlayerRig 의 Player 에 WaterRippleEmitter 를 달았습니다. 물속을 걸으면 물결이 생깁니다 (Submerge Tolerance 를 키우면 얕은 물에서도 반응).");
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
         // 지금 열린(활성) 씬에 적용. 저장은 안 함 -> 확인하고 직접 저장하세요. (_HJH_Map 처럼 위 두 맵이 아닌 씬용)
