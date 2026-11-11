@@ -14,6 +14,8 @@ namespace RobotWeapons
         [Tooltip("Shot thickness. A little width keeps top-down aiming forgiving.")]
         public float shotRadius = 0.25f;
         public LayerMask hitMask = ~0;
+        [Tooltip("Solid geometry that stops the shot (rocks, walls, props). Added on top of Hit Mask so a mask that lists only enemies still can't shoot through scenery.")]
+        public LayerMask environmentMask = 1;   // Default layer
 
         [Header("Muzzles")]
         [Tooltip("One entry per hand/barrel, fired in turn. Shots start at the MuzzleSocket with this id under the player.")]

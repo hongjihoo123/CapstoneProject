@@ -234,6 +234,7 @@ namespace RobotWeapons
                 Start = start,
                 End = end,
                 Hit = target != null,
+                Blocked = blocked && target == null,
                 Empowered = empowered,
                 Color = color
             });
@@ -363,7 +364,7 @@ namespace RobotWeapons
             if (distance <= 0f)
                 return false;
 
-            int mask = data.hitMask.value & ~AimUtility.IgnoreLayerMask.value;
+            int mask = (data.hitMask.value | data.environmentMask.value) & ~AimUtility.IgnoreLayerMask.value;
             int count = Physics.SphereCastNonAlloc(start, data.shotRadius, direction, HitBuffer, distance, mask, QueryTriggerInteraction.Collide);
             Array.Sort(HitBuffer, 0, count, DistanceComparer);
 

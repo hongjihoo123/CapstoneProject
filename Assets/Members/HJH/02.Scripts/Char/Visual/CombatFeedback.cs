@@ -328,7 +328,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Fx.Tracer(shot.Start, shot.End, shot.Color, shot.Empowered ? 0.24f : 0.11f, shot.Empowered ? 0.12f : 0.07f);
                 Fx.Tracer(shot.Start, shot.End, GunnerFx.Hot(shot.Color, 0.8f), shot.Empowered ? 0.1f : 0.04f, shot.Empowered ? 0.08f : 0.045f);   // 하얀 심
                 if (!shot.Hit)
+                {
                     Fx.ProjectileImpact(shot.End, direction, shot.Color, 0.4f, false);
+                    // 바위·벽에 막힌 탄: 맞은 자리에서 쏜 방향 반대로 튀는 불꽃 + 짧은 조명
+                    if (shot.Blocked && direction.sqrMagnitude > 0.0001f)
+                    {
+                        Vector3 back = -direction.normalized;
+                        Fx.Hit(shot.End, back, GunnerFx.Hot(shot.Color, 0.4f), shot.Empowered);
+                        GunnerFx.Flash(shot.End + back * 0.2f, shot.Color, shot.Empowered ? 3.5f : 1.6f, 2.2f, 0.06f);
+                    }
+                }
             }
 
             if (shot.Empowered)

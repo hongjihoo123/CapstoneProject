@@ -71,6 +71,8 @@ namespace RobotWeapons
         public UnityEngine.Vector3 Start;
         public UnityEngine.Vector3 End;
         public bool Hit;
+        // True when the shot stopped on solid geometry (rock, wall) instead of a target or max range: End is the contact point.
+        public bool Blocked;
         public bool Empowered;
         public UnityEngine.Color Color;
         // True for travelling shots: only the muzzle is drawn here, the projectile comes from ProjectileLaunched.

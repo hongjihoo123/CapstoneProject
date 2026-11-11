@@ -70,6 +70,11 @@ namespace HJH.EditorTools
         internal static float EndDepth(Vector2 p) => InPoly(S.blobs[1], p) ? DistPoly(S.blobs[1], p) : 0f;
         internal static float RouteDist(Vector2 p) => DistRoute(p);
         internal static float SpecWaterY => S.waterY;
+        // 암벽 쌓기 도구용: 시작 구역(blobs[0]) 윤곽과 물·다리 질의
+        internal static Vector2[] SpecBlob(int i) => S.blobs[i];
+        internal static bool SpecInBlob(int i, Vector2 p) => InPoly(S.blobs[i], p);
+        internal static bool SpecInWater(Vector2 p) => InWater(p);
+        internal static float SpecBridgeDist(Vector2 p) => Seg(p, S.bridgeA, S.bridgeB);
         private static float Smooth(float a, float b, float x) => Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((x - a) / (b - a)));
 
         private static bool InPoly(Vector2[] poly, Vector2 p)
@@ -194,13 +199,14 @@ namespace HJH.EditorTools
             foreach (var n in new[] { "RockMass_A", "RockMass_B", "RockMass_C" }) { var m = Load(PropDir + n + ".prefab"); if (m != null) massPrefabs.Add(m); }
             var fireflies = Load(FxDir + "FireflyZone.prefab");
 
-            GameObject Put(GameObject prefab, Transform parent, Vector2 p, float sink, Vector3 scale, float tilt, bool colliders = false)
+            GameObject Put(GameObject prefab, Transform parent, Vector2 p, float sink, Vector3 scale, float tilt, bool colliders = false, bool bySize = false)
             {
                 var g = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
                 g.transform.position = new Vector3(p.x, Ground(p) - sink, p.y);
                 g.transform.rotation = Quaternion.Euler(L(-tilt, tilt), R() * 360f, L(-tilt, tilt));
                 g.transform.localScale = scale;
-                if (!colliders) foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = false;
+                if (bySize) { var mr = g.GetComponentInChildren<MeshRenderer>(); float ext = mr != null ? Mathf.Max(mr.bounds.size.x, mr.bounds.size.z) : 0f; foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = ext >= 0.8f; }   // 조약돌(0.8m 미만)만 콜라이더 끔
+                else if (!colliders) foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = false;
                 return g;
             }
 
@@ -256,13 +262,13 @@ namespace HJH.EditorTools
                 var p = new Vector2(L(mn.x, mx.x), L(mn.y, mx.y));
                 if (!InBlob(p) || Depth(p) < 1.2f || DistRoute(p) < 2.2f || rockA == null) continue;
                 float s = L(0.45f, 0.9f);
-                Put(R() < 0.5f ? rockA : (rockB ?? rockA), deco, p, L(0.08f, 0.22f), new Vector3(s * L(0.9f, 1.3f), s * L(0.6f, 0.95f), s * L(0.9f, 1.3f)), 8f); rocks++;
+                Put(R() < 0.5f ? rockA : (rockB ?? rockA), deco, p, L(0.08f, 0.22f), new Vector3(s * L(0.9f, 1.3f), s * L(0.6f, 0.95f), s * L(0.9f, 1.3f)), 8f, bySize: true); rocks++;
                 int k = 2 + rng.Next(0, 3);
                 for (int i = 0; i < k; i++)
                 {
                     float a = R() * 6.28f, dd = L(0.6f, 1.5f); var q = p + new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * dd;
                     if (!InBlob(q) || DistRoute(q) < 1.2f) continue;
-                    float cs = L(0.12f, 0.3f); Put(rockA, deco, q, 0.03f, new Vector3(cs * L(0.9f, 1.4f), cs * L(0.6f, 1f), cs * L(0.9f, 1.4f)), 18f); chips++;
+                    float cs = L(0.12f, 0.3f); Put(rockA, deco, q, 0.03f, new Vector3(cs * L(0.9f, 1.4f), cs * L(0.6f, 1f), cs * L(0.9f, 1.4f)), 18f, bySize: true); chips++;
                 }
                 c++;
             }
@@ -297,7 +303,7 @@ namespace HJH.EditorTools
                     var p = bp + inward * L(0.4f, 1.6f);
                     if (!InPlay(p) || Seg(p, S.bridgeA, S.bridgeB) < 3.5f) continue;
                     float roll = R();
-                    if (roll < 0.5f && rockA != null) { float sc = L(0.2f, 0.55f); Put(rockA, deco, p, L(0.05f, 0.15f), new Vector3(sc * L(0.9f, 1.4f), sc * L(0.6f, 0.95f), sc * L(0.9f, 1.4f)), 10f); edge++; }
+                    if (roll < 0.5f && rockA != null) { float sc = L(0.2f, 0.55f); Put(rockA, deco, p, L(0.05f, 0.15f), new Vector3(sc * L(0.9f, 1.4f), sc * L(0.6f, 0.95f), sc * L(0.9f, 1.4f)), 10f, bySize: true); edge++; }
                     else if (roll < 0.8f && flower != null) { float sc = L(0.3f, 0.5f); Put(flower, deco, p, 0.03f, new Vector3(sc, sc, sc), 6f); edge++; }
                     else if (roots != null) { float sc = L(0.3f, 0.5f); Put(roots, deco, p, 0.05f, new Vector3(sc, sc, sc), 5f); edge++; }
                 }
@@ -340,13 +346,17 @@ namespace HJH.EditorTools
             var ls = AssetDatabase.LoadAssetAtPath<LightingSettings>(DataDir + "MapL_Lighting.lighting");
             if (ls != null) Lightmapping.lightingSettings = ls;
 
-            // 카메라·플레이어를 시작 지점으로
-            var cam = GameObject.Find("Main Camera");
-            if (cam != null) { cam.transform.position = new Vector3(spec.start.x, Ground(spec.start) + 16f, spec.start.y - 9f); cam.transform.rotation = Quaternion.Euler(60f, 0f, 0f); }
-            if (GameObject.Find("Player") == null)
+            // 플레이어 세트(Start 씬에서 만든 PlayerRig 프리팹)를 시작 지점에 배치. 프리팹이 없으면 기존 카메라 위치만 옮김.
+            var startPos = new Vector3(spec.start.x + 1.5f, Ground(spec.start) + 0.1f, spec.start.y + 1.5f);
+            if (!PlayerRigBuilder.PlaceRigAt(startPos))
             {
-                var pp = Load(PlayerPrefab);
-                if (pp != null) { var pl = (GameObject)PrefabUtility.InstantiatePrefab(pp); pl.transform.position = new Vector3(spec.start.x + 1.5f, Ground(spec.start) + 0.1f, spec.start.y + 1.5f); }
+                var cam = GameObject.Find("Main Camera");
+                if (cam != null) { cam.transform.position = new Vector3(spec.start.x, Ground(spec.start) + 16f, spec.start.y - 9f); cam.transform.rotation = Quaternion.Euler(60f, 0f, 0f); }
+                if (GameObject.Find("Player") == null)
+                {
+                    var pp = Load(PlayerPrefab);
+                    if (pp != null) { var pl = (GameObject)PrefabUtility.InstantiatePrefab(pp); pl.transform.position = startPos; }
+                }
             }
 
             EditorSceneManager.MarkSceneDirty(scene);
