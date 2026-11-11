@@ -74,6 +74,7 @@ namespace HJH.EditorTools
         internal static Vector2[] SpecBlob(int i) => S.blobs[i];
         internal static bool SpecInBlob(int i, Vector2 p) => InPoly(S.blobs[i], p);
         internal static bool SpecInWater(Vector2 p) => InWater(p);
+        internal static Vector2[] SpecWater() => S.water;
         internal static float SpecBridgeDist(Vector2 p) => Seg(p, S.bridgeA, S.bridgeB);
         private static float Smooth(float a, float b, float x) => Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((x - a) / (b - a)));
 
