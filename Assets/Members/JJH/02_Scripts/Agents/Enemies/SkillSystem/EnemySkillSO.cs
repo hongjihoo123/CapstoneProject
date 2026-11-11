@@ -22,7 +22,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
 
 #if UNITY_EDITOR
-        // MonoScript 는 에디터에만 있음 → 빌드(exe)에서는 아래 skillTypeName 으로 타입을 찾음
         [SerializeField] private MonoScript skillScript;
 #endif
         [SerializeField, HideInInspector] private string skillTypeName;

@@ -1,7 +1,6 @@
 ﻿using RobotWeapons;
 using System;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
@@ -20,7 +19,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected virtual bool followEnemy => true;
 
-        private readonly List<Coroutine> _subCoroutines = new List<Coroutine>();
         private Coroutine _skillCoroutine;
 
         private int _playingVfxHash;
