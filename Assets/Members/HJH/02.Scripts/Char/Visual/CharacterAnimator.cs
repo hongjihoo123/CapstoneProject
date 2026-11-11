@@ -42,6 +42,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static readonly int MoveY = Animator.StringToHash("MoveY");
         private const string UpperLayerName = "Upper";
 
+        // 총 잡는 손 IK(GunHoldIK)가 읽는 지금 자세. None = 전신 동작·맞는 중·죽음이라 IK 끔
+        // Shoot = 공격 클립 재생 중(IK 끔), Aim = 쏜 직후 견착 유지(IK 로 겨눔)
+        public enum GunHold { None, Idle, Run, Shoot, Aim }
+        public GunHold Hold { get; private set; }
+        private float _lastShot = -10f;
+
+        [SerializeField, Tooltip("쏘고 나서 이 시간 동안은 견착 자세 유지")] private float shootHold = 0.8f;
         [SerializeField] private float fade = 0.08f;
         [SerializeField, Tooltip("이 속도보다 빠르게 움직이면 Run")] private float runSpeed = 0.2f;
         [SerializeField, Tooltip("이동 방향(MoveX/MoveY) 바뀔 때 부드럽게 따라가는 시간")] private float moveDirDamp = 0.1f;
@@ -140,6 +147,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Animator animator = _model != null ? _model.Animator : null;
             if (animator == null || animator.runtimeAnimatorController == null)
             {
+                Hold = GunHold.None;
                 _base.Reset();
                 _upper.Reset();
                 return;
@@ -150,6 +158,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             if (!_player.IsAlive)
             {
+                Hold = GunHold.None;
                 PlayDead(animator);
                 return;
             }
@@ -169,6 +178,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             int locomotion = _player.Mover.PlanarSpeed > runSpeed ? Run : Idle;
             int action = Action(animator);
+            if (action == Attack || action == PassiveShot)
+                _lastShot = Time.time;
             _attackRequested = false;
             _passiveShotRequested = false;
             _hitRequested = false;
@@ -179,7 +190,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Drive(animator, _base, body, body != locomotion);
 
             if (_upper.Layer < 0)
+            {
+                Hold = HoldFor(locomotion, _base.OneShot);
                 return;
+            }
 
             // 대시/스킬 같은 전신 동작 중엔 상체 레이어 끔 (끝나면 다시 하체에 맞춰 들어감)
             bool fullBody = _base.OneShot;
@@ -189,9 +203,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (fullBody)
             {
                 _upper.Reset();
+                Hold = GunHold.None;
                 return;
             }
             Drive(animator, _upper, upperAttack ? action : locomotion, upperAttack);
+            Hold = HoldFor(locomotion, false);
+        }
+
+        // 총 손 IK 가 어떤 자세로 잡을지: 전신 동작·맞는 중 = 끔, 쏘는 중/직후 = 견착(클립 그대로), 나머지 = 뛰는 중/가만히
+        private GunHold HoldFor(int locomotion, bool fullBody)
+        {
+            if (fullBody)
+                return GunHold.None;
+            if (_upper.Layer >= 0 && _upper.OneShot && _upper.Playing == Hit)
+                return GunHold.None;
+            bool shooting = _upper.Layer >= 0 && _upper.OneShot && (_upper.Playing == Attack || _upper.Playing == PassiveShot);
+            if (shooting)
+                return GunHold.Shoot;
+            if (Time.time - _lastShot < shootHold)
+                return GunHold.Aim;
+            return locomotion == Run ? GunHold.Run : GunHold.Idle;
         }
 
         // 쓰러지는 동작 한 번 (클립이 반복 안 해서 끝나면 누운 채로 멈춤). 상체 레이어는 끔

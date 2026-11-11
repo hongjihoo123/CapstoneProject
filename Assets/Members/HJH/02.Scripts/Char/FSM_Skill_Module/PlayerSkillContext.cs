@@ -26,7 +26,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             _player = player;
             _targetMask = targetMask;
-            _environmentMask = environmentMask;
+            // 대시·바닥 찾기용 환경 마스크에 Obstacle/Ground 를 항상 포함 (지형이 Ground, 장애물이 Obstacle 레이어라서)
+            _environmentMask = environmentMask.value | BulletLayers.Environment;
         }
 
         public Transform Transform => _player.transform;
@@ -204,7 +205,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Vector3 delta = to - from;
             float distance = delta.magnitude;
             if (distance > 0.0001f
-                && Physics.Raycast(from, delta / distance, out RaycastHit hit, distance, _environmentMask, QueryTriggerInteraction.Ignore))
+                && Physics.Raycast(from, delta / distance, out RaycastHit hit, distance, BulletLayers.Environment, QueryTriggerInteraction.Ignore))   // 투사체·관통탄은 Obstacle/Ground 에만 막힘 (보이지 않는 벽은 통과)
             {
                 hitPoint = hit.point;
                 return true;

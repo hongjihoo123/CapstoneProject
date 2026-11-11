@@ -9,10 +9,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
         [SerializeField, Tooltip("Dash toward WASD while moving (aim direction when standing still).")]
         private bool useMoveInputDirection = true;
         [SerializeField] private bool reloadOnDash = true;
+        [SerializeField, Tooltip("건슬링어 연출: 출발 파동 + 조명 + 잔상")] private bool flashyFx;
 
         public override void Execute(ISkillContext context)
         {
-            context.Dash(ResolveDirection(context), dashForce, Duration);
+            Vector3 direction = ResolveDirection(context);
+            context.Dash(direction, dashForce, Duration);
+            if (flashyFx)
+                global::Assets.Members.HJH._02.Scripts.Char.Visual.GunnerFx.DashStart(context.Transform, direction, FxColor, Duration);
 
             if (reloadOnDash)
                 context.Weapon?.InstantReload();

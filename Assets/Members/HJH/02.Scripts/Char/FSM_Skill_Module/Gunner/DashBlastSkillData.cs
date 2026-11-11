@@ -60,6 +60,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 _context = context;
                 _direction = SkillAim.Resolve(context, 0f, 1f, out _);
                 context.Dash(_direction, data.dashSpeed, data.dashTime);   // 대쉬 잔상은 CombatFeedback 이 알아서 그림
+                GunnerFx.DashStart(context.Transform, _direction, data.FxColor, data.dashTime);
             }
 
             public void Tick(float elapsed)
@@ -83,7 +84,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 Vector3 origin = _context.Transform.position;
                 Color color = _data.FxColor;
 
-                Fx.ConeBlast(origin, _direction, _data.blastRange, _data.blastAngle, color);
+                GunnerFx.DashBlast(origin, _direction, _data.blastRange, _data.blastAngle, color);
                 AttackAreaBus.Raise(AttackArea.Cone(AttackAreaKind.Skill, origin, Quaternion.LookRotation(_direction), _data.blastRange, _data.blastAngle, 0.2f));
 
                 float halfAngle = _data.blastAngle * 0.5f;
@@ -99,6 +100,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                         continue;   // 부채꼴 밖
 
                     _context.DealDamage(target, _data.damage);
+                    GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : _direction, color);
                     // 정면 방향 + 옆으로 벌어지는 방향 섞어서 밀어냄 (부채꼴 모양으로 퍼지게)
                     Vector3 push = toTarget.sqrMagnitude > 0.01f ? (_direction + toTarget.normalized).normalized : _direction;
                     _context.Knockback(target, push, _data.knockback);

@@ -73,6 +73,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             _elapsed += deltaTime;
             Vector3 start = _muzzle != null ? _muzzle() : _context.Transform.position + _muzzleOffset;
             Vector3 end = start + _direction * _s.range;
+            // 관통은 적만: 바위·벽 같은 단단한 오브젝트에서는 그 자리에서 끊긴다 (조준선·빔·피해 범위 모두 거기까지)
+            bool blocked = _context.LineBlocked(start, end, out Vector3 blockPoint);
+            if (blocked)
+                end = blockPoint;
 
             if (!ReadyToFire)
             {
@@ -93,7 +97,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             StopCharge();
             _context.ReleaseAim();   // 반동 대쉬는 잠금과 상관없지만 쏘는 순간 바로 풀어줌
-            Fire(start, end);
+            Fire(start, end, blocked);
             return false;
         }
 
@@ -105,18 +109,30 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             _aimLine = null;
         }
 
-        private void Fire(Vector3 start, Vector3 end)
+        private void Fire(Vector3 start, Vector3 end, bool blocked)
         {
             AttackAreaBus.Raise(AttackArea.Box(AttackAreaKind.Skill, (start + end) * 0.5f, Quaternion.LookRotation(_direction),
-                new Vector3(_s.width, 0.05f, _s.range), 0.15f));
+                new Vector3(_s.width, 0.05f, Vector3.Distance(start, end)), 0.15f));
 
             Fx.Beam(start, end, _s.color, _s.width * 1.1f, 0.3f);
             Fx.Shockwave(start - Vector3.up * 0.9f, _s.color, 1.4f);
+            GunnerFx.ChargedShot(start, end, _s.color, _s.width);
+
+            // 막힌 자리: 맞은 면에서 튀어나오는(= 쏜 방향 반대) 불꽃 + 임팩트 + 짧은 조명
+            if (blocked)
+            {
+                Vector3 back = -_direction;
+                GunnerFx.BlastHit(end, back, _s.color);
+                Fx.ProjectileImpact(end, _direction, _s.color, Mathf.Max(0.8f, _s.width * 1.5f), false);
+                GunnerFx.Flash(end + back * 0.3f, _s.color, 4f, 3f, 0.1f);
+            }
 
             int hits = 0;
             foreach (IDamageable target in _context.OverlapCapsule(start, end, _s.width * 0.5f))
             {
                 _context.DealDamage(target, _s.damage);
+                if (target is Component hitPart)
+                    GunnerFx.BlastHit(hitPart.transform.position + Vector3.up, _direction, _s.color);
                 _context.Knockback(target, _direction, _s.knockback);
                 hits++;
             }
