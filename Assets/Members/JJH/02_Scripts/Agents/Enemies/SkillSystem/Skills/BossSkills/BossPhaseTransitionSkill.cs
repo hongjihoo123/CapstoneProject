@@ -27,11 +27,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
             ShowWarnings(origin, rotation, safeLane);
 
-            yield return new WaitForSeconds(SkillSO.PrepareTime);
+            yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
             FireRoots(origin, rotation, safeLane);
 
-            yield return new WaitForSeconds(SkillSO.AttackDutation);
+            yield return new WaitForSeconds(SkillSetting.AttackDutation);
 
             Boss.CompletePhaseTransition();
         }
@@ -39,7 +39,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         private void ShowWarnings(Vector3 origin, Quaternion rotation, int safeLane)
         {
             float laneAngle = fanAngle / rootCount;
-            float range = SkillSO.Range;
+            float range = SkillSetting.Range;
             float width = range * Mathf.Sin(laneAngle * Mathf.Deg2Rad) * 0.9f;
 
             for (int i = 0; i < rootCount; i++)
@@ -54,7 +54,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 Vector3 center = origin + direction * (range * 0.5f);
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
-                    center, Quaternion.LookRotation(direction), new Vector3(width, 0f, range), SkillSO.PrepareTime));
+                    center, Quaternion.LookRotation(direction), new Vector3(width, 0f, range), SkillSetting.PrepareTime));
             }
         }
 
@@ -76,7 +76,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 BossDamageProjectile root = Instantiate(rootPrefab,
                     origin + Vector3.up * rootHeight, Quaternion.LookRotation(direction));
 
-                root.Initialize(direction, rootSpeed, SkillSO.Damage, _enemy.gameObject);
+                root.Initialize(direction, rootSpeed, SkillSetting.Damage, _enemy.gameObject);
             }
         }
 

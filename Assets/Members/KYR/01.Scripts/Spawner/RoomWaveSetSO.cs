@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Spawner
 {
-    [CreateAssetMenu(fileName = "Room Wave Set", menuName = "SO/Enemy/Room Wave Set", order = 3)]
+    [CreateAssetMenu(fileName = "Room Wave Set", menuName = "SO/Enemy/Room Wave Set", order = 4)]
     public class RoomWaveSetSO : ScriptableObject
     {
         [SerializeField] private List<EnemyWaveSO> waves = new List<EnemyWaveSO>();

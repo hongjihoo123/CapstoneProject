@@ -17,7 +17,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         {
             position = Vector3.zero;
 
-            Collider[] hits = Physics.OverlapSphere(_enemy.transform.position, SkillSO.Range,
+            Collider[] hits = Physics.OverlapSphere(_enemy.transform.position, SkillSetting.Range,
                 _skillModule.TargetLayer);
 
             IDamageable closest = null;

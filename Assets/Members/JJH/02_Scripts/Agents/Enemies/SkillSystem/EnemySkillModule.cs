@@ -5,6 +5,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
+using static Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillSO;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
@@ -94,7 +95,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
             skill.UseSkill();
             LastSkillEndTime = Time.time;
-            _skillCooldowns[skillType] = Time.time + skillData.Cooltime;
+            EnemySkillSetting setting = GetSkillSetting(skillData);
+            _skillCooldowns[skillType] = Time.time + setting.Cooltime;
         }
 
         public void CancelAllSkills()
@@ -113,9 +115,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasAvailableSkill(float distance)
         {
-            foreach (var data in enemy.EnemyData.EnemySkills.OrderByDescending(data => data.Range))
+            foreach (var data in enemy.EnemyData.EnemySkills.Where(data => data != null)
+                                              .OrderByDescending(data => GetSkillSetting(data).Range))
             {
-                if (data == null || distance > data.Range)
+                EnemySkillSetting setting = GetSkillSetting(data);
+
+                if (distance > setting.Range)
                     continue;
 
                 Type skillType = data.SkillType;
@@ -133,9 +138,20 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasSkillInRange(float distance)
         {
-            return enemy.EnemyData.EnemySkills.Any(data =>
-                data != null && data.SkillType != null && distance <= data.Range &&
-                _skillDict.ContainsKey(data.SkillType));
+            return enemy.EnemyData.EnemySkills.Any(data => data != null && data.SkillType != null
+                                                                                            && distance <= GetSkillSetting(data).Range
+                                                                                            && _skillDict.ContainsKey(data.SkillType));
+        }
+
+        private EnemySkillSO.EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)
+        {
+            if (skillData is NormalEnemySkillSO normal)
+                return normal.SkillSetting;
+
+            if (skillData is BossEnemySkillSO boss && enemy is BossEnemy bossEnemy)
+                return bossEnemy.Phase == BossPhase.Phase2 ? boss.Phase2SkillSetting : boss.Phase1SkillSetting;
+
+            return default;
         }
     }
 }

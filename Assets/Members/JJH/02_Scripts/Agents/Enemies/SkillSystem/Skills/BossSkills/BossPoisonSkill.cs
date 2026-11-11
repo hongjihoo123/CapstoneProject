@@ -40,9 +40,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 yield break;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                targetPosition, areaRadius, SkillSO.PrepareTime));
+                targetPosition, areaRadius, SkillSetting.PrepareTime));
 
-            yield return new WaitForSeconds(SkillSO.PrepareTime);
+            yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
             if (projectilePrefab == null)
                 yield break;
@@ -56,7 +56,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
             BossPoisonProjectile projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
 
             projectile.Initialize(direction, projectileSpeed, _enemy.gameObject, areaPrefab,
-                SkillSO.Damage, areaRadius, areaDuration, damageInterval,
+                SkillSetting.Damage, areaRadius, areaDuration, damageInterval,
                 IsPhase2 ? splashCount : 0, splashSpeed);
         }
     }

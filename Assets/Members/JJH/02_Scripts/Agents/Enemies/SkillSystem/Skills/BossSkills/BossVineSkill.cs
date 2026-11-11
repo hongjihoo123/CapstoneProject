@@ -39,11 +39,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 Quaternion rotation = _enemy.transform.rotation;
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                    center, rotation, SkillSO.Range, angle, SkillSO.PrepareTime));
+                    center, rotation, SkillSetting.Range, angle, SkillSetting.PrepareTime));
 
-                yield return new WaitForSeconds(SkillSO.PrepareTime);
+                yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
-                DamageInCone(center, rotation, SkillSO.Range, angle);
+                DamageInCone(center, rotation, SkillSetting.Range, angle);
 
                 if (IsPhase2)
                     FireVines();
@@ -52,7 +52,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                     yield return new WaitForSeconds(swingInterval);
             }
 
-            yield return new WaitForSeconds(SkillSO.AttackDutation);
+            yield return new WaitForSeconds(SkillSetting.AttackDutation);
         }
 
         private void FireVines()
@@ -74,7 +74,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                     Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
 
                 BossDamageProjectile projectile = Instantiate(vinePrefab, origin, Quaternion.identity);
-                projectile.Initialize(direction, projectileSpeed, SkillSO.Damage, _enemy.gameObject);
+                projectile.Initialize(direction, projectileSpeed, SkillSetting.Damage, _enemy.gameObject);
             }
         }
     }

@@ -2,12 +2,29 @@
 using System;
 using System.Collections;
 using UnityEngine;
+using static Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillSO;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
     public abstract class AbstractEnemySkill : MonoBehaviour, IEnemySkill
     {
         [field: SerializeField] public EnemySkillSO SkillSO { get; private set; }
+        protected EnemySkillSetting SkillSetting
+        {
+            get
+            {
+                if (SkillSO is NormalEnemySkillSO normal)
+                    return normal.SkillSetting;
+
+                if (SkillSO is BossEnemySkillSO boss &&
+                    _enemy is BossEnemy bossEnemy)
+                    return bossEnemy.Phase == BossPhase.Phase2
+                                                            ? boss.Phase2SkillSetting
+                                                            : boss.Phase1SkillSetting;
+
+                return default;
+            }
+        }
 
         [Header("Warning Visual")]
         [SerializeField, Min(0.01f)] private float warningTickInterval = 0.05f;
@@ -180,7 +197,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected virtual void DrawRangeGizmo()
         {
             Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
-            DrawGizmoCircle(transform.position, SkillSO.Range);
+            DrawGizmoCircle(transform.position, SkillSetting.Range);
         }
 
         protected static void DrawGizmoCircle(Vector3 center, float radius, int segments = 48)
@@ -269,7 +286,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             if (damageable == null || !damageable.IsAlive)
                 return;
 
-            damageable.TakeDamage(SkillSO.Damage, _enemy.gameObject);
+            damageable.TakeDamage(SkillSetting.Damage, _enemy.gameObject);
         }
 
         #endregion

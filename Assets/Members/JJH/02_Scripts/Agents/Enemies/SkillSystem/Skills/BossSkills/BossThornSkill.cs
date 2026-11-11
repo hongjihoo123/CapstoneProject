@@ -45,9 +45,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 Vector3 groundPosition = GetGroundPosition(targetPosition);
 
                 _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                    groundPosition, warningRadius, SkillSO.PrepareTime));
+                    groundPosition, warningRadius, SkillSetting.PrepareTime));
 
-                yield return new WaitForSeconds(SkillSO.PrepareTime);
+                yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
                 if (thornPrefab != null)
                     Instantiate(thornPrefab, groundPosition, Quaternion.identity);
@@ -86,7 +86,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 BossDamageProjectile projectile = Instantiate(shardPrefab,
                     position + Vector3.up * 0.5f, Quaternion.identity);
 
-                projectile.Initialize(direction, shardSpeed, SkillSO.Damage, _enemy.gameObject);
+                projectile.Initialize(direction, shardSpeed, SkillSetting.Damage, _enemy.gameObject);
             }
         }
     }

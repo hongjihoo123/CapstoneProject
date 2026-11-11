@@ -9,17 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: afc941d4c37f8e945a36b8b30b9f5b76, type: 3}
+  m_Script: {fileID: 11500000, guid: eb8f4e35772f0aa4285954a806fa9238, type: 3}
   m_Name: Enemy_FireBreath_Skill
-  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillSO
-  <Cooltime>k__BackingField: 7
-  <PrepareTime>k__BackingField: 1
-  <ExpandTime>k__BackingField: 1
-  <AttackDutation>k__BackingField: 0
-  <Range>k__BackingField: 8
-  <Damage>k__BackingField: 30
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.NormalEnemySkillSO
   <AnimParam>k__BackingField: {fileID: 11400000, guid: ddd53c7e0d8b8aa4d833fa8cc53f5914, type: 2}
   <VFXParam>k__BackingField: {fileID: 11400000, guid: b17546053828e9d47b9acdfbc89fc7a2, type: 2}
   skillScript: {fileID: 11500000, guid: 12202ec9c5564604899cb6a19c5aba41, type: 3}
-  skillTypeName: Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.EnemyShoutSkill,
+  skillTypeName: Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.EnemyFireBreathSkill,
     Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  <SkillSetting>k__BackingField:
+    <Cooltime>k__BackingField: 7
+    <PrepareTime>k__BackingField: 1
+    <ExpandTime>k__BackingField: 1
+    <AttackDutation>k__BackingField: 0
+    <Range>k__BackingField: 8
+    <Damage>k__BackingField: 30
