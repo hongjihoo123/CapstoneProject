@@ -39,6 +39,7 @@ namespace Members.KYR._01.Scripts.Store
         [Header("제단")]
         [SerializeField] private Altar[] altarPrefabs;
         [SerializeField] private Transform altarPoint;
+        [SerializeField, Min(0f)] private float altarPriceVariance = 0.1f;
 
         private readonly List<ShopSlot> _slots = new();
         private readonly List<SkillData> _lastOffer = new();
@@ -148,6 +149,7 @@ namespace Members.KYR._01.Scripts.Store
 
             Transform point = altarPoint != null ? altarPoint : transform;
             _altar = Instantiate(picked, point.position, point.rotation, transform);
+            _altar.SetPrice(RollAround(_altar.Price, altarPriceVariance));
             _lastAltar = picked;
         }
 
@@ -201,6 +203,7 @@ namespace Members.KYR._01.Scripts.Store
 
         private void Roll()
         {
+            //나중에 산 보상 리롤하면 겹치는거 수정.
             RollAltar();
 
             if (slotPrefab == null)
@@ -273,14 +276,16 @@ namespace Members.KYR._01.Scripts.Store
             return pool;
         }
 
-        private int RollPrice()
+        private int RollPrice() => RollAround(basePrice, priceVariance);
+
+        private static int RollAround(int baseValue, float variance)
         {
-            float spread = Mathf.Max(0f, priceVariance);
+            float spread = Mathf.Max(0f, variance);
             float min = Mathf.Max(0f, 1f - spread);
             float max = 1f + spread;
             float scale = Mathf.Approximately(min, max) ? min : Random.Range(min, max);
-            int price = Mathf.RoundToInt(basePrice * scale);
-            return basePrice > 0 ? Mathf.Max(1, price) : Mathf.Max(0, price);
+            int value = Mathf.RoundToInt(baseValue * scale);
+            return baseValue > 0 ? Mathf.Max(1, value) : Mathf.Max(0, value);
         }
 
         private int NextRerollCost(int paid)
