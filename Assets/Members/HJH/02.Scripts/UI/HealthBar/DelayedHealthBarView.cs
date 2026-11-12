@@ -23,8 +23,8 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
         [SerializeField, Tooltip("회복 예고 바 색")] private Color healGhostColor = new(0.78f, 1f, 0.72f, 0.95f);
 
         [Header("피격 잔상")]
-        [SerializeField, Tooltip("잔상이 그 자리에 머무는 시간 (초). 연타 중엔 계속 머묾")] private float damageHold = 0.4f;
-        [SerializeField, Tooltip("머문 뒤 실제 바까지 내려오는 시간 (초)")] private float damageDrainTime = 0.45f;
+        [SerializeField, Tooltip("잔상이 그 자리에 머무는 시간 (초). 연타 중엔 계속 머묾")] private float damageHold = 0.25f;
+        [SerializeField, Tooltip("머문 뒤 실제 바까지 내려오는 시간 (초)")] private float damageDrainTime = 0.3f;
         [SerializeField, Tooltip("잔상이 처음 나타날 때 하얗게 번쩍이는 시간 (초). 0 = 끔")] private float damageFlashTime = 0.08f;
 
         [Header("회복")]

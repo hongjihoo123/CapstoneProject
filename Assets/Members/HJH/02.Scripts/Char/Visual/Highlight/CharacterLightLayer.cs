@@ -96,7 +96,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
             _light.type = LightType.Directional;
             _light.shadows = LightShadows.None;
             _light.renderMode = LightRenderMode.ForcePixel;
-            _light.lightmapBakeType = LightmapBakeType.Realtime;
+#if UNITY_EDITOR
+            _light.lightmapBakeType = LightmapBakeType.Realtime;   // 에디터 전용 속성 (빌드엔 없음 → 감싸지 않으면 빌드 실패). 런타임에 만든 라이트는 원래 Realtime
+#endif
 
             var data = go.GetComponent<UniversalAdditionalLightData>();
             if (data == null)

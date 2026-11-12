@@ -4840,7 +4840,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3d7bd35f27b545d46a30cd8e4ea83c41, type: 2}
+  - {fileID: 2100000, guid: ba74ee063188d8745bcf84bac6a1b173, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -9797,6 +9797,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1815444872731832525}
+  - component: {fileID: 5612664535786720445}
   m_Layer: 0
   m_Name: FX_Earth_PbrHit
   m_TagString: Untagged
@@ -9823,6 +9824,21 @@ Transform:
   - {fileID: 8053664916516494069}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &5612664535786720445
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4597324913245387806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72b993a3f2869604f83a7d16f3b9a730, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.FxPrefabInstance
+  maxInstances: 12
+  untinted:
+  - {fileID: 4366733842930048064}
 --- !u!1 &5802563616508819729
 GameObject:
   m_ObjectHideFlags: 0

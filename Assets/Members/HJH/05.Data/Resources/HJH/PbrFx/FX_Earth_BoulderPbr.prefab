@@ -9,6 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 6822432764006824567}
+  - component: {fileID: 8053687654304172311}
   m_Layer: 0
   m_Name: FX_Earth_BoulderPbr
   m_TagString: Untagged
@@ -34,6 +35,22 @@ Transform:
   - {fileID: 883423551737441583}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8053687654304172311
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2890535192784072201}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72b993a3f2869604f83a7d16f3b9a730, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.FxPrefabInstance
+  maxInstances: 12
+  untinted:
+  - {fileID: 6379025228983515931}
+  - {fileID: 6749960295335403862}
 --- !u!1 &5846197503490469243
 GameObject:
   m_ObjectHideFlags: 0
@@ -9652,7 +9669,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3d7bd35f27b545d46a30cd8e4ea83c41, type: 2}
+  - {fileID: 2100000, guid: ba74ee063188d8745bcf84bac6a1b173, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -14564,7 +14581,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3d7bd35f27b545d46a30cd8e4ea83c41, type: 2}
+  - {fileID: 2100000, guid: ba74ee063188d8745bcf84bac6a1b173, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0

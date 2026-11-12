@@ -63,11 +63,28 @@ namespace HJH.EditorTools
             AssetDatabase.Refresh();
             Texture2D streak = MakeTexture(Dir + "T_WaterfallStreak.png", 64, 256, TextureWrapMode.Repeat, StreakPixel);
             Texture2D puff = MakeTexture(Dir + "T_MistPuff.png", 64, 64, TextureWrapMode.Clamp, PuffPixel);
-            Material sheetMat = MakeMat(Dir + "M_WaterfallSheet.mat", streak, new Color(0.8f, 0.94f, 1f, 0.92f), false);
-            Material mistMat = MakeMat(Dir + "M_WaterfallMist.mat", puff, new Color(0.85f, 0.95f, 1f, 0.5f), false);
+            Material sheetMat = MakeMat(Dir + "M_WaterfallSheet.mat", streak, new Color(0.8f, 0.94f, 1f, 0.92f), false);   // 안내용 Cube 에만 남음 (렌더러는 꺼짐)
             Material dropMat = MakeMat(Dir + "M_WaterfallDrop.mat", puff, new Color(0.9f, 0.97f, 1f, 0.8f), true);
             Material splashMat = MakeMat(Dir + "M_WaterfallSplash.mat", puff, new Color(1f, 1f, 1f, 0.9f), true);
-            SheetMat2 = MakeMat(Dir + "M_WaterfallSheet2.mat", streak, new Color(1f, 1f, 1f, 0.45f), false);
+
+            // 절차형 셰이더 재질 (텍스처 없음). 물줄기 4겹: 뒤 장막 / 본체 / 앞 빠른 줄기 / 굵은 물기둥
+            Material mistMat = MakeShaderMat(Dir + "M_WF_Mist.mat", "HJH/FX/WaterfallMist");
+            Material foamMat = MakeShaderMat(Dir + "M_WF_Foam.mat", "HJH/FX/WaterfallFoam");
+            Material patchMat = MakeShaderMat(Dir + "M_WF_FoamPatch.mat", "HJH/FX/WaterfallFoam");
+            if (mistMat == null || foamMat == null || patchMat == null) { Debug.LogWarning("[Waterfall] HJH/FX/Waterfall* 셰이더를 찾지 못했습니다. 컴파일 후 다시 실행하세요."); return; }
+            patchMat.SetFloat("_Radial", 0f); patchMat.SetFloat("_Scale", 9f); patchMat.SetFloat("_Coverage", 0.74f); patchMat.SetFloat("_Intensity", 1.15f);
+            foamMat.SetFloat("_Radial", 1f); foamMat.SetFloat("_Scale", 5f);
+            // 물이 부딪힐 때 부글부글 솟는 하얀 거품 덩어리 (큰 셀 = 둥근 거품 알갱이가 뭉친 모양)
+            CrownMat = MakeShaderMat(Dir + "M_WF_Crown.mat", "HJH/FX/WaterfallCrown");
+            FoamHeapMat = MakeShaderMat(Dir + "M_WF_FoamHeap.mat", "HJH/FX/WaterfallFoam");
+            FoamHeapMat.SetFloat("_Radial", 1f); FoamHeapMat.SetFloat("_Scale", 3.4f); FoamHeapMat.SetFloat("_Coverage", 0.95f); FoamHeapMat.SetFloat("_Intensity", 1.15f);
+            SheetLayers = new[]
+            {
+                MakeSheetMat("M_WF_Sheet_Back",  new Color(0.14f, 0.30f, 0.48f), new Color(0.42f, 0.66f, 0.84f), speed: 4.5f, density: 1.5f, stretch: 7f,   coverage: 0.58f, baseAlpha: 0.38f, sway: 0.16f, intensity: 0.80f, foamTop: 0.4f, foamBottom: 0.3f, sparkle: 0.10f, seed: 1f),
+                MakeSheetMat("M_WF_Sheet_Main",  new Color(0.26f, 0.50f, 0.74f), new Color(0.74f, 0.90f, 1.00f), speed: 6.5f, density: 2.4f, stretch: 5f,   coverage: 0.46f, baseAlpha: 0.14f, sway: 0.12f, intensity: 0.92f, foamTop: 0.5f, foamBottom: 0.9f, sparkle: 0.40f, seed: 2f),
+                MakeSheetMat("M_WF_Sheet_Front", new Color(0.40f, 0.66f, 0.90f), new Color(0.88f, 0.97f, 1.00f), speed: 9.0f, density: 3.8f, stretch: 3.4f, coverage: 0.22f, baseAlpha: 0.00f, sway: 0.10f, intensity: 1.00f, foamTop: 0.3f, foamBottom: 0.4f, sparkle: 0.65f, seed: 3f),
+                MakeSheetMat("M_WF_Sheet_Jets",  new Color(0.36f, 0.60f, 0.84f), new Color(0.90f, 0.98f, 1.00f), speed: 7.5f, density: 0.65f, stretch: 9f,  coverage: 0.28f, baseAlpha: 0.00f, sway: 0.2f,  intensity: 0.98f, foamTop: 0.6f, foamBottom: 0.8f, sparkle: 0.25f, seed: 4f),
+            };
             Stones = LoadStones("Stone_Big"); StonesSmall = LoadStones("Stone_Mid");
             PanelBounds = new List<Bounds>(); foreach (var p in panels) PanelBounds.Add(p.bounds);
 
@@ -75,7 +92,7 @@ namespace HJH.EditorTools
             Vector3 baseSum = Vector3.zero, normalSum = Vector3.zero; float widthSum = 0f, topY = 0f;
             foreach (var mr in panels)
             {
-                if (BuildPanel(root.transform, mr, idx++, waterY, pool, sheetMat, mistMat, dropMat, splashMat, out Vector3 basePos, out float width))
+                if (BuildPanel(root.transform, mr, idx++, waterY, pool, sheetMat, mistMat, dropMat, splashMat, foamMat, patchMat, out Vector3 basePos, out float width))
                 {
                     built++; baseSum += basePos; widthSum += width; topY = Mathf.Max(topY, mr.bounds.max.y);
                     normalSum += root.transform.Find($"WF_Panel_{idx - 1}").forward;
@@ -103,7 +120,7 @@ namespace HJH.EditorTools
 
         // ───────────────────────── 면 하나 ─────────────────────────
         private static bool BuildPanel(Transform root, MeshRenderer mr, int idx, float waterY, Vector3? pool,
-            Material sheetMat, Material mistMat, Material dropMat, Material splashMat, out Vector3 basePos, out float width)
+            Material sheetMat, Material mistMat, Material dropMat, Material splashMat, Material foamMat, Material patchMat, out Vector3 basePos, out float width)
         {
             basePos = Vector3.zero; width = 0f;
             Transform t = mr.transform;
@@ -140,9 +157,25 @@ namespace HJH.EditorTools
             Vector3 topPos = new Vector3(b.center.x, b.max.y - 0.15f, b.center.z) + front;
 
             // 0) 물줄기 면 두 겹 (가장자리·윗변이 부드럽게 사라지고, 아래로 갈수록 앞으로 휘어 떨어짐) + 뒤 암벽 + 발치 바위
-            BuildSheet(g.transform, idx, 0, width, fall, 0f, 1f, sheetMat, new Vector2(Mathf.Max(1f, width / 1.1f), Mathf.Max(1f, fall / 2f)), 1.6f);
-            BuildSheet(g.transform, idx, 1, width * 0.96f, fall, 0.3f, 0.8f, SheetMat2, new Vector2(Mathf.Max(1f, width / 2.4f), Mathf.Max(1f, fall / 3.6f)), 2.3f);
+            //   bulge = 바닥에서 앞으로 퍼지는 정도(m), zOffset = 겹 사이 간격. 뒤→앞 순서로 그려서 앞 줄기가 위에 얹힘
+            BuildSheet(g.transform, idx, 0, width * 1.00f, fall, -0.20f, 1.0f, SheetLayers[0], 0.9f);
+            BuildSheet(g.transform, idx, 1, width * 0.98f, fall,  0.05f, 1.0f, SheetLayers[1], 1.3f);
+            BuildSheet(g.transform, idx, 2, width * 0.94f, fall,  0.30f, 1.0f, SheetLayers[2], 1.7f);
+            BuildSheet(g.transform, idx, 3, width * 0.90f, fall,  0.15f, 1.0f, SheetLayers[3], 2.1f);
             BuildRocks(g.transform, idx, width, fall, thick, b);
+            // 수면에 깔리는 포말 패치 (레이스 같은 거품이 폭포 앞으로 흘러나가며 사라짐)
+            {
+                var patch = new GameObject("WF_FoamPatch");
+                patch.transform.SetParent(g.transform, false);
+                float depth = Mathf.Clamp(width * 0.55f, 5f, 9f);
+                patch.transform.localPosition = new Vector3(0f, 0.015f, depth * 0.5f - 0.6f);
+                patch.transform.localRotation = Quaternion.Euler(90f, 0f, 0f);
+                patch.transform.localScale = new Vector3(width * 1.1f, depth, 1f);
+                patch.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+                var pr = patch.AddComponent<MeshRenderer>();
+                pr.sharedMaterial = patchMat; pr.shadowCastingMode = ShadowCastingMode.Off; pr.receiveShadows = false;
+                // Quad 는 X 90도 눕히면 위를 보고, v(쿼드의 +y)가 로컬 +Z = 폭포에서 먼 쪽이 된다
+            }
             // 윗변: 물이 넘어오는 턱의 흰 물보라
             {
                 var ps = NewPS("WF_Crest", g.transform, topPos + Vector3.down * 0.2f, face);
@@ -185,7 +218,7 @@ namespace HJH.EditorTools
                 main.startSpeed = 0f;
                 main.startSize = new ParticleSystem.MinMaxCurve(3f, 5.5f);
                 main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
-                main.startColor = new Color(0.85f, 0.95f, 1f, 0.1f);
+                main.startColor = new Color(0.85f, 0.95f, 1f, 0.07f);
                 main.simulationSpace = ParticleSystemSimulationSpace.World;
                 var em = ps.emission; em.rateOverTime = Mathf.Clamp(width * 2.2f, 6f, 30f);
                 var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(width * 0.9f, fall * 0.8f, 0.6f);
@@ -213,27 +246,22 @@ namespace HJH.EditorTools
                 Finish(ps, dropMat);
             }
             // 2) 물안개(연기) 두 겹: 낮고 진한 것 + 높고 옅은 것
-            Mist("WF_Mist", g.transform, basePos + Vector3.up * 0.1f, face, width, 3.5f, new Vector2(2.6f, 4.6f), 0.36f, 0.35f, mistMat);
+            Mist("WF_Mist", g.transform, basePos + Vector3.up * 0.1f, face, width, 3.5f, new Vector2(3.2f, 5.6f), 0.5f, 0.2f, mistMat);
             Mist("WF_Spray", g.transform, basePos + Vector3.up * 0.5f, face, width, 1.6f, new Vector2(3.5f, 6f), 0.18f, 0.6f, mistMat);
             // 수면을 타고 웅덩이 쪽으로 깔려 나가는 물안개 (게임 카메라에서 폭포가 가까이 있다는 느낌)
             Mist("WF_MistRoll", g.transform, basePos + Vector3.up * 0.3f + normal * 1.5f, face, width, 1.8f, new Vector2(4f, 7f), 0.16f, 0.05f, mistMat, normal * 0.9f, 7f);
-            // 3) 튀어 오르는 물보라
-            {
-                var ps = NewPS("WF_Splash", g.transform, basePos, face);
-                var main = ps.main;
-                main.loop = true; main.duration = 3f; main.maxParticles = 500;
-                main.startLifetime = new ParticleSystem.MinMaxCurve(0.5f, 1f);
-                main.startSpeed = new ParticleSystem.MinMaxCurve(2.5f, 5.5f);
-                main.gravityModifier = 1.4f;
-                main.startSize = new ParticleSystem.MinMaxCurve(0.1f, 0.28f);
-                main.startColor = new Color(1f, 1f, 1f, 0.85f);
-                main.simulationSpace = ParticleSystemSimulationSpace.World;
-                var em = ps.emission; em.rateOverTime = Mathf.Clamp(width * 28f, 30f, 260f);
-                var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(width * 0.9f, 0.05f, 0.35f); sh.rotation = new Vector3(-90f, 0f, 0f);   // 위로
-                var size = ps.sizeOverLifetime; size.enabled = true;
-                size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.3f)));
-                Finish(ps, splashMat);
-            }
+            // 충돌 지점에서 솟아오르는 거대한 물안개 기둥: 느리게 크게 부풀며 위로 (웅장함의 핵심)
+            Mist("WF_Plume", g.transform, basePos + Vector3.up * 0.4f + normal * 0.4f, face, width, 1.1f, new Vector2(6f, 11f), 0.3f, 0.5f, mistMat, normal * 0.5f, 6.5f);
+            // 3) 튀어 오르는 물보라 (작은 알갱이 + 높이 솟는 큰 물덩이 두 겹)
+            Splash("WF_Splash", g.transform, basePos, face, width, 700, new Vector2(2.5f, 5.5f), new Vector2(0.16f, 0.4f), 40f, 2.2f, new Vector2(0.45f, 0.9f), splashMat);
+            Splash("WF_SplashBig", g.transform, basePos, face, width, 160, new Vector2(4.5f, 7.5f), new Vector2(0.28f, 0.6f), 7f, 2.4f, new Vector2(0.7f, 1.2f), splashMat, 0.2f);
+            // 충돌선을 따라 솟는 뾰족한 하얀 물보라 왕관 (톱니 3겹: 뒤 큰 것 / 본체 / 앞쪽 작게 기운 것)
+            BuildCrown(g.transform, "WF_Crown_Back", width, Mathf.Clamp(width * 0.16f, 1.8f, 3.0f), new Vector3(0f, 0f, 1.3f), 0f, 0.9f, width * 1.8f, 3f);
+            BuildCrown(g.transform, "WF_Crown", width, Mathf.Clamp(width * 0.12f, 1.4f, 2.4f), new Vector3(0f, 0f, 1.85f), 0f, 1f, width * 2.2f, 17f);
+            BuildCrown(g.transform, "WF_Crown_Front", width * 0.98f, Mathf.Clamp(width * 0.08f, 0.9f, 1.5f), new Vector3(0f, 0f, 2.5f), -28f, 0.95f, width * 2.6f, 41f);
+            // 충돌선을 따라 솟았다 가라앉는 거품 덩어리 (일러스트 폭포 아래의 하얀 거품 더미) + 바깥으로 밀려나는 작은 덩어리
+            FoamHeap("WF_FoamHeap", g.transform, basePos + normal * 0.25f, face, width, 12f, new Vector2(0.9f, 2.0f), new Vector2(1.2f, 3.0f), new Vector2(0.9f, 1.6f), 1.0f);
+            FoamHeap("WF_FoamHeapSmall", g.transform, basePos + normal * 0.9f, face, width, 22f, new Vector2(0.4f, 0.9f), new Vector2(0.6f, 1.6f), new Vector2(0.7f, 1.2f), 0.7f);
             // 4) 수면에 퍼지는 포말 (수평 빌보드)
             {
                 var ps = NewPS("WF_Foam", g.transform, basePos + normal * 1.1f, face);
@@ -251,12 +279,78 @@ namespace HJH.EditorTools
                 size.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.6f), new Keyframe(1f, 1.5f)));
                 FadeInOut(ps);
                 var r = ps.GetComponent<ParticleSystemRenderer>(); r.renderMode = ParticleSystemRenderMode.HorizontalBillboard;
-                Finish(ps, mistMat);
+                Finish(ps, foamMat);
             }
             // 5) 수면 물결 (플레이 중)
             var ripple = g.AddComponent<Assets.Members.HJH.Environment.WaterfallRipples>();
             ripple.Configure(width * 0.45f);
             return true;
+        }
+
+        private static Material FoamHeapMat, CrownMat;
+
+        // 톱니 왕관 띠: 폭 방향 쿼드 하나. 봉우리 개수는 폭에 비례해서(PropertyBlock) 봉우리 굵기가 어디서나 같음. tilt = 앞(웅덩이 쪽)으로 기울임(도)
+        private static void BuildCrown(Transform panel, string name, float width, float height, Vector3 localPos, float tilt, float alpha, float count, float seed)
+        {
+            if (CrownMat == null) return;
+            var go = new GameObject(name);
+            go.transform.SetParent(panel, false);
+            go.transform.localPosition = localPos + new Vector3(0f, 0.02f, 0f);
+            go.transform.localRotation = Quaternion.Euler(tilt, 0f, 0f);
+            go.transform.localScale = new Vector3(width * 0.96f, height, 1f);
+            // 쿼드는 중심이 피벗이라 바닥이 수면에 닿도록 위로 올림
+            go.transform.position += go.transform.up * (height * 0.5f);
+            go.AddComponent<MeshFilter>().sharedMesh = Resources.GetBuiltinResource<Mesh>("Quad.fbx");
+            var mr = go.AddComponent<MeshRenderer>();
+            // MaterialPropertyBlock 은 씬에 저장되지 않아 플레이하면 사라지므로, 띠마다 재질 에셋을 따로 만든다
+            Material own = MakeShaderMat($"{Dir}M_{name}_{panel.name}.mat", "HJH/FX/WaterfallCrown");
+            own.SetFloat("_Count", Mathf.Max(6f, count * 0.36f));
+            own.SetFloat("_Seed", seed);
+            EditorUtility.SetDirty(own);
+            mr.sharedMaterial = own; mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
+            go.AddComponent<Assets.Members.HJH.Environment.WaterfallEditorTick>();
+        }
+
+        // 거품 더미: 폭이 전체에 걸쳐 일정 간격으로 솟았다가 중력으로 가라앉으며 커지고 사라짐. 빌보드라 어느 각도에서도 둥글게 보임.
+        private static void FoamHeap(string name, Transform parent, Vector3 pos, Quaternion face, float width, float ratePerMeter, Vector2 size, Vector2 up, Vector2 life, float alpha)
+        {
+            var ps = NewPS(name, parent, pos, face);
+            var main = ps.main;
+            main.loop = true; main.duration = 3f; main.maxParticles = 260; main.prewarm = true;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(life.x, life.y);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(up.x, up.y);
+            main.gravityModifier = 1.1f;
+            main.startSize = new ParticleSystem.MinMaxCurve(size.x, size.y);
+            main.startRotation = new ParticleSystem.MinMaxCurve(0f, Mathf.PI * 2f);
+            main.startColor = new Color(1f, 1f, 1f, alpha);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = Mathf.Clamp(width * ratePerMeter, 20f, 140f);
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(width * 0.94f, 0.05f, 0.7f);
+            sh.rotation = new Vector3(-90f, 0f, 0f); sh.randomDirectionAmount = 0.35f;
+            var sz = ps.sizeOverLifetime; sz.enabled = true;   // 솟으며 부풀었다가 끝에서 줄어듦
+            sz.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 0.55f), new Keyframe(0.35f, 1f), new Keyframe(1f, 0.8f)));
+            FadeInOut(ps);
+            Finish(ps, FoamHeapMat);
+        }
+
+        // 솟구치는 물보라: 위로 쏘되 randomDirection 으로 부채꼴 퍼짐. 알갱이는 가산 블렌드라 배경 위에서 반짝임.
+        private static void Splash(string name, Transform parent, Vector3 pos, Quaternion face, float width, int maxCount, Vector2 speed, Vector2 size, float ratePerMeter, float gravity, Vector2 life, Material mat, float spread = 0.32f)
+        {
+            var ps = NewPS(name, parent, pos, face);
+            var main = ps.main;
+            main.loop = true; main.duration = 3f; main.maxParticles = maxCount;
+            main.startLifetime = new ParticleSystem.MinMaxCurve(life.x, life.y);
+            main.startSpeed = new ParticleSystem.MinMaxCurve(speed.x, speed.y);
+            main.gravityModifier = gravity;
+            main.startSize = new ParticleSystem.MinMaxCurve(size.x, size.y);
+            main.startColor = new Color(1f, 1f, 1f, 0.85f);
+            main.simulationSpace = ParticleSystemSimulationSpace.World;
+            var em = ps.emission; em.rateOverTime = Mathf.Clamp(width * ratePerMeter, 12f, maxCount * 0.5f);
+            var sh = ps.shape; sh.shapeType = ParticleSystemShapeType.Box; sh.scale = new Vector3(width * 0.92f, 0.05f, 0.9f);
+            sh.rotation = new Vector3(-90f, 0f, 0f); sh.randomDirectionAmount = spread;
+            var size1 = ps.sizeOverLifetime; size1.enabled = true;
+            size1.size = new ParticleSystem.MinMaxCurve(1f, new AnimationCurve(new Keyframe(0f, 1f), new Keyframe(1f, 0.3f)));
+            Finish(ps, mat);
         }
 
         private static void Mist(string name, Transform parent, Vector3 pos, Quaternion face, float width, float ratePerMeter, Vector2 size, float alpha, float rise, Material mat, Vector3 drift = default, float life = 4f)
@@ -280,7 +374,7 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 물줄기 면·암벽·조명 ─────────────────────────
-        private static Material SheetMat2;
+        private static Material[] SheetLayers;
         private static List<GameObject> Stones, StonesSmall;
         private static List<Bounds> PanelBounds;   // 옆에 다른 면이 붙어 있는 쪽에는 기둥 돌을 앞으로 내지 않기 위해
         private const string StoneDir = "Assets/Members/HJH/05.Data/MapProps/Stones/Prefabs";
@@ -296,21 +390,27 @@ namespace HJH.EditorTools
             l.lightmapBakeType = LightmapBakeType.Mixed;
         }
 
-        // 패널 로컬(X 폭, Y 높이, Z 앞) 기준 격자 면. 정점 알파로 좌우·윗변을 부드럽게 지우고, 아래로 갈수록 앞으로 휜다.
-        private static void BuildSheet(Transform panel, int idx, int layer, float width, float fall, float zOffset, float alpha, Material mat, Vector2 tiling, float speed)
+        // 패널 로컬(X 폭, Y 높이, Z 앞) 기준 격자 면. 아래로 갈수록 앞으로 퍼지고(bulge), 윗변은 턱 너머로 휘어 넘어간다.
+        // 정점 색: r = 높이 비율, g = 폭 비율, a = 좌우 가장자리·윗변 알파 (셰이더가 줄기·거품을 그림)
+        private static void BuildSheet(Transform panel, int idx, int layer, float width, float fall, float zOffset, float alpha, Material mat, float bulgeAmp)
         {
-            const int nx = 10, ny = 14;
+            const int nx = 36, ny = 32;
             var verts = new Vector3[(nx + 1) * (ny + 1)]; var uvs = new Vector2[verts.Length]; var cols = new Color[verts.Length];
             for (int y = 0; y <= ny; y++)
                 for (int x = 0; x <= nx; x++)
                 {
                     float u = x / (float)nx, v = y / (float)ny; int i = y * (nx + 1) + x;
-                    float bulge = 1.1f * (1f - v) * (1f - v) + 0.12f * Mathf.Sin(u * Mathf.PI * 3f + idx);   // 아래쪽이 앞으로, 폭 방향으로 살짝 굴곡
-                    verts[i] = new Vector3((u - 0.5f) * width, v * fall, zOffset - 0.15f + bulge);
+                    float drop = (1f - v) * (1f - v);
+                    // 바닥이 앞으로 퍼지는 곡선 + 폭 방향으로 덩어리지는 굴곡(겹마다 위상이 달라 겹쳐 보이지 않음)
+                    float lump = 0.22f * Mathf.Sin(u * Mathf.PI * (3f + layer) + idx * 1.7f + layer * 2.1f) + 0.12f * Mathf.Sin(u * Mathf.PI * 9f + layer);
+                    float bulge = bulgeAmp * drop + lump * (0.35f + 0.65f * drop);
+                    // 윗변: 턱 위로 올라가며 뒤로 말려 들어감 (직선으로 잘린 모서리 대신 바위 위로 넘어오는 곡선)
+                    float lip = -0.8f * Mathf.SmoothStep(0f, 1f, (v - 0.9f) / 0.1f);
+                    verts[i] = new Vector3((u - 0.5f) * width, v * fall, zOffset - 0.15f + bulge + lip);
                     uvs[i] = new Vector2(u, v);
-                    float edge = Mathf.SmoothStep(0f, 1f, Mathf.Min(u, 1f - u) / 0.1f);
-                    float top = Mathf.SmoothStep(0f, 1f, (1f - v) / 0.05f);
-                    cols[i] = new Color(1f, 1f, 1f, alpha * edge * top);
+                    float edge = Mathf.SmoothStep(0f, 1f, Mathf.Min(u, 1f - u) / 0.07f);
+                    float top = Mathf.SmoothStep(0f, 1f, (1f - v) / 0.025f);
+                    cols[i] = new Color(v, u, 0f, alpha * edge * top);
                 }
             var tris = new int[nx * ny * 6]; int k = 0;
             for (int y = 0; y < ny; y++)
@@ -332,11 +432,38 @@ namespace HJH.EditorTools
             go.AddComponent<MeshFilter>().sharedMesh = mesh;
             var mr = go.AddComponent<MeshRenderer>();
             mr.sharedMaterial = mat; mr.shadowCastingMode = ShadowCastingMode.Off; mr.receiveShadows = false;
-            var scroll = go.AddComponent<Assets.Members.HJH.Environment.ScrollUV>();
-            var so = new SerializedObject(scroll);
-            so.FindProperty("tiling").vector2Value = tiling;
-            so.FindProperty("speed").vector2Value = new Vector2(0f, speed);
-            so.ApplyModifiedPropertiesWithoutUndo();
+            // 흐름은 셰이더가 _Time 으로 그리니 ScrollUV 는 필요 없음. 씬 뷰(에디터)에서도 움직이게 ScrollUV 대신 에디터 갱신만 켜 둠.
+            go.AddComponent<Assets.Members.HJH.Environment.WaterfallEditorTick>();
+        }
+
+        private static Material MakeShaderMat(string path, string shaderName)
+        {
+            Shader sh = Shader.Find(shaderName);
+            if (sh == null) return null;
+            var mat = AssetDatabase.LoadAssetAtPath<Material>(path);
+            if (mat == null)
+            {
+                mat = new Material(sh) { name = Path.GetFileNameWithoutExtension(path) };
+                AssetDatabase.CreateAsset(mat, path);
+            }
+            else mat.shader = sh;
+            mat.renderQueue = -1;   // 셰이더의 Queue 태그를 따름
+            EditorUtility.SetDirty(mat);
+            return mat;
+        }
+
+        private static Material MakeSheetMat(string name, Color deep, Color light, float speed, float density, float stretch, float coverage,
+            float baseAlpha, float sway, float intensity, float foamTop, float foamBottom, float sparkle, float seed)
+        {
+            Material m = MakeShaderMat(Dir + name + ".mat", "HJH/FX/WaterfallSheet");
+            if (m == null) return null;
+            m.SetColor("_DeepColor", deep); m.SetColor("_LightColor", light);
+            m.SetFloat("_Speed", speed); m.SetFloat("_StreakDensity", density); m.SetFloat("_StreakStretch", stretch);
+            m.SetFloat("_Coverage", coverage); m.SetFloat("_BaseAlpha", baseAlpha); m.SetFloat("_Sway", sway);
+            m.SetFloat("_Intensity", intensity); m.SetFloat("_FoamTop", foamTop); m.SetFloat("_FoamBottom", foamBottom);
+            m.SetFloat("_Sparkle", sparkle); m.SetFloat("_Seed", seed);
+            EditorUtility.SetDirty(m);
+            return m;
         }
 
         private static List<GameObject> LoadStones(string prefix)

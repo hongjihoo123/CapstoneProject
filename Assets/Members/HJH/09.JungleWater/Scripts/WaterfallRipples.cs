@@ -7,9 +7,9 @@ namespace Assets.Members.HJH.Environment
     public class WaterfallRipples : MonoBehaviour
     {
         [SerializeField, Tooltip("폭포 폭의 절반 (m)")] private float halfWidth = 2f;
-        [SerializeField, Tooltip("물결 하나 만드는 간격(초). 작을수록 많이 침")] private float interval = 0.12f;
-        [SerializeField, Tooltip("물결 반지름 (m)")] private Vector2 radius = new Vector2(0.7f, 1.3f);
-        [SerializeField, Tooltip("물결 세기")] private Vector2 strength = new Vector2(0.08f, 0.2f);
+        [SerializeField, Tooltip("물결 하나 만드는 간격(초). 작을수록 많이 침")] private float interval = 0.07f;
+        [SerializeField, Tooltip("물결 반지름 (m)")] private Vector2 radius = new Vector2(0.9f, 2.0f);
+        [SerializeField, Tooltip("물결 세기")] private Vector2 strength = new Vector2(0.12f, 0.3f);
 
         private float _timer;
 
