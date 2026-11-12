@@ -620,6 +620,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return line;
         }
 
+        public void HideEnemyWarning()
+        {
+            _timed.RemoveAll(timed => timed.Kind == AttackAreaKind.EnemyWarning);
+        }
+
         private void OnDrawGizmos()
         {
             foreach (Shape shape in _frame)

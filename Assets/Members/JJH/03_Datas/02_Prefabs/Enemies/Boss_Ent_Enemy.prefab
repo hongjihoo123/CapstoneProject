@@ -147,11 +147,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d33707b04a411bb1ed28486801e66360, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::RobotWeapons.CrowdControlReceiver
-  tier: 0
-  stunImmunity: 1
-  knockbackTime: 0.15
-  flinchChainMax: 0.6
-  flinchImmunity: 0.5
+  tier: 2
+  stunImmunity: 0
+  knockbackTime: 0
+  flinchChainMax: 0
+  flinchImmunity: 0
   flinchAnimSpeed: 0.15
 --- !u!114 &2749827017084461492
 MonoBehaviour:
@@ -168,6 +168,37 @@ MonoBehaviour:
   normal: {r: 0.95, g: 0.12, b: 0.1, a: 1}
   hover: {r: 1, g: 1, b: 1, a: 1}
   pickRadius: 0.35
+--- !u!1 &4020151776341032284
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8034958603336508841}
+  m_Layer: 0
+  m_Name: Root_Spawn_Point
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8034958603336508841
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4020151776341032284}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 1.05, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1359696606452381285}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &7960726060239575189
 GameObject:
   m_ObjectHideFlags: 0
@@ -327,9 +358,32 @@ PrefabInstance:
       propertyPath: m_Name
       value: BossPhaseTransitionSkill
       objectReference: {fileID: 0}
+    - target: {fileID: 6963286241908532418, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      propertyPath: rootCount
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 6963286241908532418, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      propertyPath: rootSpeed
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6963286241908532418, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      propertyPath: rootWidth
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 6963286241908532418, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      propertyPath: rootPrefab
+      value: 
+      objectReference: {fileID: 7622644108939948647, guid: ddb0405139d246442b75ebc4c39a9bc3, type: 3}
+    - target: {fileID: 6963286241908532418, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      propertyPath: rootSpawnPoint
+      value: 
+      objectReference: {fileID: 8034958603336508841}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
-    m_AddedGameObjects: []
+    m_AddedGameObjects:
+    - targetCorrespondingSourceObject: {fileID: 1157746603662264753, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 8034958603336508841}
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 8bf199ae662ee574eaa62d232d0d0ddb, type: 3}
 --- !u!4 &1359696606452381285 stripped
@@ -567,6 +621,26 @@ PrefabInstance:
       propertyPath: thornPrefab
       value: 
       objectReference: {fileID: 9126482698070681021, guid: ae3be18211bf80740912d30af2021aa7, type: 3}
+    - target: {fileID: 9058895069475225880, guid: 26896fef8f8f87f42b266e21bf0f2263, type: 3}
+      propertyPath: phase2ThornCount
+      value: 5
+      objectReference: {fileID: 0}
+    - target: {fileID: 9058895069475225880, guid: 26896fef8f8f87f42b266e21bf0f2263, type: 3}
+      propertyPath: groundLayer.m_Bits
+      value: 128
+      objectReference: {fileID: 0}
+    - target: {fileID: 9058895069475225880, guid: 26896fef8f8f87f42b266e21bf0f2263, type: 3}
+      propertyPath: phase1ThornInterval
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9058895069475225880, guid: 26896fef8f8f87f42b266e21bf0f2263, type: 3}
+      propertyPath: phase2ThornInterval
+      value: 0.1
+      objectReference: {fileID: 0}
+    - target: {fileID: 9058895069475225880, guid: 26896fef8f8f87f42b266e21bf0f2263, type: 3}
+      propertyPath: phase2ThornStopTime
+      value: 0.2
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects: []
@@ -764,6 +838,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 8874487832026640585}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
       value: 2
       objectReference: {fileID: 0}
@@ -773,7 +851,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
-      value: Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy, Assembly-CSharp
+      value: Members.JJH._02_Scripts.Agents.Enemies.BossEnemy, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
@@ -1008,6 +1086,10 @@ PrefabInstance:
     - target: {fileID: 4764447733684058191, guid: c434176be8ad0fd44ad800c1c35b62ef, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8695347092931767892, guid: c434176be8ad0fd44ad800c1c35b62ef, type: 3}
+      propertyPath: phase2FlightTime
+      value: 0.75
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
