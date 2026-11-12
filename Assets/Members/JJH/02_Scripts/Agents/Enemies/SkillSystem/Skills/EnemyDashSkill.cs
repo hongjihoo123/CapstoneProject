@@ -10,9 +10,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected override IEnumerator Execute()
         {
-            float prepare = SkillSO.PrepareTime;
-            float expand = SkillSO.ExpandTime;
-            float range = SkillSO.Range;
+            float prepare = SkillSetting.PrepareTime;
+            float expand = SkillSetting.ExpandTime;
+            float range = SkillSetting.Range;
             float length = range + ExtraDistance;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
@@ -42,7 +42,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected override void DrawRangeGizmo()
         {
             const float extra = 1.5f;
-            float length = SkillSO.Range + extra;
+            float length = SkillSetting.Range + extra;
 
             Gizmos.color = new Color(0.2f, 0.8f, 1f, 0.9f);
             DrawGizmoBox(transform.position + transform.forward * (length * 0.5f),

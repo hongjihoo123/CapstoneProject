@@ -1,6 +1,6 @@
 ﻿using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjectiles;
+using RobotWeapons;
 using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
@@ -9,14 +9,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     {
         [Header("Root Settings")]
         [SerializeField] private BossDamageProjectile rootPrefab;
-        [SerializeField] private GameObject warningPrefab;
 
         [SerializeField, Min(2)] private int rootCount = 7;
         [SerializeField] private float fanAngle = 100f;
         [SerializeField] private float rootSpeed = 12f;
         [SerializeField] private float rootHeight = 0.3f;
-
-        private readonly List<GameObject> _warnings = new();
 
         protected override IEnumerator Execute()
         {
@@ -30,24 +27,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
             ShowWarnings(origin, rotation, safeLane);
 
-            yield return new WaitForSeconds(SkillSO.PrepareTime);
-
-            ClearWarnings();
+            yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
             FireRoots(origin, rotation, safeLane);
 
-            yield return new WaitForSeconds(SkillSO.AttackDutation);
+            yield return new WaitForSeconds(SkillSetting.AttackDutation);
 
             Boss.CompletePhaseTransition();
         }
 
         private void ShowWarnings(Vector3 origin, Quaternion rotation, int safeLane)
         {
-            if (warningPrefab == null)
-                return;
-
             float laneAngle = fanAngle / rootCount;
-            float range = SkillSO.Range;
+            float range = SkillSetting.Range;
             float width = range * Mathf.Sin(laneAngle * Mathf.Deg2Rad) * 0.9f;
 
             for (int i = 0; i < rootCount; i++)
@@ -60,12 +52,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
                 Vector3 direction = rotation * Quaternion.Euler(0f, angle, 0f) * Vector3.forward;
                 Vector3 center = origin + direction * (range * 0.5f);
-                center.y += rootHeight;
 
-                GameObject warning = Instantiate(warningPrefab, center, Quaternion.LookRotation(direction));
-                warning.transform.localScale = new Vector3(width, 0.1f, range);
-
-                _warnings.Add(warning);
+                _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
+                    center, Quaternion.LookRotation(direction), new Vector3(width, 0f, range), SkillSetting.PrepareTime));
             }
         }
 
@@ -87,24 +76,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 BossDamageProjectile root = Instantiate(rootPrefab,
                     origin + Vector3.up * rootHeight, Quaternion.LookRotation(direction));
 
-                root.Initialize(direction, rootSpeed, SkillSO.Damage, _enemy.gameObject);
+                root.Initialize(direction, rootSpeed, SkillSetting.Damage, _enemy.gameObject);
             }
-        }
-
-        private void ClearWarnings()
-        {
-            foreach (GameObject warning in _warnings)
-            {
-                if (warning != null)
-                    Destroy(warning);
-            }
-
-            _warnings.Clear();
         }
 
         protected override void OnCancelled()
         {
-            ClearWarnings();
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
         }
     }
 }

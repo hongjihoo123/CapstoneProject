@@ -9,9 +9,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected override IEnumerator Execute()
         {
             Vector3 center = _enemy.transform.position;
-            float prepare = SkillSO.PrepareTime;
-            float expand = SkillSO.ExpandTime;
-            float range = SkillSO.Range;
+            float prepare = SkillSetting.PrepareTime;
+            float expand = SkillSetting.ExpandTime;
+            float range = SkillSetting.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
                 center, range, prepare + expand));
@@ -28,7 +28,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected override void DrawRangeGizmo()
         {
             Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
-            DrawGizmoCircle(transform.position, SkillSO.Range);
+            DrawGizmoCircle(transform.position, SkillSetting.Range);
         }
 
 #endif

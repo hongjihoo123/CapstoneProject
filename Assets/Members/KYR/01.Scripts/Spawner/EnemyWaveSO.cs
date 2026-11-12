@@ -17,7 +17,7 @@ namespace Members.KYR._01.Scripts.Spawner
         public float Weight => weight;
     }
 
-    [CreateAssetMenu(fileName = "Enemy Wave", menuName = "SO/Enemy/Wave", order = 2)]
+    [CreateAssetMenu(fileName = "Enemy Wave", menuName = "SO/Enemy/Wave", order = 3)]
     public class EnemyWaveSO : ScriptableObject
     {
         [SerializeField, Min(0)]

@@ -13,8 +13,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         {
             Vector3 center = _enemy.transform.position;
             Quaternion rotation = _enemy.transform.rotation;
-            float prepare = SkillSO.PrepareTime;
-            float range = SkillSO.Range;
+            float prepare = SkillSetting.PrepareTime;
+            float range = SkillSetting.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
                 center, rotation, range, angle, prepare));
@@ -22,7 +22,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             yield return new WaitForSeconds(prepare);
 
             DamageInCone(center, rotation, range, angle);
-            yield return new WaitForSeconds(SkillSO.AttackDutation);
+            yield return new WaitForSeconds(SkillSetting.AttackDutation);
         }
 
 #if UNITY_EDITOR
@@ -30,7 +30,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         protected override void DrawRangeGizmo()
         {
             Gizmos.color = new Color(1f, 0.6f, 0.1f, 0.9f);
-            DrawGizmoCone(transform.position, transform.rotation, SkillSO.Range, angle);
+            DrawGizmoCone(transform.position, transform.rotation, SkillSetting.Range, angle);
         }
 
 #endif
