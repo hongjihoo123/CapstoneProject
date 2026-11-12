@@ -214,7 +214,7 @@ namespace Members.KYR._01.Scripts.DashElement
                     continue;
 
                 string name = ElementComboBook.KoreanName(options[i]);
-                labels[i].text = current == options[i] ? $"{name}\n사용 중" : name;
+                labels[i].text = current == options[i] ? $"{name}\n [] " : name;
                 if (swatches != null && i < swatches.Length && swatches[i] != null && ElementPalette.Default != null)
                     swatches[i].color = ElementPalette.Default.ColorOf(options[i]);
             }
@@ -234,7 +234,7 @@ namespace Members.KYR._01.Scripts.DashElement
 
         private void BindInput(PlayerAgent agent)
         {
-            if (agent == null || _player == agent)
+            if (agent == null || (_player == agent && _input != null))
                 return;
 
             UnbindInput();
