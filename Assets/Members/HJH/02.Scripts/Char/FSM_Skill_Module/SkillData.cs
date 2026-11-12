@@ -62,6 +62,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public float AttackCoefficient => attackCoefficient;
         public float ElementCoefficient => elementCoefficient;
 
+        public void SetElement(ElementType type, Color color)
+        {
+            element = type;
+            grantsElement = true;
+            fxColor = color;
+        }
+
         public bool TryGetElement(out ElementType result)
         {
             result = element;

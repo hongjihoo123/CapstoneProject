@@ -18,7 +18,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         protected override Status OnStart()
         {
             if (Enemy.Value == null || Enemy.Value.Renderer == null || Clip.Value == null)
+            {
+                Debug.Log(Enemy.Value == null);
+                Debug.Log(Enemy.Value.Renderer == null);
+                Debug.Log(Clip.Value == null);
                 return Status.Failure;
+            }
 
             Enemy.Value.Renderer.PlayClip(Clip.Value.HashValue, 0f, CrossFadeDuration.Value, 0);
 
