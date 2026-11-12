@@ -50,7 +50,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private Vector2 throbSeconds = new(2.6f, 1.6f);
 
         [Header("죽음")]
-        [SerializeField, Range(0f, 1f)] private float deathRedAlpha = 0.6f;
+        // 2026-11-12 피드백: 죽으면 테두리가 너무 세고 색이 회색 화면과 안 어울림 → 빨강에서 회색으로 바뀌며 옅게
+        [SerializeField, Range(0f, 1f), Tooltip("죽었을 때 테두리 진하기")] private float deathEdgeAlpha = 0.35f;
+        [SerializeField, Tooltip("죽었을 때 테두리 색 (회색 화면에 맞춘 회색). 맞았을 때 빨강에서 이 색으로 서서히 바뀜")]
+        private Color deathEdgeColor = new(0.62f, 0.62f, 0.66f);
         [SerializeField, Range(-100f, 0f), Tooltip("죽었을 때만 화면 회색")] private float deathSaturation = -80f;
 
         private RawImage _red;
@@ -189,9 +192,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float white = _hitHighlight * _hitHighlight * hitHighlightAlpha * _hitBoost;
 
             // 딸피 / 죽음
+            Color edgeColor = hitColor;
             if (_dead)
             {
-                red = Mathf.Max(red, _danger * deathRedAlpha);
+                // 죽는 순간엔 맞은 빨강 그대로 → 화면이 회색으로 빠지는 만큼(_danger) 테두리도 회색·옅게
+                edgeColor = Color.Lerp(hitColor, deathEdgeColor, _danger);
+                red = Mathf.Lerp(red, deathEdgeAlpha, _danger);
             }
             else if (_danger > 0.001f)
             {
@@ -207,7 +213,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _beatPhase = 0f;
             }
 
-            SetAlpha(_red, hitColor, Mathf.Clamp01(red));
+            SetAlpha(_red, edgeColor, Mathf.Clamp01(red));
             SetAlpha(_highlight, highlightColor, Mathf.Clamp01(white));
         }
 

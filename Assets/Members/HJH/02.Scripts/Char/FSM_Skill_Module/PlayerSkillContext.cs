@@ -246,6 +246,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
                 Vector3 direction = distance > 0.0001f ? offset / distance : -_player.transform.forward;
                 MoveTarget(root, direction * (radius - distance));
+                InterruptTarget(target);
             }
         }
 
@@ -267,6 +268,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     continue;
 
                 MoveTarget(root, offset / distance * Mathf.Min(maxDistance, distance - stopDistance));
+                InterruptTarget(target);
             }
         }
 
@@ -280,6 +282,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 return;
 
             MoveTarget(component.transform, direction.normalized * distance);
+            InterruptTarget(target);
+        }
+
+        // 스킬로 날리거나 끌어당긴 적은 하던 공격·스킬이 끊김 (실제로 끊는 건 적 쪽 EnemyCcInterrupt)
+        private const float DisplaceInterruptTime = 0.35f;
+
+        private static void InterruptTarget(IDamageable target)
+        {
+            if (CrowdControl.Of(target) is CrowdControlReceiver receiver)
+                receiver.Interrupt(DisplaceInterruptTime);
         }
 
         private static void MoveTarget(Transform root, Vector3 delta)

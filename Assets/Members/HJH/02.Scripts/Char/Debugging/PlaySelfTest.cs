@@ -43,6 +43,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             highlighter.GetComponent<Visual.Highlight.FootRingLayer>().enabled = which != "none";
             highlighter.GetComponent<Visual.Highlight.RimHighlightLayer>().enabled = which == "rim";
             highlighter.GetComponent<Visual.Highlight.GroundLightLayer>().enabled = which == "light";
+            var key = highlighter.GetComponent<Visual.Highlight.CharacterLightLayer>();
+            if (key != null) key.enabled = which == "charlight";
             Log("highlight mode " + which);
             yield return new WaitForSeconds(2.5f);
             foreach (AbstractEnemy e in FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None))
@@ -65,6 +67,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
         private IEnumerator Start()
         {
             Log("selftest start " + _mode);
+            if (_mode == "death")
+            {
+                yield return new WaitForSeconds(3f);
+                PlayerAgent victim = FindFirstObjectByType<PlayerAgent>();
+                if (victim != null) victim.TakeDamage(victim.Health.MaxHealth * 10f, null);
+                Log("player killed");
+                yield break;
+            }
+            if (_mode == "cc")
+            {
+                yield return CcTest();
+                yield break;
+            }
             if (_mode.StartsWith("highlight:"))
             {
                 yield return HighlightOnly(_mode.Substring("highlight:".Length));
@@ -89,7 +104,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             Log($"A max {ra.Max} cur {ra.Current}");
             yield return new WaitForSeconds(0.5f);   // 3.5
             a.TakeDamage(ra.Max * 0.35f, null);
-            player.Health.TakeDamage(player.Health.MaxHealth * 0.3f);
+            player.TakeDamage(player.Health.MaxHealth * 0.3f, null);   // 실제 적 공격처럼 DamageTaken 이벤트까지 (피격 화면 효과)
             Log($"A damaged -> {ra.Current}, player -> {player.Health.CurrentHealth}/{player.Health.MaxHealth}");
             yield return new WaitForSeconds(2f);     // 5.5
             ((AgentHealth)a.Health).CurrentHealth += ra.Max * 0.25f;
@@ -113,6 +128,56 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             yield return new WaitForSecondsRealtime(1.5f);
             yield return StrongTest(player, enemies[3], 9002, new[] { 0.85f, 0.3f }, "85% by raw dmg then skill 30% kill (cast total <70%)", false);
             Log("selftest done");
+        }
+
+        // CC 캔슬: 스킬 쓰는 중인 적(있으면)을 기절 → 스킬 캔슬·AI 정지·기절 애니 / 풀리면 AI 재시작. 밀려남·끌려감(Interrupt)도
+        private IEnumerator CcTest()
+        {
+            yield return new WaitForSeconds(2f);
+            AbstractEnemy[] enemies = FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None);
+            Log($"enemies {enemies.Length}");
+            if (enemies.Length < 2) { Log("ERR need 2 enemies"); yield break; }
+
+            // 스킬 쓰는 적이 나올 때까지 최대 8초 기다림 (없으면 아무나)
+            AbstractEnemy target = null;
+            float until = Time.time + 8f;
+            while (target == null && Time.time < until)
+            {
+                foreach (AbstractEnemy e in FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None))
+                    if (e.IsAlive && e.SkillModule != null && e.SkillModule.IsSkillUsing()) { target = e; break; }
+                if (target == null) yield return null;
+            }
+            bool wasUsingSkill = target != null;
+            if (target == null) target = enemies[0];
+            Log($"target {target.name} usingSkill={wasUsingSkill}");
+
+            var bt = target.GetComponent<BehaviorGraphAgent>();
+            CrowdControl.Of(target).ApplyStun(1.2f);
+            yield return null;
+            yield return null;
+            yield return new WaitForSeconds(0.1f);
+            var anim = target.Renderer?.Animator;
+            bool inStun = anim != null && anim.GetCurrentAnimatorStateInfo(0).shortNameHash == Animator.StringToHash("STUNNED")
+                          || anim != null && anim.GetNextAnimatorStateInfo(0).shortNameHash == Animator.StringToHash("STUNNED");
+            Log($"diag: receiver={target.GetComponent<CrowdControlReceiver>() != null} adapter={target.GetComponent<Assets.Members.HJH._02.Scripts.Weapon.Runtime.EnemyCcInterrupt>() != null} interrupted={(target.GetComponent<CrowdControlReceiver>()?.IsInterrupted)} btOnSelf={bt != null} btInChildren={target.GetComponentInChildren<BehaviorGraphAgent>() != null}");
+            Log($"stun: btEnabled={bt != null && bt.enabled} usingSkill={target.SkillModule.IsSkillUsing()} stunAnim={inStun} -> {(bt != null && !bt.enabled && !target.SkillModule.IsSkillUsing() ? "OK" : "FAIL")}");
+            yield return new WaitForSeconds(1.6f);
+            Log($"after stun: btEnabled={bt != null && bt.enabled} -> {(bt != null && bt.enabled ? "OK" : "FAIL")}");
+
+            // 스킬 밀치기 경로 (PlayerSkillContext.Knockback → Interrupt)
+            AbstractEnemy other = enemies[0] == target ? enemies[1] : enemies[0];
+            var bt2 = other.GetComponent<BehaviorGraphAgent>();
+            if (CrowdControl.Of(other) is CrowdControlReceiver receiver)
+            {
+                receiver.ApplyKnockback(Vector3.forward, 2f);
+                receiver.Interrupt(0.35f);
+            }
+            yield return null;
+            yield return null;
+            Log($"knockback: btEnabled={bt2 != null && bt2.enabled} -> {(bt2 != null && !bt2.enabled ? "OK" : "FAIL")}");
+            yield return new WaitForSeconds(0.8f);
+            Log($"after knockback: btEnabled={bt2 != null && bt2.enabled} -> {(bt2 != null && bt2.enabled ? "OK" : "FAIL")}");
+            Log("cc test done");
         }
 
         private static float Dist(Transform a, Transform b) => Vector3.Distance(a.position, b.position);

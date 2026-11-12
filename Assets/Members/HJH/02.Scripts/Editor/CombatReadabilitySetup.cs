@@ -91,8 +91,46 @@ namespace HJH.EditorTools
             Debug.Log(changed ? "[Setup] PlayerRig 에 DashPassThrough 추가" : "[Setup] DashPassThrough 이미 있음 (변경 없음)");
         }
 
+        // 2026-11-12 피드백 "맞았을 때 비네트가 너무 셈" → 피격 화면 효과를 약하게. PlayerRig 오버라이드로만 (KYR Player 프리팹 원본은 그대로)
+        [MenuItem("HJH/세팅/4 피격 화면 효과 약하게 (PlayerRig)")]
+        private static void SoftenHitScreen()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode) return;
+
+            GameObject root = PrefabUtility.LoadPrefabContents(PlayerRigPath);
+            bool changed = false;
+            try
+            {
+                var fx = root.GetComponentInChildren<Assets.Members.HJH._02.Scripts.Char.Visual.PlayerDamageScreenFx>(true);
+                if (fx == null) { Debug.LogError("[Setup] PlayerRig 안에 PlayerDamageScreenFx 가 없음"); return; }
+                var so = new SerializedObject(fx);
+                changed |= SetFloat(so, "redEdgeWidth", 0.18f);       // 0.28 → 가장자리만
+                changed |= SetFloat(so, "highlightWidth", 0.05f);     // 0.08
+                changed |= SetFloat(so, "hitRedAlpha", 0.25f);        // 0.45
+                changed |= SetFloat(so, "hitHighlightAlpha", 0.35f);  // 0.7
+                changed |= SetFloat(so, "hitFlashBloom", 0.6f);       // 1
+                changed |= SetFloat(so, "hitFadeOutTime", 0.5f);      // 0.8 → 빨리 빠지게
+                changed |= SetFloat(so, "minHitStrength", 0.2f);      // 0.4 → 약한 공격은 약하게
+                changed |= SetFloat(so, "lowHpHitBoost", 1.2f);       // 1.4
+                so.ApplyModifiedPropertiesWithoutUndo();
+                if (changed) PrefabUtility.SaveAsPrefabAsset(root, PlayerRigPath);
+            }
+            finally { PrefabUtility.UnloadPrefabContents(root); }
+
+            Debug.Log(changed ? "[Setup] 피격 화면 효과 약하게 적용 (PlayerRig)" : "[Setup] 피격 화면 효과 이미 적용됨 (변경 없음)");
+        }
+
+        private static bool SetFloat(SerializedObject so, string field, float value)
+        {
+            SerializedProperty p = so.FindProperty(field);
+            if (p == null) { Debug.LogWarning("[Setup] 필드 없음: " + field); return false; }
+            if (Mathf.Approximately(p.floatValue, value)) return false;
+            p.floatValue = value;
+            return true;
+        }
+
         // HJH 맵 씬 4개 (Map_*, _HJH_Map). 열려 있는 씬에 저장 안 된 변경이 있으면 아무것도 안 함
-        [MenuItem("HJH/세팅/3 적 가시성 (HJH 맵 씬 4개에 발밑 링 + 림라이트)")]
+        [MenuItem("HJH/세팅/3 적 가시성 (HJH 맵 씬 4개에 발밑 링 + 캐릭터 조명)")]
         private static void SetupHighlighterAllMaps()
         {
             if (EditorApplication.isPlayingOrWillChangePlaymode) return;
@@ -140,11 +178,20 @@ namespace HJH.EditorTools
                 so.ApplyModifiedPropertiesWithoutUndo();
                 changed = true;
             }
-            // 2026-11-12 비교 캡처 후 림라이트(b) 채택 → 켬. 바닥 빛(c)은 이 맵에서 효과가 거의 없어 꺼 둠
+            // 2026-11-12 결정: 발밑 링 + 캐릭터 전용 조명. 림라이트(b)·바닥 빛(c)은 비교용으로 남기고 꺼 둠
             var rim = go.GetComponent<RimHighlightLayer>();
             if (rim == null) { rim = go.AddComponent<RimHighlightLayer>(); changed = true; }
-            if (!rim.enabled) { rim.enabled = true; changed = true; }
+            if (rim.enabled) { rim.enabled = false; changed = true; }
             if (go.GetComponent<GroundLightLayer>() == null) { go.AddComponent<GroundLightLayer>().enabled = false; changed = true; }
+            var key = go.GetComponent<CharacterLightLayer>();
+            if (key == null)
+            {
+                key = go.AddComponent<CharacterLightLayer>();
+                var so = new SerializedObject(key);
+                so.FindProperty("forPlayer").boolValue = true;   // 플레이어도 같이 (빨간 갑옷 색이 살게)
+                so.ApplyModifiedPropertiesWithoutUndo();
+                changed = true;
+            }
 
             if (changed)
             {

@@ -92,6 +92,10 @@ Shader "HJH/Character/Toon"
             #pragma shader_feature_local _ALPHATEST_ON
             #pragma multi_compile _ _MAIN_LIGHT_SHADOWS _MAIN_LIGHT_SHADOWS_CASCADE _MAIN_LIGHT_SHADOWS_SCREEN
             #pragma multi_compile_fragment _ _SHADOWS_SOFT _SHADOWS_SOFT_LOW _SHADOWS_SOFT_MEDIUM _SHADOWS_SOFT_HIGH
+            // 추가 라이트 (캐릭터 전용 조명 CharacterLightLayer, 발광 꽃 점광원). 렌더링 레이어가 맞는 빛만 받음
+            #pragma multi_compile _ _ADDITIONAL_LIGHTS
+            #pragma multi_compile _ _LIGHT_LAYERS
+            #pragma multi_compile _ _CLUSTER_LIGHT_LOOP
             #pragma multi_compile_fog
             #pragma multi_compile_instancing
 
@@ -156,6 +160,41 @@ Shader "HJH/Character/Toon"
                 half3 shade = albedo * _ShadowColor.rgb * (ambient * 0.6 + lightColor * 0.35);
                 half3 bright = albedo * (lightColor + ambient * 0.35);
                 half3 color = lerp(shade, bright, lit);
+
+                // 추가 라이트: 같은 2단 명암으로 밝은 면만 더함 (그늘 쪽은 그대로 → 툰 느낌 유지)
+                #if defined(_ADDITIONAL_LIGHTS)
+                {
+                    uint meshLayers = GetMeshRenderingLayer();
+                    InputData inputData = (InputData)0;
+                    inputData.positionWS = i.positionWS;
+                    inputData.normalWS = n;
+                    inputData.normalizedScreenSpaceUV = GetNormalizedScreenSpaceUV(i.positionCS);
+                    uint pixelLightCount = GetAdditionalLightsCount();
+                    #if USE_CLUSTER_LIGHT_LOOP
+                    [loop] for (uint lightIndex = 0; lightIndex < min(URP_FP_DIRECTIONAL_LIGHTS_COUNT, MAX_VISIBLE_LIGHTS); lightIndex++)
+                    {
+                        Light extra = GetAdditionalLight(lightIndex, i.positionWS);
+                        #ifdef _LIGHT_LAYERS
+                        if (IsMatchingLightLayer(extra.layerMask, meshLayers))
+                        #endif
+                        {
+                            half band = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, dot(n, extra.direction));
+                            color += albedo * extra.color * extra.distanceAttenuation * band;
+                        }
+                    }
+                    #endif
+                    LIGHT_LOOP_BEGIN(pixelLightCount)
+                        Light extra = GetAdditionalLight(lightIndex, i.positionWS);
+                        #ifdef _LIGHT_LAYERS
+                        if (IsMatchingLightLayer(extra.layerMask, meshLayers))
+                        #endif
+                        {
+                            half band = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, dot(n, extra.direction));
+                            color += albedo * extra.color * extra.distanceAttenuation * band;
+                        }
+                    LIGHT_LOOP_END
+                }
+                #endif
 
                 // 테두리 빛: 밝은 쪽에서 더 세게 (그늘 쪽도 살짝)
                 half rim = pow(saturate(1.0 - dot(n, v)), _RimPower);

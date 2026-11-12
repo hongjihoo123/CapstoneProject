@@ -51,7 +51,15 @@ namespace RobotWeapons
 
         public Tier EnemyTier { get => tier; set => tier = value; }
 
-        private void Awake() => _agent = GetComponent<NavMeshAgent>();
+        // 프리팹에 미리 붙어 있든 맞을 때 자동으로 붙든, 생길 때마다 알림.
+        // 적 쪽 어댑터(EnemyCcInterrupt: 공격·스킬 캔슬)가 여기서 자기를 붙임 → 이 파일은 적 코드를 몰라도 됨
+        public static event Action<CrowdControlReceiver> Awakened;
+
+        private void Awake()
+        {
+            _agent = GetComponent<NavMeshAgent>();
+            Awakened?.Invoke(this);
+        }
 
         public bool Has(CrowdControlType type) => type switch
         {
@@ -119,6 +127,19 @@ namespace RobotWeapons
             _knockbackSpeed = distance / Mathf.Max(0.01f, knockbackTime);
             if (!had)
                 Changed?.Invoke(CrowdControlType.Knockback, true);
+        }
+
+        // 행동 끊기 (공격·스킬 캔슬). 기절·밀려남이 걸리면 자동으로 끊기고, 스킬이 직접 끌어당기기/밀어내기를 할 때도 Interrupt 로 끊음.
+        // 실제로 적 AI 를 멈추는 건 적 쪽 어댑터(EnemyCcInterrupt)가 IsInterrupted 를 보고 함. 경직(Flinch)은 끊지 않음 (연타로 공격을 영영 못 하게 되지 않게)
+        private float _interruptEnd;
+
+        public bool IsInterrupted => Has(CrowdControlType.Stun) || Has(CrowdControlType.Knockback) || Time.time < _interruptEnd;
+
+        public void Interrupt(float duration)
+        {
+            if (!Scale(ref duration))
+                return;
+            _interruptEnd = Mathf.Max(_interruptEnd, Time.time + duration);
         }
 
         // 맞을 때마다 들어오는 짧은 경직. 기절(Stun)과 따로 둠 → 평타 맞은 뒤에도 스킬 기절은 면역 없이 걸림.
@@ -223,7 +244,7 @@ namespace RobotWeapons
             if (_agent == null || !_agent.enabled || !_agent.isOnNavMesh)
                 return;
 
-            bool stopped = Has(CrowdControlType.Stun) || Has(CrowdControlType.Root) || Has(CrowdControlType.Knockback) || IsFlinching;
+            bool stopped = IsInterrupted || Has(CrowdControlType.Root) || IsFlinching;
             if (stopped)
             {
                 // 적 AI 가 추적하면서 매 프레임 isStopped = false 로 되돌리기 때문에, 걸려 있는 동안은 매 프레임 다시 멈춤
