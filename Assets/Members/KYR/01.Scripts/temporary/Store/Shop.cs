@@ -37,13 +37,15 @@ namespace Members.KYR._01.Scripts.Store
         [SerializeField] private TMP_Text rerollLabel;
 
         [Header("제단")]
-        [SerializeField] private Altar altarPrefab;
+        [SerializeField] private Altar[] altarPrefabs;
         [SerializeField] private Transform altarPoint;
+        [SerializeField, Min(0f)] private float altarPriceVariance = 0.1f;
 
         private readonly List<ShopSlot> _slots = new();
         private readonly List<SkillData> _lastOffer = new();
         private PlayerAgent _player;
         private Altar _altar;
+        private Altar _lastAltar;
         private int _rerollCost;
         private bool _warnedEmpty;
         private int _shownCost = int.MinValue;
@@ -62,7 +64,6 @@ namespace Members.KYR._01.Scripts.Store
         {
             _rerollCost = Mathf.Max(0, baseRerollCost);
             Roll();
-            SpawnAltar();
         }
 
         private void OnDisable()
@@ -136,13 +137,46 @@ namespace Members.KYR._01.Scripts.Store
                 pickup.SetActive(true);
         }
 
-        private void SpawnAltar()
+        private void RollAltar()
         {
-            if (altarPrefab == null || _altar != null)
+            Altar picked = DrawAltar();
+            if (_altar != null)
+                Destroy(_altar.gameObject);
+
+            _altar = null;
+            if (picked == null)
                 return;
 
             Transform point = altarPoint != null ? altarPoint : transform;
-            _altar = Instantiate(altarPrefab, point.position, point.rotation, transform);
+            _altar = Instantiate(picked, point.position, point.rotation, transform);
+            _altar.SetPrice(RollAround(_altar.Price, altarPriceVariance));
+            _lastAltar = picked;
+        }
+
+        private Altar DrawAltar()
+        {
+            var pool = new List<Altar>();
+            if (altarPrefabs != null)
+            {
+                for (int i = 0; i < altarPrefabs.Length; i++)
+                {
+                    if (altarPrefabs[i] != null && !pool.Contains(altarPrefabs[i]))
+                        pool.Add(altarPrefabs[i]);
+                }
+            }
+
+            if (pool.Count == 0)
+                return null;
+
+            var fresh = new List<Altar>();
+            for (int i = 0; i < pool.Count; i++)
+            {
+                if (pool[i] != _lastAltar)
+                    fresh.Add(pool[i]);
+            }
+
+            List<Altar> bag = fresh.Count > 0 ? fresh : pool;
+            return bag[Random.Range(0, bag.Count)];
         }
 
         private bool InAltarRange()
@@ -169,6 +203,9 @@ namespace Members.KYR._01.Scripts.Store
 
         private void Roll()
         {
+            //나중에 산 보상 리롤하면 겹치는거 수정.
+            RollAltar();
+
             if (slotPrefab == null)
             {
                 Debug.LogWarning($"{name}: 슬롯 프리팹이 없습니다.", this);
@@ -239,14 +276,16 @@ namespace Members.KYR._01.Scripts.Store
             return pool;
         }
 
-        private int RollPrice()
+        private int RollPrice() => RollAround(basePrice, priceVariance);
+
+        private static int RollAround(int baseValue, float variance)
         {
-            float spread = Mathf.Max(0f, priceVariance);
+            float spread = Mathf.Max(0f, variance);
             float min = Mathf.Max(0f, 1f - spread);
             float max = 1f + spread;
             float scale = Mathf.Approximately(min, max) ? min : Random.Range(min, max);
-            int price = Mathf.RoundToInt(basePrice * scale);
-            return basePrice > 0 ? Mathf.Max(1, price) : Mathf.Max(0, price);
+            int value = Mathf.RoundToInt(baseValue * scale);
+            return baseValue > 0 ? Mathf.Max(1, value) : Mathf.Max(0, value);
         }
 
         private int NextRerollCost(int paid)
@@ -428,7 +467,7 @@ namespace Members.KYR._01.Scripts.Store
             for (int i = 0; i < count; i++)
                 Gizmos.DrawWireSphere(SlotPosition(i, count) + Vector3.up * 0.9f, slotDetectRadius);
 
-            if (altarPoint == null && altarPrefab == null)
+            if (altarPoint == null && (altarPrefabs == null || altarPrefabs.Length == 0))
                 return;
 
             Vector3 altarPosition = altarPoint != null ? altarPoint.position : transform.position;

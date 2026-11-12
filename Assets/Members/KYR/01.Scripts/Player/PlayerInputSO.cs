@@ -50,6 +50,9 @@ namespace Members.KYR._01_Scripts
         public string GetSkillBindingLabel(SkillSlotId slot) =>
             _skillActions.TryGetValue(slot, out InputAction action) ? action.GetBindingDisplayString() : string.Empty;
 
+        public string InteractBindingLabel =>
+            _controls != null ? _controls.Player.Interact.GetBindingDisplayString() : string.Empty;
+
         private void OnEnable()
         {
             if (_controls == null)

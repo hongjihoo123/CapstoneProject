@@ -24,6 +24,8 @@ namespace Members.KYR._01.Scripts.Player
     {
 
         [SerializeField] private PlayerInputSO playerInput;
+
+        public PlayerInputSO PlayerInput => playerInput;
         [SerializeField] private WeaponKitData kit;
 
         [Header("총 관련")]
