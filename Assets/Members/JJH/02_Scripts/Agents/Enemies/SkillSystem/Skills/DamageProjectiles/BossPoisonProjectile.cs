@@ -24,13 +24,51 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
         private bool _initialized;
         private bool _hasHit;
 
+        private bool _isArc;
+        private Vector3 _arcStart;
+        private Vector3 _arcTarget;
+        private float _arcHeight;
+        private float _arcDuration;
+        private float _arcElapsed;
+
         private void Awake()
         {
             _rigidbody = GetComponent<Rigidbody>();
         }
 
+        public void InitializeArc(Vector3 target, float speed, float arcHeight, GameObject owner,
+            BossPoisonArea areaPrefab, float damage, float areaRadius, float areaDuration,
+            float damageInterval, int splashCount, float splashSpeed)
+        {
+            SetCommon(owner, areaPrefab, damage, areaRadius, areaDuration,
+                damageInterval, splashCount, splashSpeed);
+
+            _isArc = true;
+            _arcStart = transform.position;
+            _arcTarget = target;
+            _arcHeight = arcHeight;
+
+            float distance = Vector3.Distance(_arcStart, _arcTarget);
+            _arcDuration = Mathf.Max(0.1f, distance / Mathf.Max(0.01f, speed));
+            _arcElapsed = 0f;
+
+            _rigidbody.isKinematic = true;
+            _rigidbody.linearVelocity = Vector3.zero;
+        }
+
+        // 스플래시 파편용 직선 발사 (기존 방식)
         public void Initialize(Vector3 direction, float speed, GameObject owner, BossPoisonArea areaPrefab,
             float damage, float areaRadius, float areaDuration, float damageInterval, int splashCount, float splashSpeed)
+        {
+            SetCommon(owner, areaPrefab, damage, areaRadius, areaDuration,
+                damageInterval, splashCount, splashSpeed);
+
+            _isArc = false;
+            _rigidbody.linearVelocity = direction.normalized * speed;
+        }
+
+        private void SetCommon(GameObject owner, BossPoisonArea areaPrefab, float damage,
+            float areaRadius, float areaDuration, float damageInterval, int splashCount, float splashSpeed)
         {
             _owner = owner;
             _areaPrefab = areaPrefab;
@@ -43,14 +81,30 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
 
             _initialized = true;
             _hasHit = false;
-            _rigidbody.linearVelocity = direction.normalized * speed;
 
             Destroy(gameObject, lifeTime);
         }
 
+        private void Update()
+        {
+            if (!_initialized || !_isArc || _hasHit)
+                return;
+
+            _arcElapsed += Time.deltaTime;
+            float t = Mathf.Clamp01(_arcElapsed / _arcDuration);
+
+            Vector3 pos = Vector3.Lerp(_arcStart, _arcTarget, t);
+            pos.y += Mathf.Sin(t * Mathf.PI) * _arcHeight;
+
+            transform.position = pos;
+
+            if (t >= 1f)
+                Hit(_arcTarget);
+        }
+
         private void OnTriggerEnter(Collider other)
         {
-            if (!_initialized || _hasHit ||
+            if (_isArc || !_initialized || _hasHit ||
                 other.transform.IsChildOf(_owner.transform))
                 return;
 
@@ -59,7 +113,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
 
         private void OnCollisionEnter(Collision collision)
         {
-            if (!_initialized || _hasHit ||
+            if (_isArc || !_initialized || _hasHit ||
                 collision.transform.IsChildOf(_owner.transform))
                 return;
 

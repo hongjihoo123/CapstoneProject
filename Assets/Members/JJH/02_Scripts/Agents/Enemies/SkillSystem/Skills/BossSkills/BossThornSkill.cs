@@ -8,7 +8,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     public class BossThornSkill : AbstractBossSkill
     {
         [Header("Thorn Settings")]
-        [SerializeField] private GameObject thornPrefab;
+        [SerializeField] private BossThornProjectile thornPrefab;
         [SerializeField] private BossDamageProjectile shardPrefab;
         [SerializeField] private LayerMask groundLayer;
 
@@ -50,7 +50,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
                 if (thornPrefab != null)
-                    Instantiate(thornPrefab, groundPosition, Quaternion.identity);
+                {
+                    BossThornProjectile thorn = Instantiate(thornPrefab, groundPosition, Quaternion.identity);
+                    thorn.Play(groundPosition);
+                }
 
                 DamageInCircle(groundPosition, damageRadius);
 

@@ -11,6 +11,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [SerializeField] private BossPoisonProjectile projectilePrefab;
         [SerializeField] private BossPoisonArea areaPrefab;
         [SerializeField] private Transform projectileSpawnPoint;
+        [SerializeField] private float arcHeight = 4f;
 
         [Header("Phase 1")]
         [SerializeField] private float phase1ProjectileSpeed = 10f;
@@ -51,11 +52,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 ? projectileSpawnPoint.position
                 : _enemy.transform.position + Vector3.up;
 
-            Vector3 direction = (targetPosition - origin).normalized;
-
             BossPoisonProjectile projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
 
-            projectile.Initialize(direction, projectileSpeed, _enemy.gameObject, areaPrefab,
+            projectile.InitializeArc(targetPosition, projectileSpeed, arcHeight, _enemy.gameObject, areaPrefab,
                 SkillSetting.Damage, areaRadius, areaDuration, damageInterval,
                 IsPhase2 ? splashCount : 0, splashSpeed);
         }
