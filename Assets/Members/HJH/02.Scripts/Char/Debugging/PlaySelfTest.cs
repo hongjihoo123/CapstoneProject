@@ -67,6 +67,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
         private IEnumerator Start()
         {
             Log("selftest start " + _mode);
+            if (_mode == "push" || _mode == "push-off")
+            {
+                yield return PushTest();
+                yield break;
+            }
             if (_mode == "death")
             {
                 yield return new WaitForSeconds(3f);
@@ -178,6 +183,70 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             yield return new WaitForSeconds(0.8f);
             Log($"after knockback: btEnabled={bt2 != null && bt2.enabled} -> {(bt2 != null && bt2.enabled ? "OK" : "FAIL")}");
             Log("cc test done");
+        }
+
+        // 적이 플레이어를 미는지: 플레이어는 가만히 (무적: 매 프레임 회복) 8초 동안 적이 몰려옴 → 플레이어가 밀린 거리.
+        // 그다음 가장 가까운 적을 죽이고 시체가 플레이어 쪽으로 미끄러지는지 + 몸 콜라이더가 꺼지는지
+        private Vector3 _lastPushPos;
+        private int _pushLogs;
+
+        private IEnumerator PushTest()
+        {
+            yield return new WaitForSeconds(1f);
+            PlayerAgent player = FindFirstObjectByType<PlayerAgent>();
+            if (player == null) { Log("ERR no player"); yield break; }
+            Vector3 start = player.transform.position;
+            _lastPushPos = start;
+            float maxDrift = 0f, minGap = float.MaxValue;
+            float until = Time.time + 8f;
+            while (Time.time < until)
+            {
+                player.Heal(9999f);
+                if (_mode == "push-off")   // 비교용: 수정 전 상태 (간격 유지 끔)
+                    foreach (var s in FindObjectsByType<Assets.Members.HJH._02.Scripts.Weapon.Runtime.EnemyBodySpacing>(FindObjectsSortMode.None)) s.enabled = false;
+                Vector3 d = player.transform.position - start; d.y = 0f;
+                maxDrift = Mathf.Max(maxDrift, d.magnitude);
+                // 이번 프레임에 밀렸으면 누가 닿아 있는지 기록 (원인 찾기)
+                Vector3 step = player.transform.position - _lastPushPos; step.y = 0f;
+                if (step.magnitude > 0.01f && _pushLogs < 12)
+                {
+                    _pushLogs++;
+                    CharacterController cc = player.Mover.Body;
+                    Vector3 c = player.transform.position + cc.center;
+                    float half = Mathf.Max(0f, cc.height * 0.5f - cc.radius);
+                    var names = new System.Collections.Generic.List<string>();
+                    foreach (Collider hit in Physics.OverlapCapsule(c - Vector3.up * half, c + Vector3.up * half, cc.radius + 0.02f, ~0, QueryTriggerInteraction.Ignore))
+                        if (hit != cc && !hit.transform.IsChildOf(player.transform))
+                            names.Add($"{hit.transform.root.name}/{hit.name}({LayerMask.LayerToName(hit.gameObject.layer)},{hit.GetType().Name})");
+                    Log($"  pushed {step.magnitude:F3}m dir {step.normalized}, touching: {string.Join(", ", names)}");
+                }
+                _lastPushPos = player.transform.position;
+                foreach (AbstractEnemy e in FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None))
+                {
+                    if (!e.IsAlive) continue;
+                    Vector3 o = e.transform.position - player.transform.position; o.y = 0f;
+                    minGap = Mathf.Min(minGap, o.magnitude);
+                }
+                yield return null;
+            }
+            Log($"push: player drift max {maxDrift:F2}m (0 = 안 밀림), closest enemy center {minGap:F2}m -> {(maxDrift < 0.15f ? "OK" : "FAIL")}");
+
+            AbstractEnemy[] enemies = FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None);
+            System.Array.Sort(enemies, (a, b) => Dist(a.transform, player.transform).CompareTo(Dist(b.transform, player.transform)));
+            AbstractEnemy victim = null;
+            foreach (AbstractEnemy e in enemies) if (e.IsAlive) { victim = e; break; }
+            if (victim == null) { Log("ERR no enemy"); yield break; }
+            CrowdControl.Of(victim);   // 경직 끝나며 isStopped 를 푸는 원래 버그 경로까지
+            if (CrowdControl.Of(victim) is CrowdControlReceiver r) r.ApplyFlinch(0.1f);
+            float before = Dist(victim.transform, player.transform);
+            victim.TakeDamage(99999f, player.gameObject);
+            Vector3 corpseStart = victim.transform.position;
+            yield return new WaitForSeconds(1.0f);
+            if (victim == null) { Log("corpse: destroyed within 1s (OK)"); Log("push test done"); yield break; }
+            Vector3 moved = victim.transform.position - corpseStart; moved.y = 0f;
+            var box = victim.GetComponent<Collider>();
+            Log($"corpse: was {before:F2}m away, slid {moved.magnitude:F2}m, body collider enabled={box != null && box.enabled} -> {(moved.magnitude < 0.2f && (box == null || !box.enabled) ? "OK" : "FAIL")}");
+            Log("push test done");
         }
 
         private static float Dist(Transform a, Transform b) => Vector3.Distance(a.position, b.position);

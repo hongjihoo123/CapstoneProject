@@ -4903,6 +4903,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 468115538540809903}
+  - component: {fileID: 4841716846736180955}
   m_Layer: 0
   m_Name: FX_Earth_WallPbr
   m_TagString: Untagged
@@ -4929,6 +4930,21 @@ Transform:
   - {fileID: 8198044981150185623}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &4841716846736180955
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 670756272138284712}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72b993a3f2869604f83a7d16f3b9a730, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.FxPrefabInstance
+  maxInstances: 12
+  untinted:
+  - {fileID: 4466224361627759910}
 --- !u!1 &3316974624684797882
 GameObject:
   m_ObjectHideFlags: 0
@@ -14735,7 +14751,7 @@ ParticleSystemRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 3d7bd35f27b545d46a30cd8e4ea83c41, type: 2}
+  - {fileID: 2100000, guid: ba74ee063188d8745bcf84bac6a1b173, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
