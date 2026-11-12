@@ -95,8 +95,13 @@ MonoBehaviour:
   rerollRadius: 1.6
   rerollLabel: {fileID: 0}
   altarPrefabs:
-  - {fileID: 8540800398859136030, guid: d1c2ee4e7c684a34d905df7bcc6867ea, type: 3}
+  - {fileID: 8540800398859136030, guid: e013f65b8ab646d498cf47bd16283cee, type: 3}
+  - {fileID: 8540800398859136030, guid: da57d79644b87aa4c8c0c8901142a7a1, type: 3}
+  - {fileID: 8540800398859136030, guid: f3c5df068cc3baa4d8feac094e786cf3, type: 3}
+  - {fileID: 8540800398859136030, guid: 2756cfcb874d64c4899c6a9a67d89d27, type: 3}
+  - {fileID: 8540800398859136030, guid: aabd0ef421d07864aaea8c950ed6733d, type: 3}
   altarPoint: {fileID: 810000008}
+  altarPriceVariance: 0.1
 --- !u!1 &810000005
 GameObject:
   m_ObjectHideFlags: 0
@@ -128,6 +133,37 @@ Transform:
   m_Children:
   - {fileID: 810000008}
   m_Father: {fileID: 810000002}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &810000007
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 810000008}
+  m_Layer: 0
+  m_Name: AltarPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &810000008
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 810000007}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 6.5, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 810000006}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &364098754301637464
 GameObject:
@@ -241,34 +277,3 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
---- !u!1 &810000007
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 810000008}
-  m_Layer: 0
-  m_Name: AltarPoint
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!4 &810000008
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 810000007}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 6.5, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 810000006}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
