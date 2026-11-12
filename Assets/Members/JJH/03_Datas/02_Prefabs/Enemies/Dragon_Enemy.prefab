@@ -1600,9 +1600,9 @@ Transform:
   m_GameObject: {fileID: 8541734892472665447}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.7, y: 0.61, z: 4.89}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
+  m_ConstrainProportionsScale: 1
   m_Children:
   - {fileID: 1625968417794929287}
   - {fileID: 6219094254170959414}
@@ -1723,6 +1723,9 @@ MonoBehaviour:
   tier: 0
   stunImmunity: 1
   knockbackTime: 0.15
+  flinchChainMax: 0.6
+  flinchImmunity: 0.5
+  flinchAnimSpeed: 0.15
 --- !u!114 &1943294866224969722
 MonoBehaviour:
   m_ObjectHideFlags: 0
