@@ -12,8 +12,9 @@ GameObject:
   - component: {fileID: 6047949564681790179}
   - component: {fileID: 7720415715257727507}
   - component: {fileID: 7250591183959830798}
+  - component: {fileID: 9126482698070681021}
   m_Layer: 0
-  m_Name: Vine
+  m_Name: Thorn
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -112,3 +113,19 @@ BoxCollider:
   serializedVersion: 3
   m_Size: {x: 1, y: 1, z: 1}
   m_Center: {x: 0, y: 0, z: 0}
+--- !u!114 &9126482698070681021
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9109852655252778756}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f992e4137db628f4c8e9d9a18f5d2992, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjectiles.BossThornProjectile
+  hiddenDepth: 3
+  riseTime: 0.15
+  holdTime: 0.6
+  sinkTime: 0.4
