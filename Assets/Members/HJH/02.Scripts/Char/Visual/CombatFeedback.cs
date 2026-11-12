@@ -190,7 +190,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 HitFeel.Shake(hitShake, 0.12f);
             }
 
-            bool strong = info.Killed && IsStrongKill(info, source);
+            bool strong = IsStrongKill(info, source);
 
             SfxBank sounds = Sfx.Bank;
             if (sounds != null)
@@ -210,6 +210,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 else
                     HitFeel.Play(killHitStop, killShake);
             }
+            else if (strong)
+            {
+                PlayStrongKill(target.position, impact, sparkColor);   // requireKill 을 끈 경우: 안 죽어도 크게 깎이면
+            }
         }
 
         // ------------------------------------------------ 강한 처치
@@ -219,12 +223,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             public bool enabled = true;
 
-            [Header("발동 조건 (하나라도 맞으면)")]
-            [Tooltip("이 피해 이상으로 처치하면 (마지막 한 방 기준)")] public float minDamage = 40f;
-            [Tooltip("스킬로 처치하면 피해와 상관없이")] public bool skillKills = true;
-            [Tooltip("패시브로 처치하면 피해와 상관없이. 룬 공명처럼 계속 닿는 패시브가 있어 기본은 끔 (충전 관통탄은 피해 조건으로 걸림)")]
-            public bool passiveKills;
-            [Tooltip("약점으로 처치하면")] public bool weakpointKills;
+            [Header("발동 조건: 스킬 1회 시전이 대상 최대 체력의 일정 비율 이상을 깎았을 때")]
+            [Range(0f, 1f), Tooltip("스킬 한 번 시전으로 한 대상에게 준 피해 합계 / 대상 최대 체력. 이 값 이상이면 발동 (0.7 = 70%). " +
+                                    "여러 틱·파편으로 나눠 맞는 스킬도 같은 시전이면 합쳐서 셈")]
+            public float minCastDamageRatio = 0.7f;
+            [Tooltip("켜면 그 타격으로 처치했을 때만 발동 (강한 '처치' 연출). 끄면 안 죽어도 비율만 넘으면 발동")]
+            public bool requireKill = true;
+            [Tooltip("패시브(충전 관통탄 등) 한 방도 같은 비율 기준으로 셀지. 패시브는 시전이 없어서 한 방 피해만 봄")]
+            public bool includePassive;
             [Tooltip("한 번 나온 뒤 이 시간(실제 초) 동안은 다시 안 나옴. 광역 스킬로 여럿 잡아도 한 번만")]
             public float cooldown = 0.8f;
 
@@ -259,16 +265,63 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _lastStrongKillTime = -999f;
         private float _lastPassiveShakeTime = -999f;
 
+        // 시전 번호별로 대상마다 준 피해 합계. 최근 몇 번의 시전만 기억 (지연 폭발 등이 조금 뒤에 들어와도 합쳐지게)
+        private const int RememberedCasts = 8;
+        private readonly List<(int castId, Dictionary<IDamageable, float> damage)> _castDamage = new();
+        private readonly HashSet<(int, IDamageable)> _strongFired = new();
+
+        private float RecordCastDamage(int castId, IDamageable target, float amount)
+        {
+            Dictionary<IDamageable, float> perTarget = null;
+            foreach ((int id, Dictionary<IDamageable, float> damage) entry in _castDamage)
+                if (entry.id == castId)
+                    perTarget = entry.damage;
+
+            if (perTarget == null)
+            {
+                if (_castDamage.Count >= RememberedCasts)
+                {
+                    int dropped = _castDamage[0].castId;
+                    _castDamage.RemoveAt(0);
+                    _strongFired.RemoveWhere(k => k.Item1 == dropped);
+                }
+                perTarget = new Dictionary<IDamageable, float>();
+                _castDamage.Add((castId, perTarget));
+            }
+
+            perTarget.TryGetValue(target, out float total);
+            total += amount;
+            perTarget[target] = total;
+            return total;
+        }
+
         private bool IsStrongKill(DamageDealtInfo info, HitSourceKind source)
         {
             StrongKillSettings s = strongKill;
-            if (s == null || !s.enabled || Time.unscaledTime - _lastStrongKillTime < s.cooldown)
+            if (s == null || !s.enabled)
                 return false;
 
-            return info.Amount >= s.minDamage
-                   || (s.skillKills && source == HitSourceKind.Skill)
-                   || (s.passiveKills && source == HitSourceKind.Passive)
-                   || (s.weakpointKills && info.IsWeakpoint);
+            // 이번 피해까지 합친 "이번 시전 누적". 패시브는 시전이 없으니 이번 한 방
+            float dealt;
+            int castId = HitSource.CurrentCastId;
+            if (source == HitSourceKind.Skill && castId != 0)
+                dealt = RecordCastDamage(castId, info.Target, info.Amount);
+            else if (source == HitSourceKind.Passive && s.includePassive)
+                dealt = info.Amount;
+            else
+                return false;   // 평타 무기는 대상 아님
+
+            if (s.requireKill && !info.Killed)
+                return false;
+            if (Time.unscaledTime - _lastStrongKillTime < s.cooldown)
+                return false;
+            if (!Health.HealthReader.TryGetMax(info.Target, out float maxHp))
+                return false;
+            if (dealt < maxHp * s.minCastDamageRatio)
+                return false;
+
+            // 안 죽어도 발동하는 설정이면 같은 시전·같은 대상에 한 번만
+            return castId == 0 || _strongFired.Add((castId, info.Target));
         }
 
         // 멈칫 → 슬로모션 + 줌인(유지) → 부드럽게 원래대로. 소리는 확 커졌다 돌아옴.

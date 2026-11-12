@@ -1,6 +1,6 @@
 namespace RobotWeapons
 {
-    // 지금 나가는 피해가 무엇에서 왔는지 (평타 무기 / 패시브 / 스킬).
+    // 지금 나가는 피해가 무엇에서 왔는지 (평타 무기 / 패시브 / 스킬) + 스킬이면 몇 번째 시전인지.
     // DamageDealtInfo 는 다른 팀원 코드(PlayerAgent)가 만들어서 출처를 못 담음 →
     // 피해를 주는 쪽이 Push/Pop 으로 감싸면, 그 사이에 동기로 불리는 DamageDealt 구독자(연출)가 Current 로 읽음.
     // 감싸지 않은 피해(총알 등)는 Weapon.
@@ -10,14 +10,21 @@ namespace RobotWeapons
     {
         private const int MaxDepth = 8;
         private static readonly HitSourceKind[] Stack = new HitSourceKind[MaxDepth];
+        private static readonly int[] CastStack = new int[MaxDepth];
         private static int _depth;
 
-        public static HitSourceKind Current => _depth > 0 ? Stack[_depth - 1] : HitSourceKind.Weapon;
+        public static HitSourceKind Current => _depth > 0 && _depth <= MaxDepth ? Stack[_depth - 1] : HitSourceKind.Weapon;
 
-        public static void Push(HitSourceKind kind)
+        // 스킬 1회 시전마다 다른 번호 (0 = 시전 아님). 같은 시전의 여러 타격(틱·파편)을 묶어서 셀 때 씀
+        public static int CurrentCastId => _depth > 0 && _depth <= MaxDepth ? CastStack[_depth - 1] : 0;
+
+        public static void Push(HitSourceKind kind, int castId = 0)
         {
             if (_depth < MaxDepth)
+            {
                 Stack[_depth] = kind;
+                CastStack[_depth] = castId;
+            }
             _depth++;
         }
 

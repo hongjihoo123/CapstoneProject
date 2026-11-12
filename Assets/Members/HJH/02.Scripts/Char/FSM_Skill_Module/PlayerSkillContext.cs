@@ -60,7 +60,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IPassive Passive { get; set; }
 
-        public SkillData ActiveSkill { get; set; }
+        // 스킬이 시작될 때마다(ActiveSkill 이 새로 들어올 때) 그 스킬의 시전 번호를 새로 매김.
+        // 시전이 끝난 뒤 터지는 지연 효과(파편·폭발)도 같은 스킬이면 같은 번호 → 연출이 "이번 시전 누적 피해"를 셀 수 있음
+        private readonly Dictionary<SkillData, int> _castIds = new();
+        private int _castSerial;
+        private SkillData _activeSkill;
+
+        public SkillData ActiveSkill
+        {
+            get => _activeSkill;
+            set
+            {
+                if (value != null && value != _activeSkill)
+                    _castIds[value] = ++_castSerial;
+                _activeSkill = value;
+            }
+        }
 
         public void BeginActivation() => _hitThisActivation.Clear();
 
@@ -372,7 +387,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
             // 연출(CombatFeedback)이 "스킬로 맞았나 / 패시브로 맞았나"를 알 수 있게 출처를 표시.
             // 스킬 상태 밖에서 이 통로로 들어오는 피해 = 패시브 (충전 관통탄, 룬 공명 등)
-            HitSource.Push(skill != null ? HitSourceKind.Skill : HitSourceKind.Passive);
+            int castId = skill != null && _castIds.TryGetValue(skill, out int id) ? id : 0;
+            HitSource.Push(skill != null ? HitSourceKind.Skill : HitSourceKind.Passive, castId);
             try
             {
                 if (skill == null)

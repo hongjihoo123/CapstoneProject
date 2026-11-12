@@ -14449,14 +14449,17 @@ PrefabInstance:
     - targetCorrespondingSourceObject: {fileID: 5882936960964419099, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
       insertIndex: -1
       addedObject: {fileID: 6083491805527107679}
-    m_AddedComponents: []
+    m_AddedComponents:
+    - targetCorrespondingSourceObject: {fileID: 371332166745463317, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 2653111899225313634}
   m_SourcePrefab: {fileID: 100100000, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
 --- !u!114 &113315620844610402 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 2724380753364955884, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
   m_PrefabInstance: {fileID: 2620077010160488846}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 2412625980075183003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: fb7281d6176d478409d2073ae2d44462, type: 3}
@@ -14467,18 +14470,46 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 322130268088581870, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
   m_PrefabInstance: {fileID: 2620077010160488846}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 2412625980075183003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 4f992085b01ed364e973f205c8d3808c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.SkillSwap.SkillSwapInteractor
+--- !u!1 &2412625980075183003 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 371332166745463317, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
+  m_PrefabInstance: {fileID: 2620077010160488846}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2653111899225313634
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2412625980075183003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f711ab0bfdfcc814683ad09d9f4c19c7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Movement.DashPassThrough
+  passThroughLayers:
+    serializedVersion: 2
+    m_Bits: 512
+  maxResolveDistance: 3
+  resolveStep: 0.2
+  preferForward: 0.6
+  clearance: 0.05
+  shoveEnemies: 1
+  shoveDistance: 0.6
+  shoveTime: 0.15
+  shoveRadiusPadding: 0.35
 --- !u!114 &4641428986370992908 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 7220898832464263810, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
   m_PrefabInstance: {fileID: 2620077010160488846}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 2412625980075183003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: db72300a95304755abf61e043eb00881, type: 3}
@@ -14494,7 +14525,7 @@ MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 5943250634871901731, guid: 86b424378a11a534eb7b1090095b63f7, type: 3}
   m_PrefabInstance: {fileID: 2620077010160488846}
   m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
+  m_GameObject: {fileID: 2412625980075183003}
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 26e202b7369ac39458a49d122b367546, type: 3}

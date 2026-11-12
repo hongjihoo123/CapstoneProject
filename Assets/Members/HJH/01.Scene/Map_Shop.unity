@@ -55393,6 +55393,114 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 6441792212127661759, guid: 4c97820acf8913540b441f40939d7a87, type: 3}
   m_PrefabInstance: {fileID: 1183294130}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &1183342584
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1183342589}
+  - component: {fileID: 1183342588}
+  - component: {fileID: 1183342587}
+  - component: {fileID: 1183342586}
+  - component: {fileID: 1183342585}
+  m_Layer: 0
+  m_Name: CharacterHighlighter
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1183342585
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183342584}
+  m_Enabled: 0
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9f72da782b9afa84db83d784b484f691, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.Highlight.GroundLightLayer
+  forEnemies: 1
+  forPlayer: 0
+  color: {r: 1, g: 0.55, b: 0.45, a: 1}
+  intensity: 1.6
+  range: 3.5
+  height: 1.8
+--- !u!114 &1183342586
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183342584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 11e15c8b3e638f842a3de48ead8a9f3e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.Highlight.RimHighlightLayer
+  forEnemies: 1
+  forPlayer: 0
+  rimColor: {r: 1, g: 0.38, b: 0.28, a: 0.85}
+  rimPower: 3
+  fill: 0.06
+--- !u!114 &1183342587
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183342584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: aafb7645aad88c44bb8cff12e1cacc1d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.Highlight.FootRingLayer
+  forEnemies: 1
+  forPlayer: 1
+  ringMaterial: {fileID: 2100000, guid: 12393497542537748b6387357255b6a6, type: 2}
+  enemyColor: {r: 1, g: 0.16, b: 0.12, a: 0.9}
+  playerColor: {r: 0.35, g: 1, b: 0.45, a: 0.85}
+  sizeScale: 1.55
+  minDiameter: 1.1
+  lift: 0.04
+  groundLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  pulseAlpha: 0.25
+  pulseSpeed: 2.4
+--- !u!114 &1183342588
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183342584}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b10cd5313dd4138418c8b98a2e372ab8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.Char.Visual.Highlight.CharacterHighlighter
+  scanInterval: 0.25
+--- !u!4 &1183342589
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1183342584}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1001 &1183816966
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -101329,3 +101437,4 @@ SceneRoots:
   - {fileID: 459309062}
   - {fileID: 96610946}
   - {fileID: 1651462513}
+  - {fileID: 1183342589}

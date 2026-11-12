@@ -1,0 +1,21 @@
+{
+  "scene": "Assets/Members/HJH/01.Scene/Map_Bridge_Normal.unity",
+  "outDir": "Captures/selftest_combat",
+  "width": 1280,
+  "height": 720,
+  "play": true,
+  "maxSeconds": 150,
+  "shots": [
+    { "name": "a0_before", "delay": 3.3, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a1_hit_0.05s", "delay": 3.55, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "p1_player_hit", "delay": 3.6, "target": "tag:Player", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.4, "z": 0 }, "fov": 30 },
+    { "name": "a2_hit_0.4s", "delay": 3.9, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a3_hit_0.75s", "delay": 4.25, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a4_hit_1.5s", "delay": 5.0, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a5_heal_0.05s", "delay": 5.55, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a6_heal_0.3s", "delay": 5.8, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "a7_heal_1s", "delay": 6.5, "target": "SELFTEST_A", "space": "world", "offset": { "x": -2.2, "y": 4.4, "z": -2.2 }, "lookAt": { "x": 0, "y": 2.2, "z": 0 }, "fov": 30 },
+    { "name": "g_rings", "mode": "game", "delay": 7.0 },
+    { "name": "end", "mode": "game", "delay": 14 }
+  ]
+}
