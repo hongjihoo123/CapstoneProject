@@ -1,0 +1,64 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!1 &1295849760715847624
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2789400170897356564}
+  - component: {fileID: 9058895069475225880}
+  m_Layer: 0
+  m_Name: BossThornSkill
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2789400170897356564
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1295849760715847624}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &9058895069475225880
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1295849760715847624}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7b13822e2a52689418c8a11740d8c5fd, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills.BossThornSkill
+  <SkillSO>k__BackingField: {fileID: 11400000, guid: a9441d5e6d3a66847bd3fd300f7dbe37, type: 2}
+  warningTickInterval: 0.05
+  thornPrefab: {fileID: 9109852655252778756, guid: ae3be18211bf80740912d30af2021aa7, type: 3}
+  shardPrefab: {fileID: 1438337270579316061, guid: 58b948a58b421f442a7991d117dcf505, type: 3}
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  phase1ThornCount: 3
+  phase1ThornInterval: 0.5
+  phase1WarningRadius: 1.5
+  phase1DamageRadius: 1.5
+  phase2ThornCount: 3
+  phase2ThornInterval: 0.5
+  phase2WarningRadius: 1.5
+  phase2DamageRadius: 1.5
+  shardCount: 8
+  shardSpeed: 8
+  shardDelay: 0.2

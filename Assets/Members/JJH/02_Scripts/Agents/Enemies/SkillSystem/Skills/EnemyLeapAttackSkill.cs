@@ -24,8 +24,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             if (target == null || target.Value == null)
                 yield break;
 
-            float prepare = SkillSO.PrepareTime;
-            float duration = SkillSO.AttackDutation;
+            float prepare = SkillSetting.PrepareTime;
+            float duration = SkillSetting.AttackDutation;
 
             Vector3 start = _enemy.transform.position;
             Vector3 landing = target.Value.transform.position;
@@ -90,7 +90,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             Gizmos.DrawWireSphere(peak, 0.2f);
 
             Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.4f);
-            DrawGizmoCircle(transform.position, SkillSO.Range);
+            DrawGizmoCircle(transform.position, SkillSetting.Range);
         }
 
 #endif

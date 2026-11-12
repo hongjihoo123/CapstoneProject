@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 90d6a11ae55b87445ac7b3a2da976e66, type: 3}
+  m_Name: Boss_PoisonSkill
+  m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.BossEnemySkillSO
+  <AnimParam>k__BackingField: {fileID: 0}
+  <VFXParam>k__BackingField: {fileID: 0}
+  skillScript: {fileID: 11500000, guid: 6a902406330a10b4681b6ab890770f29, type: 3}
+  skillTypeName: Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills.BossPoisonSkill,
+    Assembly-CSharp, Version=0.0.0.0, Culture=neutral, PublicKeyToken=null
+  <Phase1SkillSetting>k__BackingField:
+    <Cooltime>k__BackingField: 9
+    <PrepareTime>k__BackingField: 1
+    <ExpandTime>k__BackingField: 0
+    <AttackDutation>k__BackingField: 0.5
+    <Range>k__BackingField: 12
+    <Damage>k__BackingField: 8
+  <Phase2SkillSetting>k__BackingField:
+    <Cooltime>k__BackingField: 11
+    <PrepareTime>k__BackingField: 1.2
+    <ExpandTime>k__BackingField: 0
+    <AttackDutation>k__BackingField: 0.5
+    <Range>k__BackingField: 14
+    <Damage>k__BackingField: 10
