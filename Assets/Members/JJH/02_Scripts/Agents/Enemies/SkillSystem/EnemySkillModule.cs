@@ -1,5 +1,6 @@
 ﻿using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills;
+using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using System;
 using System.Collections.Generic;
@@ -71,32 +72,27 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             _wasSkillUsing = isSkillUsing;
         }
 
-        public IEnemySkill GetSkill<T>() where T : IEnemySkill
+        public IEnemySkill GetTransitionSkill()
         {
-            _skillDict.TryGetValue(typeof(T), out IEnemySkill skill);
-            return skill;
+            return _skillDict.Values.FirstOrDefault(skill => skill is ITransitionSkill);
         }
 
-        public void UseSkill(Type skillType)
+        public bool UseSkill(Type skillType)
         {
-            IEnemySkill skill = _skillDict.Values.FirstOrDefault(skill => skill.GetType() == skillType);
+            if (!_skillDict.TryGetValue(skillType, out IEnemySkill skill) || skill.IsUsing)
+                return false;
 
-            if (skill.IsUsing)
-                return;
-
-            var skillData = enemy.EnemyData.EnemySkills.FirstOrDefault(data =>
-                                                                    data != null && data.SkillType == skillType);
+            var skillData = enemy.EnemyData.EnemySkills.FirstOrDefault(d => d != null && d.SkillType == skillType);
             if (skillData == null)
-                return;
+                return false;
 
-            if (_skillCooldowns.TryGetValue(skillType, out float nextAvailableTime)
-                && Time.time < nextAvailableTime)
-                return;
+            if (_skillCooldowns.TryGetValue(skillType, out float next) && Time.time < next)
+                return false;
 
             skill.UseSkill();
             LastSkillEndTime = Time.time;
-            EnemySkillSetting setting = GetSkillSetting(skillData);
-            _skillCooldowns[skillType] = Time.time + setting.Cooltime;
+            _skillCooldowns[skillType] = Time.time + GetSkillSetting(skillData).Cooltime;
+            return true;
         }
 
         public void CancelAllSkills()
@@ -113,18 +109,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             return _skillDict.Values.Any(skill => skill.IsUsing);
         }
 
+        private bool IsTransitionSkill(Type skillType)
+            => skillType != null && typeof(ITransitionSkill).IsAssignableFrom(skillType);
+
         public bool HasAvailableSkill(float distance)
         {
             foreach (var data in enemy.EnemyData.EnemySkills.Where(data => data != null)
                                               .OrderByDescending(data => GetSkillSetting(data).Range))
             {
-                EnemySkillSetting setting = GetSkillSetting(data);
+                Type skillType = data.SkillType;
+                if (skillType == null || IsTransitionSkill(skillType))
+                    continue;
 
+                EnemySkillSetting setting = GetSkillSetting(data);
                 if (distance > setting.Range)
                     continue;
 
-                Type skillType = data.SkillType;
-                if (skillType == null || !_skillDict.TryGetValue(skillType, out IEnemySkill skill) || skill.IsUsing)
+                if (!_skillDict.TryGetValue(skillType, out IEnemySkill skill) || skill.IsUsing)
                     continue;
 
                 if (_skillCooldowns.TryGetValue(skillType, out float nextAvailableTime) && Time.time < nextAvailableTime)
@@ -138,12 +139,15 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasSkillInRange(float distance)
         {
-            return enemy.EnemyData.EnemySkills.Any(data => data != null && data.SkillType != null
-                                                                                            && distance <= GetSkillSetting(data).Range
-                                                                                            && _skillDict.ContainsKey(data.SkillType));
+            return enemy.EnemyData.EnemySkills.Any(data =>
+                data != null
+                && data.SkillType != null
+                && !IsTransitionSkill(data.SkillType)
+                && distance <= GetSkillSetting(data).Range
+                && _skillDict.ContainsKey(data.SkillType));
         }
 
-        private EnemySkillSO.EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)
+        private EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)
         {
             if (skillData is NormalEnemySkillSO normal)
                 return normal.SkillSetting;

@@ -5,7 +5,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 {
-    public class BossPhaseTransitionSkill : AbstractBossSkill
+    public class BossPhaseTransitionSkill : AbstractBossSkill, ITransitionSkill
     {
         [Header("Root Settings")]
         [SerializeField] private BossDamageProjectile rootPrefab;
