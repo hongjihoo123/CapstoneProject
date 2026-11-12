@@ -13,8 +13,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         LayerMask TargetLayer { get; }
         AbstractEnemy enemy { get; }
 
-        IEnemySkill GetSkill<T>() where T : IEnemySkill;
-        void UseSkill(Type skillType);
+        IEnemySkill GetTransitionSkill();
+        bool UseSkill(Type skillType);
         void CancelAllSkills();
         bool IsSkillUsing();
         bool HasAvailableSkill(float distance);

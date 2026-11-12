@@ -2,6 +2,7 @@
 {
     public interface IEnemySkill
     {
+        EnemySkillSO SkillSO { get; }
         bool IsUsing { get; }
 
         void Initialize(AbstractEnemy owner, EnemySkillModule skillModule);
