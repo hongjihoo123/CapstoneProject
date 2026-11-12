@@ -109,18 +109,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             return _skillDict.Values.Any(skill => skill.IsUsing);
         }
 
+        private bool IsTransitionSkill(Type skillType)
+            => skillType != null && typeof(ITransitionSkill).IsAssignableFrom(skillType);
+
         public bool HasAvailableSkill(float distance)
         {
             foreach (var data in enemy.EnemyData.EnemySkills.Where(data => data != null)
                                               .OrderByDescending(data => GetSkillSetting(data).Range))
             {
-                EnemySkillSetting setting = GetSkillSetting(data);
+                Type skillType = data.SkillType;
+                if (skillType == null || IsTransitionSkill(skillType))
+                    continue;
 
+                EnemySkillSetting setting = GetSkillSetting(data);
                 if (distance > setting.Range)
                     continue;
 
-                Type skillType = data.SkillType;
-                if (skillType == null || !_skillDict.TryGetValue(skillType, out IEnemySkill skill) || skill.IsUsing)
+                if (!_skillDict.TryGetValue(skillType, out IEnemySkill skill) || skill.IsUsing)
                     continue;
 
                 if (_skillCooldowns.TryGetValue(skillType, out float nextAvailableTime) && Time.time < nextAvailableTime)
@@ -134,9 +139,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 
         public bool HasSkillInRange(float distance)
         {
-            return enemy.EnemyData.EnemySkills.Any(data => data != null && data.SkillType != null
-                                                                                            && distance <= GetSkillSetting(data).Range
-                                                                                            && _skillDict.ContainsKey(data.SkillType));
+            return enemy.EnemyData.EnemySkills.Any(data =>
+                data != null
+                && data.SkillType != null
+                && !IsTransitionSkill(data.SkillType)
+                && distance <= GetSkillSetting(data).Range
+                && _skillDict.ContainsKey(data.SkillType));
         }
 
         private EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)

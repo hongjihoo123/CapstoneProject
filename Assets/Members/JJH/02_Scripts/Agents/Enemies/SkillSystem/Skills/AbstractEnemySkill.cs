@@ -132,7 +132,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             CancelSkill();
         }
 
-        protected static IEnumerator Tick(float duration, Action<float> onTick)
+        protected IEnumerator Tick(float duration, Action<float> onTick)
         {
             float elapsed = 0f;
             while (elapsed < duration)
@@ -200,7 +200,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             DrawGizmoCircle(transform.position, SkillSetting.Range);
         }
 
-        protected static void DrawGizmoCircle(Vector3 center, float radius, int segments = 48)
+        protected void DrawGizmoCircle(Vector3 center, float radius, int segments = 48)
         {
             Vector3 prev = center + new Vector3(radius, 0f, 0f);
             for (int i = 1; i <= segments; i++)
@@ -212,7 +212,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             }
         }
 
-        protected static void DrawGizmoCone(Vector3 center, Quaternion rotation, float range, float angle, int segments = 24)
+        protected void DrawGizmoCone(Vector3 center, Quaternion rotation, float range, float angle, int segments = 24)
         {
             float half = angle * 0.5f;
             Vector3 prev = center + rotation * Quaternion.Euler(0f, -half, 0f) * Vector3.forward * range;
@@ -228,7 +228,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             Gizmos.DrawLine(prev, center);
         }
 
-        protected static void DrawGizmoBox(Vector3 center, Quaternion rotation, Vector3 size)
+        protected void DrawGizmoBox(Vector3 center, Quaternion rotation, Vector3 size)
         {
             Matrix4x4 old = Gizmos.matrix;
             Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);

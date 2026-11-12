@@ -50,7 +50,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             {
                 int idx = (_skillIndex + i) % skills.Count;
                 var data = skills[idx];
-
+                Debug.Log(data.name);
                 if (data == null || data.SkillType == null)
                     continue;
                 if (typeof(ITransitionSkill).IsAssignableFrom(data.SkillType))
