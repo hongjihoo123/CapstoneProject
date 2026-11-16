@@ -2,6 +2,7 @@ using Assets.Members.HJH._02.Scripts.Element;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using DG.Tweening;
 using Members.JJH._02_Scripts.ElementsSystem;
+using Members.JJH._02_Scripts.UI;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -37,6 +38,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("Outline ring that expands off the frame when the skill is ready.")]
         private Image readyRing;
         [SerializeField] private Image comboGlow;
+
+        [Header("속성 링 (셰이더 HJH/UI/ElementRing)")]
+        [SerializeField, Tooltip("Empty = created at runtime behind the frame.")]
+        private ElementRingView ring;
+        [SerializeField, Tooltip("Ring quad size as a multiple of the frame size.")]
+        private float ringSize = 1.6f;
+        [SerializeField, Range(0.5f, 1f), Tooltip("How much of the frame the round slot fills (the circle art is 0.84).")]
+        private float circleFraction = 0.84f;
+        [SerializeField, Min(0.1f)] private float emphasisFollow = 18f;
 
         [Header("쿨타임")]
         [SerializeField] private Color cooldownIconTint = new Color(0.42f, 0.42f, 0.46f, 1f);
@@ -84,6 +94,116 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 readyRing.enabled = false;
             if (cooldownEdge != null)
                 cooldownEdge.enabled = false;
+        }
+
+        private float _scaleNow = 1f;
+        private float _scaleTarget = 1f;
+
+        private void Update()
+        {
+            if (Mathf.Approximately(_scaleNow, _scaleTarget))
+                return;
+
+            _scaleNow = Mathf.Lerp(_scaleNow, _scaleTarget, 1f - Mathf.Exp(-emphasisFollow * Time.unscaledDeltaTime));
+            if (Mathf.Abs(_scaleNow - _scaleTarget) < 0.002f)
+                _scaleNow = _scaleTarget;
+            transform.localScale = Vector3.one * _scaleNow;
+        }
+
+        // 콤보로 이어지는 칸을 키우고 링 연출을 세게. 1 = 평소, 2.8 쯤 = "이걸 쓰세요", 0.6 = 눌려 있음
+        public void SetComboEmphasis(float intensity, float scale, bool snap = false)
+        {
+            _scaleTarget = scale;
+            if (snap)
+            {
+                _scaleNow = scale;
+                transform.localScale = Vector3.one * scale;
+            }
+
+            EnsureRing();   // 칸 크기가 레이아웃 뒤에 정해져서 매 프레임 맞춰줌
+            if (ring != null)
+                ring.SetIntensity(intensity, snap);
+        }
+
+        private void EnsureRing()
+        {
+            if (ring == null && frame != null)
+            {
+                var go = new GameObject("ElementRing", typeof(RectTransform), typeof(Image), typeof(ElementRingView));
+                var rect = (RectTransform)go.transform;
+                rect.SetParent(frame.rectTransform, false);
+                rect.anchorMin = rect.anchorMax = rect.pivot = new Vector2(0.5f, 0.5f);
+                rect.anchoredPosition = Vector2.zero;
+                rect.SetAsFirstSibling();
+                ring = go.GetComponent<ElementRingView>();
+            }
+
+            if (ring != null && frame != null)
+            {
+                Rect r = frame.rectTransform.rect;
+                float box = Mathf.Min(r.width, r.height);
+                float side = box * ringSize;
+                ((RectTransform)ring.transform).sizeDelta = new Vector2(side, side);
+                ring.SetRingRadius(circleFraction / ringSize);
+                ApplyCircleStyle(box);
+            }
+        }
+
+        // 네모 슬롯을 동그랗게: 프레임/뒷판을 원형 그림으로, 아이콘·쿨타임은 원 모양으로 자름
+        private bool _circleApplied;
+        private float _circleBox;
+
+        private void ApplyCircleStyle(float box)
+        {
+            if (box <= 1f)
+                return;
+
+            if (!_circleApplied)
+            {
+                var circleFrame = Resources.Load<Sprite>("HJH/UI/slot_circle_frame");
+                var circleBack = Resources.Load<Sprite>("HJH/UI/slot_circle_bg");
+                if (circleFrame == null)
+                    return;     // 에셋을 아직 안 가져옴: 예전 모양 유지
+
+                _circleApplied = true;
+                frame.sprite = circleFrame;
+                frame.type = Image.Type.Simple;
+                frame.preserveAspect = true;
+                foreach (Shadow shadow in GetComponents<Shadow>())   // Outline 포함: 네모 테두리 번짐 끔
+                    shadow.enabled = false;
+
+                Transform back = transform.Find("Backing");
+                if (back != null && back.TryGetComponent(out Image backImage) && circleBack != null)
+                {
+                    backImage.sprite = circleBack;
+                    backImage.color = Color.white;
+                    backImage.preserveAspect = true;
+                    backImage.enabled = true;
+                    ((RectTransform)back).sizeDelta = Vector2.one * box * circleFraction;
+                }
+
+                if (cooldownOverlay != null && circleBack != null)
+                    cooldownOverlay.sprite = circleBack;
+                if (readyFlash != null && circleBack != null)
+                    readyFlash.sprite = circleBack;
+            }
+
+            if (Mathf.Approximately(_circleBox, box))
+                return;
+
+            _circleBox = box;
+            if (TryGetComponent(out SlotIconClipper clipper))
+            {
+                const int steps = 40;
+                float radius = box * circleFraction * 0.5f * 0.94f;
+                var points = new Vector2[steps];
+                for (int i = 0; i < steps; i++)
+                {
+                    float a = i * Mathf.PI * 2f / steps;
+                    points[i] = new Vector2(Mathf.Cos(a), Mathf.Sin(a)) * radius;
+                }
+                clipper.SetPolygon(points);
+            }
         }
 
         public void ComboBurst(Color color)
@@ -226,6 +346,16 @@ namespace Assets.Members.HJH._02.Scripts.UI
                               && data.TryGetElement(out ElementType element) && palette.TryGet(element, out entry);
 
             frame.color = hasElement ? entry.color : palette != null ? palette.NeutralColor : Color.gray;
+
+            ElementType ringElement = default;
+            bool hasType = data != null && data.TryGetElement(out ringElement);
+            EnsureRing();
+            if (ring != null)
+            {
+                ring.gameObject.SetActive(hasType);
+                if (hasType)
+                    ring.Setup(ringElement, (GetInstanceID() & 7) * 1.3f);
+            }
 
             if (elementBadge != null)
             {

@@ -43,6 +43,24 @@ namespace Members.KYR._01.Scripts.Spawner
         private static readonly HashSet<string> LoggedEditorWarnings = new HashSet<string>();
 #endif
 
+        // 이 방에서 나올 적 전체 수 (모든 웨이브의 합). 퀘스트의 "전체 적" 표시용
+        public int TotalEnemyCount
+        {
+            get
+            {
+                int sum = 0;
+                if (waveSet != null && waveSet.Waves != null)
+                {
+                    foreach (EnemyWaveSO wave in waveSet.Waves)
+                    {
+                        if (wave != null)
+                            sum += wave.TotalCount;
+                    }
+                }
+                return sum;
+            }
+        }
+
         public bool IsRunning => _running;
         public bool IsCleared { get; private set; }
 

@@ -158,8 +158,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Hold(Library?.frenzyAura, target.position, Quaternion.identity, 1f, color, new FxParams { Follow = target, Value = stacks });
 
         // move = 실제로 밀리는 거리 배율 (1 = 기존). 찌그러짐(맞은 자세)은 strength 그대로
+        // 맞은 대상이 찌그러지며 밀리는 연출. 보스는 밀리지 않음(move 0, 찌그러짐만) — 어디서 불러도 여기서 막힘
         public static void Punch(Transform target, Vector3 direction, float strength, float move = 1f) =>
-            PunchFx.Play(target, direction, strength, move);
+            PunchFx.Play(target, direction, strength, RobotWeapons.CrowdControl.IsImmovable(target) ? 0f : move);
 
         // 라이브러리에 없는 프리팹 아무거나 (스킬마다 따로 정한 이펙트). 풀링은 똑같이 됨. 색 그대로 쓰려면 Color.white
         public static void Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>

@@ -40,5 +40,18 @@ namespace RobotWeapons
 
             return component.gameObject.AddComponent<CrowdControlReceiver>();
         }
+
+        // 보스처럼 밀리거나 끌려가면 안 되는 대상인지. 밀치기·끌어당기기·밀어내기·타격 밀림이 전부 이걸 보고 건너뜀.
+        // (CrowdControlReceiver 의 tier 는 아무도 안 넣어 줘서 Normal 로 남기 때문에, 보스는 BossEnemy 컴포넌트로도 판단)
+        public static bool IsImmovable(Component target)
+        {
+            if (target == null)
+                return false;
+
+            if (target.TryGetComponent(out CrowdControlReceiver receiver) && receiver.EnemyTier == CrowdControlReceiver.Tier.Boss)
+                return true;
+
+            return target.GetComponentInParent<Members.JJH._02_Scripts.Agents.Enemies.BossEnemy>() != null;
+        }
     }
 }

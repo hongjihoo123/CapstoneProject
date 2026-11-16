@@ -75,7 +75,25 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
                                 && EditorPrefs.GetString(VersionKey) == SetupVersion;   // 설정 바뀌면 버전 올려서 다시 돌게
                 if (!complete)
                     Run();
+                else
+                    AddUpperPassiveShot(existing);
             };
+        }
+
+        // 전체 세팅 다시 안 돌리고, 이미 있는 컨트롤러의 Upper 레이어에 PassiveShot 만 끼워 넣음 (없을 때만)
+        private static void AddUpperPassiveShot(AnimatorController ac)
+        {
+            AnimatorControllerLayer upper = ac.layers.FirstOrDefault(l => l.name == "Upper");
+            if (upper == null || upper.stateMachine.states.Any(s => s.state.name == "PassiveShot"))
+                return;
+            AnimatorState source = ac.layers[0].stateMachine.states.Select(s => s.state).FirstOrDefault(s => s.name == "PassiveShot");
+            if (source == null || source.motion == null)
+                return;
+            AnimatorState state = upper.stateMachine.AddState("PassiveShot");
+            state.motion = source.motion;
+            EditorUtility.SetDirty(ac);
+            AssetDatabase.SaveAssets();
+            Debug.Log("[GunnerV2] Upper 레이어에 PassiveShot 추가");
         }
 
         [MenuItem("HJH/건슬링어 v2/세팅 (모델·애니·컨트롤러·연결)")]
@@ -294,6 +312,7 @@ namespace Assets.Members.HJH._02.Scripts.EditorTools
             // 재생은 안 함. GunHoldIK 가 견착 자세(기준 파지)를 읽으려고 컨트롤러에서 이 클립을 찾으니 넣어 둠 (빠지면 IK 가 통째로 꺼짐)
             Add(up, "AimRef", C("C_AimIdle"));
             Add(up, "Attack", C("C_Attack"), 1f, true);
+            Add(up, "PassiveShot", C("C_PassiveShot"));   // 충격포도 상체에서만 -> 연사 중 전신으로 바뀌며 끊기지 않게
             Add(up, "Hit", C("Hit"), 2f);
             EditorUtility.SetDirty(ac);
             log.Add($"컨트롤러: {ControllerPath} (Base {sm.states.Length}개, Upper {up.states.Length}개)");

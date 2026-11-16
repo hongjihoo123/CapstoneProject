@@ -237,6 +237,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 if (target is not Component component)
                     continue;
 
+                if (CrowdControl.IsImmovable(component))
+                    continue;   // 보스는 안 밀림
+
                 Transform root = component.transform;
                 Vector3 offset = root.position - center;
                 offset.y = 0f;
@@ -260,6 +263,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 if (target is not Component component)
                     continue;
 
+                if (CrowdControl.IsImmovable(component))
+                    continue;   // 보스는 안 끌려옴
+
                 Transform root = component.transform;
                 Vector3 offset = center - root.position;
                 offset.y = 0f;
@@ -276,6 +282,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             if (target is not Component component || distance <= 0f)
                 return;
+
+            if (CrowdControl.IsImmovable(component))
+                return;   // 보스는 안 밀림
 
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f)
@@ -296,6 +305,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private static void MoveTarget(Transform root, Vector3 delta)
         {
+            // 마지막 방어선: 어느 스킬이 불러도 보스는 안 움직임 (밀치기·밀어내기·끌어당기기 전부 여기를 지남)
+            if (CrowdControl.IsImmovable(root))
+                return;
+
             if (root.TryGetComponent(out NavMeshAgent agent) && agent.enabled && agent.isOnNavMesh)
                 agent.Move(delta);
             else if (root.TryGetComponent(out CharacterController controller) && controller.enabled)

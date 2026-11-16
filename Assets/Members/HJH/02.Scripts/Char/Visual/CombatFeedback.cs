@@ -20,6 +20,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         // SoD 기준 (StudyNotes/SoD_타격감_분석.md): 일반 = 작은 주황, 크리(큰 타격·약점·처치) = 큰 빨강 + 흰 외곽선
         [Header("Damage numbers")]
         [SerializeField] private float bigHitThreshold = 30f;
+        [Header("데미지 숫자 종류 (SoD 영상 기준)")]
+        [SerializeField, Tooltip("이 값 미만이면 흰색 '약한 피해' 숫자")] private float weakNumberThreshold = 40f;
+        [SerializeField, Tooltip("이 값 이상이면 크고 붉은 '크리' 숫자. 약점/처치도 크리 숫자")] private float critNumberThreshold = 120f;
         [SerializeField] private Color normalNumberColor = new(1f, 0.62f, 0.22f);
         [SerializeField] private Color critNumberColor = new(1f, 0.22f, 0.16f);
         [SerializeField, Tooltip("맞은 번쩍임 다음 프레임에 숫자가 뜨게 (SoD: 번쩍 → 숫자 순서)")]
@@ -155,8 +158,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 : skillHit ? Color.Lerp(normalNumberColor, elementColor, 0.35f) : normalNumberColor;
             Vector3 numberAt = body + Vector3.up * 0.7f;
             float amount = info.Amount;
-            DamageNumberStyle style = crit ? DamageNumberStyle.Crit : DamageNumberStyle.Normal;
-            float numberScale = crit ? 1.3f : 0.9f;
+            // 크리 > 약한 피해(흰색) > 원소 스킬 = 마법(파랑) > 그 외 = 물리(주황)
+            // (위의 crit 는 연출용이라 기준이 낮음(30). 숫자 모양은 따로: 약점/처치/아주 큰 한 방만 크리 숫자)
+            bool numberCrit = info.IsWeakpoint || info.Killed || info.Amount >= critNumberThreshold;
+            bool weakHit = !numberCrit && info.Amount < weakNumberThreshold;
+            DamageNumberStyle style = numberCrit ? DamageNumberStyle.Crit
+                : weakHit ? DamageNumberStyle.Weak
+                : skillHit ? DamageNumberStyle.Magic
+                : DamageNumberStyle.Normal;
+            float numberScale = numberCrit ? 1.3f : weakHit ? 0.8f : 0.9f;
             if (numberDelay > 0f)
                 Fx.After(numberDelay, () => Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style));
             else
@@ -167,7 +177,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_hitParticles && !skillHit)
                 Fx.Hit(impact, direction, sparkColor, big);
             // 움찔(찌그러짐)은 그대로, 실제로 밀리는 거리만 줄임
-            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);
+            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);   // 보스 보호는 Fx.Punch 안에서
 
             // 맞은 지점 섬광 (빛줄기 + 플레어). 큰 타격·원소 스킬일 때만 → 연사 무기로 도배되지 않게
             if (big || skillHit || info.Killed)

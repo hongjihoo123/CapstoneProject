@@ -27,6 +27,7 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
         private readonly List<Collider> _bodyColliders = new();
         private float _bodyRadius = 0.5f;
         private bool _bodyOff;
+        private bool _immovable;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void Hook()
@@ -47,6 +48,7 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
         {
             _enemy = GetComponent<AbstractEnemy>();
             _agent = GetComponent<NavMeshAgent>();
+            _immovable = CrowdControl.IsImmovable(this);
             foreach (Collider c in GetComponents<Collider>())
             {
                 if (c.isTrigger)
@@ -126,6 +128,16 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
                 return;
 
             Vector3 away = distance > 0.0001f ? offset / distance : -transform.forward;
+
+            // 보스는 밀리면 안 되니까 보스를 옮기지 않고, 대신 플레이어를 몸 밖으로 내보냄 (플레이어가 부딪혀서 막히는 느낌)
+            if (_immovable)
+            {
+                if (_playerBody.enabled)
+                    _playerBody.Move(-away * (minDistance - distance));
+                _agent.velocity = Vector3.zero;
+                return;
+            }
+
             _agent.Move(away * (minDistance - distance));   // 적을 밖으로 (내비메시 밖으로는 안 나감)
             // 플레이어 쪽으로 가던 속도는 버림 → 다음 프레임에 다시 파고들지 않게
             Vector3 v = _agent.velocity;
