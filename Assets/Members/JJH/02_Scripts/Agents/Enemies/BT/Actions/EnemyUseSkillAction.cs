@@ -14,12 +14,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
 
-        [Tooltip("»ç¿ëÇÏ°í ½ÍÀº ½ºÅ³ÀÌ ÀÖ´Ù¸é ³Ö±â(¾ø´Ù¸é ½ºÅ³ ¸®½ºÆ®¿¡ µé¾î°£ ¼ø¼­´ë·Î ½ÇÇà")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½Ï°ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å³ï¿½ï¿½ ï¿½Ö´Ù¸ï¿½ ï¿½Ö±ï¿½(ï¿½ï¿½ï¿½Ù¸ï¿½ ï¿½ï¿½Å³ ï¿½ï¿½ï¿½ï¿½Æ®ï¿½ï¿½ ï¿½ï¿½î°£ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½")]
         [SerializeReference] public BlackboardVariable<EnemySkillSO> EnemySkill;
-        [Tooltip("½ÇÇàÇÒ ½ºÅ³ÀÇ AnimParamSO")]
+        [Tooltip("ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å³ï¿½ï¿½ AnimParamSO")]
         [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
-        private IEnemySkillModule _enemySkillModule;
+        private IEnemySkillModule _skillModule;
 
         private int skillIndex = 0;
 
@@ -29,7 +29,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 return Status.Failure;
 
 
-            _enemySkillModule = Enemy.Value.SkillModule;
+            _skillModule = Enemy.Value.SkillModule;
             if (EnemySkill == null || EnemySkill.Value == null)
             {
                 if (Enemy.Value.EnemyData.EnemySkills == null || Enemy.Value.EnemyData.EnemySkills.Count == 0)
@@ -37,15 +37,16 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                 skillIndex %= Enemy.Value.EnemyData.EnemySkills.Count;
 
-                _enemySkillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
-                AnimParam.Value = Enemy.Value.EnemyData.EnemySkills[skillIndex].AnimParam;
+                _skillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
+                AnimParam.Value = _skillModule.GetSkillSetting(Enemy.Value.EnemyData.EnemySkills[skillIndex])
+                                                                    .AnimParam;
 
                 skillIndex++;
             }
             else
             {
-                _enemySkillModule.UseSkill(EnemySkill.Value.SkillType);
-                AnimParam.Value = EnemySkill.Value.AnimParam;
+                _skillModule.UseSkill(EnemySkill.Value.SkillType);
+                AnimParam.Value = _skillModule.GetSkillSetting(EnemySkill.Value).AnimParam;
             }
 
             return Status.Running;
@@ -53,7 +54,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         protected override Status OnUpdate()
         {
-            return _enemySkillModule.IsSkillUsing()
+            return _skillModule.IsSkillUsing()
                             ? Status.Running : Status.Success;
         }
     }

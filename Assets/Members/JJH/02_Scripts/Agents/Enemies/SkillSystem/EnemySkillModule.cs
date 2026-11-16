@@ -147,7 +147,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
                 && _skillDict.ContainsKey(data.SkillType));
         }
 
-        private EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)
+        public EnemySkillSetting GetSkillSetting(EnemySkillSO skillData)
         {
             if (skillData is NormalEnemySkillSO normal)
                 return normal.SkillSetting;
@@ -155,6 +155,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
             if (skillData is BossEnemySkillSO boss && enemy is BossEnemy bossEnemy)
                 return bossEnemy.Phase == BossPhase.Phase2 ? boss.Phase2SkillSetting : boss.Phase1SkillSetting;
 
+            Debug.LogError($"{gameObject.name}: 지원하지 않는 스킬 SO입니다. ({(skillData != null ? skillData.name : "null")})");
             return default;
         }
     }

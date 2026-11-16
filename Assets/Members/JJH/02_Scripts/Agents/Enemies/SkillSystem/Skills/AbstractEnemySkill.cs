@@ -110,10 +110,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected void PlaySkillVfx()
         {
-            if (SkillSO == null || SkillSO.VFXParam == null)
+            if (SkillSO == null || _skillModule.GetSkillSetting(SkillSO).VFXParam == null)
                 return;
 
-            _playingVfxHash = SkillSO.VFXParam.HashValue;
+            _playingVfxHash = _skillModule.GetSkillSetting(SkillSO).VFXParam.HashValue;
             _hasPlayingVfx = true;
             _enemy.VFXModule.PlayVfx(_playingVfxHash);
         }

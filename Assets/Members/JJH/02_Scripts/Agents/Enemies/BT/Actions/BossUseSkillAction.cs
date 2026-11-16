@@ -15,7 +15,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     public partial class BossUseSkillAction : Action
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Boss;
-        [Tooltip("실행할 스킬의 AnimParamSO")]
+
         [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
         private BossEnemy _boss;
@@ -37,7 +37,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 if (_currentSkill == null || _currentSkill.IsUsing)
                     return Status.Failure;
 
-                AnimParam.Value = _currentSkill.SkillSO.AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(_currentSkill.SkillSO).AnimParam;
                 _currentSkill.UseSkill();
                 return Status.Running;
             }
@@ -58,7 +58,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 if (!_skillModule.UseSkill(data.SkillType))
                     continue;
 
-                AnimParam.Value = data.AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(data).AnimParam;
                 _skillIndex = idx + 1;
                 _currentSkill = null;
                 return Status.Running;
