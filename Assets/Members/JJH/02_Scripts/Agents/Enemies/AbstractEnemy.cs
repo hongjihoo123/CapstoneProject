@@ -50,8 +50,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             SetBTVariable(BTVars.Enemy, this);
 
             Health.InitHealth(EnemyData.Health);
-            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed,
-                                                                 EnemyData.Acceleration);
+            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.Acceleration);
         }
 
         public void HandleOnDead()
@@ -61,9 +60,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             _stateChannel.Value.SendEventMessage(EnemyState.DEAD);
         }
 
+        // 어떤 적이든 죽는 순간(Dead) 알림. 퀘스트·방 클리어 같은 곳이 이것만 구독하면 됨
+        public static event System.Action<AbstractEnemy> AnyDied;
+
         public override void Dead()
         {
             moneyChannel.RaiseEvent(MoneyEvents.EnemyKilledEvent.Init(EnemyData.Gold));
+            AnyDied?.Invoke(this);
             base.Dead();
         }
 

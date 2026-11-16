@@ -47,6 +47,17 @@ namespace Assets.Members.JJH._02_Scripts.Test
             }
         }
 
+        // 이 스포너가 만들 적의 수 (플레이어가 가까이 가기 전에도 알 수 있음). 퀘스트의 "전체 적의 수" 계산용
+        public int PlannedCount
+        {
+            get
+            {
+                if (enemyPrefabs == null || enemyPrefabs.Length == 0 || spawnPoints == null)
+                    return 0;
+                return Mathf.Min(spawnCount, spawnPoints.Length);
+            }
+        }
+
         public void SpawnEnemies()
         {
             if (enemyPrefabs == null || enemyPrefabs.Length == 0)
@@ -84,7 +95,10 @@ namespace Assets.Members.JJH._02_Scripts.Test
                 if (particleLeadTime > 0f)
                     yield return new WaitForSeconds(particleLeadTime);
 
-                Instantiate(prefab, point.position, point.rotation);
+                GameObject spawned = Instantiate(prefab, point.position, point.rotation);
+                // 스포너가 만든 적 표시: 퀘스트가 "이 적은 이미 전체 수에 들어 있다"고 알 수 있게
+                if (spawned != null)
+                    spawned.AddComponent<global::Members.KYR._01.Scripts.Spawner.SpawnedEnemyTracker>();
 
                 if (i < count - 1)
                 {

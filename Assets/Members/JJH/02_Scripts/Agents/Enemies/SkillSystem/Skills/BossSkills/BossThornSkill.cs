@@ -15,12 +15,14 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [Header("Phase 1")]
         [SerializeField] private int phase1ThornCount = 3;
         [SerializeField] private float phase1ThornInterval = 0.5f;
+        [SerializeField] private float phase1ThornStopTime = 0.3f;
         [SerializeField] private float phase1WarningRadius = 1.5f;
         [SerializeField] private float phase1DamageRadius = 1.5f;
 
         [Header("Phase 2")]
         [SerializeField] private int phase2ThornCount = 3;
         [SerializeField] private float phase2ThornInterval = 0.5f;
+        [SerializeField] private float phase2ThornStopTime = 0.3f;
         [SerializeField] private float phase2WarningRadius = 1.5f;
         [SerializeField] private float phase2DamageRadius = 1.5f;
         [SerializeField] private int shardCount = 8;
@@ -34,20 +36,61 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
             int thornCount = IsPhase2 ? phase2ThornCount : phase1ThornCount;
             float thornInterval = IsPhase2 ? phase2ThornInterval : phase1ThornInterval;
+            float thornStopTime = IsPhase2 ? phase2ThornStopTime : phase1ThornStopTime;
             float warningRadius = IsPhase2 ? phase2WarningRadius : phase1WarningRadius;
             float damageRadius = IsPhase2 ? phase2DamageRadius : phase1DamageRadius;
 
+            float expandTime = 0.3f;
+
             for (int i = 0; i < thornCount; i++)
             {
-                if (!TryGetTargetPosition(out Vector3 targetPosition))
+                float elapsed = 0f;
+                Vector3 groundPosition = Vector3.zero;
+
+                _skillModule.AreaVisualizer.HideEnemyWarning();
+
+                while (elapsed < expandTime)
+                {
+                    if (!TryGetTargetPosition(out Vector3 targetPosition))
+                    {
+                        _skillModule.AreaVisualizer.HideEnemyWarning();
+                        yield break;
+                    }
+
+                    groundPosition = GetGroundPosition(targetPosition);
+
+                    float t = Mathf.Clamp01(elapsed / expandTime);
+                    float currentRadius = Mathf.Lerp(0.1f, warningRadius, t);
+
+                    _skillModule.AreaVisualizer.HideEnemyWarning();
+                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(
+                        AttackAreaKind.EnemyWarning, groundPosition, warningRadius, 0.1f));
+
+                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(
+                        AttackAreaKind.Skill, groundPosition, currentRadius, 0.1f));
+
+                    elapsed += Time.deltaTime;
+                    yield return null;
+                }
+
+                if (!TryGetTargetPosition(out Vector3 finalTargetPosition))
+                {
+                    _skillModule.AreaVisualizer.HideEnemyWarning();
                     yield break;
+                }
 
-                Vector3 groundPosition = GetGroundPosition(targetPosition);
+                groundPosition = GetGroundPosition(finalTargetPosition);
 
-                _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                    groundPosition, warningRadius, SkillSetting.PrepareTime));
+                _skillModule.AreaVisualizer.HideEnemyWarning();
+                _skillModule.AreaVisualizer.Hide(AttackAreaKind.Skill);
 
-                yield return new WaitForSeconds(SkillSetting.PrepareTime);
+                _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, groundPosition,
+                                                                                                                warningRadius, thornStopTime));
+
+                yield return new WaitForSeconds(thornStopTime);
+
+                _skillModule.AreaVisualizer.HideEnemyWarning();
+                _skillModule.AreaVisualizer.Hide(AttackAreaKind.Skill);
 
                 if (thornPrefab != null)
                 {

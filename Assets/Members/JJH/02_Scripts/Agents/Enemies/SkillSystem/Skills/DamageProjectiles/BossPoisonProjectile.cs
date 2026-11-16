@@ -36,9 +36,9 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
             _rigidbody = GetComponent<Rigidbody>();
         }
 
-        public void InitializeArc(Vector3 target, float speed, float arcHeight, GameObject owner,
-            BossPoisonArea areaPrefab, float damage, float areaRadius, float areaDuration,
-            float damageInterval, int splashCount, float splashSpeed)
+        public void InitializeArc(Vector3 target, float flightTime, float arcHeight, GameObject owner,
+                                                BossPoisonArea areaPrefab, float damage, float areaRadius, float areaDuration,
+                                                float damageInterval, int splashCount, float splashSpeed)
         {
             SetCommon(owner, areaPrefab, damage, areaRadius, areaDuration,
                 damageInterval, splashCount, splashSpeed);
@@ -48,15 +48,14 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
             _arcTarget = target;
             _arcHeight = arcHeight;
 
-            float distance = Vector3.Distance(_arcStart, _arcTarget);
-            _arcDuration = Mathf.Max(0.1f, distance / Mathf.Max(0.01f, speed));
+            _arcDuration = Mathf.Max(0.01f, flightTime);
             _arcElapsed = 0f;
 
             _rigidbody.isKinematic = true;
             _rigidbody.linearVelocity = Vector3.zero;
         }
 
-        // 스플래시 파편용 직선 발사 (기존 방식)
+
         public void Initialize(Vector3 direction, float speed, GameObject owner, BossPoisonArea areaPrefab,
             float damage, float areaRadius, float areaDuration, float damageInterval, int splashCount, float splashSpeed)
         {
@@ -109,15 +108,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
                 return;
 
             Hit(other.ClosestPoint(transform.position));
-        }
-
-        private void OnCollisionEnter(Collision collision)
-        {
-            if (_isArc || !_initialized || _hasHit ||
-                collision.transform.IsChildOf(_owner.transform))
-                return;
-
-            Hit(collision.GetContact(0).point);
         }
 
         private void Hit(Vector3 position)

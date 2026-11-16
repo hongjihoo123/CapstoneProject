@@ -185,7 +185,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _hitRequested = false;
 
             // 상체 레이어 있으면 평타·맞는 모션은 상체에서만 -> 하체는 계속 Idle/Run
-            bool upperAttack = (action == Attack || action == Hit) && _upper.Layer >= 0 && animator.HasState(_upper.Layer, action);
+            // 충격포(PassiveShot)도 상체 레이어에 있으면 평타처럼 상체에서만 -> 연사 중에 전신 동작으로 바뀌었다 돌아오며 끊기지 않음
+            bool upperAttack = (action == Attack || action == PassiveShot || action == Hit) && _upper.Layer >= 0 && animator.HasState(_upper.Layer, action);
+            // (상체에 PassiveShot 없는 컨트롤러) 전신 충격포 클립 끝날 때까지 상체가 꺼져서 그 뒤 평타가 모션 없이 늦게 나갔음
+            // -> 평타가 들어오면(= 충격포는 이미 나감) 꼬리 끊고 바로 평타로
+            if (upperAttack && action == Attack && _base.OneShot && _base.Playing == PassiveShot)
+                _base.OneShot = false;
             int body = action != 0 && !upperAttack ? action : locomotion;
             Drive(animator, _base, body, body != locomotion);
 

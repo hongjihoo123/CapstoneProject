@@ -1,66 +1,63 @@
-﻿using RobotWeapons;
-using System.Collections.Generic;
+﻿
+using RobotWeapons;
 using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjectiles
 {
-    [RequireComponent(typeof(SphereCollider))]
     public class BossPoisonArea : MonoBehaviour
     {
+        [Header("Poison Settings")]
+        [SerializeField] private Vector3 boxSize = new Vector3(4f, 1f, 4f);
         [SerializeField] private float damageInterval = 0.5f;
-
-        private SphereCollider _collider;
-        private readonly Dictionary<IDamageable, float> _nextDamageTimes = new();
+        [SerializeField] private LayerMask targetLayer;
 
         private GameObject _owner;
         private float _damage;
-        private float _duration;
-
-        private void Awake()
-        {
-            _collider = GetComponent<SphereCollider>();
-            _collider.isTrigger = true;
-        }
+        private float _nextDamageTime;
 
         public void Initialize(GameObject owner, float radius, float damage,
-                                            float duration, float interval)
+                               float duration, float interval)
         {
             _owner = owner;
             _damage = damage;
-            _duration = duration;
             damageInterval = interval;
 
-            _collider.radius = radius;
+            _nextDamageTime = Time.time;
 
-            Destroy(gameObject, _duration);
+            Destroy(gameObject, duration);
         }
 
-        private void OnTriggerStay(Collider other)
+        private void Update()
         {
-            if (other.transform.IsChildOf(_owner.transform))
+            if (Time.time < _nextDamageTime)
                 return;
 
-            if (!other.TryGetComponent<IDamageable>(out var damageable))
-                damageable = other.GetComponentInParent<IDamageable>();
+            Collider[] colliders = Physics.OverlapBox(transform.position, boxSize / 2,
+                transform.rotation, targetLayer, QueryTriggerInteraction.Collide);
 
-            if (damageable == null || !damageable.IsAlive)
-                return;
+            foreach (Collider other in colliders)
+            {
+                if (other.transform.IsChildOf(_owner.transform))
+                    continue;
 
-            if (_nextDamageTimes.TryGetValue(damageable, out float nextTime)
-                && Time.time < nextTime)
-                return;
+                if (!other.TryGetComponent<IDamageable>(out var damageable))
+                    damageable = other.GetComponentInParent<IDamageable>();
 
-            damageable.TakeDamage(_damage, _owner);
-            _nextDamageTimes[damageable] = Time.time + damageInterval;
+                if (damageable == null || !damageable.IsAlive)
+                    continue;
+
+                damageable.TakeDamage(_damage, _owner);
+                _nextDamageTime = Time.time + damageInterval;
+                break;
+            }
         }
 
-        private void OnTriggerExit(Collider other)
+        private void OnDrawGizmosSelected()
         {
-            if (!other.TryGetComponent<IDamageable>(out var damageable))
-                damageable = other.GetComponentInParent<IDamageable>();
+            Gizmos.color = Color.green;
+            Gizmos.matrix = Matrix4x4.TRS(transform.position, transform.rotation, Vector3.one);
 
-            if (damageable != null)
-                _nextDamageTimes.Remove(damageable);
+            Gizmos.DrawWireCube(Vector3.zero, boxSize);
         }
     }
 }

@@ -17,6 +17,18 @@ namespace RobotWeapons
         [Tooltip("Solid geometry that stops the shot (rocks, walls, props). Added on top of Hit Mask so a mask that lists only enemies still can't shoot through scenery.")]
         public LayerMask environmentMask = 1;   // Default layer
 
+        [Header("Ammo")]
+        [Tooltip("Off (design default): no magazine, no reload — holding fire never stops. On: resourceMax shots, then auto reload.")]
+        public bool useAmmo = false;
+
+        [Header("Aim Assist (basic shots only)")]
+        [Tooltip("Basic shots aim at the body collider center of the nearest enemy in front. Passive shots stay flat and straight.")]
+        public bool heightAssist = true;
+        [Tooltip("Max height difference (m) between the muzzle and the enemy's body center that still gets assisted. Bigger gaps keep the flat shot.")]
+        public float heightAssistMaxDelta = 1.5f;
+        [Tooltip("Only enemies within this many degrees (horizontal) of the aim direction count.")]
+        public float heightAssistAngle = 12f;
+
         [Header("Muzzles")]
         [Tooltip("One entry per hand/barrel, fired in turn. Shots start at the MuzzleSocket with this id under the player.")]
         public string[] muzzleIds = { "Pistol_L", "Pistol_R" };

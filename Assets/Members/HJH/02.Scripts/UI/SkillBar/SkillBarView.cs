@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Element;
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
@@ -27,6 +28,18 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private ElementPalette palette;
         [SerializeField] private SlotBinding[] slots;
         [SerializeField] private Image passiveIcon;
+
+        [Header("콤보 연계 강조 (속성 링 세기 / 칸 크기)")]
+        [SerializeField] private float idleIntensity = 1f;
+        [SerializeField, Tooltip("Combo chain is running: slots that are not the next step calm down.")]
+        private float chainOtherIntensity = 0.6f;
+        [SerializeField, Tooltip("The skill that was just used.")]
+        private float lastUsedIntensity = 1.5f;
+        [SerializeField, Tooltip("The skill that continues the combo: use this one now.")]
+        private float nextIntensity = 2.8f;
+        [SerializeField] private float nextScale = 1.18f;
+        [SerializeField, Tooltip("Emphasis shrinks back during the last seconds of the combo window.")]
+        private float emphasisFadeTime = 0.8f;
 
         public bool TryGetView(SkillSlotId slot, out SkillSlotView view)
         {
@@ -59,6 +72,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 _subscribed.SkillReady += HandleSkillReady;
             }
 
+            _hud = PlayerHudSource.Instance;
+            if (_hud != null)
+                _hud.ComboBroken += HandleComboBroken;
+
             foreach (SlotBinding binding in slots)
             {
                 if (binding.view != null)
@@ -78,7 +95,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 _subscribed.SkillDenied -= HandleSkillDenied;
                 _subscribed.SkillReady -= HandleSkillReady;
             }
+
+            if (_hud != null)
+                _hud.ComboBroken -= HandleComboBroken;
         }
+
+        private PlayerHudSource _hud;
 
         private void HandleSkillDenied(SkillSlotId slot)
         {
@@ -115,6 +137,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     binding.view.SetCooldown(remaining, skills.GetCooldownDuration(binding.slot), charges, skills.GetMaxCharges(binding.slot));
             }
 
+            UpdateComboEmphasis(skills);
+
             if (passiveIcon != null)
             {
                 Sprite sprite = skills.Passive != null ? skills.Passive.Icon : null;
@@ -123,6 +147,70 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 DrawPassiveGauge(sprite);
             }
         }
+
+        // 콤보 진행 상황을 읽어서 슬롯마다 링 세기/크기를 정함
+        //  평소: 모두 기본 / 콤보 중: 방금 쓴 스킬은 번쩍, 이어지는(NEXT) 속성의 스킬은 크고 세게, 나머지는 잠잠
+        private void UpdateComboEmphasis(SkillStateModule skills)
+        {
+            PlayerHudSource hud = PlayerHudSource.Instance;
+            bool chain = false;
+            bool hasLast = false;
+            SkillSlotId lastSlot = default;
+            bool hasNext = false;
+            ElementType next = default;
+
+            // 콤보 시간이 끝나 가면 강조도 같이 줄어서, 시간이 다 되는 순간 평소로 돌아와 있게 함
+            float fade = 1f;
+            if (hud != null)
+            {
+                IReadOnlyList<ElementComboChain.ComboInput> inputs = hud.ComboInputs;
+                chain = inputs.Count > 0;
+                fade = Mathf.Clamp01(hud.ComboTimeLeft / Mathf.Max(0.05f, emphasisFadeTime));
+                if (chain)
+                {
+                    lastSlot = inputs[inputs.Count - 1].Slot;
+                    hasLast = true;
+                }
+
+                hasNext = hud.TryGetNextCombo(out next, out _, out _);
+            }
+
+            foreach (SlotBinding binding in slots)
+            {
+                if (binding.view == null)
+                    continue;
+
+                float intensity = idleIntensity;
+                float scale = 1f;
+                if (chain)
+                {
+                    intensity = chainOtherIntensity;
+                    if (hasLast && binding.slot == lastSlot)
+                        intensity = lastUsedIntensity;
+
+                    SkillData skill = skills.GetSkill(binding.slot);
+                    if (hasNext && skill != null && skill.TryGetElement(out ElementType element) && element == next)
+                    {
+                        intensity = nextIntensity;
+                        scale = nextScale;
+                    }
+                }
+
+                if (chain)
+                {
+                    intensity = Mathf.Lerp(idleIntensity, intensity, fade);
+                    scale = Mathf.Lerp(1f, scale, fade);
+                }
+
+                // 콤보가 끊긴 프레임에는 서서히가 아니라 바로 평소 상태로
+                binding.view.SetComboEmphasis(intensity, scale, snap: _snapIdle && !chain);
+            }
+
+            _snapIdle = false;
+        }
+
+        private bool _snapIdle;
+        private void HandleComboBroken() => _snapIdle = true;
 
         // 게이지 있는 패시브(건슬링어 충전 충격포 등)면 패시브 칸이 아래서부터 차오름.
         // 뒤에 흐린 아이콘 하나 깔고, 앞 아이콘을 게이지만큼만 보여주는 방식. 꽉 차면 금색으로 깜빡임

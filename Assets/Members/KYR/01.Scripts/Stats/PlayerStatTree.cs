@@ -13,8 +13,9 @@ namespace Members.KYR._01.Scripts.Stats
         {
             Root = new StatNode(PlayerStatId.None, 0f);
 
-            //----------°ø°Ý----------
+            //----------ï¿½ï¿½ï¿½ï¿½----------
             Add(PlayerStatId.Damage, bases.Damage, Root);
+            Add(PlayerStatId.MagicDamage, bases.MagicDamage, Root);
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, Root);
             Add(PlayerStatId.ArmorPenetration, bases.ArmorPenetration, Root);
             Add(PlayerStatId.MagicPenetration, bases.MagicPenetration, Root);
@@ -26,7 +27,7 @@ namespace Members.KYR._01.Scripts.Stats
             Add(PlayerStatId.ElectricPenetration, bases.ElectricPenetration, Root);
             Add(PlayerStatId.EarthPenetration, bases.EarthPenetration, Root);
 
-            //----------¹æ¾î----------
+            //----------ï¿½ï¿½ï¿½----------
             Add(PlayerStatId.MaxHp, bases.MaxHp, Root);
             Add(PlayerStatId.DamageReduction, bases.DamageReduction, Root);
             Add(PlayerStatId.IncomingDamageTaken, bases.IncomingDamageTaken, Root);
@@ -35,7 +36,7 @@ namespace Members.KYR._01.Scripts.Stats
             Add(PlayerStatId.ArmorDefense, bases.ArmorDefense, Root);
             Add(PlayerStatId.MagicDefense, bases.MagicDefense, Root);
 
-            //----------ÀÌµ¿----------
+            //----------ï¿½Ìµï¿½----------
             Add(PlayerStatId.MoveSpeed, bases.MoveSpeed, Root);
             Add(PlayerStatId.DashSpeed, bases.DashSpeed, Root);
             Add(PlayerStatId.DashDuration, bases.DashDuration, Root);

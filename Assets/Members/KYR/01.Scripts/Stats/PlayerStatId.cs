@@ -1,37 +1,38 @@
 namespace Members.KYR._01.Scripts.Stats
 {
     public enum PlayerStatId
-    {
-        None = 0,                   // ¾øÀ½ (·çÆ® ³ëµå)
+{
+    None = 0,                   // ì—†ìŒ (ë£¨íŠ¸ ë…¸ë“œ)
 
-        //----------°ø°İ----------
-        Damage,                     // °ø°İ·Â
-        AttackSpeed,                // °ø°İ ¼Óµµ
-        ArmorPenetration,           // ¹°¸® °üÅë·Â
-        MagicPenetration,           // ¸¶¹ı °üÅë·Â (¸ğµç ¼Ó¼º °øÅë)
-        Omnivamp,                   // ÇÇÇØ ÈíÇ÷
-        SkillCooldownReduction,     // ½ºÅ³ ÄğÅ¸ÀÓ °¨¼Ò
+    //---------- ê³µê²© ----------
+    Damage,                     // ê³µê²©ë ¥
+    MagicDamage,                // ë§ˆë²• ê³µê²©ë ¥
+    AttackSpeed,                // ê³µê²© ì†ë„
+    ArmorPenetration,           // ë¬¼ë¦¬ ê´€í†µë ¥
+    MagicPenetration,           // ë§ˆë²• ê´€í†µë ¥
+    Omnivamp,                   // í”¼í•´ í¡í˜ˆ
+    SkillCooldownReduction,     // ìŠ¤í‚¬ ì¿¨íƒ€ì„ ê°ì†Œ
 
-        FirePenetration,            // È­¿° °üÅë·Â
-        WaterPenetration,           // ¹° °üÅë·Â
-        WindPenetration,            // ¹Ù¶÷ °üÅë·Â
-        ElectricPenetration,        // Àü±â °üÅë·Â
-        EarthPenetration,           // ´ëÁö °üÅë·Â
+    FirePenetration,            // í™”ì—¼ ê´€í†µë ¥
+    WaterPenetration,           // ë¬¼ ê´€í†µë ¥
+    WindPenetration,            // ë°”ëŒ ê´€í†µë ¥
+    ElectricPenetration,        // ì „ê¸° ê´€í†µë ¥
+    EarthPenetration,           // ëŒ€ì§€ ê´€í†µë ¥
 
-        //----------¹æ¾î----------
-        MaxHp,                      // ÃÖ´ë Ã¼·Â
+    //---------- ë°©ì–´ ----------
+    MaxHp,                      // ìµœëŒ€ ì²´ë ¥
 
-        DamageReduction,            // ÇÇÇØ °¨¼Ò
-        IncomingDamageTaken,        // ¹Ş´Â ÇÇÇØ ¹èÀ²
-        HealReceived,               // ¹Ş´Â È¸º¹ ¹èÀ²
-        Tenacity,                   // °­ÀÎÇÔ
+    DamageReduction,            // í”¼í•´ ê°ì†Œ
+    IncomingDamageTaken,        // ë°›ëŠ” í”¼í•´ ë°°ìœ¨
+    HealReceived,               // ë°›ëŠ” íšŒë³µ ë°°ìœ¨
+    Tenacity,                   // ê°•ì¸í•¨
 
-        ArmorDefense,               // ¹°¸® ¹æ¾î·Â
-        MagicDefense,               // ¸¶¹ı ¹æ¾î·Â
+    ArmorDefense,               // ë¬¼ë¦¬ ë°©ì–´ë ¥
+    MagicDefense,               // ë§ˆë²• ë°©ì–´ë ¥
 
-        //----------ÀÌµ¿----------
-        MoveSpeed,                  // ÀÌµ¿ ¼Óµµ
-        DashSpeed,                  // ´ë½Ã ¼Óµµ
-        DashDuration,               // ´ë½Ã Áö¼Ó½Ã°£
-    }
+    //---------- ì´ë™ ----------
+    MoveSpeed,                  // ì´ë™ ì†ë„
+    DashSpeed,                  // ëŒ€ì‹œ ì†ë„
+    DashDuration,               // ëŒ€ì‹œ ì§€ì†ì‹œê°„
+}
 }

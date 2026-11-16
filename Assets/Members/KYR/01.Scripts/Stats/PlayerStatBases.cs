@@ -1,32 +1,36 @@
 namespace Members.KYR._01.Scripts.Stats
 {
     public struct PlayerStatBases
-    {
-        //----------°ø°İ----------
-        public float Damage;                    // °ø°İ·Â
-        public float AttackSpeed;               // °ø°İ ¼Óµµ
-        public float ArmorPenetration;          // ¹°¸® °üÅë·Â
-        public float MagicPenetration;          // ¸¶¹ı °üÅë·Â
-        public float Omnivamp;                  // ÇÇÇØ ÈíÇ÷
-        public float SkillCooldownReduction;    // ½ºÅ³ ÄğÅ¸ÀÓ °¨¼Ò
-        public float FirePenetration;           // È­¿° °üÅë·Â
-        public float WaterPenetration;          // ¹° °üÅë·Â
-        public float WindPenetration;           // ¹Ù¶÷ °üÅë·Â
-        public float ElectricPenetration;       // Àü±â °üÅë·Â
-        public float EarthPenetration;          // ´ëÁö °üÅë·Â
+{
+    //----------ê³µê²©----------
+    public float Damage;                    // ê³µê²©ë ¥
+    public float MagicDamage;               // ë§ˆë²• ê³µê²©ë ¥
+    public float AttackSpeed;               // ê³µê²© ì†ë„
+    public float ArmorPenetration;           // ë¬¼ë¦¬ ê´€í†µë ¥
+    public float MagicPenetration;           // ë§ˆë²• ê´€í†µë ¥
+    public float Omnivamp;                   // í”¼í•´ í¡í˜ˆ
+    public float SkillCooldownReduction;     // ìŠ¤í‚¬ ì¿¨íƒ€ì„ ê°ì†Œ
 
-        //----------¹æ¾î----------
-        public float MaxHp;                     // ÃÖ´ë Ã¼·Â
-        public float DamageReduction;           // ÇÇÇØ °¨¼Ò
-        public float IncomingDamageTaken;       // ¹Ş´Â ÇÇÇØ ¹èÀ²
-        public float HealReceived;              // ¹Ş´Â È¸º¹ ¹èÀ²
-        public float Tenacity;                  // °­ÀÎÇÔ
-        public float ArmorDefense;              // ¹°¸® ¹æ¾î·Â
-        public float MagicDefense;              // ¸¶¹ı ¹æ¾î·Â
+    public float FirePenetration;            // í™”ì—¼ ê´€í†µë ¥
+    public float WaterPenetration;           // ë¬¼ ê´€í†µë ¥
+    public float WindPenetration;            // ë°”ëŒ ê´€í†µë ¥
+    public float ElectricPenetration;        // ì „ê¸° ê´€í†µë ¥
+    public float EarthPenetration;           // ëŒ€ì§€ ê´€í†µë ¥
 
-        //----------ÀÌµ¿----------
-        public float MoveSpeed;                 // ÀÌµ¿ ¼Óµµ
-        public float DashSpeed;                 // ´ë½Ã ¼Óµµ
-        public float DashDuration;              // ´ë½Ã Áö¼Ó½Ã°£
-    }
+    //---------- ë°©ì–´ ----------
+    public float MaxHp;                     // ìµœëŒ€ ì²´ë ¥
+
+    public float DamageReduction;            // í”¼í•´ ê°ì†Œ
+    public float IncomingDamageTaken;        // ë°›ëŠ” í”¼í•´ ë°°ìœ¨
+    public float HealReceived;               // ë°›ëŠ” íšŒë³µ ë°°ìœ¨
+    public float Tenacity;                   // ê°•ì¸í•¨
+
+    public float ArmorDefense;               // ë¬¼ë¦¬ ë°©ì–´ë ¥
+    public float MagicDefense;               // ë§ˆë²• ë°©ì–´ë ¥
+
+    //---------- ì´ë™ ----------
+    public float MoveSpeed;                 // ì´ë™ ì†ë„
+    public float DashSpeed;                 // ëŒ€ì‹œ ì†ë„
+    public float DashDuration;               // ëŒ€ì‹œ ì§€ì†ì‹œê°„
+}
 }

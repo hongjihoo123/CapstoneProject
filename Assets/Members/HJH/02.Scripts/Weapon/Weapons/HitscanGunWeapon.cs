@@ -8,6 +8,7 @@ namespace RobotWeapons
         IEmpowerableShots, IShotHitSource, IShotVisualSource, IShotInterceptable, IMuzzleSource, IAnimationTimedShots
     {
         private static readonly RaycastHit[] HitBuffer = new RaycastHit[32];
+        private static readonly Collider[] AssistBuffer = new Collider[64];
         private static readonly int WeakpointLayer = LayerMask.NameToLayer("Weakpoint");
         private static readonly IComparer<RaycastHit> DistanceComparer =
             Comparer<RaycastHit>.Create((a, b) => a.distance.CompareTo(b.distance));
@@ -60,8 +61,8 @@ namespace RobotWeapons
 
         public bool TryGetAmmoText(out string text)
         {
-            text = AmmoText.ForResource(this);
-            return true;
+            text = data.useAmmo ? AmmoText.ForResource(this) : null;
+            return data.useAmmo;
         }
 
         public AttackFeedback DescribeAttack(string animId) =>
@@ -86,14 +87,16 @@ namespace RobotWeapons
             if (owner == null || IsReloading || fireCooldown > 0f || interceptHeld)
                 return;
 
-            if (CurrentResource <= 0f)
+            // 기획상 재장전 없음: useAmmo 꺼져 있으면 탄 안 씀 (탄창 비어서 1초 동안 멈추던 것)
+            if (data.useAmmo && CurrentResource <= 0f)
             {
                 Reload();
                 return;
             }
 
             fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier));
-            CurrentResource -= 1f;
+            if (data.useAmmo)
+                CurrentResource -= 1f;
 
             // A shot still waiting for its animation goes out before the next one is queued.
             ReleaseShot();
@@ -108,7 +111,7 @@ namespace RobotWeapons
                 Fire(empowered, canIntercept: true);
 
             // No reload key in the top-down build: an empty magazine reloads by itself.
-            if (CurrentResource <= 0f)
+            if (data.useAmmo && CurrentResource <= 0f)
                 Reload();
         }
 
@@ -206,6 +209,9 @@ namespace RobotWeapons
             if (canIntercept && TryIntercept(start, direction))
                 return;
 
+            // 평타만 보정: 앞쪽 가장 가까운 적의 몸 콜라이더 중심으로 (패시브는 위에서 평평한 방향 그대로 가져감)
+            direction = ApplyAimAssist(start, direction);
+
             Color color = empowered ? data.empoweredFxColor : data.fxColor;
 
             if (muzzle < data.fireAnimIds.Length)
@@ -262,6 +268,75 @@ namespace RobotWeapons
             if (fromMuzzle.sqrMagnitude > 9f && Vector3.Dot(fromMuzzle.normalized, fromBody) > 0.97f)
                 return fromMuzzle.normalized;
             return fromBody;
+        }
+
+        // Points the shot at the body collider center of the nearest living enemy in front,
+        // as long as its center is not too far above/below the muzzle. Otherwise the flat shot is kept.
+        private Vector3 ApplyAimAssist(Vector3 start, Vector3 direction)
+        {
+            if (!data.heightAssist || data.heightAssistMaxDelta <= 0f)
+                return direction;
+
+            Vector3 flatDir = direction; flatDir.y = 0f;
+            if (flatDir.sqrMagnitude < 0.0001f)
+                return direction;
+            flatDir.Normalize();
+
+            int mask = data.hitMask.value & ~AimUtility.IgnoreLayerMask.value;
+            int count = Physics.OverlapSphereNonAlloc(start, data.range, AssistBuffer, mask, QueryTriggerInteraction.Collide);
+            float minDot = Mathf.Cos(data.heightAssistAngle * Mathf.Deg2Rad);
+
+            float bestDistance = float.MaxValue;
+            Vector3 bestCenter = Vector3.zero;
+            IDamageable bestTarget = null;
+
+            for (int i = 0; i < count; i++)
+            {
+                IDamageable candidate = AssistBuffer[i].GetComponentInParent<IDamageable>();
+                if (candidate == null || ReferenceEquals(candidate, owner) || ReferenceEquals(candidate, bestTarget) || !candidate.IsAlive)
+                    continue;
+
+                Vector3 center = BodyCenter(candidate, AssistBuffer[i]);
+                Vector3 toTarget = center - start; toTarget.y = 0f;
+                float horizontal = toTarget.magnitude;
+                if (horizontal < 0.3f || horizontal > data.range || horizontal >= bestDistance)
+                    continue;
+                if (Vector3.Dot(toTarget / horizontal, flatDir) < minDot)
+                    continue;
+                if (Mathf.Abs(center.y - start.y) > data.heightAssistMaxDelta)
+                    continue;
+
+                bestDistance = horizontal;
+                bestCenter = center;
+                bestTarget = candidate;
+            }
+
+            return bestTarget != null ? (bestCenter - start).normalized : direction;
+        }
+
+        // Center of the enemy's main body collider: the biggest solid (non-trigger, non-weakpoint) collider under it.
+        // Triggers like sensor/aggro ranges are skipped so their center doesn't pull the shot off.
+        private static Vector3 BodyCenter(IDamageable target, Collider fallback)
+        {
+            if (!(target is Component root))
+                return fallback.bounds.center;
+
+            Collider best = null;
+            float bestVolume = 0f;
+            foreach (Collider col in root.GetComponentsInChildren<Collider>())
+            {
+                if (!col.enabled || col.isTrigger || col.gameObject.layer == WeakpointLayer)
+                    continue;
+                Vector3 size = col.bounds.size;
+                float volume = size.x * size.y * size.z;
+                if (volume > bestVolume)
+                {
+                    bestVolume = volume;
+                    best = col;
+                }
+            }
+
+            return (best != null ? best : fallback).bounds.center;
         }
 
         // The shot leaves the gun on the model and travels along the aim direction at the muzzle's height.

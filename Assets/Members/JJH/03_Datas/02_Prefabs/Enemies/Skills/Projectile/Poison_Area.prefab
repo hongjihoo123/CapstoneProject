@@ -11,8 +11,6 @@ GameObject:
   - component: {fileID: 4042932667866312537}
   - component: {fileID: 3276434839171473491}
   - component: {fileID: 2157615156426195917}
-  - component: {fileID: 5493814063684867620}
-  - component: {fileID: 1837646072994094987}
   - component: {fileID: 6358055212663668434}
   m_Layer: 0
   m_Name: Poison_Area
@@ -93,49 +91,6 @@ MeshRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_AdditionalVertexStreams: {fileID: 0}
---- !u!64 &5493814063684867620
-MeshCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3231886448014093689}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 5
-  m_Convex: 0
-  m_CookingOptions: 30
-  m_Mesh: {fileID: 10209, guid: 0000000000000000e000000000000000, type: 0}
---- !u!135 &1837646072994094987
-SphereCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3231886448014093689}
-  m_Material: {fileID: 0}
-  m_IncludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_ExcludeLayers:
-    serializedVersion: 2
-    m_Bits: 0
-  m_LayerOverridePriority: 0
-  m_IsTrigger: 0
-  m_ProvidesContacts: 0
-  m_Enabled: 1
-  serializedVersion: 3
-  m_Radius: 5
-  m_Center: {x: 0, y: 0, z: 0}
 --- !u!114 &6358055212663668434
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -148,4 +103,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7fc6f401fc29f6844a6e172c9d2c5f2b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjectiles.BossPoisonArea
+  boxSize: {x: 10, y: 3, z: 10}
   damageInterval: 0.5
+  targetLayer:
+    serializedVersion: 2
+    m_Bits: 256
