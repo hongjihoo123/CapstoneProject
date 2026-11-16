@@ -111,7 +111,7 @@ namespace RobotWeapons
 
         public void ApplyKnockback(Vector3 direction, float distance)
         {
-            if (tier == Tier.Boss)
+            if (tier == Tier.Boss || CrowdControl.IsImmovable(this))
                 return;
             if (tier == Tier.Elite)
                 distance *= 0.5f;

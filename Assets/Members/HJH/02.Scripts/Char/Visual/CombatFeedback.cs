@@ -177,7 +177,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_hitParticles && !skillHit)
                 Fx.Hit(impact, direction, sparkColor, big);
             // 움찔(찌그러짐)은 그대로, 실제로 밀리는 거리만 줄임
-            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);
+            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);   // 보스 보호는 Fx.Punch 안에서
 
             // 맞은 지점 섬광 (빛줄기 + 플레어). 큰 타격·원소 스킬일 때만 → 연사 무기로 도배되지 않게
             if (big || skillHit || info.Killed)
