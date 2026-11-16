@@ -236,6 +236,17 @@ namespace Members.JJH._02_Scripts.Map
             _choices.Add(choice);
         }
 
+        // 죽어서 캐릭터 선택으로 돌아간 뒤 새 런을 시작할 때: 방 진행도를 처음으로
+        public void ResetRun()
+        {
+            _currentRoomCount = 1;
+            _bossEntered = false;
+            _choicesGenerated = false;
+            ClearChoices();
+            SetMapVisible(false);
+            UpdateProgressUI();
+        }
+
         private void ClearChoices()
         {
             foreach (MapChoiceUI choice in _choices)

@@ -110,6 +110,7 @@ namespace HJH.EditorTools
             PrefabUtility.SaveAsPrefabAsset(root, Dir + "FireflyZone.prefab");
             Object.DestroyImmediate(root);
             AssetDatabase.SaveAssets();
+            MapFireflyV2.Upgrade();   // v2: 빛나는 반딧불이 (글로우 텍스처·HDR·입자별 깜빡임)
             Debug.Log("[Firefly] 에셋 생성 완료: " + Dir + " (T_FireflyGlow, M_Firefly, M_FireflyHalo, FireflyZone.prefab). 이제 2번으로 놓으세요.");
         }
 

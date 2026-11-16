@@ -32,6 +32,32 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private Color normalOutline = new(0.12f, 0.04f, 0.02f, 1f);
         [SerializeField, Range(0f, 1f)] private float normalOutlineWidth = 0.18f;
 
+        // SoD 영상 기준: 종류마다 채움색 / 외곽선 색 / 외곽선 굵기. 인스펙터에서 바로 고쳐 볼 수 있음
+        [System.Serializable]
+        public struct Look
+        {
+            public Color fill;
+            public Color outline;
+            [Range(0f, 1f)] public float outlineWidth;
+            public Look(Color fill, Color outline, float width) { this.fill = fill; this.outline = outline; outlineWidth = width; }
+        }
+
+        [Header("종류별 모양 (SoD 영상 기준)")]
+        [SerializeField, Tooltip("물리 피해(일반): 연한 주황 + 얇은 갈색 외곽선")]
+        private Look physical = new(new Color(0.96f, 0.66f, 0.47f), new Color(0.38f, 0.17f, 0.06f), 0.2f);
+        [SerializeField, Tooltip("마법(원소 스킬) 피해: 파랑 + 얇은 남색 외곽선")]
+        private Look magic = new(new Color(0.45f, 0.72f, 1f), new Color(0.08f, 0.16f, 0.4f), 0.2f);
+        [SerializeField, Tooltip("약한 피해: 흰색 + 두꺼운 어두운 외곽선")]
+        private Look weak = new(new Color(0.9f, 0.9f, 0.9f), new Color(0.13f, 0.13f, 0.16f), 0.38f);
+        [SerializeField, Tooltip("크리: 붉은색 + 매우 두꺼운 적갈색 외곽선")]
+        private Look crit = new(new Color(0.91f, 0.4f, 0.29f), new Color(0.36f, 0.09f, 0.09f), 0.42f);
+        [SerializeField, Tooltip("받은 피해: 색은 호출한 쪽 색 그대로, 두꺼운 어두운 외곽선")]
+        private Look taken = new(Color.white, new Color(0.13f, 0.13f, 0.16f), 0.38f);
+
+        [Header("숫자 글꼴 (Resources/Fonts & Materials, 없으면 프리팹 기본 글꼴)")]
+        [SerializeField] private TMP_FontAsset numberFont;
+        [SerializeField] private TMP_FontAsset critFont;
+
         private Vector3 _position;
         private Color _color;
         private float _scale;
@@ -57,6 +83,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
+        private TMP_FontAsset NumberFont =>
+            numberFont != null ? numberFont : numberFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/ChakraPetch-Bold SDF");
+        private TMP_FontAsset CritFont =>
+            critFont != null ? critFont : critFont = Resources.Load<TMP_FontAsset>("Fonts & Materials/RussoOne SDF");
+
         public bool IsPlaying => _playing;
 
         private float ShrinkEnd => popInTime + popHoldTime + shrinkTime;
@@ -78,16 +109,38 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _ => peakScale.x
             };
 
-            // 글자(한글)는 숫자 글꼴에 없어서 한글 글꼴로 바꿔 씀. 숫자로 돌아오면 원래 글꼴
+            // 글자(한글)는 숫자 글꼴에 없어서 한글 글꼴로 바꿔 씀. 숫자로 돌아오면 숫자 글꼴
             _defaultFont ??= text.font;
             bool isText = !string.IsNullOrEmpty(parameters.Text);
             TMP_FontAsset korean = isText ? KoreanFont : null;
-            text.font = isText && korean != null ? korean : _defaultFont;
-            text.text = isText ? parameters.Text : Mathf.RoundToInt(parameters.Value).ToString();
 
-            bool crit = style == DamageNumberStyle.Crit;
-            text.outlineColor = crit ? critOutline : normalOutline;
-            text.outlineWidth = crit ? critOutlineWidth : normalOutlineWidth;
+            if (isText)
+            {
+                text.font = korean != null ? korean : _defaultFont;
+                text.text = parameters.Text;
+                bool textCrit = style == DamageNumberStyle.Crit;
+                text.outlineColor = textCrit ? critOutline : normalOutline;
+                text.outlineWidth = textCrit ? critOutlineWidth : normalOutlineWidth;
+                Apply();
+                return;
+            }
+
+            bool isCrit = style == DamageNumberStyle.Crit;
+            TMP_FontAsset chosen = isCrit ? CritFont : NumberFont;
+            text.font = chosen != null ? chosen : _defaultFont;
+            text.text = Mathf.RoundToInt(parameters.Value).ToString();
+
+            Look look = style switch
+            {
+                DamageNumberStyle.Crit => crit,
+                DamageNumberStyle.Magic => magic,
+                DamageNumberStyle.Weak => weak,
+                DamageNumberStyle.Taken => taken,
+                _ => physical
+            };
+            _color = style == DamageNumberStyle.Taken ? parameters.Tint : look.fill;
+            text.outlineColor = look.outline;
+            text.outlineWidth = look.outlineWidth;
 
             Apply();
         }

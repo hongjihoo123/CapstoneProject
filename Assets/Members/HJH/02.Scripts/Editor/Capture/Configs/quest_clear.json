@@ -1,0 +1,14 @@
+{
+  "scene": "Assets/Members/HJH/01.Scene/Map_Bridge_Normal.unity",
+  "outDir": "Captures/quest_clear",
+  "width": 1920,
+  "height": 1080,
+  "play": true,
+  "maxSeconds": 120,
+  "shots": [
+    { "name": "q1_start_locked", "mode": "game", "delay": 2.5 },
+    { "name": "q2_portal_locked", "target": "Portal", "space": "world", "offset": { "x": 0, "y": 5, "z": -7 }, "lookAt": { "x": 0, "y": 1.5, "z": 0 }, "fov": 45, "delay": 3.5 },
+    { "name": "q3_midway", "mode": "game", "delay": 9.5 },
+    { "name": "q4_portal_open", "target": "Portal", "space": "world", "offset": { "x": 0, "y": 5, "z": -7 }, "lookAt": { "x": 0, "y": 1.5, "z": 0 }, "fov": 45, "delay": 30 }
+  ]
+}

@@ -67,6 +67,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [Header("Setting")]
         [SerializeField] private float clearDelay = 0.35f;
         [SerializeField] private float bounceScale = 0.25f;
+        [SerializeField, Min(0.05f)] private float bounceDuration = 0.3f;
 
         private class ListRow
         {
@@ -733,7 +734,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 return;
 
             target.DOKill(true);
-            target.DOPunchScale(Vector3.one * bounceScale, 0.3f).SetUpdate(true);
+            target.DOPunchScale(Vector3.one * bounceScale, bounceDuration, 6, 0.5f).SetUpdate(true);
         }
 
         private void DrawFinisherStock()

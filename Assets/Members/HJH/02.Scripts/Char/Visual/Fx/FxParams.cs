@@ -29,7 +29,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
     {
         Normal,   // 작은 주황
         Crit,     // 큰 빨강 + 흰 외곽선 (큰 타격, 약점, 처치)
-        Taken     // 플레이어가 받은 피해 (흰색)
+        Taken,    // 플레이어가 받은 피해 (흰색)
+        Magic,    // 마법(원소 스킬) 피해: 파랑
+        Weak      // 약한 피해: 흰색 + 두꺼운 어두운 외곽선
+        // Normal = 물리 피해(주황). 값 순서는 저장된 데이터가 있어서 뒤에만 추가함
     }
 
     // A component on an effect prefab that needs runtime values. Play is called right after spawning.

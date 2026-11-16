@@ -30,12 +30,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
             if (player == null || roster == null || roster.Length == 0)
                 return;
 
-            Select(Mathf.Clamp(startIndex, 0, roster.Length - 1));
+            // 픽 화면에서 고른 캐릭터가 있으면 그걸로 시작 (씬이 바뀌어도 계속 같은 캐릭터)
+            int index = CharacterSelection.HasPick ? CharacterSelection.Index : startIndex;
+            Select(Mathf.Clamp(index, 0, roster.Length - 1));
         }
 
         private void Update()
         {
-            if (!numberKeys || roster == null)
+            // 픽한 캐릭터로 계속 플레이: 숫자키로 바꾸는 건 픽 없이 개발용으로 씬을 열었을 때만
+            if (!numberKeys || roster == null || CharacterSelection.HasPick)
                 return;
 
             Keyboard keyboard = Keyboard.current;
