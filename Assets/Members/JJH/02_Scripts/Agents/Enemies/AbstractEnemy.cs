@@ -50,8 +50,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             SetBTVariable(BTVars.Enemy, this);
 
             Health.InitHealth(EnemyData.Health);
-            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed,
-                                                                 EnemyData.Acceleration);
+            NavMeshAgent.SetNavMeshAgent(EnemyData.Speed, EnemyData.Acceleration);
         }
 
         public void HandleOnDead()
