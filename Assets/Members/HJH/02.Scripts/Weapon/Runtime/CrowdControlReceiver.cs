@@ -73,7 +73,7 @@ namespace RobotWeapons
         public void ApplySlow(float percent, float duration)
         {
             if (tier == Tier.Boss)
-                percent *= 0.5f;
+                return;
 
             bool had = Has(CrowdControlType.Slow);
             _slowEnd = Mathf.Max(_slowEnd, Time.time + duration);
@@ -96,6 +96,9 @@ namespace RobotWeapons
 
         public void ApplyStun(float duration)
         {
+            if (tier == Tier.Boss)
+                return;
+
             if (!Scale(ref duration) || Time.time < _stunImmuneEnd)
                 return;
 
@@ -137,6 +140,9 @@ namespace RobotWeapons
 
         public void Interrupt(float duration)
         {
+            if (tier == Tier.Boss)
+                return;
+
             if (!Scale(ref duration))
                 return;
             _interruptEnd = Mathf.Max(_interruptEnd, Time.time + duration);
@@ -148,6 +154,9 @@ namespace RobotWeapons
 
         public void ApplyFlinch(float duration)
         {
+            if (tier == Tier.Boss)
+                return;
+
             if (!Scale(ref duration) || Time.time < _flinchImmuneEnd)
                 return;
 

@@ -33,6 +33,17 @@ Shader "HJH/Character/Toon"
         _MossColor ("Moss Color (위를 보는 면에 이끼, 적 리터칭)", Color) = (0.32, 0.5, 0.2, 1)
         _MossAmount ("Moss Amount", Range(0, 1)) = 0
 
+        [Header(Swamp Paint)]   // 맵 풍으로 맞추기. 값이 0 이면 꺼짐
+        _Simplify ("Simplify (텍스처 잔무늬 줄이기, 밉 바이어스)", Range(0, 4)) = 0
+        _GradeColor ("Palette Grade (곱할 색)", Color) = (1, 1, 1, 1)
+        _GradeAmount ("Palette Grade Amount", Range(0, 1)) = 0
+        _BrushStrength ("Brush Strength (붓 터치: 명암 경계 흔들림 + 색 얼룩)", Range(0, 1)) = 0
+        _BrushScale ("Brush Scale", Range(4, 120)) = 36
+        _GlowColor ("Glow Color (청록·노랑 포인트가 스스로 빛남)", Color) = (0.3, 1, 0.95, 1)
+        _GlowAmount ("Glow Amount", Range(0, 3)) = 0
+        _GroundTint ("Ground Bounce (바닥 늪색 반사광, 아래를 보는 면)", Color) = (0.1, 0.3, 0.38, 1)
+        _GroundTintAmount ("Ground Bounce Amount", Range(0, 1)) = 0
+
         [Header(Alpha)]
         [Toggle(_ALPHATEST_ON)] _AlphaClip ("Alpha Clip", Float) = 0
         _Cutoff ("Cutoff", Range(0, 1)) = 0.5
@@ -64,14 +75,44 @@ Shader "HJH/Character/Toon"
             half4 _MossColor;
             half _MossAmount;
             half _Cutoff;
+            half _Simplify;
+            half4 _GradeColor;
+            half _GradeAmount;
+            half _BrushStrength;
+            half _BrushScale;
+            half4 _GlowColor;
+            half _GlowAmount;
+            half4 _GroundTint;
+            half _GroundTintAmount;
         CBUFFER_END
 
         TEXTURE2D(_BaseMap);
         SAMPLER(sampler_BaseMap);
 
+        float Hash21(float2 p)
+        {
+            return frac(sin(dot(p, float2(127.1, 311.7))) * 43758.5453);
+        }
+
+        // 부드러운 값 노이즈 2겹 (UV 기준이라 움직여도 안 미끄러짐)
+        half BrushNoise(float2 uv)
+        {
+            float2 p = uv * _BrushScale;
+            float2 i = floor(p);
+            float2 f = frac(p);
+            f = f * f * (3.0 - 2.0 * f);
+            half n = lerp(lerp(Hash21(i), Hash21(i + float2(1, 0)), f.x), lerp(Hash21(i + float2(0, 1)), Hash21(i + 1.0), f.x), f.y);
+            float2 p2 = uv * _BrushScale * 2.7 + 7.3;
+            float2 i2 = floor(p2);
+            float2 f2 = frac(p2);
+            f2 = f2 * f2 * (3.0 - 2.0 * f2);
+            half n2 = lerp(lerp(Hash21(i2), Hash21(i2 + float2(1, 0)), f2.x), lerp(Hash21(i2 + float2(0, 1)), Hash21(i2 + 1.0), f2.x), f2.y);
+            return n * 0.65 + n2 * 0.35;
+        }
+
         half4 SampleBase(float2 uv)
         {
-            half4 c = SAMPLE_TEXTURE2D(_BaseMap, sampler_BaseMap, uv) * _BaseColor;
+            half4 c = SAMPLE_TEXTURE2D_BIAS(_BaseMap, sampler_BaseMap, uv, _Simplify) * _BaseColor;
             #if defined(_ALPHATEST_ON)
                 clip(c.a - _Cutoff);
             #endif
@@ -142,6 +183,16 @@ Shader "HJH/Character/Toon"
                 half luma = dot(base.rgb, half3(0.299, 0.587, 0.114));
                 half3 albedo = lerp(luma.xxx, base.rgb, _Saturation) * _Brightness;
 
+                // 맵 풍 맞추기: 팔레트를 맵 색(남색·청록)쪽으로 + 붓 얼룩 (옵션, 0 이면 그대로)
+                albedo *= lerp(half3(1, 1, 1), _GradeColor.rgb, _GradeAmount);
+                half brush = BrushNoise(i.uv);
+                albedo *= 1.0 + (brush - 0.5) * 0.45 * _BrushStrength;
+
+                // 청록·노랑 포인트(고글 렌즈, 장비 라인)는 스스로 빛남: 맵의 발광 식물과 같은 계열
+                half glowMask = smoothstep(0.25, 0.45, min(base.g, base.b) - base.r)
+                              + smoothstep(0.4, 0.6, min(base.r, base.g) - base.b);
+                half3 glow = base.rgb * saturate(glowMask) * _GlowAmount * _GlowColor.rgb;
+
                 float3 n = normalize(i.normalWS);
                 // 이끼: 위를 보는 면 + UV 얼룩 (움직여도 안 미끄러짐) (정글 배경에 묻어나게)
                 half moss = smoothstep(0.25, 0.6, n.y) * smoothstep(0.2, 0.5, frac(sin(dot(floor(i.uv * 20.0), float2(12.9898, 78.233))) * 43758.5453) * 0.5 + n.y * 0.5);
@@ -153,13 +204,16 @@ Shader "HJH/Character/Toon"
                 half shadow = lerp(1.0, light.shadowAttenuation, _ReceiveShadow);
 
                 // 2단 명암: N·L 이 문턱을 넘으면 밝은 면, 아니면 색 있는 그늘
-                half ndl = dot(n, light.direction);
+                half ndl = dot(n, light.direction) + (BrushNoise(i.uv * 0.7 + 3.1) - 0.5) * 0.35 * _BrushStrength;   // 명암 경계가 붓 터치처럼 울퉁불퉁
                 half lit = smoothstep(_ShadowThreshold - _ShadowSoftness, _ShadowThreshold + _ShadowSoftness, ndl) * shadow;
                 half3 lightColor = light.color;
                 half3 ambient = SampleSH(n);
                 half3 shade = albedo * _ShadowColor.rgb * (ambient * 0.6 + lightColor * 0.35);
                 half3 bright = albedo * (lightColor + ambient * 0.35);
                 half3 color = lerp(shade, bright, lit);
+
+                // 늪 바닥 반사광: 아래를 보는 면(다리·소총 밑)에 청록빛이 번짐
+                color += albedo * _GroundTint.rgb * saturate(-n.y * 0.8 + 0.2) * _GroundTintAmount;
 
                 // 추가 라이트: 같은 2단 명암으로 밝은 면만 더함 (그늘 쪽은 그대로 → 툰 느낌 유지)
                 #if defined(_ADDITIONAL_LIGHTS)
@@ -200,6 +254,7 @@ Shader "HJH/Character/Toon"
                 half rim = pow(saturate(1.0 - dot(n, v)), _RimPower);
                 rim = smoothstep(0.35, 0.55, rim) * _RimStrength * lerp(0.4, 1.0, lit);
                 color += _RimColor.rgb * rim * lightColor;
+                color += glow;
 
                 color = MixFog(color, i.fog);
                 return half4(color, 1);
