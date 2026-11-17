@@ -40,7 +40,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 if (_currentSkill == null || _currentSkill.IsUsing)
                     return Status.Failure;
 
-                AnimParam.Value = _skillModule.GetSkillSetting(_currentSkill.SkillSO).AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(_currentSkill.SkillSO).AttackAnimParam;
                 _currentSkill.UseSkill();
                 return Status.Running;
             }
@@ -57,7 +57,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                     return Status.Success;
                 }
 
-                AnimParam.Value = _skillModule.GetSkillSetting(selected).AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(selected).AttackAnimParam;
                 return Status.Running;
             }
 
@@ -76,7 +76,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 if (!_skillModule.UseSkill(data.SkillType))
                     continue;
 
-                AnimParam.Value = _skillModule.GetSkillSetting(data).AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(data).AttackAnimParam;
                 _skillIndex = idx + 1;
                 return Status.Running;
             }

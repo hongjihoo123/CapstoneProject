@@ -37,14 +37,14 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                 _skillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
                 AnimParam.Value = _skillModule.GetSkillSetting(Enemy.Value.EnemyData.EnemySkills[skillIndex])
-                                                                    .AnimParam;
+                                                                    .AttackAnimParam;
 
                 skillIndex++;
             }
             else
             {
                 _skillModule.UseSkill(EnemySkill.Value.SkillType);
-                AnimParam.Value = _skillModule.GetSkillSetting(EnemySkill.Value).AnimParam;
+                AnimParam.Value = _skillModule.GetSkillSetting(EnemySkill.Value).AttackAnimParam;
             }
 
             return Status.Running;
