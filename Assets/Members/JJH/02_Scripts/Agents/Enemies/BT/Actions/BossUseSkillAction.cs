@@ -3,6 +3,7 @@ using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using System;
+using System.Collections.Generic;
 using Unity.Behavior;
 using Unity.Properties;
 using UnityEngine;
@@ -16,6 +17,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Boss;
 
+        [SerializeReference] public BlackboardVariable<EnemySkillSO> EnemySkill;
         [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
         private BossEnemy _boss;
@@ -30,6 +32,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
             _boss = boss;
             _skillModule = _boss.SkillModule;
+            _currentSkill = null;
 
             if (_boss.Phase == BossPhase.Transition)
             {
@@ -42,7 +45,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 return Status.Running;
             }
 
-            var skills = _boss.EnemyData.EnemySkills;
+            if (EnemySkill != null && EnemySkill.Value != null)
+            {
+                var selected = EnemySkill.Value;
+                if (selected.SkillType == null)
+                    return Status.Failure;
+
+                if (!_skillModule.UseSkill(selected.SkillType))
+                {
+                    AnimParam.Value = null;
+                    return Status.Success;
+                }
+
+                AnimParam.Value = _skillModule.GetSkillSetting(selected).AnimParam;
+                return Status.Running;
+            }
+
+            List<EnemySkillSO> skills = _boss.EnemyData.EnemySkills;
             if (skills == null || skills.Count == 0)
                 return Status.Failure;
 
@@ -50,7 +69,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             {
                 int idx = (_skillIndex + i) % skills.Count;
                 var data = skills[idx];
-                Debug.Log(data.name);
                 if (data == null || data.SkillType == null)
                     continue;
                 if (typeof(ITransitionSkill).IsAssignableFrom(data.SkillType))
@@ -60,7 +78,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                 AnimParam.Value = _skillModule.GetSkillSetting(data).AnimParam;
                 _skillIndex = idx + 1;
-                _currentSkill = null;
                 return Status.Running;
             }
 

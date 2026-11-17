@@ -14,9 +14,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
 
-        [Tooltip("����ϰ� ���� ��ų�� �ִٸ� �ֱ�(���ٸ� ��ų ����Ʈ�� �� ������� ����")]
         [SerializeReference] public BlackboardVariable<EnemySkillSO> EnemySkill;
-        [Tooltip("������ ��ų�� AnimParamSO")]
         [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
         private IEnemySkillModule _skillModule;
