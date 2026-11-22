@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01.Scripts.Currency;
+using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Enchant.So;
 using Members.KYR._01.Scripts.Modules;
 using Members.KYR._01.Scripts.Player;
@@ -118,24 +119,22 @@ namespace Members.KYR._01.Scripts.Enchant
                 : 0;
         }
 
-        // 선행 노드 중 하나라도 배웠으면(또는 선행이 없으면) 열린 것.
+        // 입구 노드는 항상 열려 있고, 나머지는 선행 노드 중 하나라도 배웠으면 열린다.
+        // 선행이 없는 일반 노드는 열리지 않는다 (트리는 반드시 입구에서 시작).
         public bool IsOpen(EnchantTree tree, EnchantTreeNode node)
         {
             if (tree == null || node == null)
                 return false;
+            if (node.kind == EnchantNodeKind.Entry)
+                return true;
 
-            bool hasParent = false;
             foreach (EnchantTreeLink link in tree.Links)
             {
-                if (link == null || link.childId != node.id)
-                    continue;
-
-                hasParent = true;
-                if (GetRank(tree, link.parentId) > 0)
+                if (link != null && link.childId == node.id && GetRank(tree, link.parentId) > 0)
                     return true;
             }
 
-            return !hasParent;
+            return false;
         }
 
         public bool IsBlockedByExclusive(EnchantTree tree, EnchantTreeNode node)

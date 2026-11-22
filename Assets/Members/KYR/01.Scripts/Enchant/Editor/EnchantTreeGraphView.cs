@@ -105,9 +105,9 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             EnchantTreeNode node = new EnchantTreeNode
             {
                 id = _tree.NewNodeId(),
-                displayName = "새 노드",
-                kind = EnchantNodeKind.Stat,
-                maxRank = 5,
+                displayName = _tree.Nodes.Count == 0 ? "입구" : "새 노드",
+                kind = _tree.Nodes.Count == 0 ? EnchantNodeKind.Entry : EnchantNodeKind.Stat,
+                maxRank = _tree.Nodes.Count == 0 ? 1 : 5,
                 cost = 1,
                 position = position
             };
@@ -239,6 +239,13 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             EnchantTreeLink link = ToLink(edge);
             if (link == null || link.parentId == link.childId)
                 return false;
+
+            EnchantTreeNode child = _tree.FindNode(link.childId);
+            if (child != null && child.kind == EnchantNodeKind.Entry)
+            {
+                Rejected?.Invoke("입구 노드에는 선행을 연결할 수 없습니다");
+                return false;
+            }
 
             foreach (EnchantTreeLink existing in _tree.Links)
             {

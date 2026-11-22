@@ -121,9 +121,9 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             tree.Nodes.Add(new EnchantTreeNode
             {
                 id = tree.NewNodeId(),
-                displayName = "새 노드",
-                kind = EnchantNodeKind.Stat,
-                maxRank = 5,
+                displayName = tree.Nodes.Count == 0 ? "입구" : "새 노드",
+                kind = tree.Nodes.Count == 0 ? EnchantNodeKind.Entry : EnchantNodeKind.Stat,
+                maxRank = tree.Nodes.Count == 0 ? 1 : 5,
                 cost = 1,
                 position = new Vector2(80f, y)
             });
@@ -295,6 +295,14 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("선행");
+            if (node.kind == EnchantNodeKind.Entry)
+            {
+                EditorGUILayout.HelpBox("입구 노드는 트리 시작점이라 선행을 가질 수 없습니다.", MessageType.None);
+                if (GUILayout.Button("이 노드 삭제"))
+                    EnchantTreeCanvasEdit.DeleteNode(widget.Tree, node.id);
+                return;
+            }
+
             for (int i = 0; i < widget.Tree.Nodes.Count; i++)
             {
                 EnchantTreeNode other = widget.Tree.Nodes[i];

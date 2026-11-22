@@ -93,13 +93,41 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                         }
                     }
 
-                    if (!linked)
-                        issues.Add(new EnchantTreeIssue(false, node.id, Label(node) + ": 아무 노드와도 연결되지 않았습니다 (처음부터 배울 수 있음)."));
+                    if (!linked && node.kind != EnchantNodeKind.Entry)
+                        issues.Add(new EnchantTreeIssue(false, node.id, Label(node) + ": 아무 노드와도 연결되지 않았습니다."));
                 }
             }
 
+            CheckEntries(tree, issues);
+
             CheckExclusive(tree, issues);
             return issues;
+        }
+
+        // 트리는 입구에서 시작한다: 입구가 하나 이상 있어야 하고, 입구에는 선행이 없고, 입구가 아닌 노드는 선행이 있어야 한다.
+        private static void CheckEntries(EnchantTree tree, List<EnchantTreeIssue> issues)
+        {
+            bool anyEntry = false;
+            foreach (EnchantTreeNode node in tree.Nodes)
+            {
+                if (node == null || string.IsNullOrEmpty(node.id))
+                    continue;
+
+                bool hasParents = tree.HasParents(node.id);
+                if (node.kind == EnchantNodeKind.Entry)
+                {
+                    anyEntry = true;
+                    if (hasParents)
+                        issues.Add(new EnchantTreeIssue(true, node.id, Label(node) + ": 입구 노드에 선행이 연결되어 있습니다."));
+                }
+                else if (!hasParents)
+                {
+                    issues.Add(new EnchantTreeIssue(true, node.id, Label(node) + ": 선행이 없는 노드는 입구여야 합니다 (지금은 배울 수 없음)."));
+                }
+            }
+
+            if (tree.Nodes.Count > 0 && !anyEntry)
+                issues.Add(new EnchantTreeIssue(true, null, "입구 노드가 없습니다. 트리를 시작할 수 없습니다."));
         }
 
         // 같은 배타 그룹 안에서 한 노드가 다른 노드의 선행이면, 자식은 선행만 배운 상태로는 절대 배울 수 없다.

@@ -93,8 +93,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 case EnchantNodeKind.Stat: return "스탯";
                 case EnchantNodeKind.Ability: return "특성";
                 case EnchantNodeKind.Key: return "핵심";
-                case EnchantNodeKind.Cooldown: return "쿨";
-                case EnchantNodeKind.Element: return "원소";
                 default: return kind.ToString();
             }
         }
@@ -107,8 +105,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 case EnchantNodeKind.Stat: return new Color(0.22f, 0.38f, 0.58f);
                 case EnchantNodeKind.Ability: return new Color(0.48f, 0.28f, 0.56f);
                 case EnchantNodeKind.Key: return new Color(0.62f, 0.30f, 0.16f);
-                case EnchantNodeKind.Cooldown: return new Color(0.14f, 0.42f, 0.46f);
-                case EnchantNodeKind.Element: return new Color(0.18f, 0.46f, 0.30f);
                 default: return new Color(0.25f, 0.25f, 0.25f);
             }
         }

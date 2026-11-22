@@ -13,31 +13,44 @@ MonoBehaviour:
   m_Name: TestEnchantTree
   m_EditorClassIdentifier: Assembly-CSharp::Members.KYR._01.Scripts.Enchant.So.EnchantTree
   character: {fileID: 11400000, guid: d8141337380137c4bb8ee8dacc8a42b4, type: 2}
+  costCurrency: 1
   nodes:
   - id: n1
     displayName: "\uC0C8 \uB178\uB4DC"
-    kind: 0
+    kind: 1
     maxRank: 5
     cost: 1
-    exclusiveGroup: 
-    description: 
-    position: {x: 194, y: 244.8}
+    exclusiveGroup: "\uBC29\uC5B4\uC801"
+    description: "\uB9C8\uB534\uB534"
+    effects:
+    - stat: 19
+      type: 1
+      valuePerRank: 0.05
+    position: {x: 194.00002, y: 250.09}
   - id: n2
     displayName: "\uC0C8 \uB178\uB4DC"
     kind: 1
     maxRank: 5
     cost: 1
-    exclusiveGroup: 
-    description: 
-    position: {x: 283.6004, y: 533.2818}
+    exclusiveGroup: "\uACF5\uACA9\uB825 \uC99D\uAC00"
+    description: "\uC544\uC57C \uC544\uD30C\uB77C\n"
+    effects:
+    - stat: 1
+      type: 2
+      valuePerRank: 0.5
+    position: {x: 284.4, y: 528.8}
   - id: n3
     displayName: "\uC0C8 \uB178\uB4DC"
     kind: 1
     maxRank: 5
     cost: 1
-    exclusiveGroup: 
-    description: 
-    position: {x: 652.1125, y: 263.6}
+    exclusiveGroup: "\uBC29\uC5B4\uC801"
+    description: "\uB534\uB534\uD568"
+    effects:
+    - stat: 14
+      type: 1
+      valuePerRank: 0.05
+    position: {x: 524.50696, y: 249.59995}
   - id: n4
     displayName: "\uC0C8 \uB178\uB4DC"
     kind: 0
@@ -45,13 +58,14 @@ MonoBehaviour:
     cost: 1
     exclusiveGroup: 
     description: 
+    effects: []
     position: {x: 412.83337, y: 90.735596}
   links:
-  - parentId: n2
+  - parentId: n4
     childId: n1
-  - parentId: n2
+  - parentId: n4
     childId: n3
   - parentId: n1
-    childId: n4
+    childId: n2
   - parentId: n3
-    childId: n4
+    childId: n2

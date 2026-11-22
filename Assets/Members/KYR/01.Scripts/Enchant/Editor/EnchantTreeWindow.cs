@@ -212,7 +212,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
 
             _inspector.Clear();
             _inspector.Add(new HelpBox(
-                "오른쪽 포트에서 다음 노드의 왼쪽으로 잇습니다. 들어오는 선이 여러 개면 그중 하나만 선행으로 칩니다.",
+                "트리는 입구 노드에서 시작합니다. 오른쪽 포트에서 다음 노드의 왼쪽으로 잇고, 들어오는 선이 여러 개면 그중 하나만 배워도 열립니다.",
                 HelpBoxMessageType.Info));
 
             if (_tree == null)
@@ -250,7 +250,28 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
 
             List<EnchantNodeKind> kinds = new List<EnchantNodeKind>((EnchantNodeKind[])Enum.GetValues(typeof(EnchantNodeKind)));
             PopupField<EnchantNodeKind> kind = new PopupField<EnchantNodeKind>("종류", kinds, data.kind, EnchantNodeKindStyle.LabelOf, EnchantNodeKindStyle.LabelOf);
-            kind.RegisterValueChangedCallback(evt => Edit(view, "종류", () => view.Data.kind = evt.newValue));
+            kind.RegisterValueChangedCallback(evt =>
+            {
+                if (evt.newValue == EnchantNodeKind.Entry && _tree.HasParents(view.Data.id))
+                {
+                    if (!EditorUtility.DisplayDialog("인챈트 트리", "입구 노드는 선행을 가질 수 없습니다. 들어오는 연결을 지우고 입구로 바꿀까요?", "바꾸기", "취소"))
+                    {
+                        kind.SetValueWithoutNotify(evt.previousValue);
+                        return;
+                    }
+
+                    string id = view.Data.id;
+                    Undo.RecordObject(_tree, "입구로 변경");
+                    _tree.Links.RemoveAll(link => link != null && link.childId == id);
+                    view.Data.kind = EnchantNodeKind.Entry;
+                    EditorUtility.SetDirty(_tree);
+                    _graph.SetTree(_tree);
+                    _graph.Select(id);
+                    return;
+                }
+
+                Edit(view, "종류", () => view.Data.kind = evt.newValue);
+            });
             _inspector.Add(kind);
 
             IntegerField max = new IntegerField("최대 랭크") { value = data.maxRank, isDelayed = true };
