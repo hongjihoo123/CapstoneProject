@@ -1,0 +1,57 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c01990db6cc9640a43404dadeab550, type: 3}
+  m_Name: TestEnchantTree
+  m_EditorClassIdentifier: Assembly-CSharp::Members.KYR._01.Scripts.Enchant.So.EnchantTree
+  character: {fileID: 11400000, guid: d8141337380137c4bb8ee8dacc8a42b4, type: 2}
+  nodes:
+  - id: n1
+    displayName: "\uC0C8 \uB178\uB4DC"
+    kind: 0
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    description: 
+    position: {x: 194, y: 244.8}
+  - id: n2
+    displayName: "\uC0C8 \uB178\uB4DC"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    description: 
+    position: {x: 283.6004, y: 533.2818}
+  - id: n3
+    displayName: "\uC0C8 \uB178\uB4DC"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    description: 
+    position: {x: 652.1125, y: 263.6}
+  - id: n4
+    displayName: "\uC0C8 \uB178\uB4DC"
+    kind: 0
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    description: 
+    position: {x: 412.83337, y: 90.735596}
+  links:
+  - parentId: n2
+    childId: n1
+  - parentId: n2
+    childId: n3
+  - parentId: n1
+    childId: n4
+  - parentId: n3
+    childId: n4

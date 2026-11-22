@@ -24,13 +24,54 @@ namespace Members.KYR._01.Scripts.Enchant.UI
         [SerializeField] private RectTransform fragmentRow;
         [SerializeField] private RectTransform optionRow;
         [SerializeField] private Button buttonPrefab;
+        [SerializeField] private EnchantTree[] trees = Array.Empty<EnchantTree>();
 
+        private readonly EnchantTreeBoard _treeBoard = new EnchantTreeBoard();
         private RectTransform _board;
         private TMP_Text _title;
         private RectTransform _actions;
         private Button _openButton;
         private EnchantFragment _current;
+        private string _selectedNodeId;
         private TMP_FontAsset _font;
+        private bool _editTreeVisible;
+
+        public bool EditTreeVisible => _editTreeVisible;
+
+        public void EnsureEditView(bool allowRebuild)
+        {
+            if (Application.isPlaying)
+                return;
+
+            if (_board == null)
+                _board = board != null ? board : transform.Find("Board") as RectTransform;
+            if (_font == null && buttonPrefab != null)
+            {
+                TMP_Text sample = buttonPrefab.GetComponentInChildren<TMP_Text>(true);
+                if (sample != null)
+                    _font = sample.font;
+            }
+
+            EnchantTree tree = TreeFor(CurrentCharacter);
+            bool show = tree != null && tree.Nodes.Count > 0 && _board != null;
+            _editTreeVisible = show;
+            if (!show)
+            {
+                _treeBoard.Clear();
+                return;
+            }
+
+            int hash = EnchantTreeBoard.StructureHashOf(tree);
+            if (allowRebuild && (_treeBoard.Root == null || _treeBoard.StructureHash != hash))
+                _treeBoard.Build(_board, tree, _font, _selectedNodeId, null);
+        }
+
+        public void RefreshEditLines()
+        {
+            EnchantTree tree = TreeFor(CurrentCharacter);
+            if (tree != null)
+                _treeBoard.RefreshLines(tree);
+        }
 
         private void Awake()
         {
@@ -93,6 +134,7 @@ namespace Members.KYR._01.Scripts.Enchant.UI
         private void HandleCharacterChanged(CharacterData character)
         {
             _current = null;
+            _selectedNodeId = null;
             ShowCurrentBoard();
         }
 
@@ -246,9 +288,89 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             rect.sizeDelta = new Vector2(96f, 40f);
         }
 
+        private EnchantTree TreeFor(CharacterData character)
+        {
+            EnchantTree first = null;
+            if (trees == null)
+                return null;
+
+            for (int i = 0; i < trees.Length; i++)
+            {
+                EnchantTree tree = trees[i];
+                if (tree == null)
+                    continue;
+
+                if (first == null)
+                    first = tree;
+                if (character != null && tree.Character == character)
+                    return tree;
+            }
+
+            return character == null ? first : null;
+        }
+
+        private void HandleTreeNode(EnchantTreeNode node)
+        {
+            _selectedNodeId = node != null ? node.id : null;
+            _current = null;
+            Rebuild();
+        }
+
+        private static void SetLegacyNodes(RectTransform board, bool visible)
+        {
+            if (board == null)
+                return;
+
+            EnchantNode[] nodes = board.GetComponentsInChildren<EnchantNode>(true);
+            for (int i = 0; i < nodes.Length; i++)
+                nodes[i].gameObject.SetActive(visible);
+        }
+
+        private void ShowTreeNode(EnchantTree tree)
+        {
+            EnchantTreeNode selected = null;
+            foreach (EnchantTreeNode node in tree.Nodes)
+            {
+                if (node != null && node.id == _selectedNodeId)
+                {
+                    selected = node;
+                    break;
+                }
+            }
+
+            if (selected == null)
+            {
+                _title.text = "노드를 누르세요";
+                return;
+            }
+
+            _title.text = string.IsNullOrEmpty(selected.displayName) ? selected.id : selected.displayName;
+            string body = string.IsNullOrEmpty(selected.description)
+                ? "최대 " + selected.maxRank + "   비용 " + selected.cost
+                : selected.description;
+            TMP_Text text = CreateText("Desc", _actions, 16f);
+            text.alignment = TextAlignmentOptions.Center;
+            text.enableWordWrapping = true;
+            text.text = body;
+            RectTransform rect = text.rectTransform;
+            rect.sizeDelta = new Vector2(680f, 64f);
+        }
+
         private void Rebuild()
         {
             Clear(_actions);
+
+            EnchantTree tree = TreeFor(CurrentCharacter);
+            if (tree != null && tree.Nodes.Count > 0 && _board != null)
+            {
+                SetLegacyNodes(_board, false);
+                _treeBoard.Build(_board, tree, _font, _selectedNodeId, HandleTreeNode);
+                ShowTreeNode(tree);
+                return;
+            }
+
+            _treeBoard.Clear();
+            SetLegacyNodes(_board, true);
             RefreshNodes();
 
             if (module == null)
