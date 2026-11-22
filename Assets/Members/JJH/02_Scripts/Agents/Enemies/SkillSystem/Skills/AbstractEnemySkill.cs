@@ -1,4 +1,5 @@
-﻿using RobotWeapons;
+﻿using Members.JJH._02_Scripts.Systems.AnimatorSystem;
+using RobotWeapons;
 using System;
 using System.Collections;
 using UnityEngine;
@@ -33,21 +34,27 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         protected AbstractEnemy _enemy;
         protected IEnemySkillModule _skillModule;
+        private EnemyRenderer _enemyRenderer;
 
         protected virtual bool followEnemy => true;
 
         private Coroutine _skillCoroutine;
-
-        private int _playingVfxHash;
-        private bool _hasPlayingVfx;
-
+        private Func<IEnumerator> _onAttack;
         private Vector3 _lastEnemyPos;
         private Vector3 _followOffset;
+
+        private int _playingVfxHash;
+
+        private bool _isAnimationEnd;
+        private bool _isAttackSequenceEnd;
+        private bool _hasAttackEvent;
+        private bool _hasPlayingVfx;
 
         public virtual void Initialize(AbstractEnemy owner, EnemySkillModule skillModule)
         {
             _enemy = owner;
             _skillModule = skillModule;
+            _enemyRenderer = owner.Renderer as EnemyRenderer;
         }
 
         protected virtual void LateUpdate()
@@ -143,6 +150,76 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             }
         }
 
+        #region  Play Animation
+
+        protected IEnumerator PlayAnimationAndWait(AnimParamSO animParam, Func<IEnumerator> onAttack = null,
+                                                                                                                                float timeout = -1f)
+        {
+            _isAnimationEnd = false;
+            _isAttackSequenceEnd = onAttack == null;
+            _hasAttackEvent = false;
+            _onAttack = onAttack;
+
+            _enemyRenderer.OnAnimationEndEvent += OnAnimationEnd;
+
+            if (onAttack != null)
+                _enemyRenderer.OnAttackEvent += OnAttack;
+
+            try
+            {
+                _enemy.PlayAnimation(animParam, 0.1f);
+
+                float endTime = timeout > 0f ? Time.time + timeout : float.MaxValue;
+
+                yield return new WaitUntil(() =>
+                    (_isAnimationEnd || Time.time >= endTime) && _isAttackSequenceEnd);
+            }
+            finally
+            {
+                ClearAnimationEvents();
+            }
+        }
+
+        private void OnAttack()
+        {
+            if (_onAttack == null || _hasAttackEvent)
+                return;
+
+            _hasAttackEvent = true;
+            StartCoroutine(RunAttackSequence());
+        }
+
+        private IEnumerator RunAttackSequence()
+        {
+            try
+            {
+                yield return _onAttack();
+            }
+            finally
+            {
+                _isAttackSequenceEnd = true;
+            }
+        }
+
+        private void ClearAnimationEvents()
+        {
+            if (_enemyRenderer != null)
+            {
+                _enemyRenderer.OnAttackEvent -= OnAttack;
+                _enemyRenderer.OnAnimationEndEvent -= OnAnimationEnd;
+            }
+
+            _onAttack = null;
+            _isAnimationEnd = false;
+            _isAttackSequenceEnd = false;
+            _hasAttackEvent = false;
+        }
+
+        private void OnAnimationEnd()
+            => _isAnimationEnd = true;
+
+        #endregion
+
         #region Expand Warning
 
         protected IEnumerator ExpandWarning(Func<float, float, AttackArea> factory, float duration)
@@ -184,7 +261,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         #region Skill Gizmo (Editor)
 
-#if UNITY_EDITOR
+#if UNITY_EDITOR //Gizmo
 
         private void OnDrawGizmosSelected()
         {

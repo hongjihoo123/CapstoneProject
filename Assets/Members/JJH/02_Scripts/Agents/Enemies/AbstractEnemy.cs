@@ -2,6 +2,7 @@ using Members.JJH._02_Scripts.Agents.Enemies.BT;
 using Members.JJH._02_Scripts.Agents.Enemies.BT.Channels;
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
 using System.Collections.Generic;
@@ -26,6 +27,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         private IReadOnlyDictionary<string, SerializableGUID> _guids;
         private BlackboardVariable<StateChannel> _stateChannel;
+        private BlackboardVariable<AnimationChannel> _animationChannel;
 
         protected override void InitializeModules()
         {
@@ -47,6 +49,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             }
 
             GetBTVariable(BTVars.StateChannel, out _stateChannel);
+            GetBTVariable(BTVars.AnimationChannel, out _animationChannel);
             SetBTVariable(BTVars.Enemy, this);
 
             Health.InitHealth(EnemyData.Health);
@@ -97,6 +100,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         {
             if (BehaviorAgent != null)
                 BehaviorAgent.End();
+        }
+
+        public void PlayAnimation(AnimParamSO animParam, float crossFadeDuration)
+        {
+            _animationChannel.Value.SendEventMessage(animParam, crossFadeDuration);
         }
 
         #endregion

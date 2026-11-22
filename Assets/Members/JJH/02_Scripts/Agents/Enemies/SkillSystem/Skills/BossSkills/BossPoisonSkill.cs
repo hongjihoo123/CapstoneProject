@@ -28,28 +28,34 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [SerializeField] private float splashSpeed = 5f;
         [SerializeField] private float phase2FlightTime = 1.5f;
 
+
         protected override IEnumerator Execute()
         {
             if (IsTransition)
                 yield break;
 
-            float projectileSpeed = IsPhase2 ? phase2ProjectileSpeed : phase1ProjectileSpeed;
             float areaRadius = IsPhase2 ? phase2AreaRadius : phase1AreaRadius;
             float areaDuration = IsPhase2 ? phase2AreaDuration : phase1AreaDuration;
             float damageInterval = IsPhase2 ? phase2DamageInterval : phase1DamageInterval;
             float flightTime = IsPhase2 ? phase2FlightTime : phase1FlightTime;
+            int currentSplashCount = IsPhase2 ? splashCount : 0;
 
-            if (!TryGetTargetPosition(out Vector3 targetPosition))
+            if (!TryGetTargetPosition(out Vector3 targetPosition) || projectilePrefab == null)
                 yield break;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Box(AttackAreaKind.EnemyWarning,
                 targetPosition, Quaternion.identity, new Vector3(10, 1, 10), SkillSetting.PrepareTime));
 
-            yield return new WaitForSeconds(SkillSetting.PrepareTime);
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: SkillSetting.PrepareTime);
 
-            if (projectilePrefab == null)
-                yield break;
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecutePoisonAttack(targetPosition, flightTime, areaRadius,
+                    areaDuration, damageInterval, currentSplashCount));
+        }
 
+        private IEnumerator ExecutePoisonAttack(Vector3 targetPosition, float flightTime,
+            float areaRadius, float areaDuration, float damageInterval, int currentSplashCount)
+        {
             Vector3 origin = projectileSpawnPoint != null
                 ? projectileSpawnPoint.position
                 : _enemy.transform.position + Vector3.up;
@@ -57,8 +63,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
             BossPoisonProjectile projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
 
             projectile.InitializeArc(targetPosition, flightTime, arcHeight, _enemy.gameObject, areaPrefab,
-                                                        SkillSetting.Damage, areaRadius, areaDuration, damageInterval,
-                                                        IsPhase2 ? splashCount : 0, splashSpeed);
+                SkillSetting.Damage, areaRadius, areaDuration, damageInterval,
+                currentSplashCount, splashSpeed);
+
+            yield break;
         }
     }
 }

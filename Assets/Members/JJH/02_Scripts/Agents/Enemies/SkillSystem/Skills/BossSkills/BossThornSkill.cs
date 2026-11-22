@@ -29,6 +29,22 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [SerializeField] private float shardSpeed = 8f;
         [SerializeField] private float shardDelay = 0.2f;
 
+        private Vector3 _thornPosition;
+        private float _warningRadius;
+        private float _damageRadius;
+        private bool _showWarning;
+
+        protected override void LateUpdate()
+        {
+            base.LateUpdate();
+
+            if (!_showWarning)
+                return;
+
+            _skillModule.AreaVisualizer.Show(AttackArea.Circle(
+                AttackAreaKind.EnemyWarning, _thornPosition, _warningRadius, 0.1f));
+        }
+
         protected override IEnumerator Execute()
         {
             if (IsTransition)
@@ -40,20 +56,29 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
             float warningRadius = IsPhase2 ? phase2WarningRadius : phase1WarningRadius;
             float damageRadius = IsPhase2 ? phase2DamageRadius : phase1DamageRadius;
 
-            float expandTime = 0.3f;
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: SkillSetting.PrepareTime);
+
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteThornAttacks(thornCount, thornInterval, thornStopTime,
+                    warningRadius, damageRadius));
+        }
+
+        private IEnumerator ExecuteThornAttacks(int thornCount, float thornInterval, float thornStopTime,
+                                                                                float warningRadius, float damageRadius)
+        {
+            const float expandTime = 0.3f;
+            const float warningDuration = 0.12f;
 
             for (int i = 0; i < thornCount; i++)
             {
                 float elapsed = 0f;
                 Vector3 groundPosition = Vector3.zero;
 
-                _skillModule.AreaVisualizer.HideEnemyWarning();
-
                 while (elapsed < expandTime)
                 {
                     if (!TryGetTargetPosition(out Vector3 targetPosition))
                     {
-                        _skillModule.AreaVisualizer.HideEnemyWarning();
+                        _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
                         yield break;
                     }
 
@@ -62,12 +87,13 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                     float t = Mathf.Clamp01(elapsed / expandTime);
                     float currentRadius = Mathf.Lerp(0.1f, warningRadius, t);
 
-                    _skillModule.AreaVisualizer.HideEnemyWarning();
-                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(
-                        AttackAreaKind.EnemyWarning, groundPosition, warningRadius, 0.1f));
+                    _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
 
-                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(
-                        AttackAreaKind.Skill, groundPosition, currentRadius, 0.1f));
+                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, groundPosition,
+                                                                                                             warningRadius, warningDuration));
+
+                    _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, groundPosition,
+                                                                                                            currentRadius, warningDuration));
 
                     elapsed += Time.deltaTime;
                     yield return null;
@@ -75,22 +101,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
                 if (!TryGetTargetPosition(out Vector3 finalTargetPosition))
                 {
-                    _skillModule.AreaVisualizer.HideEnemyWarning();
+                    _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
                     yield break;
                 }
 
                 groundPosition = GetGroundPosition(finalTargetPosition);
 
-                _skillModule.AreaVisualizer.HideEnemyWarning();
-                _skillModule.AreaVisualizer.Hide(AttackAreaKind.Skill);
-
+                _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
                 _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, groundPosition,
-                                                                                                                warningRadius, thornStopTime));
+                                                                                                                warningRadius, thornStopTime + 0.1f));
 
                 yield return new WaitForSeconds(thornStopTime);
 
-                _skillModule.AreaVisualizer.HideEnemyWarning();
-                _skillModule.AreaVisualizer.Hide(AttackAreaKind.Skill);
+                _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
 
                 if (thornPrefab != null)
                 {
@@ -106,8 +129,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                     FireShards(groundPosition);
                 }
 
-                yield return new WaitForSeconds(thornInterval);
+                if (i < thornCount - 1)
+                    yield return new WaitForSeconds(thornInterval);
             }
+
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
+        }
+
+        private IEnumerator FireShardsAfterDelay(Vector3 position)
+        {
+            yield return new WaitForSeconds(shardDelay);
+            FireShards(position);
         }
 
         private Vector3 GetGroundPosition(Vector3 position)
@@ -134,6 +166,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
 
                 projectile.Initialize(direction, shardSpeed, SkillSetting.Damage, _enemy.gameObject);
             }
+        }
+
+        protected override void OnCancelled()
+        {
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
         }
     }
 }

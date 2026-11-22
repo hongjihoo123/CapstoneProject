@@ -33,26 +33,35 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
             float swingInterval = IsPhase2 ? phase2SwingInterval : phase1SwingInterval;
             float angle = IsPhase2 ? phase2Angle : phase1Angle;
 
+            Vector3 center = _enemy.transform.position;
+            Quaternion rotation = _enemy.transform.rotation;
+
+            _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
+                center, rotation, SkillSetting.Range, angle, SkillSetting.PrepareTime));
+
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: SkillSetting.PrepareTime);
+
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
+
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteVineAttacks(swingCount, swingInterval, angle));
+        }
+
+        private IEnumerator ExecuteVineAttacks(int swingCount, float swingInterval, float angle)
+        {
             for (int i = 0; i < swingCount; i++)
             {
+                if (i > 0)
+                    yield return new WaitForSeconds(swingInterval);
+
                 Vector3 center = _enemy.transform.position;
                 Quaternion rotation = _enemy.transform.rotation;
-
-                _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                    center, rotation, SkillSetting.Range, angle, SkillSetting.PrepareTime));
-
-                yield return new WaitForSeconds(SkillSetting.PrepareTime);
 
                 DamageInCone(center, rotation, SkillSetting.Range, angle);
 
                 if (IsPhase2)
                     FireVines();
-
-                if (i < swingCount - 1)
-                    yield return new WaitForSeconds(swingInterval);
             }
-
-            yield return new WaitForSeconds(SkillSetting.AttackDutation);
         }
 
         private void FireVines()
