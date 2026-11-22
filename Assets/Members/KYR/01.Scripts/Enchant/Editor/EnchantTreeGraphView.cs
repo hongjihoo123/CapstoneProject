@@ -104,7 +104,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             Undo.RecordObject(_tree, "노드 추가");
             EnchantTreeNode node = new EnchantTreeNode
             {
-                id = NextId(),
+                id = _tree.NewNodeId(),
                 displayName = "새 노드",
                 kind = EnchantNodeKind.Stat,
                 maxRank = 5,
@@ -338,22 +338,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             }
 
             return null;
-        }
-
-        private string NextId()
-        {
-            int max = 0;
-            foreach (EnchantTreeNode node in _tree.Nodes)
-            {
-                if (string.IsNullOrEmpty(node.id) || node.id[0] != 'n')
-                    continue;
-
-                int value;
-                if (int.TryParse(node.id.Substring(1), out value) && value > max)
-                    max = value;
-            }
-
-            return "n" + (max + 1);
         }
     }
 }

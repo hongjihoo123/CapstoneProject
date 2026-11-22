@@ -1,8 +1,10 @@
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Enchant.So;
+using Members.KYR._01.Scripts.Stats;
 using UnityEditor;
 using UnityEditor.Callbacks;
 using UnityEditor.UIElements;
@@ -23,6 +25,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
         private EnchantTreeGraphView _graph;
         private ScrollView _inspector;
         private EnchantTreeNodeView _selected;
+        private List<EnchantTreeIssue> _issues;
 
         [MenuItem("KYR/인챈트 트리 편집기")]
         public static void OpenMenu()
@@ -101,6 +104,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                     _graph.FrameAll();
             })
             { text = "전체 보기" });
+            toolbar.Add(new ToolbarButton(RunValidation) { text = "검사" });
             rootVisualElement.Add(toolbar);
 
             VisualElement body = new VisualElement();
@@ -146,6 +150,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
         {
             _tree = tree;
             _selected = null;
+            _issues = null;
             SessionState.SetString(SessionKey, tree != null ? AssetDatabase.GetAssetPath(tree) : string.Empty);
 
             if (_treeField == null)
@@ -216,9 +221,20 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 return;
             }
 
+            ShowIssues();
+
             if (_selected == null || _selected.Data == null)
             {
-                _inspector.Add(Hint("노드를 선택하면 이름, 종류, 랭크, 비용, 배타 그룹, 설명을 고칠 수 있습니다."));
+                EnumField currency = new EnumField("비용 재화", _tree.CostCurrency);
+                currency.style.marginTop = 8;
+                currency.RegisterValueChangedCallback(evt =>
+                {
+                    Undo.RecordObject(_tree, "비용 재화");
+                    _tree.CostCurrency = (CurrencyType)evt.newValue;
+                    EditorUtility.SetDirty(_tree);
+                });
+                _inspector.Add(currency);
+                _inspector.Add(Hint("노드를 선택하면 이름, 종류, 랭크, 비용, 배타 그룹, 설명, 효과를 고칠 수 있습니다."));
                 return;
             }
 
@@ -264,6 +280,121 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             desc.style.whiteSpace = WhiteSpace.Normal;
             desc.RegisterValueChangedCallback(evt => Edit(view, "설명", () => view.Data.description = evt.newValue));
             _inspector.Add(desc);
+
+            ShowEffects(view);
+        }
+
+        // 효과 목록. SerializedObject로 고치면 노드 객체가 새로 만들어져 그래프가 들고 있는 참조가 끊기므로 직접 고친다.
+        private void ShowEffects(EnchantTreeNodeView view)
+        {
+            Label header = new Label("효과 (랭크당 값)");
+            header.style.unityFontStyleAndWeight = FontStyle.Bold;
+            header.style.marginTop = 10;
+            _inspector.Add(header);
+
+            List<EnchantStatEffect> effects = view.Data.Effects;
+            List<PlayerStatId> stats = new List<PlayerStatId>((PlayerStatId[])Enum.GetValues(typeof(PlayerStatId)));
+            stats.Remove(PlayerStatId.None);
+
+            for (int i = 0; i < effects.Count; i++)
+            {
+                EnchantStatEffect effect = effects[i];
+                if (effect == null)
+                    continue;
+
+                VisualElement box = new VisualElement();
+                box.style.marginTop = 4;
+                box.style.paddingLeft = 4;
+                box.style.paddingRight = 4;
+                box.style.paddingTop = 4;
+                box.style.paddingBottom = 4;
+                box.style.backgroundColor = new Color(0f, 0f, 0f, 0.15f);
+
+                PlayerStatId current = stats.Contains(effect.stat) ? effect.stat : stats[0];
+                PopupField<PlayerStatId> stat = new PopupField<PlayerStatId>("스탯", stats, current, EnchantText.StatLabel, EnchantText.StatLabel);
+                stat.RegisterValueChangedCallback(evt => Edit(view, "효과 스탯", () => effect.stat = evt.newValue));
+                box.Add(stat);
+
+                EnumField type = new EnumField("방식", effect.type);
+                type.tooltip = "Flat: 값 그대로 더함 / PercentAdd: 다른 % 와 합산 / PercentMore: 따로 곱함";
+                box.Add(type);
+
+                FloatField value = new FloatField("랭크당 값") { value = effect.valuePerRank, isDelayed = true };
+                value.tooltip = "PercentAdd/PercentMore는 0.05 = 5%";
+                box.Add(value);
+
+                Label preview = new Label();
+                preview.style.opacity = 0.7f;
+                box.Add(preview);
+                void UpdatePreview() => preview.text = "1랭크 " + EnchantText.Effect(effect, 1) + "   최대 " + EnchantText.Effect(effect, view.Data.maxRank);
+                UpdatePreview();
+
+                stat.RegisterValueChangedCallback(_ => UpdatePreview());
+                type.RegisterValueChangedCallback(evt =>
+                {
+                    Edit(view, "효과 방식", () => effect.type = (StatModifierType)evt.newValue);
+                    UpdatePreview();
+                });
+                value.RegisterValueChangedCallback(evt =>
+                {
+                    Edit(view, "효과 값", () => effect.valuePerRank = evt.newValue);
+                    UpdatePreview();
+                });
+
+                int index = i;
+                box.Add(new Button(() =>
+                {
+                    Edit(view, "효과 삭제", () => view.Data.Effects.RemoveAt(index));
+                    ShowInspector();
+                })
+                { text = "효과 삭제" });
+
+                _inspector.Add(box);
+            }
+
+            _inspector.Add(new Button(() =>
+            {
+                Edit(view, "효과 추가", () => view.Data.Effects.Add(new EnchantStatEffect()));
+                ShowInspector();
+            })
+            { text = "효과 추가" });
+        }
+
+        private void RunValidation()
+        {
+            if (_tree == null)
+                return;
+
+            _issues = EnchantTreeValidator.Validate(_tree);
+            if (_issues.Count == 0)
+                ShowNotification(new GUIContent("문제 없음"));
+            ShowInspector();
+        }
+
+        private void ShowIssues()
+        {
+            if (_issues == null || _issues.Count == 0)
+                return;
+
+            Label header = new Label("검사 결과 " + _issues.Count + "건 (누르면 노드 선택)");
+            header.style.unityFontStyleAndWeight = FontStyle.Bold;
+            _inspector.Add(header);
+
+            foreach (EnchantTreeIssue issue in _issues)
+            {
+                HelpBox box = new HelpBox(issue.Message, issue.IsError ? HelpBoxMessageType.Error : HelpBoxMessageType.Warning);
+                string id = issue.NodeId;
+                if (!string.IsNullOrEmpty(id))
+                    box.RegisterCallback<ClickEvent>(_ => _graph.Select(id));
+                _inspector.Add(box);
+            }
+
+            _inspector.Add(new Button(() =>
+            {
+                _issues = null;
+                ShowInspector();
+            })
+            { text = "검사 결과 닫기" });
         }
 
         private void Edit(EnchantTreeNodeView view, string undo, Action apply)
@@ -294,6 +425,8 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             VisualElement root = new VisualElement();
             root.Add(new Button(() => EnchantTreeWindow.Open((EnchantTree)target)) { text = "트리 편집기 열기" });
             root.Add(new PropertyField(serializedObject.FindProperty("character")));
+            root.Add(new PropertyField(serializedObject.FindProperty("costCurrency"), "비용 재화"));
+            root.Add(new Label("노드 " + ((EnchantTree)target).Nodes.Count + "개 · 연결 " + ((EnchantTree)target).Links.Count + "개"));
             root.Bind(serializedObject);
             return root;
         }

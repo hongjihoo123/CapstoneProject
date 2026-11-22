@@ -80,7 +80,8 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             }
         }
 
-        public void Build(RectTransform board, EnchantTree tree, TMP_FontAsset font, string selectedId, Action<EnchantTreeNode> onSelect)
+        // status: 노드별 (랭크, 열림). null이면 편집 미리보기로 그린다.
+        public void Build(RectTransform board, EnchantTree tree, TMP_FontAsset font, string selectedId, Action<EnchantTreeNode> onSelect, Func<EnchantTreeNode, (int rank, bool open)> status = null)
         {
             bool keepScroll = _scroll != null;
             Vector2 scroll = keepScroll ? _scroll.normalizedPosition : new Vector2(0f, 1f);
@@ -106,7 +107,7 @@ namespace Members.KYR._01.Scripts.Enchant.UI
                 topLefts[node.id] = topLeft;
                 maxX = Mathf.Max(maxX, node.position.x + NodeWidth + Pad);
                 maxY = Mathf.Max(maxY, node.position.y + NodeHeight + Pad);
-                CreateNode(content, tree, node, topLeft, font, node.id == selectedId, onSelect);
+                CreateNode(content, tree, node, topLeft, font, node.id == selectedId, onSelect, status);
             }
 
             DrawLinks(content, topLefts, tree.Links);
@@ -192,7 +193,7 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             return scroll;
         }
 
-        private static void CreateNode(RectTransform content, EnchantTree tree, EnchantTreeNode node, Vector2 topLeft, TMP_FontAsset font, bool selected, Action<EnchantTreeNode> onSelect)
+        private static void CreateNode(RectTransform content, EnchantTree tree, EnchantTreeNode node, Vector2 topLeft, TMP_FontAsset font, bool selected, Action<EnchantTreeNode> onSelect, Func<EnchantTreeNode, (int rank, bool open)> status)
         {
             RectTransform rect = CreateRect(node.id, content);
             rect.anchorMin = new Vector2(0f, 1f);
@@ -220,7 +221,15 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             widget.NameLabel = name;
             widget.InfoLabel = info;
             widget.Background = image;
-            widget.Apply(node, selected);
+            if (status != null)
+            {
+                (int rank, bool open) state = status(node);
+                widget.Apply(node, selected, state.rank, state.open);
+            }
+            else
+            {
+                widget.Apply(node, selected);
+            }
         }
 
         private struct NodeAnchor

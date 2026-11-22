@@ -2,8 +2,8 @@ using System.Collections.Generic;
 using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Enchant.So;
 using Members.KYR._01.Scripts.Enchant.UI;
+using Members.KYR._01.Scripts.Stats;
 using UnityEditor;
-using UnityEditor.SceneManagement;
 using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Enchant.Editor
@@ -11,7 +11,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
     [InitializeOnLoad]
     public static class EnchantTreeCanvasEdit
     {
-        private static bool _legacyHidden;
         private static bool _dragging;
         private static int _dragGroup = -1;
         private static bool _snapFromAsset;
@@ -29,7 +28,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 return;
 
             EnchantPanel[] panels = Object.FindObjectsByType<EnchantPanel>(FindObjectsInactive.Exclude, FindObjectsSortMode.None);
-            bool showTree = false;
             bool allowRebuild = GUIUtility.hotControl == 0;
             for (int i = 0; i < panels.Length; i++)
             {
@@ -38,8 +36,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                     continue;
 
                 panel.EnsureEditView(allowRebuild);
-                if (panel.EditTreeVisible)
-                    showTree = true;
                 SyncWidgets(panel);
                 if (LinesDirty)
                 {
@@ -48,7 +44,6 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 }
             }
 
-            SetLegacyVisible(!showTree);
             if (_dragging && GUIUtility.hotControl == 0)
             {
                 Undo.CollapseUndoOperations(_dragGroup);
@@ -105,55 +100,9 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             }
         }
 
-        private static void SetLegacyVisible(bool visible)
-        {
-            if (_legacyHidden == !visible)
-                return;
-
-            EnchantNode[] nodes = Object.FindObjectsByType<EnchantNode>(FindObjectsInactive.Include, FindObjectsSortMode.None);
-            for (int i = 0; i < nodes.Length; i++)
-            {
-                if (nodes[i] == null)
-                    continue;
-                if (visible)
-                    SceneVisibilityManager.instance.Show(nodes[i].gameObject, true);
-                else
-                    SceneVisibilityManager.instance.Hide(nodes[i].gameObject, true);
-            }
-
-            _legacyHidden = !visible;
-        }
-
         public static EnchantTreeNode FindNode(EnchantTree tree, string id)
         {
-            if (tree == null || string.IsNullOrEmpty(id))
-                return null;
-
-            for (int i = 0; i < tree.Nodes.Count; i++)
-            {
-                EnchantTreeNode node = tree.Nodes[i];
-                if (node != null && node.id == id)
-                    return node;
-            }
-
-            return null;
-        }
-
-        public static string NextId(EnchantTree tree)
-        {
-            int max = 0;
-            for (int i = 0; i < tree.Nodes.Count; i++)
-            {
-                EnchantTreeNode node = tree.Nodes[i];
-                if (node == null || string.IsNullOrEmpty(node.id) || node.id[0] != 'n')
-                    continue;
-
-                int value;
-                if (int.TryParse(node.id.Substring(1), out value) && value > max)
-                    max = value;
-            }
-
-            return "n" + (max + 1);
+            return tree != null ? tree.FindNode(id) : null;
         }
 
         public static void AddNode(EnchantTree tree)
@@ -171,7 +120,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             Undo.RecordObject(tree, "노드 추가");
             tree.Nodes.Add(new EnchantTreeNode
             {
-                id = NextId(tree),
+                id = tree.NewNodeId(),
                 displayName = "새 노드",
                 kind = EnchantNodeKind.Stat,
                 maxRank = 5,
@@ -248,17 +197,70 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
 
         private EnchantTree FirstTree()
         {
-            SerializedProperty trees = serializedObject.FindProperty("trees");
-            if (trees == null || trees.arraySize == 0)
+            EnchantModule module = ((EnchantPanel)target).Module;
+            if (module == null)
+            {
+                EditorUtility.DisplayDialog("인챈트 트리", "패널에 EnchantModule을 연결하세요. 트리 목록은 모듈이 들고 있습니다.", "확인");
                 return null;
+            }
 
-            return trees.GetArrayElementAtIndex(0).objectReferenceValue as EnchantTree;
+            return module.TreeFor(null);
         }
     }
 
     [CustomEditor(typeof(EnchantTreeNodeWidget))]
     public sealed class EnchantTreeNodeWidgetEditor : UnityEditor.Editor
     {
+        // 그래프 창이 노드 객체 참조를 들고 있으므로 SerializedObject 대신 직접 고친다.
+        private static void DrawEffects(EnchantTreeNodeWidget widget, EnchantTreeNode node)
+        {
+            EditorGUILayout.Space();
+            EditorGUILayout.LabelField("효과 (랭크당 값)", EditorStyles.boldLabel);
+
+            List<EnchantStatEffect> effects = node.Effects;
+            int remove = -1;
+            for (int i = 0; i < effects.Count; i++)
+            {
+                EnchantStatEffect effect = effects[i];
+                if (effect == null)
+                    continue;
+
+                using (new EditorGUILayout.VerticalScope("box"))
+                {
+                    EditorGUI.BeginChangeCheck();
+                    PlayerStatId stat = (PlayerStatId)EditorGUILayout.EnumPopup("스탯", effect.stat);
+                    StatModifierType type = (StatModifierType)EditorGUILayout.EnumPopup("방식", effect.type);
+                    float value = EditorGUILayout.FloatField(new GUIContent("랭크당 값", "PercentAdd/PercentMore는 0.05 = 5%"), effect.valuePerRank);
+                    if (EditorGUI.EndChangeCheck())
+                    {
+                        Undo.RecordObject(widget.Tree, "효과 수정");
+                        effect.stat = stat;
+                        effect.type = type;
+                        effect.valuePerRank = value;
+                        EditorUtility.SetDirty(widget.Tree);
+                    }
+
+                    EditorGUILayout.LabelField("1랭크 " + EnchantText.Effect(effect, 1) + "   최대 " + EnchantText.Effect(effect, node.maxRank), EditorStyles.miniLabel);
+                    if (GUILayout.Button("효과 삭제"))
+                        remove = i;
+                }
+            }
+
+            if (remove >= 0)
+            {
+                Undo.RecordObject(widget.Tree, "효과 삭제");
+                effects.RemoveAt(remove);
+                EditorUtility.SetDirty(widget.Tree);
+            }
+
+            if (GUILayout.Button("효과 추가"))
+            {
+                Undo.RecordObject(widget.Tree, "효과 추가");
+                effects.Add(new EnchantStatEffect());
+                EditorUtility.SetDirty(widget.Tree);
+            }
+        }
+
         public override void OnInspectorGUI()
         {
             EnchantTreeNodeWidget widget = (EnchantTreeNodeWidget)target;
@@ -288,6 +290,8 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 EditorUtility.SetDirty(widget.Tree);
                 widget.Apply(node, true);
             }
+
+            DrawEffects(widget, node);
 
             EditorGUILayout.Space();
             EditorGUILayout.LabelField("선행");

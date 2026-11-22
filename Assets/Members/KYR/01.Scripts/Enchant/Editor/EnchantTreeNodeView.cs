@@ -76,6 +76,9 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             string text = EnchantNodeKindStyle.LabelOf(Data.kind) + "   최대 " + Data.maxRank + "   비용 " + Data.cost;
             if (!string.IsNullOrEmpty(Data.exclusiveGroup))
                 text += "\n배타 " + Data.exclusiveGroup;
+            string effects = EnchantText.Effects(Data, -1);
+            if (!string.IsNullOrEmpty(effects))
+                text += "\n" + effects;
             _info.text = text;
         }
     }
