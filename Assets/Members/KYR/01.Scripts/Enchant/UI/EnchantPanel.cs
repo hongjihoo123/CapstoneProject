@@ -8,6 +8,7 @@ using UnityEngine.UI;
 
 namespace Members.KYR._01.Scripts.Enchant.UI
 {
+    // 지금 캐릭터의 인챈트 트리를 그리고, 노드를 고르면 하단 바에서 설명과 "배우기"를 보여 준다.
     public class EnchantPanel : MonoBehaviour
     {
         [Serializable]
@@ -18,35 +19,76 @@ namespace Members.KYR._01.Scripts.Enchant.UI
         }
 
         [SerializeField] private EnchantModule module;
-        [SerializeField] private CharacterSwitcher switcher;
         [SerializeField] private CharacterBoard[] boards = Array.Empty<CharacterBoard>();
         [SerializeField] private RectTransform board;
-        [SerializeField] private RectTransform fragmentRow;
-        [SerializeField] private RectTransform optionRow;
         [SerializeField] private Button buttonPrefab;
 
+        private readonly EnchantTreeBoard _treeBoard = new EnchantTreeBoard();
         private RectTransform _board;
         private TMP_Text _title;
         private RectTransform _actions;
         private Button _openButton;
-        private EnchantFragment _current;
+        private string _selectedNodeId;
         private TMP_FontAsset _font;
+        private bool _editTreeVisible;
+
+        public EnchantModule Module => module;
+        public bool EditTreeVisible => _editTreeVisible;
+
+        public void EnsureEditView(bool allowRebuild)
+        {
+            if (Application.isPlaying)
+                return;
+
+            if (_board == null)
+                _board = board != null ? board : transform.Find("Board") as RectTransform;
+            if (_font == null && buttonPrefab != null)
+            {
+                TMP_Text sample = buttonPrefab.GetComponentInChildren<TMP_Text>(true);
+                if (sample != null)
+                    _font = sample.font;
+            }
+
+            EnchantTree tree = CurrentTree;
+            bool show = tree != null && tree.Nodes.Count > 0 && _board != null;
+            _editTreeVisible = show;
+            if (!show)
+            {
+                _treeBoard.Clear();
+                return;
+            }
+
+            int hash = EnchantTreeBoard.StructureHashOf(tree);
+            if (allowRebuild && (_treeBoard.Root == null || _treeBoard.StructureHash != hash))
+                _treeBoard.Build(_board, tree, _font, _selectedNodeId, null);
+        }
+
+        public void RefreshEditLines()
+        {
+            EnchantTree tree = CurrentTree;
+            if (tree != null)
+                _treeBoard.RefreshLines(tree);
+        }
+
+        private EnchantTree CurrentTree
+        {
+            get
+            {
+                if (module == null)
+                    return null;
+
+                return Application.isPlaying ? module.ActiveTree : module.TreeFor(null);
+            }
+        }
 
         private void Awake()
         {
             if (module == null)
                 module = FindFirstObjectByType<EnchantModule>();
-            if (switcher == null)
-                switcher = FindFirstObjectByType<CharacterSwitcher>();
 
             VerticalLayoutGroup layout = GetComponent<VerticalLayoutGroup>();
             if (layout != null)
                 layout.enabled = false;
-
-            if (fragmentRow != null)
-                fragmentRow.gameObject.SetActive(false);
-            if (optionRow != null)
-                optionRow.gameObject.SetActive(false);
 
             if (buttonPrefab != null)
             {
@@ -57,7 +99,6 @@ namespace Members.KYR._01.Scripts.Enchant.UI
 
             _board = board != null ? board : transform.Find("Board") as RectTransform;
             BuildChrome();
-            BindNodes();
             ShowCurrentBoard();
         }
 
@@ -65,42 +106,41 @@ namespace Members.KYR._01.Scripts.Enchant.UI
         {
             if (module != null)
             {
-                module.FragmentUnlocked += HandleChanged;
-                module.OptionSelected += HandleOptionSelected;
+                module.RankChanged += HandleRankChanged;
+                module.ActiveTreeChanged += HandleActiveTreeChanged;
             }
-
-            if (switcher != null)
-                switcher.CharacterChanged += HandleCharacterChanged;
 
             if (_openButton != null)
                 _openButton.gameObject.SetActive(false);
 
-            ShowCurrentBoard();
+            if (_title != null)
+                ShowCurrentBoard();
         }
 
         private void OnDisable()
         {
             if (module != null)
             {
-                module.FragmentUnlocked -= HandleChanged;
-                module.OptionSelected -= HandleOptionSelected;
+                module.RankChanged -= HandleRankChanged;
+                module.ActiveTreeChanged -= HandleActiveTreeChanged;
             }
-
-            if (switcher != null)
-                switcher.CharacterChanged -= HandleCharacterChanged;
         }
 
-        private void HandleCharacterChanged(CharacterData character)
+        private void HandleActiveTreeChanged(EnchantTree tree)
         {
-            _current = null;
+            _selectedNodeId = null;
             ShowCurrentBoard();
         }
 
-        private CharacterData CurrentCharacter => switcher != null ? switcher.Current : null;
+        private void HandleRankChanged(EnchantTree tree, EnchantTreeNode node, int rank)
+        {
+            if (tree == CurrentTree)
+                Rebuild();
+        }
 
         private void ShowCurrentBoard()
         {
-            CharacterData current = CurrentCharacter;
+            CharacterData current = module != null ? module.CurrentCharacter : null;
             RectTransform active = null;
 
             if (boards != null && boards.Length > 0)
@@ -124,54 +164,11 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             }
             else
             {
-                active = _board;
+                active = board != null ? board : _board;
             }
 
             _board = active;
             Rebuild();
-        }
-
-        private void HandleChanged(EnchantFragment fragment)
-        {
-            Rebuild();
-        }
-
-        private void HandleOptionSelected(EnchantFragment fragment, int optionIndex)
-        {
-            Rebuild();
-        }
-
-        private void BindNodes()
-        {
-            if (boards != null)
-            {
-                for (int i = 0; i < boards.Length; i++)
-                    BindBoard(boards[i].board);
-            }
-
-            BindBoard(_board);
-        }
-
-        private void BindBoard(RectTransform target)
-        {
-            if (target == null)
-                return;
-
-            foreach (EnchantNode node in target.GetComponentsInChildren<EnchantNode>(true))
-            {
-                Button button = node.GetComponent<Button>();
-                if (button == null || node.Fragment == null)
-                    continue;
-
-                button.transition = Selectable.Transition.None;
-                button.onClick.RemoveAllListeners();
-                EnchantFragment captured = node.Fragment;
-                button.onClick.AddListener(() =>
-                {
-                    _current = captured;
-                    Rebuild();
-                });
-            }
         }
 
         private void BuildChrome()
@@ -246,70 +243,98 @@ namespace Members.KYR._01.Scripts.Enchant.UI
             rect.sizeDelta = new Vector2(96f, 40f);
         }
 
-        private void Rebuild()
+        private void HandleTreeNode(EnchantTreeNode node)
         {
-            Clear(_actions);
-            RefreshNodes();
-
-            if (module == null)
-            {
-                _title.text = "파편 모듈이 없습니다";
-                return;
-            }
-
-            if (_current == null)
-            {
-                _title.text = "파편을 누르세요";
-                return;
-            }
-
-            _title.text = _current.DisplayName;
-            CharacterData character = CurrentCharacter;
-            if (!module.IsUnlocked(character, _current))
-            {
-                Button activate = Spawn(_actions, "활성화", Color.white);
-                EnchantFragment captured = _current;
-                activate.onClick.AddListener(() => module.Activate(character, captured));
-                return;
-            }
-
-            int selected = module.GetSelectedOption(character, _current);
-            if (_current.Options == null)
-                return;
-
-            for (int i = 0; i < _current.Options.Length; i++)
-            {
-                EnchantOption option = _current.Options[i];
-                if (option == null)
-                    continue;
-
-                int index = i;
-                bool chosen = selected == i;
-                Color color = chosen ? Color.white : BranchColor(_current.Branch, true);
-                Button button = Spawn(_actions, option.DisplayName, color);
-                TMP_Text label = button.GetComponentInChildren<TMP_Text>();
-                if (label != null)
-                    label.color = chosen ? new Color(0.07f, 0.08f, 0.1f) : Color.white;
-
-                EnchantFragment captured = _current;
-                button.onClick.AddListener(() => module.TrySelectOption(character, captured, index));
-            }
+            _selectedNodeId = node != null ? node.id : null;
+            Rebuild();
         }
 
-        private void RefreshNodes()
+        private (int rank, bool open) StatusOf(EnchantTree tree, EnchantTreeNode node)
         {
-            if (_board == null || module == null)
+            if (module == null)
+                return (0, true);
+
+            return (module.GetRank(tree, node.id), module.IsOpen(tree, node));
+        }
+
+        private void Rebuild()
+        {
+            if (_actions == null)
                 return;
 
-            foreach (EnchantNode node in _board.GetComponentsInChildren<EnchantNode>(true))
-            {
-                EnchantFragment fragment = node.Fragment;
-                if (fragment == null)
-                    continue;
+            Clear(_actions);
 
-                bool unlocked = module.IsUnlocked(CurrentCharacter, fragment);
-                bool viewing = fragment == _current;
-                node.SetColor(BranchColor(fragment.Branch, unlocked || viewing));
+            EnchantTree tree = CurrentTree;
+            if (module == null)
+            {
+                _treeBoard.Clear();
+                _title.text = "인챈트 모듈이 없습니다";
+                return;
+            }
+
+            if (tree == null || tree.Nodes.Count == 0 || _board == null)
+            {
+                _treeBoard.Clear();
+                _title.text = "이 캐릭터의 인챈트 트리가 없습니다";
+                return;
+            }
+
+            _treeBoard.Build(_board, tree, _font, _selectedNodeId, HandleTreeNode, node => StatusOf(tree, node));
+            ShowTreeNode(tree);
+        }
+
+        private void ShowTreeNode(EnchantTree tree)
+        {
+            EnchantTreeNode selected = tree.FindNode(_selectedNodeId);
+            if (selected == null)
+            {
+                _title.text = "노드를 누르세요";
+                return;
+            }
+
+            int rank = module.GetRank(tree, selected.id);
+            string name = string.IsNullOrEmpty(selected.displayName) ? selected.id : selected.displayName;
+            _title.text = name + "   랭크 " + rank + "/" + selected.maxRank;
+
+            string body = selected.description ?? string.Empty;
+            string now = EnchantText.Effects(selected, rank, ", ");
+            string next = rank < selected.maxRank ? EnchantText.Effects(selected, rank + 1, ", ") : string.Empty;
+            if (!string.IsNullOrEmpty(next))
+                body += (body.Length > 0 ? "\n" : string.Empty) + (rank > 0 ? now + "  →  " : "다음: ") + next;
+            else if (!string.IsNullOrEmpty(now))
+                body += (body.Length > 0 ? "\n" : string.Empty) + now;
+
+            TMP_Text text = CreateText("Desc", _actions, 15f);
+            text.alignment = TextAlignmentOptions.Center;
+            text.enableWordWrapping = true;
+            text.text = body;
+            text.rectTransform.sizeDelta = new Vector2(520f, 64f);
+
+            if (buttonPrefab == null)
+                return;
+
+            EnchantLearnResult result = module.CanLearn(tree, selected);
+            bool ok = result == EnchantLearnResult.Ok;
+            Button learn = Spawn(_actions, LearnLabel(result, selected.cost), ok ? Color.white : new Color(0.3f, 0.3f, 0.32f));
+            learn.interactable = ok;
+            TMP_Text label = learn.GetComponentInChildren<TMP_Text>();
+            if (label != null)
+                label.color = ok ? new Color(0.07f, 0.08f, 0.1f) : new Color(0.75f, 0.75f, 0.75f);
+
+            EnchantTreeNode captured = selected;
+            learn.onClick.AddListener(() => module.TryLearn(tree, captured));
+        }
+
+        private static string LearnLabel(EnchantLearnResult result, int cost)
+        {
+            switch (result)
+            {
+                case EnchantLearnResult.Ok: return cost > 0 ? "배우기 (" + cost + ")" : "배우기";
+                case EnchantLearnResult.MaxRank: return "최대 랭크";
+                case EnchantLearnResult.Locked: return "선행 필요";
+                case EnchantLearnResult.Exclusive: return "배타 선택됨";
+                case EnchantLearnResult.NotEnoughCurrency: return "재화 부족 (" + cost + ")";
+                default: return "배울 수 없음";
             }
         }
 
@@ -359,23 +384,6 @@ namespace Members.KYR._01.Scripts.Enchant.UI
         {
             for (int i = parent.childCount - 1; i >= 0; i--)
                 Destroy(parent.GetChild(i).gameObject);
-        }
-
-        private static Color BranchColor(EnchantBranch branch, bool bright)
-        {
-            Color color = branch switch
-            {
-                EnchantBranch.Attack => new Color(1f, 0.35f, 0.35f),
-                EnchantBranch.Defense => new Color(0.35f, 0.66f, 1f),
-                EnchantBranch.Utility => new Color(0.35f, 1f, 0.54f),
-                _ => Color.white
-            };
-
-            if (!bright)
-                color = Color.Lerp(Color.black, color, 0.35f);
-
-            color.a = 1f;
-            return color;
         }
     }
 }
