@@ -106,7 +106,7 @@ namespace HJH.EditorTools
                 AssetDatabase.CreateAsset(table, TablePath);
             }
 
-            table.Set(2, 4, 10f, new[] { 1.25f, 1.75f, 2.5f, 4f }, elements, pairs);
+            table.Set(2, 4, 10f, new[] { 1.75f, 2.5f, 4f }, elements, pairs);
             EditorUtility.SetDirty(table);
             AssetDatabase.SaveAssets();
             Debug.Log($"[ComboBind] 원소 효과 표 저장: {TablePath} (원소 {elements.Count}, 보너스 {pairs.Count})");

@@ -39,7 +39,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         [SerializeField, Min(1)] private int minLength = 2;
         [SerializeField, Min(1)] private int maxLength = 4;
         [SerializeField, Min(0.1f)] private float duration = 10f;
-        [SerializeField, Tooltip("콤보 길이별 전체 효과 배율 (0번 = 1칸)")] private float[] lengthScale = { 1.25f, 1.75f, 2.5f, 4f };
+        [SerializeField, Tooltip("콤보 길이별 전체 효과 배율 (0번 = 최소 길이, 보통 2칸). 최소 길이보다 짧으면 배율 없음(x1)")] private float[] lengthScale = { 1.75f, 2.5f, 4f };
         [SerializeField] private List<ElementEffect> elements = new();
         [SerializeField] private List<PairBonus> pairs = new();
 
@@ -50,7 +50,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public IReadOnlyList<PairBonus> Pairs => pairs;
 
         public float ScaleFor(int length) =>
-            lengthScale == null || lengthScale.Length == 0 ? 1f : lengthScale[Mathf.Clamp(length - 1, 0, lengthScale.Length - 1)];
+            lengthScale == null || lengthScale.Length == 0 || length < minLength ? 1f : lengthScale[Mathf.Clamp(length - minLength, 0, lengthScale.Length - 1)];
 
         public ElementEffect EffectOf(ElementType element) => elements.Find(e => e.element == element);
 

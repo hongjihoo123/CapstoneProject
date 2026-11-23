@@ -758,7 +758,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 total.Append($"{ComboEffect.StatName(mod.stat)}  <color={color}>{ComboEffect.Amount(mod)}</color>");
             }
             totalText.text = total.Length > 0 ? total.ToString() : "효과 없음";
-            totalNoteText.text = $"<color=#D6B878>×{effect.Scale:0.##}</color> ({_sequence.Count}칸)  ·  {(table != null ? table.Duration : 10f):0}초";
+            float seconds = table != null ? table.Duration : 10f;
+            totalNoteText.text = table != null && _sequence.Count >= table.MinLength
+                ? $"<color=#D6B878>×{effect.Scale:0.##}</color> ({_sequence.Count}칸)  ·  {seconds:0}초"
+                : $"{seconds:0}초";
         }
 
         // "공격력 +10%" 한 줄씩. signColor 면 + 초록 / - 빨강
