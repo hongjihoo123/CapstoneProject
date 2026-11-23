@@ -13,7 +13,7 @@ namespace Members.KYR._01.Scripts.Stats
         {
             Root = new StatNode(PlayerStatId.None, 0f);
 
-            //----------����----------
+            //----------공격----------
             Add(PlayerStatId.Damage, bases.Damage, Root);
             Add(PlayerStatId.MagicDamage, bases.MagicDamage, Root);
             Add(PlayerStatId.AttackSpeed, bases.AttackSpeed, Root);
@@ -21,22 +21,28 @@ namespace Members.KYR._01.Scripts.Stats
             Add(PlayerStatId.MagicPenetration, bases.MagicPenetration, Root);
             Add(PlayerStatId.Omnivamp, bases.Omnivamp, Root);
             Add(PlayerStatId.SkillCooldownReduction, bases.SkillCooldownReduction, Root);
+
+            Add(PlayerStatId.CritChance, bases.CritChance, Root);
+            Add(PlayerStatId.CritDamage, bases.CritDamage, Root);
+
             Add(PlayerStatId.FirePenetration, bases.FirePenetration, Root);
             Add(PlayerStatId.WaterPenetration, bases.WaterPenetration, Root);
             Add(PlayerStatId.WindPenetration, bases.WindPenetration, Root);
             Add(PlayerStatId.ElectricPenetration, bases.ElectricPenetration, Root);
             Add(PlayerStatId.EarthPenetration, bases.EarthPenetration, Root);
 
-            //----------���----------
+            //----------방어----------
             Add(PlayerStatId.MaxHp, bases.MaxHp, Root);
+
             Add(PlayerStatId.DamageReduction, bases.DamageReduction, Root);
             Add(PlayerStatId.IncomingDamageTaken, bases.IncomingDamageTaken, Root);
             Add(PlayerStatId.HealReceived, bases.HealReceived, Root);
             Add(PlayerStatId.Tenacity, bases.Tenacity, Root);
+
             Add(PlayerStatId.ArmorDefense, bases.ArmorDefense, Root);
             Add(PlayerStatId.MagicDefense, bases.MagicDefense, Root);
 
-            //----------�̵�----------
+            //----------이동----------
             Add(PlayerStatId.MoveSpeed, bases.MoveSpeed, Root);
             Add(PlayerStatId.DashSpeed, bases.DashSpeed, Root);
             Add(PlayerStatId.DashDuration, bases.DashDuration, Root);
