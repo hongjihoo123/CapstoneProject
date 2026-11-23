@@ -10,7 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
     //  플레이어: 바라보는 방향을 가리키는 청록 화살표 / 적: 붉은 점(보스는 크게) / 포탈: 금색 고리
     // 0.5초마다 새로 생긴 아이콘을 찾아서 한 번만 바꿈. 플레이어 방향은 매 프레임 따라감.
     [DefaultExecutionOrder(100)]
-    public class MinimapIconSkin : MonoBehaviour
+    public class MinimapIconSkin : MonoBehaviour, IUiBake
     {
         [SerializeField] private float playerSize = 3.6f;
         [SerializeField] private float enemySize = 2.4f;
@@ -19,14 +19,20 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private readonly HashSet<int> _done = new();
         private readonly List<Transform> _players = new();
-        private Sprite _player, _enemy, _portal;
+        [SerializeField, Tooltip("미니맵 아이콘 그림 (Resources/HJH/UI 의 minimap_*)")] private Sprite playerSprite;
+        [SerializeField] private Sprite enemySprite;
+        [SerializeField] private Sprite portalSprite;
         private float _next;
 
-        private void Awake()
+        // 그림 연결 (에디터 전용, HJH/UI 굽기 메뉴가 부름)
+        [ContextMenu("그림 연결")]
+        public void BakeLayout()
         {
-            _player = HudUiKit.Load("minimap_player");
-            _enemy = HudUiKit.Load("minimap_enemy");
-            _portal = HudUiKit.Load("minimap_portal");
+#if UNITY_EDITOR
+            playerSprite = HudUiKit.Load("minimap_player");
+            enemySprite = HudUiKit.Load("minimap_enemy");
+            portalSprite = HudUiKit.Load("minimap_portal");
+#endif
         }
 
         private void Update()
@@ -77,17 +83,17 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             if (owner != null && owner.GetComponentInParent<PlayerAgent>() != null)
             {
-                sprite = _player; size = playerSize; order = 20;
+                sprite = playerSprite; size = playerSize; order = 20;
                 _players.Add(icon.transform);
             }
             else if (owner != null && owner.GetComponentInParent<MapPortalTrigger>() != null)
             {
-                sprite = _portal; size = portalSize; order = 10;
+                sprite = portalSprite; size = portalSize; order = 10;
             }
             else
             {
                 bool boss = owner != null && owner.name.Contains("Boss");
-                sprite = _enemy; size = boss ? bossSize : enemySize; order = 5;
+                sprite = enemySprite; size = boss ? bossSize : enemySize; order = 5;
             }
 
             if (sprite == null)

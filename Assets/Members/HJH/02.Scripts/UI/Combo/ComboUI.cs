@@ -131,6 +131,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.FinisherArmed += OnFinisherArmed;
             _hud.FinisherExpired += OnFinisherExpired;
             _hud.LoadoutChanged += Redraw;   // 스킬 바꾸거나 캐릭터 바꾸면 칸에 적힌 키도 바뀌어야 해서
+            _hud.ComboListChanged += RebuildList;   // 맛보기 선택·바인딩 교체로 들고 있는 콤보가 바뀜
             Redraw();
         }
 
@@ -147,6 +148,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.FinisherArmed -= OnFinisherArmed;
             _hud.FinisherExpired -= OnFinisherExpired;
             _hud.LoadoutChanged -= Redraw;
+            _hud.ComboListChanged -= RebuildList;
         }
 
         private void Update()
@@ -535,6 +537,18 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
                 _rows.Add(row);
             }
+        }
+
+        private void RebuildList()
+        {
+            foreach (ListRow row in _rows)
+            {
+                if (row.background != null)
+                    Destroy(row.background.gameObject);
+            }
+            _rows.Clear();
+            BuildList();
+            Redraw();
         }
 
         // 콤보 진행 중이면 이어갈 수 있는 것만 (많이 진행한 순서로), 아니면 전부 보여줌

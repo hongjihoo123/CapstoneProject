@@ -26,6 +26,8 @@ namespace RobotWeapons
         public bool heightAssist = true;
         [Tooltip("Max height difference (m) between the muzzle and the enemy's body center that still gets assisted. Bigger gaps keep the flat shot.")]
         public float heightAssistMaxDelta = 1.5f;
+        [Tooltip("Extra allowed height difference per meter of distance (hills): 0.6 = enemies up to ~30 degrees above/below still get assisted.")]
+        public float heightAssistSlope = 0.6f;
         [Tooltip("Only enemies within this many degrees (horizontal) of the aim direction count.")]
         public float heightAssistAngle = 12f;
 

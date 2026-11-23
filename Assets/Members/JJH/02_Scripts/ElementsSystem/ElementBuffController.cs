@@ -50,6 +50,22 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         public int ComboCount => combos.Count;
 
+        // (HJH) 픽 화면에서 고른 콤보로 표를 통째로 바꿈. 켜져 있던 콤보는 정리하고 시작
+        public void SetCombos(List<ElementCombo> list)
+        {
+            if (list == null)
+                return;
+
+            foreach (string name in _active.Keys)
+            {
+                EffectBuff running = EffectBuffOf(name);
+                if (running != null)
+                    EffectBuffRunner.Player?.Remove(running);
+            }
+            _active.Clear();
+            combos = list;
+        }
+
         private void Awake()
         {
             _counts = new int[Enum.GetValues(typeof(ElementType)).Length];

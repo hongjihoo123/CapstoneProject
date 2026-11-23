@@ -20,6 +20,9 @@ namespace Members.JJH._02_Scripts.ElementsSystem
         [SerializeField, Min(1)] private int maxStack = 4;
         [SerializeField, Min(0.1f)] private float triggerDelay = 3f;
 
+        // (HJH) The time the stack UI counts down; the combo chain uses the same length so the screen and the rules agree.
+        public float TriggerDelay => triggerDelay;
+
         private ElementStackModel _model;
         private float _timer;
         private bool _timerRunning;

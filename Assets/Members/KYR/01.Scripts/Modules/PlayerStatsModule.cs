@@ -131,6 +131,12 @@ namespace Members.KYR._01.Scripts.Modules
             return Get(PlayerStatId.MagicPenetration) + Get(PlayerElementStats.PenetrationStat(element));
         }
 
+        // (HJH) Final value without modifiers whose source matches excludeSource (UI shows what one source adds).
+        public float GetExcluding(PlayerStatId id, Predicate<object> excludeSource)
+        {
+            return Tree != null ? Tree.GetExcluding(id, excludeSource) : NeutralCombatStats.Instance.Get(id);
+        }
+
         public void AddModifier(PlayerStatId id, StatModifier modifier)
         {
             Tree.AddModifier(id, modifier);

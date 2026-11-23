@@ -95,9 +95,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             private (Vector3 start, Vector3 tip) Barrel()
             {
-                Vector3 start = _context.Transform.position + Vector3.up + _direction * _data.barrelOffset;
-                return (start, start + _direction * _data.barrelLength);
+                // 포신도 경사를 따라 눕힘: 오르막에서 수평으로 뻗으면 포신 끝(탄 나가는 곳)이 땅속에 들어가서 탄이 바로 사라짐
+                Vector3 origin = _context.Transform.position + Vector3.up;
+                GroundTrace.Trace(_context, origin, _direction, _data.barrelOffset, _path);
+                Vector3 start = _path[_path.Count - 1];
+                GroundTrace.Trace(_context, start, _direction, _data.barrelLength, _path);
+                return (start, _path[_path.Count - 1]);
             }
+
+            private readonly System.Collections.Generic.List<Vector3> _path = new();
 
             private void Fire(Vector3 tip)
             {

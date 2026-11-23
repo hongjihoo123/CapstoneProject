@@ -47,6 +47,12 @@ namespace Members.KYR._01.Scripts.Stats
             return GetNode(id).ComputeFinal();
         }
 
+        // (HJH) Final value without modifiers whose source matches excludeSource.
+        public float GetExcluding(PlayerStatId id, Predicate<object> excludeSource)
+        {
+            return GetNode(id).ComputeFinal(excludeSource);
+        }
+
         public void AddModifier(PlayerStatId id, StatModifier modifier)
         {
             GetNode(id).AddModifier(modifier);

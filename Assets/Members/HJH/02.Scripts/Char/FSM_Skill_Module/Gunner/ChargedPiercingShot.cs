@@ -1,3 +1,5 @@
+using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using RobotWeapons;
 using UnityEngine;
@@ -34,6 +36,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         private FxHandle _aimLine;
         private IAnimationTimedShots _fireFrameSource;
         private bool _fireFrameReached;
+        private readonly List<Vector3> _path = new();
+        private readonly HashSet<IDamageable> _struck = new();
 
         // muzzle: 총이 알려주는 "지금 총구 위치" (있으면 충전 이펙트가 총구에 딱 붙어서 따라감)
         // fireFrameSource: 애니 이벤트로 쏘는 총이면 넘김 -> 충전하다가 PassiveShot 클립의 Anim_Fire 프레임에 발사
@@ -61,6 +65,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         // 애니 이벤트 안 와도 총이 알아서 시간 초과로 FireFrame 보내줌. 이건 총이 사라졌을 때 대비용
         private const float SafetyTimeout = 2f;
 
+        // 판정 여유: 빔 폭 양옆으로 이만큼 더, 경로 위아래로 이만큼 더 맞음 (보이는 빔보다 판정이 넉넉함)
+        private const float HitPadding = 0.5f;
+        private const float HitHeightReach = 2.5f;
+
         // 애니 이벤트로 쏘면: 총이 FireFrame 보낼 때 / 아니면: 충전 시간 끝
         private bool ReadyToFire => _fireFrameSource != null
             ? _fireFrameReached || _elapsed >= SafetyTimeout
@@ -72,11 +80,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         {
             _elapsed += deltaTime;
             Vector3 start = _muzzle != null ? _muzzle() : _context.Transform.position + _muzzleOffset;
-            Vector3 end = start + _direction * _s.range;
+            // 지형을 타고 가는 경로 (언덕에서 땅에 박히거나 내리막에서 적 머리 위로 지나가지 않게).
             // 관통은 적만: 바위·벽 같은 단단한 오브젝트에서는 그 자리에서 끊긴다 (조준선·빔·피해 범위 모두 거기까지)
-            bool blocked = _context.LineBlocked(start, end, out Vector3 blockPoint);
-            if (blocked)
-                end = blockPoint;
+            bool blocked = GroundTrace.Trace(_context, start, _direction, _s.range, _path);
+            Vector3 end = _path[_path.Count - 1];
 
             if (!ReadyToFire)
             {
@@ -111,8 +118,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
         private void Fire(Vector3 start, Vector3 end, bool blocked)
         {
-            AttackAreaBus.Raise(AttackArea.Box(AttackAreaKind.Skill, (start + end) * 0.5f, Quaternion.LookRotation(_direction),
-                new Vector3(_s.width, 0.05f, Vector3.Distance(start, end)), 0.15f));
+            Vector3 along = end - start;
+            AttackAreaBus.Raise(AttackArea.Box(AttackAreaKind.Skill, (start + end) * 0.5f,
+                Quaternion.LookRotation(along.sqrMagnitude > 0.0001f ? along : _direction),
+                new Vector3(_s.width, 0.05f, along.magnitude), 0.15f));
 
             Fx.Beam(start, end, _s.color, _s.width * 1.1f, 0.3f);
             Fx.Shockwave(start - Vector3.up * 0.9f, _s.color, 1.4f);
@@ -127,14 +136,33 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 GunnerFx.Flash(end + back * 0.3f, _s.color, 4f, 3f, 0.1f);
             }
 
-            int hits = 0;
-            foreach (IDamageable target in _context.OverlapCapsule(start, end, _s.width * 0.5f))
+            // 판정은 넉넉하게: 위에서 본 직사각형(길이 = 막힌 데까지, 폭 = 빔보다 넓게) 안에 있으면 높이 상관없이 맞음.
+            // 넓은 캡슐을 위아래로 겹쳐 쌓아서 "높은 박스"처럼 훑음. 같은 적은 한 번만
+            float radius = _s.width * 0.5f + HitPadding;
+            float minY = start.y, maxY = start.y;
+            foreach (Vector3 point in _path)
             {
-                _context.DealDamage(target, _s.damage);
-                if (target is Component hitPart)
-                    GunnerFx.BlastHit(hitPart.transform.position + Vector3.up, _direction, _s.color);
-                _context.Knockback(target, _direction, _s.knockback);
-                hits++;
+                minY = Mathf.Min(minY, point.y);
+                maxY = Mathf.Max(maxY, point.y);
+            }
+
+            int hits = 0;
+            _struck.Clear();
+            for (float y = minY - HitHeightReach; y <= maxY + HitHeightReach; y += radius)
+            {
+                Vector3 from = new(start.x, y, start.z);
+                Vector3 to = new(end.x, y, end.z);
+                foreach (IDamageable target in _context.OverlapCapsule(from, to, radius))
+                {
+                    if (!_struck.Add(target))
+                        continue;
+
+                    _context.DealDamage(target, _s.damage);
+                    if (target is Component hitPart)
+                        GunnerFx.BlastHit(hitPart.transform.position + Vector3.up, _direction, _s.color);
+                    _context.Knockback(target, _direction, _s.knockback);
+                    hits++;
+                }
             }
 
             if (_s.recoil > 0f)

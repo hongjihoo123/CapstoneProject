@@ -68,23 +68,28 @@ namespace Members.KYR._01.Scripts.Stats
             }
         }
 
-        public float ComputeFinal()
+        public float ComputeFinal() => ComputeFinal(null);
+
+        // (HJH) excludeSource returns true for sources to leave out (UI shows what one source adds). null = include all.
+        public float ComputeFinal(Predicate<object> excludeSource)
         {
             float flat = 0f;
             float percentAdd = 0f;
             float percentMore = 1f;
 
             for (StatNode node = this; node != null; node = node.Parent)
-                Accumulate(node, ref flat, ref percentAdd, ref percentMore);
+                Accumulate(node, excludeSource, ref flat, ref percentAdd, ref percentMore);
 
             return (BaseValue + flat) * (1f + percentAdd) * percentMore;
         }
 
-        private static void Accumulate(StatNode node, ref float flat, ref float percentAdd, ref float percentMore)
+        private static void Accumulate(StatNode node, Predicate<object> excludeSource, ref float flat, ref float percentAdd, ref float percentMore)
         {
             for (int i = 0; i < node._modifiers.Count; i++)
             {
                 StatModifier modifier = node._modifiers[i].Modifier;
+                if (excludeSource != null && excludeSource(modifier.Source))
+                    continue;
                 switch (modifier.Type)
                 {
                     case StatModifierType.Flat:

@@ -129,10 +129,14 @@ Shader "HJH/UI/ElementRing"
 
                 float I = _Intensity;
                 float k = saturate(I / 3.0);                       // 0~1: 얼마나 세게 보여줄지
-                float t = _Time.y * _Speed + _Seed * 9.7;
+                // 울렁임 완화: 전체 시간 속도 + 링 반지름 흔들림을 줄임 (두 상수 모두 1 = 예전 느낌, 낮을수록 차분)
+                const float CALM_TIME = 0.35;
+                const float CALM_WOBBLE = 0.12;
+                float soft = 0.8;                                  // 전체 투명도 배율 (낮을수록 연함)
+                float t = _Time.y * _Speed * CALM_TIME + _Seed * 9.7;
                 float R0 = _RingRadius;
 
-                float disp = (fbm(float3(dir * 1.6 + _Seed, t * 0.4)) - 0.5) * 0.07 * (0.6 + 0.5 * I);
+                float disp = (fbm(float3(dir * 1.6 + _Seed, t * 0.4)) - 0.5) * 0.07 * CALM_WOBBLE * (0.6 + 0.5 * I);
                 float d = r - (R0 + disp);
                 float w = 0.024 * (0.8 + 0.4 * I);
 
@@ -182,10 +186,11 @@ Shader "HJH/UI/ElementRing"
                     cA = float3(1.0, 0.80, 0.12);
                     cB = float3(1.0, 1.0, 0.86);
                     // 끊어서 튀지 않고 연속으로 흐르는 시간 -> 지직거리되 부드럽게 움직임
-                    float te = _Time.y * _Speed * 4.0;
-                    float jag = (fbm(float3(dir * 5.0, te)) - 0.5) * 0.085 * (1.0 + 0.6 * I);
+                    soft = 0.5;                                    // 전기는 유독 강해 보여서 더 연하게
+                    float te = _Time.y * _Speed * 1.0;
+                    float jag = (fbm(float3(dir * 5.0, te)) - 0.5) * 0.012 * (1.0 + 0.6 * I);
                     float dd = d + jag;
-                    float flick = 0.88 + 0.32 * noise3(float3(te * 1.6, _Seed, 1.0));
+                    float flick = 0.94 + 0.12 * noise3(float3(te * 1.6, _Seed, 1.0));
                     core = exp(-dd * dd / (w * w * 0.4)) * flick;
                     float n = fbm(float3(dir * 4.0, d * 3.5 + te * 0.9));
                     float bolt = pow(saturate(1.0 - abs(n - 0.5) * 8.0), 3.0);
@@ -207,16 +212,19 @@ Shader "HJH/UI/ElementRing"
 
                 // 사각형 끝에서 잘려 보이지 않게 가장자리로 갈수록 줄기·입자를 지움
                 float edge = smoothstep(0.98, 0.70, r);
-                wisp *= edge * (1.15 + 1.1 * k);
-                part *= edge * (1.2 + 1.3 * k);
+                // 덜 튀게: 줄기/입자/번지는 빛을 크게 줄이고 링 본체 위주로 보이게 함
+                wisp *= edge * (1.15 + 1.1 * k) * 0.4;
+                part *= edge * (1.2 + 1.3 * k) * 0.3;
                 // 링 바깥으로 번지는 빛 (세질수록 넓고 진하게)
-                core += exp(-max(d, 0.0) * (10.0 - 5.0 * k)) * (0.14 + 0.42 * k) * edge;
+                core += exp(-max(d, 0.0) * (14.0 - 5.0 * k)) * (0.05 + 0.14 * k) * edge;
 
                 float vis = saturate(0.25 + 0.75 * min(I, 1.0));
-                float tot = (core * (0.9 + 0.4 * k) + wisp + part) * vis;
+                float tot = (core * (0.9 + 0.4 * k) + wisp + part) * vis * soft;
                 float a = saturate(tot);
                 float hot = saturate(core * 1.1 + wisp * 0.4 + part);
-                float3 col = lerp(cA, cB, hot * hot) * (0.85 + 0.7 * k);
+                // 색도 덜 쨍하게: 흰색 쪽으로 살짝 섞고 밝기 보정을 낮춤
+                float3 col = lerp(cA, cB, hot * hot) * (0.8 + 0.3 * k);
+                col = lerp(col, dot(col, float3(0.33, 0.33, 0.33)).xxx, 0.18);
                 return fixed4(col, a) * i.color;
             }
             ENDCG
