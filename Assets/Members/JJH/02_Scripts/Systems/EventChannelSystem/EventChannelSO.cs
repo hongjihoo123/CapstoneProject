@@ -45,6 +45,10 @@ namespace Members.JJH._02_Scripts.Systems.EventChannelSystem
             _lookup.Remove(handler);
         }
 
+        // 이 이벤트를 받을 리스너가 하나라도 있는지 (보내기 전에 받는 쪽이 씬에 있는지 확인할 때)
+        public bool HasListener<T>() where T : GameEvent
+            => _events.TryGetValue(typeof(T), out Action<GameEvent> evtHandler) && evtHandler != null;
+
         public void RaiseEvent(GameEvent evt)
         {
             if (_events.TryGetValue(evt.GetType(), out Action<GameEvent> evtHandler))

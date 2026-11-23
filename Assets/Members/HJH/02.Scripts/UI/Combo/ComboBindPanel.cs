@@ -12,7 +12,7 @@ using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 콤보 바인딩 창. 원소를 순서대로 2~4칸 채우고 "저장하기" → ComboLoadout.TryBind (기존 바인딩은 교체).
+    // 콤보 바인딩 창. 원소를 순서대로 2~4칸 채우고 "저장하기" → ComboLoadout.TryBind (기존 바인딩은 그대로 두고 추가, 최대 ComboLoadout.MaxBound 개).
     //  - 원소 버튼: 빈 칸 맨 앞에 넣음 / 채운 칸 클릭: 그 칸 빼기 / 전체 초기화: 칸 전부 비우기
     //  - 넣거나 뺄 때마다 그 원소 효과와 바뀐 능력치를 보여주고, 아래에 효과 목록 + 합계
     //  - 열려 있는 동안 시간 멈춤. Esc 또는 닫기로 닫음
@@ -109,8 +109,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _activePalette = palette;
 
             FillLegend();
-            if (ComboLoadout.Bound != null)
-                _sequence.AddRange(ComboLoadout.Bound);
             Refresh(null);
 
             // 열릴 때 살짝 떠오르게 (시간이 멈춰 있어서 unscaled)

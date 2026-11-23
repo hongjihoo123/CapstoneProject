@@ -16,13 +16,16 @@ namespace Assets.Members.HJH._02.Scripts.Element
     public static class ComboLoadout
     {
         private static ElementType[] _starter;
-        private static ElementType[] _bound;
+        private static readonly List<ElementType[]> _bounds = new();
+        public const int MaxBound = 3;
         private static readonly Dictionary<string, ComboEffect> _effects = new();
 
         public static IComboBindGate Gate { get; set; } = new FreeBindGate();
 
         public static IReadOnlyList<ElementType> Starter => _starter;
-        public static IReadOnlyList<ElementType> Bound => _bound;
+        public static IReadOnlyList<ElementType[]> Bounds => _bounds;
+        // 가장 최근에 바인딩한 콤보 (없으면 null). 예전 코드/튜토리얼 호환용
+        public static IReadOnlyList<ElementType> Bound => _bounds.Count > 0 ? _bounds[_bounds.Count - 1] : null;
         public static bool HasStarter => _starter != null;
 
         public static event Action Changed;
@@ -31,7 +34,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         private static void ResetOnPlay()
         {
             _starter = null;
-            _bound = null;
+            _bounds.Clear();
             _effects.Clear();
             Gate = new FreeBindGate();
             Changed = null;
@@ -81,9 +84,9 @@ namespace Assets.Members.HJH._02.Scripts.Element
         // 새 런 시작 (픽 화면 "게임 시작"): 맛보기만 남기고 바인딩한 콤보는 지움
         public static void BeginRun()
         {
-            if (_bound == null)
+            if (_bounds.Count == 0)
                 return;
-            _bound = null;
+            _bounds.Clear();
             Changed?.Invoke();
         }
 
@@ -107,9 +110,14 @@ namespace Assets.Members.HJH._02.Scripts.Element
             }
             if (!IsValidLength(sequence.Count, out reason))
                 return false;
-            if (Same(_bound, sequence))
+            if (_starter != null && Same(_starter, sequence) || _bounds.Exists(b => Same(b, sequence)))
             {
-                reason = "지금 바인딩된 콤보와 같습니다.";
+                reason = "이미 가지고 있는 콤보입니다.";
+                return false;
+            }
+            if (_bounds.Count >= MaxBound)
+            {
+                reason = $"바인딩한 콤보는 {MaxBound}개까지입니다. 위 목록에서 지우고 다시 하세요.";
                 return false;
             }
             return Gate.CanBind(sequence, out reason);
@@ -120,17 +128,27 @@ namespace Assets.Members.HJH._02.Scripts.Element
             if (!CanBind(sequence, out reason))
                 return false;
 
-            _bound = sequence.ToArray();
+            _bounds.Add(sequence.ToArray());
             Gate.OnBound(sequence);
             Changed?.Invoke();
             return true;
         }
 
+        // 바인딩한 콤보 하나 지우기 (index = Bounds 번호)
+        public static void Unbind(int index)
+        {
+            if (index < 0 || index >= _bounds.Count)
+                return;
+            _bounds.RemoveAt(index);
+            Changed?.Invoke();
+        }
+
+        // 바인딩한 콤보 전부 지우기
         public static void Unbind()
         {
-            if (_bound == null)
+            if (_bounds.Count == 0)
                 return;
-            _bound = null;
+            _bounds.Clear();
             Changed?.Invoke();
         }
 
@@ -165,7 +183,8 @@ namespace Assets.Members.HJH._02.Scripts.Element
             _effects.Clear();
 
             var combos = new List<ElementBuffController.ElementCombo>();
-            foreach (ElementType[] sequence in new[] { _bound, _starter })
+            var all = new List<ElementType[]>(_bounds) { _starter };
+            foreach (ElementType[] sequence in all)
             {
                 if (sequence == null || sequence.Length == 0)
                     continue;
