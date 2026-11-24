@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
@@ -27,7 +28,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         }
 
         private readonly ISkillContext _context;
-        private readonly Settings _s;
+        private Settings _s;
         private readonly Vector3 _direction;
         private readonly Vector3 _muzzleOffset;
         private readonly System.Func<Vector3> _muzzle;
@@ -46,6 +47,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         {
             _context = context;
             _s = settings;
+            _s.width *= SkillUpgrades.Multiplier(SkillUpgradeKind.Range, SkillUpgradeScope.Charged);   // 스킬 트리: 충전탄 범위
             _muzzle = liveMuzzle;
             direction.y = 0f;
             _direction = direction.sqrMagnitude > 0.0001f ? direction.normalized : context.AimDirection;
@@ -66,6 +68,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         private const float SafetyTimeout = 2f;
 
         // 판정 여유: 빔 폭 양옆으로 이만큼 더, 경로 위아래로 이만큼 더 맞음 (보이는 빔보다 판정이 넉넉함)
+        private const float ExplosionRadius = 2.2f;
         private const float HitPadding = 0.5f;
         private const float HitHeightReach = 2.5f;
 
@@ -147,6 +150,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             }
 
             int hits = 0;
+            float pierceBonus = SkillUpgrades.Exact(SkillUpgradeKind.PierceDamage, SkillUpgradeScope.Charged);
+            float explode = SkillUpgrades.Exact(SkillUpgradeKind.ChargeExplosion, SkillUpgradeScope.Charged);
             _struck.Clear();
             for (float y = minY - HitHeightReach; y <= maxY + HitHeightReach; y += radius)
             {
@@ -157,10 +162,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                     if (!_struck.Add(target))
                         continue;
 
-                    _context.DealDamage(target, _s.damage);
+                    _context.DealDamage(target, _s.damage * (1f + pierceBonus * hits));   // 관통할수록 피해 (스킬 트리)
                     if (target is Component hitPart)
                         GunnerFx.BlastHit(hitPart.transform.position + Vector3.up, _direction, _s.color);
                     _context.Knockback(target, _direction, _s.knockback);
+                    if (explode > 0f && target is Component blastAt)
+                    {
+                        // 폭발탄: 적중한 자리에서 폭발 (충전탄 슬롯으로 치명 판정)
+                        SkillUpgradeScope prev = CritSystem.CurrentSlot;
+                        CritSystem.CurrentSlot = SkillUpgradeScope.Charged;
+                        try { SkillBlast.Explode(_context, blastAt.transform.position, ExplosionRadius, _s.damage * explode, _s.color, 0.02f, 0.15f, 0.8f); }
+                        finally { CritSystem.CurrentSlot = prev; }
+                    }
                     hits++;
                 }
             }

@@ -1,4 +1,6 @@
+using Members.KYR._01.Scripts.Player;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
@@ -82,34 +84,96 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             {
                 _fired = true;
                 Vector3 origin = _context.Transform.position;
-                Color color = _data.FxColor;
+                float blastRange = _data.blastRange * SkillUpgrades.Multiplier(SkillUpgradeKind.Range, _data);   // 스킬 트리: 범위
 
-                GunnerFx.DashBlast(origin, _direction, _data.blastRange, _data.blastAngle, color);
-                AttackAreaBus.Raise(AttackArea.Cone(AttackAreaKind.Skill, origin, Quaternion.LookRotation(_direction), _data.blastRange, _data.blastAngle, 0.2f));
+                // 치명이 난 적 수 / 맞은 적 수를 센다 (연쇄 충격 / 맞은 적당 쿨 감소 / 충격파 사슬)
+                int crits = 0;
+                void OnLanded(SkillUpgradeScope slot)
+                {
+                    if (slot == SkillUpgradeScope.Shock)
+                        crits++;
+                }
+                CritSystem.Landed += OnLanded;
+                int hits;
+                try
+                {
+                    hits = Blast(origin, _direction, blastRange, ref crits);
+                    // 이중 충격파: 반대 방향으로 한 번 더 (같은 적은 두 번 맞지 않음)
+                    if (SkillUpgrades.Exact(SkillUpgradeKind.DoubleBlast, SkillUpgradeScope.Shock) > 0f)
+                        hits += Blast(origin, -_direction, blastRange, ref crits);
+                }
+                finally
+                {
+                    CritSystem.Landed -= OnLanded;
+                }
+
+                float refund = SkillUpgrades.Exact(SkillUpgradeKind.HitRefundSelf, SkillUpgradeScope.Shock) * hits;
+                if (refund > 0f)
+                    _context.ReduceCooldown(SkillSlotId.Weapon, refund);
+                if (crits >= 3 && _context is PlayerSkillContext)
+                    CritSystem.TryChainReset(_player(), crits);
+
+                _context.PlayHitFeel(hits > 0 ? _data.hitStop : 0f, _data.shake);
+                _context.PlayCameraKick(-_direction * _data.cameraKick);
+            }
+
+            private PlayerAgent _player() =>
+                (_context.Transform != null) ? _context.Transform.GetComponentInParent<PlayerAgent>() : null;
+
+            // 한 방향 부채꼴 하나. 맞은 적 수를 돌려줌
+            private int Blast(Vector3 origin, Vector3 direction, float blastRange, ref int crits)
+            {
+                Color color = _data.FxColor;
+                GunnerFx.DashBlast(origin, direction, blastRange, _data.blastAngle, color);
+                AttackAreaBus.Raise(AttackArea.Cone(AttackAreaKind.Skill, origin, Quaternion.LookRotation(direction), blastRange, _data.blastAngle, 0.2f));
 
                 float halfAngle = _data.blastAngle * 0.5f;
+                float chain = SkillUpgrades.Exact(SkillUpgradeKind.ChainShock, SkillUpgradeScope.Shock);
                 int hits = 0;
-                foreach (IDamageable target in _context.OverlapSphere(origin + Vector3.up, _data.blastRange))
+                foreach (IDamageable target in _context.OverlapSphere(origin + Vector3.up, blastRange))
                 {
                     if (target is not Component component)
                         continue;
 
                     Vector3 toTarget = component.transform.position - origin;
                     toTarget.y = 0f;
-                    if (toTarget.sqrMagnitude > 0.01f && Vector3.Angle(_direction, toTarget) > halfAngle)
+                    if (toTarget.sqrMagnitude > 0.01f && Vector3.Angle(direction, toTarget) > halfAngle)
                         continue;   // 부채꼴 밖
+                    if (!_struck.Add(target))
+                        continue;   // 이중 충격파에서 같은 적 두 번 맞지 않게
 
+                    CritSystem.Mark(target);   // 표식 계열을 배웠으면 맞은 적에 표식
+                    int before = crits;
                     _context.DealDamage(target, _data.damage);
-                    GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : _direction, color);
+                    if (chain > 0f && crits > before)
+                        Chain(component.transform.position, target, _data.damage * chain);   // 충격파 사슬: 치명이면 주변 적에게 전이
+
+                    GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : direction, color);
                     // 정면 방향 + 옆으로 벌어지는 방향 섞어서 밀어냄 (부채꼴 모양으로 퍼지게)
-                    Vector3 push = toTarget.sqrMagnitude > 0.01f ? (_direction + toTarget.normalized).normalized : _direction;
+                    Vector3 push = toTarget.sqrMagnitude > 0.01f ? (direction + toTarget.normalized).normalized : direction;
                     _context.Knockback(target, push, _data.knockback);
                     hits++;
                 }
 
-                _context.PlayHitFeel(hits > 0 ? _data.hitStop : 0f, _data.shake);
-                _context.PlayCameraKick(-_direction * _data.cameraKick);
+                return hits;
             }
+
+            private readonly System.Collections.Generic.HashSet<IDamageable> _struck = new();
+
+            // 충격파 사슬: 치명이 난 자리 주변의 다른 적에게 충격파가 번짐 (연쇄는 한 번만)
+            private void Chain(Vector3 center, IDamageable source, float damage)
+            {
+                foreach (IDamageable other in _context.OverlapSphere(center + Vector3.up, ChainRadius))
+                {
+                    if (other == source || other is not Component part || !_struck.Add(other))
+                        continue;
+
+                    GunnerFx.BlastHit(part.transform.position + Vector3.up, (part.transform.position - center).normalized, _data.FxColor);
+                    _context.DealDamage(other, damage);
+                }
+            }
+
+            private const float ChainRadius = 5f;
         }
     }
 }

@@ -68,17 +68,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void OnFinisherExpired() =>
             Show("MISS", "피니시 시간 끝", string.Empty, string.Empty, HudUiKit.Label);
 
-        private void OnFinisherReleased(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        private void OnFinisherReleased(SkillSlotId slot, float scale)
         {
-            var names = new StringBuilder();
-            foreach (FinisherBook.Entry finisher in fired)
-            {
-                if (names.Length > 0)
-                    names.Append("  +  ");
-                names.Append(finisher.name);
-            }
-
-            Show($"FINISH  ×{scale:0.0#}", "피니시", names.Length > 0 ? names.ToString() : "피해 강화", string.Empty, FinisherAccent);
+            Show($"FINISH  ×{scale:0.0#}", "피니시", "피해 강화", string.Empty, FinisherAccent);
         }
 
         // SetUpdate(true): 콤보 순간 게임이 잠깐 멈춰도(히트스톱) 배너는 계속 움직임

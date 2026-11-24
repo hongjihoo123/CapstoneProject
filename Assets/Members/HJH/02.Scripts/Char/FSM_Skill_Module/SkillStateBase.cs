@@ -12,6 +12,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private bool _recharging;
         private float _rechargeEndTime;
         private float _lockedUntil;
+        private float _pendingReduce;
 
         protected SkillStateBase(ISkillHost host) => Host = host;
 
@@ -73,19 +74,29 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
+        // 쿨타임 감소 비율. 스킬마다 더할 게 있으면(스킬 트리 강화) override
+        protected virtual float CooldownReduction => Host.CooldownReduction;
+
         protected float EffectiveCooldown
         {
             get
             {
                 float cooldown = Cooldown;
-                return cooldown <= 0f ? 0f : cooldown * (1f - Host.CooldownReduction);
+                return cooldown <= 0f ? 0f : cooldown * (1f - CooldownReduction);
             }
         }
 
         public void ReduceCooldown(float seconds)
         {
-            if (!_recharging || seconds <= 0f)
+            if (seconds <= 0f)
                 return;
+            if (!_recharging)
+            {
+                // 시전 중(아직 쿨이 안 돌기 시작함)이면 쿨이 돌기 시작할 때 한꺼번에 깎음
+                if (_spentCharges > 0)
+                    _pendingReduce += seconds;
+                return;
+            }
 
             _rechargeEndTime -= seconds;
             Refresh();
@@ -104,7 +115,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (_spentCharges > 0 && !_recharging)
             {
                 _recharging = true;
-                _rechargeEndTime = Time.time + EffectiveCooldown;
+                _rechargeEndTime = Time.time + Mathf.Max(0f, EffectiveCooldown - _pendingReduce);
+                _pendingReduce = 0f;
             }
         }
 

@@ -89,9 +89,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            // 상단 시간/스테이지 표시 바로 아래
+            // 상단 퀘스트 패널(KillQuestHud, y -82) 밑. 겹치면 퀘스트에 가려짐
             RectTransform rect = HudUiKit.NewRect("Notice", transform);
-            HudUiKit.Place(rect, new Vector2(0.5f, 1f), new Vector2(0f, -86f), new Vector2(700f, 72f));
+            HudUiKit.Place(rect, new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(700f, 72f));
             group = rect.gameObject.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             group.blocksRaycasts = false;

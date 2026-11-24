@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01.Scripts.Stats;
 using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
@@ -55,7 +56,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 }
             }
 
-            effect.Scale = table.ScaleFor(sequence.Count);
+            effect.Scale = table.ScaleFor(sequence.Count) * SkillUpgrades.Multiplier(SkillUpgradeKind.ComboPower);   // 스킬 트리 강화 포함
             effect.Sum();
             return effect;
         }

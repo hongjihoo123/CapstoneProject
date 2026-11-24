@@ -1,0 +1,1978 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b3c01990db6cc9640a43404dadeab550, type: 3}
+  m_Name: EnchantTree_Gunner
+  m_EditorClassIdentifier: Assembly-CSharp::Members.KYR._01.Scripts.Enchant.So.EnchantTree
+  character: {fileID: 11400000, guid: d8141337380137c4bb8ee8dacc8a42b4, type: 2}
+  costCurrency: 1
+  nodes:
+  - id: atk1_entry
+    displayName: "\uC815\uBC00 \uC0AC\uACA9"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uCE58\uBA85 \uD655\uB960\uACFC \uCE58\uBA85 \uD53C\uD574\uB97C \uC9C1\uC811 \uC62C\uB9AC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCE58\uBA85 \uD655\uB960 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 8
+      valuePerRank: 0.02
+    position: {x: -5, y: 40}
+  - id: atk1_l
+    displayName: "\uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +1.5%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 8
+      valuePerRank: 0.015
+    position: {x: -140, y: 40}
+  - id: atk1_r
+    displayName: "\uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 9
+      valuePerRank: 0.05
+    position: {x: 130, y: 40}
+  - id: atk1_s1
+    displayName: "\uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +1.5%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 8
+      valuePerRank: 0.015
+    position: {x: -5, y: 185}
+  - id: atk1_a1
+    displayName: "\uC815\uC870\uC900"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk1
+    tab: "\uD3C9\uD0C0"
+    description: "\uC774\uB3D9 \uC5C6\uC774 \uC3E0\uC218\uB85D \uCE58\uBA85 \uD655\uB960 \uC99D\uAC00 (\uCD5C\uB300 +20%)"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 33
+      valuePerRank: 0.2
+    position: {x: -140, y: 325}
+  - id: atk1_a2
+    displayName: "\uAE09\uC18C \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk1
+    tab: "\uD3C9\uD0C0"
+    description: "\uBA3C \uC801\uC77C\uC218\uB85D \uCE58\uBA85 \uD53C\uD574 \uC99D\uAC00 (\uCD5C\uB300 +40%)"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 34
+      valuePerRank: 0.4
+    position: {x: 130, y: 325}
+  - id: atk1_s2
+    displayName: "\uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 9
+      valuePerRank: 0.05
+    position: {x: -5, y: 465}
+  - id: atk1_s3
+    displayName: "\uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +1.5%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 8
+      valuePerRank: 0.015
+    position: {x: -5, y: 605}
+  - id: atk2_entry
+    displayName: "\uCE58\uBA85 \uD658\uB958"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uD3C9\uD0C0 \uCE58\uBA85\uD0C0\uAC00 \uB2E4\uB978 \uC2A4\uD0AC \uCFE8\uC744 \uB3CC\uB824\uC8FC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uD3C9\uD0C0 \uCE58\uBA85 \uC2DC \uAD81\uADF9\uAE30 \uCFE8 -0.1\uCD08. \uCFE8 \uD658\uB958 \uD569\uACC4\uB294 \uCD08\uB2F9 -0.5\uCD08\uAE4C\uC9C0"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 14
+      valuePerRank: 0.1
+    position: {x: 400, y: 40}
+  - id: atk2_l
+    displayName: "\uCE58\uBA85 \uC2DC \uAD81\uADF9\uAE30 \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 -0.1\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 14
+      valuePerRank: 0.1
+    position: {x: 265, y: 40}
+  - id: atk2_r
+    displayName: "\uCE58\uBA85 \uC2DC \uAE30\uBCF8 \uC2A4\uD0AC \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 -0.1\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 13
+      valuePerRank: 0.1
+    position: {x: 535, y: 40}
+  - id: atk2_s1
+    displayName: "\uCE58\uBA85 \uC2DC \uB300\uC26C \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 -0.1\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 12
+      valuePerRank: 0.1
+    position: {x: 400, y: 185}
+  - id: atk2_a1
+    displayName: "\uCF8C\uAC10 \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk4
+    tab: "\uD3C9\uD0C0"
+    description: "\uD3C9\uD0C0 \uCE58\uBA85 5\uC5F0\uC18D \uC2DC 5\uCD08\uAC04 \uACF5\uC18D +30%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 30
+      valuePerRank: 0.3
+    position: {x: 265, y: 325}
+  - id: atk2_a2
+    displayName: "\uD658\uB958 \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk4
+    tab: "\uD3C9\uD0C0"
+    description: "\uD3C9\uD0C0 \uCE58\uBA85 \uC2DC 5% \uD655\uB960\uB85C \uAD81\uADF9\uAE30 \uCFE8 -3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 31
+      valuePerRank: 0.05
+    position: {x: 535, y: 325}
+  - id: atk2_s2
+    displayName: "\uACF5\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.02
+    position: {x: 400, y: 465}
+  - id: atk2_s3
+    displayName: "\uCE58\uBA85 \uC2DC \uAD81\uADF9\uAE30 \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 -0.1\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 14
+      valuePerRank: 0.1
+    position: {x: 400, y: 605}
+  - id: atk3_entry
+    displayName: "\uC5F0\uBC1C"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uBC1C\uC0AC \uC218\uB97C \uB298\uB824 \uCE58\uBA85 \uD310\uC815 \uD69F\uC218\uB97C \uB298\uB9AC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uACF5\uC18D +3%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.03
+    position: {x: 805, y: 40}
+  - id: atk3_l
+    displayName: "\uACF5\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.02
+    position: {x: 670, y: 40}
+  - id: atk3_r
+    displayName: "\uD0C4\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects: []
+    position: {x: 940, y: 40}
+  - id: atk3_s1
+    displayName: "\uACF5\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.02
+    position: {x: 805, y: 185}
+  - id: atk3_a1
+    displayName: "\uB09C\uC0AC"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk7
+    tab: "\uD3C9\uD0C0"
+    description: "\uACF5\uC18D +40%, \uB300\uC2E0 \uD55C \uBC1C \uD53C\uD574 -25%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.4
+    - scope: 10
+      kind: 0
+      valuePerRank: -0.25
+    position: {x: 670, y: 325}
+  - id: atk3_a2
+    displayName: "\uC774\uC911 \uACA9\uBC1C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: atk7
+    tab: "\uD3C9\uD0C0"
+    description: "\uD3C9\uD0C0 15% \uD655\uB960\uB85C \uD55C \uBC88 \uB354 \uBC1C\uC0AC. \uCD94\uAC00 \uBC1C\uC0AC\uB3C4 \uCE58\uBA85 \uD310\uC815"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 19
+      valuePerRank: 0.15
+    position: {x: 940, y: 325}
+  - id: atk3_s2
+    displayName: "\uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 0
+      valuePerRank: 0.02
+    position: {x: 805, y: 465}
+  - id: atk3_s3
+    displayName: "\uACF5\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 10
+      valuePerRank: 0.02
+    position: {x: 805, y: 605}
+  - id: atk_key
+    displayName: "\uCE58\uBA85\uC758 \uBC29\uC544\uC1E0"
+    kind: 3
+    maxRank: 1
+    cost: 5
+    exclusiveGroup: 
+    tab: "\uD3C9\uD0C0"
+    description: "\uD3C9\uD0C0 \uCE58\uBA85\uD0C0 \uC2DC 3\uCD08\uAC04 \uCE58\uBA85 \uD655\uB960 +2% \uC911\uCCA9 (\uCD5C\uB300 5\uC911\uCCA9 = +10%). \uCE58\uBA85\uC774 \uCE58\uBA85\uC744 \uBD80\uB974\uB294 \uB208\uB369\uC774 \uB178\uB4DC."
+    effects: []
+    skillEffects:
+    - scope: 10
+      kind: 29
+      valuePerRank: 0.02
+    position: {x: 400, y: 735}
+  - id: pas1_entry
+    displayName: "\uD655\uC815 \uCE58\uBA85"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC744 \uBBFF\uC744 \uC218 \uC788\uB294 \uCE58\uBA85 \uC218\uB2E8\uC73C\uB85C \uB9CC\uB4DC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCDA9\uC804\uD0C4 \uCE58\uBA85 \uD655\uB960 +20%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 8
+      valuePerRank: 0.2
+    position: {x: -5, y: 40}
+  - id: pas1_l
+    displayName: "\uCDA9\uC804\uD0C4 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +10%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 8
+      valuePerRank: 0.1
+    position: {x: -140, y: 40}
+  - id: pas1_r
+    displayName: "\uCDA9\uC804\uD0C4 \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +6%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 9
+      valuePerRank: 0.06
+    position: {x: 130, y: 40}
+  - id: pas1_s1
+    displayName: "\uCDA9\uC804 \uD544\uC694 \uBC1C\uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 -0.2\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 11
+      valuePerRank: 0.2
+    position: {x: -5, y: 185}
+  - id: pas1_a1
+    displayName: "\uD655\uC815 \uCE58\uBA85"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas1
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC740 \uD56D\uC0C1 \uCE58\uBA85\uD0C0"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 8
+      valuePerRank: 1
+    position: {x: -140, y: 325}
+  - id: pas1_a2
+    displayName: "\uCE58\uBA85 \uC5F0\uB3D9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas1
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC774 \uCE58\uBA85\uD0C0\uBA74 \uAC8C\uC774\uC9C0 \uC989\uC2DC +3\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 17
+      valuePerRank: 3
+    position: {x: 130, y: 325}
+  - id: pas1_s2
+    displayName: "\uCDA9\uC804\uD0C4 \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +6%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 9
+      valuePerRank: 0.06
+    position: {x: -5, y: 465}
+  - id: pas1_s3
+    displayName: "\uCDA9\uC804 \uD544\uC694 \uBC1C\uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 -0.2\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 11
+      valuePerRank: 0.2
+    position: {x: -5, y: 605}
+  - id: pas2_entry
+    displayName: "\uAD00\uD1B5 \uAD74\uB9BC"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC774 \uC5EC\uB7EC \uC801\uC744 \uB9DE\uD600 \uCE58\uBA85 \uD310\uC815\uC744 \uB298\uB9AC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCDA9\uC804\uD0C4 \uAD00\uD1B5 +1"
+    effects: []
+    skillEffects: []
+    position: {x: 400, y: 40}
+  - id: pas2_l
+    displayName: "\uCDA9\uC804\uD0C4 \uAD00\uD1B5 \uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +0.5"
+    effects: []
+    skillEffects: []
+    position: {x: 265, y: 40}
+  - id: pas2_r
+    displayName: "\uCDA9\uC804\uD0C4 \uBC94\uC704"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 4
+      valuePerRank: 0.04
+    position: {x: 535, y: 40}
+  - id: pas2_s1
+    displayName: "\uAD00\uD1B5\uD560\uC218\uB85D \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 16
+      valuePerRank: 0.03
+    position: {x: 400, y: 185}
+  - id: pas2_a1
+    displayName: "\uD3ED\uBC1C\uD0C4"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas4
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4 \uC801\uC911 \uC9C0\uC810 \uD3ED\uBC1C. \uD3ED\uBC1C\uB3C4 \uCE58\uBA85 \uD310\uC815"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 38
+      valuePerRank: 0.5
+    position: {x: 265, y: 325}
+  - id: pas2_a2
+    displayName: "\uC5F0\uC1C4 \uAD00\uD1B5"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas4
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC774 \uCE58\uBA85\uC73C\uB85C \uC801\uC744 \uAD00\uD1B5\uD560 \uB54C\uB9C8\uB2E4 \uAD81\uADF9\uAE30 \uCFE8 -0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 14
+      valuePerRank: 0.3
+    position: {x: 535, y: 325}
+  - id: pas2_s2
+    displayName: "\uCDA9\uC804\uD0C4 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 0
+      valuePerRank: 0.04
+    position: {x: 400, y: 465}
+  - id: pas2_s3
+    displayName: "\uCDA9\uC804\uD0C4 \uD0C4\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects: []
+    position: {x: 400, y: 605}
+  - id: pas3_entry
+    displayName: "\uAC8C\uC774\uC9C0 \uAC00\uC18D"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uAC8C\uC774\uC9C0\uB97C \uBE68\uB9AC \uCC44\uC6B0\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCC98\uCE58 \uC2DC \uAC8C\uC774\uC9C0 +0.3\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 18
+      valuePerRank: 0.3
+    position: {x: 805, y: 40}
+  - id: pas3_l
+    displayName: "\uB300\uC26C \uC2DC \uAC8C\uC774\uC9C0"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +0.2\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 37
+      valuePerRank: 0.2
+    position: {x: 670, y: 40}
+  - id: pas3_r
+    displayName: "\uAC8C\uC774\uC9C0 \uC720\uC9C0 \uC2DC\uAC04"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects: []
+    position: {x: 940, y: 40}
+  - id: pas3_s1
+    displayName: "\uCC98\uCE58 \uC2DC \uAC8C\uC774\uC9C0"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +0.3\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 18
+      valuePerRank: 0.3
+    position: {x: 805, y: 185}
+  - id: pas3_a1
+    displayName: "\uC794\uB958 \uCDA9\uC804"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas7
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB300\uC26C\uD558\uBA74 \uAC8C\uC774\uC9C0 \uC77C\uBD80 \uC989\uC2DC \uCDA9\uC804"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 37
+      valuePerRank: 2
+    position: {x: 670, y: 325}
+  - id: pas3_a2
+    displayName: "\uACFC\uCDA9\uC804"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: pas7
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uAC8C\uC774\uC9C0 \uAC00\uB4DD \uD6C4 \uD55C \uBC88 \uB354 \uCDA9\uC804, \uCDA9\uC804\uD0C4 2\uC5F0\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 39
+      valuePerRank: 1
+    position: {x: 940, y: 325}
+  - id: pas3_s2
+    displayName: "\uD53C\uACA9 \uC2DC \uAC8C\uC774\uC9C0 \uC720\uC9C0"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects: []
+    position: {x: 805, y: 465}
+  - id: pas3_s3
+    displayName: "\uCDA9\uC804 \uD544\uC694 \uBC1C\uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uB7AD\uD06C\uB2F9 -0.2\uBC1C"
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 11
+      valuePerRank: 0.2
+    position: {x: 805, y: 605}
+  - id: pas_key
+    displayName: "\uC5F0\uC18D \uCDA9\uC804\uD0C4"
+    kind: 3
+    maxRank: 1
+    cost: 5
+    exclusiveGroup: 
+    tab: "\uD328\uC2DC\uBE0C"
+    description: "\uCDA9\uC804\uD0C4\uC774 \uCE58\uBA85\uD0C0\uBA74 \uAC8C\uC774\uC9C0\uAC00 \uC989\uC2DC \uC808\uBC18 \uCC2C\uB2E4. \uD655\uC815 \uCE58\uBA85 + \uC774 \uB178\uB4DC\uBA74 \uCDA9\uC804\uD0C4\uC774 \uB04A\uAE30\uC9C0 \uC54A\uACE0 \uC774\uC5B4\uC9D0."
+    effects: []
+    skillEffects:
+    - scope: 11
+      kind: 17
+      valuePerRank: 5
+    position: {x: 400, y: 735}
+  - id: dash1_entry
+    displayName: "\uCE58\uBA85 \uCC3D"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uC9C1\uD6C4 \uCE58\uBA85\uC744 \uBAB0\uC544\uC8FC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uB300\uC26C \uD6C4 2\uCD08\uAC04 \uCE58\uBA85 \uD655\uB960 +5%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 25
+      valuePerRank: 0.05
+    position: {x: -5, y: 40}
+  - id: dash1_l
+    displayName: "\uB300\uC26C \uD6C4 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 25
+      valuePerRank: 0.03
+    position: {x: -140, y: 40}
+  - id: dash1_r
+    displayName: "\uCE58\uBA85 \uCC3D \uC9C0\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +0.2\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 26
+      valuePerRank: 0.2
+    position: {x: 130, y: 40}
+  - id: dash1_s1
+    displayName: "\uB300\uC26C \uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: -5, y: 185}
+  - id: dash1_a1
+    displayName: "\uBC31\uC2A4\uD15D \uC7A5\uC804"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash1
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uC9C1\uD6C4 \uCCAB 3\uBC1C\uC740 \uCE58\uBA85 \uD655\uC815"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 36
+      valuePerRank: 3
+    position: {x: -140, y: 325}
+  - id: dash1_a2
+    displayName: "\uC794\uC0C1 \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash1
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uACBD\uB85C\uC5D0 \uC794\uC0C1\uC744 \uB0A8\uAE40. \uC794\uC0C1 \uD53C\uD574\uB3C4 \uCE58\uBA85 \uD310\uC815"
+    effects: []
+    skillEffects: []
+    position: {x: 130, y: 325}
+  - id: dash1_s2
+    displayName: "\uB300\uC26C \uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: -5, y: 465}
+  - id: dash1_s3
+    displayName: "\uB300\uC26C \uD6C4 \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +6%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 35
+      valuePerRank: 0.06
+    position: {x: -5, y: 605}
+  - id: dash2_entry
+    displayName: "\uAE30\uB3D9 \uD658\uB958"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uC6C0\uC9C1\uC784\uC774 \uCFE8\uC744 \uB3CC\uB824\uC8FC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uB300\uC26C \uC2DC \uAD81\uADF9\uAE30 \uCFE8 -0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 28
+      valuePerRank: 0.3
+    position: {x: 400, y: 40}
+  - id: dash2_l
+    displayName: "\uC774\uB3D9\uC18D\uB3C4"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 53
+      valuePerRank: 0.02
+    position: {x: 265, y: 40}
+  - id: dash2_r
+    displayName: "\uB300\uC26C \uAC70\uB9AC"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 4
+      valuePerRank: 0.03
+    position: {x: 535, y: 40}
+  - id: dash2_s1
+    displayName: "\uB300\uC26C \uC2DC \uAD81\uADF9\uAE30 \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 28
+      valuePerRank: 0.3
+    position: {x: 400, y: 185}
+  - id: dash2_a1
+    displayName: "\uC5F0\uC18D \uB300\uC26C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash4
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uCDA9\uC804 +1"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 27
+      valuePerRank: 1
+    position: {x: 265, y: 325}
+  - id: dash2_a2
+    displayName: "\uCDA9\uACA9 \uB300\uC26C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash4
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uC2DC\uC791 \uC9C0\uC810\uC5D0 \uCDA9\uACA9\uD30C. \uCE58\uBA85 \uD310\uC815 \uD3EC\uD568"
+    effects: []
+    skillEffects: []
+    position: {x: 535, y: 325}
+  - id: dash2_s2
+    displayName: "\uB300\uC26C \uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 12
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: 400, y: 465}
+  - id: dash2_s3
+    displayName: "\uBB34\uC801 \uC2DC\uAC04"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +0.02\uCD08"
+    effects: []
+    skillEffects: []
+    position: {x: 400, y: 605}
+  - id: dash3_entry
+    displayName: "\uC6D0\uC18C \uACC4\uC5F4"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uC6D0\uC18C\uB97C \uC785\uD788\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uC6D0\uC18C \uD53C\uD574 +2%"
+    effects: []
+    skillEffects: []
+    position: {x: 805, y: 40}
+  - id: dash3_l
+    displayName: "\uC6D0\uC18C \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects: []
+    position: {x: 670, y: 40}
+  - id: dash3_r
+    displayName: "\uC6D0\uC18C \uC2A4\uD0AC \uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -2%"
+    effects: []
+    skillEffects: []
+    position: {x: 940, y: 40}
+  - id: dash3_s1
+    displayName: "\uC6D0\uC18C \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects: []
+    position: {x: 805, y: 185}
+  - id: dash3_a1
+    displayName: "\uC6D0\uC18C \uB300\uC26C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash7
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uACBD\uB85C\uC5D0 \uC6D0\uC18C \uC7A5\uD310"
+    effects: []
+    skillEffects: []
+    position: {x: 670, y: 325}
+  - id: dash3_a2
+    displayName: "\uC6D0\uC18C \uC794\uC0C1"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: dash7
+    tab: "\uB300\uC26C"
+    description: "\uB300\uC26C \uD6C4 \uCCAB \uACF5\uACA9\uC5D0 \uC6D0\uC18C \uBD80\uC5EC"
+    effects: []
+    skillEffects: []
+    position: {x: 940, y: 325}
+  - id: dash3_s2
+    displayName: "\uC6D0\uC18C \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects: []
+    position: {x: 805, y: 465}
+  - id: dash3_s3
+    displayName: "\uC6D0\uC18C \uC2A4\uD0AC \uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects: []
+    position: {x: 805, y: 605}
+  - id: dash_key
+    displayName: "\uC6D0\uC18C \uC120\uD0DD"
+    kind: 3
+    maxRank: 1
+    cost: 5
+    exclusiveGroup: 
+    tab: "\uB300\uC26C"
+    description: "\uBD88/\uBB3C/\uBC14\uB78C/\uB545/\uBC88\uAC1C \uC911 1\uAC1C. \uACE0\uB978 \uC6D0\uC18C\uAC00 \uD3C9\uD0C0, \uB300\uC26C, \uAE30\uBCF8 \uC2A4\uD0AC, \uAD81\uADF9\uAE30\uC5D0 \uBAA8\uB450 \uC785\uD600\uC9D0. \uCE58\uBA85\uD0C0 \uC2DC \uC6D0\uC18C \uD6A8\uACFC\uAC00 \uD568\uAED8 \uBC1C\uB3D9. \uD2B8\uB9AC \uB9E8 \uB05D\uC5D0 \uD558\uB098\uB9CC \uC874\uC7AC."
+    effects: []
+    skillEffects: []
+    position: {x: 400, y: 735}
+  - id: skill1_entry
+    displayName: "\uCDA9\uACA9\uD30C"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C \uC790\uCCB4\uB97C \uAC15\uD654\uD558\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCDA9\uACA9\uD30C \uD53C\uD574 +3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 0
+      valuePerRank: 0.03
+    position: {x: -5, y: 40}
+  - id: skill1_l
+    displayName: "\uCDA9\uACA9\uD30C \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 0
+      valuePerRank: 0.03
+    position: {x: -140, y: 40}
+  - id: skill1_r
+    displayName: "\uBC94\uC704"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 4
+      valuePerRank: 0.04
+    position: {x: 130, y: 40}
+  - id: skill1_s1
+    displayName: "\uCDA9\uACA9\uD30C \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 8
+      valuePerRank: 0.03
+    position: {x: -5, y: 185}
+  - id: skill1_a1
+    displayName: "\uC774\uC911 \uCDA9\uACA9\uD30C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill1
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C\uAC00 \uB450 \uBC88, \uB450 \uBC88\uC9F8\uB294 \uBC18\uB300 \uBC29\uD5A5. \uAC01\uAC01 \uCE58\uBA85 \uD310\uC815"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 40
+      valuePerRank: 1
+    position: {x: -140, y: 325}
+  - id: skill1_a2
+    displayName: "\uC99D\uD3ED \uCDA9\uACA9\uD30C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill1
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uBC94\uC704 +30%, \uD53C\uD574 +15%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 4
+      valuePerRank: 0.3
+    - scope: 13
+      kind: 0
+      valuePerRank: 0.15
+    position: {x: 130, y: 325}
+  - id: skill1_s2
+    displayName: "\uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: -5, y: 465}
+  - id: skill1_s3
+    displayName: "\uCDA9\uACA9\uD30C \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +6%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 9
+      valuePerRank: 0.06
+    position: {x: -5, y: 605}
+  - id: skill2_entry
+    displayName: "\uCFE8 \uD658\uB958"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C \uCE58\uBA85\uD0C0\uB85C \uC774 \uC2A4\uD0AC\uC744 \uB2E4\uC2DC \uC4F0\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uCDA9\uACA9\uD30C \uCE58\uBA85 \uC2DC \uCFE8 -0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 15
+      valuePerRank: 0.3
+    position: {x: 400, y: 40}
+  - id: skill2_l
+    displayName: "\uCDA9\uACA9\uD30C \uCE58\uBA85 \uC2DC \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -0.2\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 15
+      valuePerRank: 0.2
+    position: {x: 265, y: 40}
+  - id: skill2_r
+    displayName: "\uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: 535, y: 40}
+  - id: skill2_s1
+    displayName: "\uB9DE\uC740 \uC801 \uC218\uB2F9 \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -0.1\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 41
+      valuePerRank: 0.1
+    position: {x: 400, y: 185}
+  - id: skill2_a1
+    displayName: "\uC5F0\uC1C4 \uCDA9\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill4
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C\uC5D0 3\uBA85 \uC774\uC0C1 \uCE58\uBA85\uC774\uBA74 \uC774 \uC2A4\uD0AC \uCFE8 \uCD08\uAE30\uD654 (\uB0B4\uBD80 \uCFE8 2\uCD08)"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 42
+      valuePerRank: 1
+    position: {x: 265, y: 325}
+  - id: skill2_a2
+    displayName: "\uBC18\uB3D9 \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill4
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C \uCE58\uBA85 \uC2DC \uD6C4\uC18D \uC0AC\uACA9 3\uBC1C"
+    effects: []
+    skillEffects: []
+    position: {x: 535, y: 325}
+  - id: skill2_s2
+    displayName: "\uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: 400, y: 465}
+  - id: skill2_s3
+    displayName: "\uCDA9\uACA9\uD30C \uCE58\uBA85 \uC2DC \uCFE8 \uAC10\uC18C"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -0.2\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 15
+      valuePerRank: 0.2
+    position: {x: 400, y: 605}
+  - id: skill3_entry
+    displayName: "\uD45C\uC2DD"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB9DE\uC740 \uC801\uC5D0 \uCE58\uBA85\uC744 \uBAB0\uC544\uC8FC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uD45C\uC2DD \uC801\uC774 \uBC1B\uB294 \uD53C\uD574 +3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 44
+      valuePerRank: 0.03
+    position: {x: 805, y: 40}
+  - id: skill3_l
+    displayName: "\uD45C\uC2DD \uC9C0\uC18D"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 43
+      valuePerRank: 0.04
+    position: {x: 670, y: 40}
+  - id: skill3_r
+    displayName: "\uACF5\uACA9\uB825"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 0
+      valuePerRank: 0.02
+    position: {x: 940, y: 40}
+  - id: skill3_s1
+    displayName: "\uD45C\uC2DD \uC801\uC774 \uBC1B\uB294 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 44
+      valuePerRank: 0.03
+    position: {x: 805, y: 185}
+  - id: skill3_a1
+    displayName: "\uC0AC\uB0E5\uAFBC\uC758 \uD45C\uC2DD"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill7
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uD45C\uC2DD \uC801\uC5D0\uAC8C \uD3C9\uD0C0 \uCE58\uBA85 \uD655\uB960 +30%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 45
+      valuePerRank: 0.3
+    position: {x: 670, y: 325}
+  - id: skill3_a2
+    displayName: "\uCD94\uC801 \uC0AC\uACA9"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: skill7
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C \uB9DE\uC740 \uC801\uC5D0\uAC8C \uC790\uB3D9 \uC0AC\uACA9"
+    effects: []
+    skillEffects: []
+    position: {x: 940, y: 325}
+  - id: skill3_s2
+    displayName: "\uD45C\uC2DD \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 46
+      valuePerRank: 0.05
+    position: {x: 805, y: 465}
+  - id: skill3_s3
+    displayName: "\uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: 805, y: 605}
+  - id: skill_key
+    displayName: "\uCDA9\uACA9\uD30C \uC0AC\uC2AC"
+    kind: 3
+    maxRank: 1
+    cost: 5
+    exclusiveGroup: 
+    tab: "\uAE30\uBCF8 \uC2A4\uD0AC"
+    description: "\uCDA9\uACA9\uD30C\uAC00 \uCE58\uBA85\uD0C0\uB97C \uB0B4\uBA74 \uBC18\uACBD \uB0B4 \uB2E4\uB978 \uC801\uC5D0\uAC8C\uB3C4 \uCDA9\uACA9\uD30C\uAC00 \uC804\uC774\uB428."
+    effects: []
+    skillEffects:
+    - scope: 13
+      kind: 52
+      valuePerRank: 0.5
+    position: {x: 400, y: 735}
+  - id: ult1_entry
+    displayName: "\uD30C\uD3B8 \uD3ED\uACA9"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uCE58\uBA85 \uD310\uC815 \uD69F\uC218(\uD30C\uD3B8 \uC218)\uB97C \uB298\uB9AC\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uD30C\uD3B8 +1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 20
+      valuePerRank: 1
+    position: {x: -5, y: 40}
+  - id: ult1_l
+    displayName: "\uD30C\uD3B8 \uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 20
+      valuePerRank: 1
+    position: {x: -140, y: 40}
+  - id: ult1_r
+    displayName: "\uD30C\uD3B8 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 8
+      valuePerRank: 0.03
+    position: {x: 130, y: 40}
+  - id: ult1_s1
+    displayName: "\uD30C\uD3B8 \uC218"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 20
+      valuePerRank: 1
+    position: {x: -5, y: 185}
+  - id: ult1_a1
+    displayName: "\uC9D1\uC18D\uD0C4"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult1
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uD30C\uD3B8 \uC218 2\uBC30, \uD30C\uD3B8 \uD55C \uBC1C \uD53C\uD574 -35%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 47
+      valuePerRank: 1
+    position: {x: -140, y: 325}
+  - id: ult1_a2
+    displayName: "\uAD00\uD1B5 \uD30C\uD3B8"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult1
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uD30C\uD3B8\uC774 \uC801\uC744 \uAD00\uD1B5. \uAD00\uD1B5\uB9C8\uB2E4 \uCE58\uBA85 \uD310\uC815"
+    effects: []
+    skillEffects: []
+    position: {x: 130, y: 325}
+  - id: ult1_s2
+    displayName: "\uD30C\uD3B8 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 8
+      valuePerRank: 0.03
+    position: {x: -5, y: 465}
+  - id: ult1_s3
+    displayName: "\uD30C\uD3B8 \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +6%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 9
+      valuePerRank: 0.06
+    position: {x: -5, y: 605}
+  - id: ult2_entry
+    displayName: "\uCD08\uAE30\uD654 \uC870\uAC74"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uCD08\uAE30\uD654\uC5D0 \uD544\uC694\uD55C \uCE58\uBA85 \uD69F\uC218\uB97C \uC904\uC774\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uD544\uC694 \uCE58\uBA85 \uD69F\uC218 -1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 21
+      valuePerRank: 1
+    position: {x: 400, y: 40}
+  - id: ult2_l
+    displayName: "\uD544\uC694 \uCE58\uBA85 \uD69F\uC218"
+    kind: 1
+    maxRank: 2
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 -1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 21
+      valuePerRank: 1
+    position: {x: 265, y: 40}
+  - id: ult2_r
+    displayName: "\uCE58\uBA85 \uC9D1\uACC4 \uC720\uC608 \uC2DC\uAC04"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 22
+      valuePerRank: 0.3
+    position: {x: 535, y: 40}
+  - id: ult2_s1
+    displayName: "\uD544\uC694 \uCE58\uBA85 \uD69F\uC218"
+    kind: 1
+    maxRank: 2
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 -1"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 21
+      valuePerRank: 1
+    position: {x: 400, y: 185}
+  - id: ult2_a1
+    displayName: "\uC5F0\uC1C4 \uC644\uD654"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult4
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uD544\uC694 \uCE58\uBA85 \uD69F\uC218 -2. \uB300\uC2E0 \uC5F0\uC1C4 \uC0C1\uD55C -1 (\uCD5C\uC18C 1)"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 21
+      valuePerRank: 2
+    position: {x: 265, y: 325}
+  - id: ult2_a2
+    displayName: "\uC815\uBC00 \uC9D1\uACC4"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult4
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uAD81\uADF9\uAE30 \uD6C4 4\uCD08\uAC04 \uD3C9\uD0C0\u00B7\uCDA9\uACA9\uD30C \uCE58\uBA85\uB3C4 \uD69F\uC218\uC5D0 \uD3EC\uD568"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 48
+      valuePerRank: 1
+    position: {x: 535, y: 325}
+  - id: ult2_s2
+    displayName: "\uAD81\uADF9\uAE30 \uC911 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +5%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 8
+      valuePerRank: 0.05
+    position: {x: 400, y: 465}
+  - id: ult2_s3
+    displayName: "\uCE58\uBA85 \uC9D1\uACC4 \uC720\uC608 \uC2DC\uAC04"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +0.3\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 22
+      valuePerRank: 0.3
+    position: {x: 400, y: 605}
+  - id: ult3_entry
+    displayName: "\uC5F0\uC1C4 \uBCF4\uC0C1"
+    kind: 0
+    maxRank: 1
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uC5F0\uC1C4\uAC00 \uC774\uC5B4\uC9C8\uC218\uB85D \uAC15\uD574\uC9C0\uB294 \uACC4\uC5F4. \uC785\uAD6C \uD6A8\uACFC: \uC5F0\uC1C4 \uB2E8\uACC4\uB2F9 \uD53C\uD574 +5%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 23
+      valuePerRank: 0.05
+    position: {x: 805, y: 40}
+  - id: ult3_l
+    displayName: "\uC5F0\uC1C4 \uB2E8\uACC4\uB2F9 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +3%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 23
+      valuePerRank: 0.03
+    position: {x: 670, y: 40}
+  - id: ult3_r
+    displayName: "\uC5F0\uC1C4 \uB2E8\uACC4\uB2F9 \uCE58\uBA85 \uD655\uB960"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +2%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 24
+      valuePerRank: 0.02
+    position: {x: 940, y: 40}
+  - id: ult3_s1
+    displayName: "\uC5F0\uC1C4 \uB2E8\uACC4\uB2F9 \uCE58\uBA85 \uD53C\uD574"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +4%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 51
+      valuePerRank: 0.04
+    position: {x: 805, y: 185}
+  - id: ult3_a1
+    displayName: "\uC5F0\uC1C4 \uD3ED\uBC1C"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult7
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uC5F0\uC1C4\uAC00 \uB05D\uB0A0 \uB54C \uB300\uD3ED\uBC1C. \uC5F0\uC1C4 \uB2E8\uACC4\uC5D0 \uBE44\uB840"
+    effects: []
+    skillEffects: []
+    position: {x: 670, y: 325}
+  - id: ult3_a2
+    displayName: "\uC5F0\uC1C4 \uAC00\uC18D"
+    kind: 2
+    maxRank: 1
+    cost: 3
+    exclusiveGroup: ult7
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uC5F0\uC1C4 \uC911 \uBAA8\uB4E0 \uCFE8\uD0C0\uC784\uC774 25% \uBE60\uB974\uAC8C \uB3CC\uC544\uAC10"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 49
+      valuePerRank: 0.25
+    position: {x: 940, y: 325}
+  - id: ult3_s2
+    displayName: "\uC5F0\uC1C4 \uC720\uC9C0 \uC2DC\uAC04"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 +0.5\uCD08"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 50
+      valuePerRank: 0.5
+    position: {x: 805, y: 465}
+  - id: ult3_s3
+    displayName: "\uCFE8"
+    kind: 1
+    maxRank: 5
+    cost: 1
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uB7AD\uD06C\uB2F9 -3%"
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 1
+      valuePerRank: 0.03
+    position: {x: 805, y: 605}
+  - id: ult_key
+    displayName: "\uB05D\uC5C6\uB294 \uC5F0\uC1C4"
+    kind: 3
+    maxRank: 1
+    cost: 5
+    exclusiveGroup: 
+    tab: "\uAD81\uADF9\uAE30"
+    description: "\uC5F0\uC1C4 \uC0C1\uD55C\uC774 1\uD68C\uC5D0\uC11C 2\uD68C\uB85C \uB298\uC5B4\uB0A8 (\uAD81\uADF9\uAE30 \uCD5C\uB300 3\uBC88 \uC5F0\uC18D). \uB300\uC2E0 \uD68C\uCC28\uB9C8\uB2E4 \uD544\uC694 \uCE58\uBA85 \uD69F\uC218 +2, \uAD81\uADF9\uAE30 \uD53C\uD574 -15%. \uC5F0\uC1C4 \uBCF4\uC0C1 \uACC4\uC5F4\uC744 \uCC0D\uC73C\uBA74 \uC774 \uAC10\uC18C\uAC00 \uC774\uB4DD\uC73C\uB85C \uBC14\uB01C."
+    effects: []
+    skillEffects:
+    - scope: 14
+      kind: 32
+      valuePerRank: 1
+    position: {x: 400, y: 735}
+  links:
+  - parentId: atk1_entry
+    childId: atk1_l
+  - parentId: atk1_entry
+    childId: atk1_r
+  - parentId: atk1_entry
+    childId: atk1_s1
+  - parentId: atk1_s1
+    childId: atk1_a1
+  - parentId: atk1_s1
+    childId: atk1_a2
+  - parentId: atk1_a1
+    childId: atk1_s2
+  - parentId: atk1_a2
+    childId: atk1_s2
+  - parentId: atk1_s2
+    childId: atk1_s3
+  - parentId: atk2_entry
+    childId: atk2_l
+  - parentId: atk2_entry
+    childId: atk2_r
+  - parentId: atk2_entry
+    childId: atk2_s1
+  - parentId: atk2_s1
+    childId: atk2_a1
+  - parentId: atk2_s1
+    childId: atk2_a2
+  - parentId: atk2_a1
+    childId: atk2_s2
+  - parentId: atk2_a2
+    childId: atk2_s2
+  - parentId: atk2_s2
+    childId: atk2_s3
+  - parentId: atk3_entry
+    childId: atk3_l
+  - parentId: atk3_entry
+    childId: atk3_r
+  - parentId: atk3_entry
+    childId: atk3_s1
+  - parentId: atk3_s1
+    childId: atk3_a1
+  - parentId: atk3_s1
+    childId: atk3_a2
+  - parentId: atk3_a1
+    childId: atk3_s2
+  - parentId: atk3_a2
+    childId: atk3_s2
+  - parentId: atk3_s2
+    childId: atk3_s3
+  - parentId: atk1_s3
+    childId: atk_key
+  - parentId: atk2_s3
+    childId: atk_key
+  - parentId: atk3_s3
+    childId: atk_key
+  - parentId: pas1_entry
+    childId: pas1_l
+  - parentId: pas1_entry
+    childId: pas1_r
+  - parentId: pas1_entry
+    childId: pas1_s1
+  - parentId: pas1_s1
+    childId: pas1_a1
+  - parentId: pas1_s1
+    childId: pas1_a2
+  - parentId: pas1_a1
+    childId: pas1_s2
+  - parentId: pas1_a2
+    childId: pas1_s2
+  - parentId: pas1_s2
+    childId: pas1_s3
+  - parentId: pas2_entry
+    childId: pas2_l
+  - parentId: pas2_entry
+    childId: pas2_r
+  - parentId: pas2_entry
+    childId: pas2_s1
+  - parentId: pas2_s1
+    childId: pas2_a1
+  - parentId: pas2_s1
+    childId: pas2_a2
+  - parentId: pas2_a1
+    childId: pas2_s2
+  - parentId: pas2_a2
+    childId: pas2_s2
+  - parentId: pas2_s2
+    childId: pas2_s3
+  - parentId: pas3_entry
+    childId: pas3_l
+  - parentId: pas3_entry
+    childId: pas3_r
+  - parentId: pas3_entry
+    childId: pas3_s1
+  - parentId: pas3_s1
+    childId: pas3_a1
+  - parentId: pas3_s1
+    childId: pas3_a2
+  - parentId: pas3_a1
+    childId: pas3_s2
+  - parentId: pas3_a2
+    childId: pas3_s2
+  - parentId: pas3_s2
+    childId: pas3_s3
+  - parentId: pas1_s3
+    childId: pas_key
+  - parentId: pas2_s3
+    childId: pas_key
+  - parentId: pas3_s3
+    childId: pas_key
+  - parentId: dash1_entry
+    childId: dash1_l
+  - parentId: dash1_entry
+    childId: dash1_r
+  - parentId: dash1_entry
+    childId: dash1_s1
+  - parentId: dash1_s1
+    childId: dash1_a1
+  - parentId: dash1_s1
+    childId: dash1_a2
+  - parentId: dash1_a1
+    childId: dash1_s2
+  - parentId: dash1_a2
+    childId: dash1_s2
+  - parentId: dash1_s2
+    childId: dash1_s3
+  - parentId: dash2_entry
+    childId: dash2_l
+  - parentId: dash2_entry
+    childId: dash2_r
+  - parentId: dash2_entry
+    childId: dash2_s1
+  - parentId: dash2_s1
+    childId: dash2_a1
+  - parentId: dash2_s1
+    childId: dash2_a2
+  - parentId: dash2_a1
+    childId: dash2_s2
+  - parentId: dash2_a2
+    childId: dash2_s2
+  - parentId: dash2_s2
+    childId: dash2_s3
+  - parentId: dash3_entry
+    childId: dash3_l
+  - parentId: dash3_entry
+    childId: dash3_r
+  - parentId: dash3_entry
+    childId: dash3_s1
+  - parentId: dash3_s1
+    childId: dash3_a1
+  - parentId: dash3_s1
+    childId: dash3_a2
+  - parentId: dash3_a1
+    childId: dash3_s2
+  - parentId: dash3_a2
+    childId: dash3_s2
+  - parentId: dash3_s2
+    childId: dash3_s3
+  - parentId: dash1_s3
+    childId: dash_key
+  - parentId: dash2_s3
+    childId: dash_key
+  - parentId: dash3_s3
+    childId: dash_key
+  - parentId: skill1_entry
+    childId: skill1_l
+  - parentId: skill1_entry
+    childId: skill1_r
+  - parentId: skill1_entry
+    childId: skill1_s1
+  - parentId: skill1_s1
+    childId: skill1_a1
+  - parentId: skill1_s1
+    childId: skill1_a2
+  - parentId: skill1_a1
+    childId: skill1_s2
+  - parentId: skill1_a2
+    childId: skill1_s2
+  - parentId: skill1_s2
+    childId: skill1_s3
+  - parentId: skill2_entry
+    childId: skill2_l
+  - parentId: skill2_entry
+    childId: skill2_r
+  - parentId: skill2_entry
+    childId: skill2_s1
+  - parentId: skill2_s1
+    childId: skill2_a1
+  - parentId: skill2_s1
+    childId: skill2_a2
+  - parentId: skill2_a1
+    childId: skill2_s2
+  - parentId: skill2_a2
+    childId: skill2_s2
+  - parentId: skill2_s2
+    childId: skill2_s3
+  - parentId: skill3_entry
+    childId: skill3_l
+  - parentId: skill3_entry
+    childId: skill3_r
+  - parentId: skill3_entry
+    childId: skill3_s1
+  - parentId: skill3_s1
+    childId: skill3_a1
+  - parentId: skill3_s1
+    childId: skill3_a2
+  - parentId: skill3_a1
+    childId: skill3_s2
+  - parentId: skill3_a2
+    childId: skill3_s2
+  - parentId: skill3_s2
+    childId: skill3_s3
+  - parentId: skill1_s3
+    childId: skill_key
+  - parentId: skill2_s3
+    childId: skill_key
+  - parentId: skill3_s3
+    childId: skill_key
+  - parentId: ult1_entry
+    childId: ult1_l
+  - parentId: ult1_entry
+    childId: ult1_r
+  - parentId: ult1_entry
+    childId: ult1_s1
+  - parentId: ult1_s1
+    childId: ult1_a1
+  - parentId: ult1_s1
+    childId: ult1_a2
+  - parentId: ult1_a1
+    childId: ult1_s2
+  - parentId: ult1_a2
+    childId: ult1_s2
+  - parentId: ult1_s2
+    childId: ult1_s3
+  - parentId: ult2_entry
+    childId: ult2_l
+  - parentId: ult2_entry
+    childId: ult2_r
+  - parentId: ult2_entry
+    childId: ult2_s1
+  - parentId: ult2_s1
+    childId: ult2_a1
+  - parentId: ult2_s1
+    childId: ult2_a2
+  - parentId: ult2_a1
+    childId: ult2_s2
+  - parentId: ult2_a2
+    childId: ult2_s2
+  - parentId: ult2_s2
+    childId: ult2_s3
+  - parentId: ult3_entry
+    childId: ult3_l
+  - parentId: ult3_entry
+    childId: ult3_r
+  - parentId: ult3_entry
+    childId: ult3_s1
+  - parentId: ult3_s1
+    childId: ult3_a1
+  - parentId: ult3_s1
+    childId: ult3_a2
+  - parentId: ult3_a1
+    childId: ult3_s2
+  - parentId: ult3_a2
+    childId: ult3_s2
+  - parentId: ult3_s2
+    childId: ult3_s3
+  - parentId: ult1_s3
+    childId: ult_key
+  - parentId: ult2_s3
+    childId: ult_key
+  - parentId: ult3_s3
+    childId: ult_key

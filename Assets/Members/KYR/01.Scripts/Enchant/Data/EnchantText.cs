@@ -1,4 +1,6 @@
 using System.Text;
+using UnityEngine;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.KYR._01.Scripts.Enchant.So;
 using Members.KYR._01.Scripts.Stats;
 
@@ -58,13 +60,38 @@ namespace Members.KYR._01.Scripts.Enchant.Data
             return StatLabel(effect.stat) + " " + Value(effect.type, effect.ValueAt(rank));
         }
 
-        // rank < 0이면 "랭크당"으로 적는다.
+        public static string SkillEffect(EnchantSkillEffect effect, int rank)
+        {
+            if (effect == null)
+                return string.Empty;
+
+            float value = effect.ValueAt(rank);
+            string prefix = effect.scope == SkillUpgradeScope.All ? string.Empty : SkillUpgradeScopes.Label(effect.scope) + " ";
+            return prefix + SkillUpgradeScopes.Label(effect.kind) + " " + SkillUpgradeScopes.Format(effect.kind, value);
+        }
+
+        // rank < 0이면 "랭크당"으로 적는다. 스탯 효과 다음에 스킬 강화 효과.
         public static string Effects(EnchantTreeNode node, int rank, string separator = "\n")
         {
-            if (node == null || node.effects == null || node.effects.Count == 0)
+            if (node == null)
                 return string.Empty;
 
             StringBuilder builder = new StringBuilder();
+            if (node.skillEffects != null)
+            {
+                foreach (EnchantSkillEffect skillEffect in node.skillEffects)
+                {
+                    if (skillEffect == null)
+                        continue;
+                    if (builder.Length > 0)
+                        builder.Append(separator);
+                    builder.Append(rank < 0 ? SkillEffect(skillEffect, 1) + "/랭크" : SkillEffect(skillEffect, rank));
+                }
+            }
+
+            if (node.effects == null || node.effects.Count == 0)
+                return builder.ToString();
+
             for (int i = 0; i < node.effects.Count; i++)
             {
                 EnchantStatEffect effect = node.effects[i];

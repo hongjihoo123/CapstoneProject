@@ -94,7 +94,7 @@ namespace RobotWeapons
                 return;
             }
 
-            fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier));
+            fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier) * TreeAttackSpeed());
             if (data.useAmmo)
                 CurrentResource -= 1f;
 
@@ -228,6 +228,8 @@ namespace RobotWeapons
             {
                 end = point;
                 ApplyHit(target, weakpoint, empowered, point, direction);
+                if (RollDoubleShot())
+                    ApplyHit(target, weakpoint, empowered, point, direction);   // 이중 격발: 한 번 더 맞음 (치명도 따로 굴림)
             }
             else if (blocked)
             {
@@ -350,10 +352,22 @@ namespace RobotWeapons
             return origin.position + Vector3.Cross(Vector3.up, direction) * side;
         }
 
+        // 스킬 트리 강화 (플레이어 총일 때만. 적이 같은 총을 써도 영향 없음)
+        private bool IsPlayerGun => owner is Members.KYR._01.Scripts.Player.PlayerAgent;
+
+        private float TreeAttackSpeed() => IsPlayerGun ? Assets.Members.HJH._02.Scripts.Element.Upgrade.CritSystem.AttackSpeedMultiplier() : 1f;
+
+        private float TreeDamage() => IsPlayerGun
+            ? Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgrades.Multiplier(Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeKind.Damage, Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeScope.Attack)
+            : 1f;
+
+        private bool RollDoubleShot() => IsPlayerGun
+            && UnityEngine.Random.value < Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgrades.Bonus(Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeKind.DoubleShot, Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeScope.Attack);
+
         private void ApplyHit(IDamageable target, bool weakpoint, bool empowered, Vector3 point, Vector3 direction)
         {
             HitPoint.Mark(target, point, direction);
-            float damage = (data.damagePerShot + bonusDamage) * DamageMultiplier * (empowered ? empoweredMultiplier : 1f);
+            float damage = (data.damagePerShot + bonusDamage) * DamageMultiplier * (empowered ? empoweredMultiplier : 1f) * TreeDamage();
             owner.ApplyDamageTo(target, damage, weakpoint);
             RaiseDamage(damage);
             ShotHit?.Invoke(target, empowered);

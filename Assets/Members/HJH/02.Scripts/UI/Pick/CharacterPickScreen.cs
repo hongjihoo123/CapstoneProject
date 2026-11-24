@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Element;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.Tutorial;
 using DG.Tweening;
 using Members.JJH._02_Scripts.ElementsSystem;
+using Members.KYR._01.Scripts.Enchant.So;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -64,6 +66,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
         [Header("구워 둔 화면 (⋮ > 레이아웃 굽기)")]
+        [Header("아웃 업그레이드 (스킬 트리)")]
+        [SerializeField, Tooltip("아웃 업그레이드 버튼이 여는 창 프리팹 (05.Data/Prefab/UI/SkillTreeScreen)")] private SkillTreeScreen skillTreeScreenPrefab;
+        [SerializeField, Tooltip("캐릭터별 스킬 트리. 고른 캐릭터와 맞는 것을 열고, 없으면 준비 중으로 보임")] private EnchantTree[] skillTrees = Array.Empty<EnchantTree>();
+
         [SerializeField] private ElementPalette palette;
         [SerializeField] private PickComboRowView comboRowPrefab;
         [SerializeField] private List<PortraitView> portraits = new();
@@ -323,7 +329,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 tags[i].text.text = roles[i];
                 tags[i].text.color = _theme;
                 tags[i].line.color = new Color(_theme.r, _theme.g, _theme.b, 0.6f);
+                tags[i].text.ForceMeshUpdate();
             }
+
+            // 처음 고를 때는 레이아웃이 아직 안 돌아서 태그가 겹쳐 보임 -> 바로 다시 계산
+            if (tags.Length > 0 && tags[0].root.transform.parent is RectTransform tagRow)
+                LayoutRebuilder.ForceRebuildLayoutImmediate(tagRow);
 
             descText.text = data.Description;
 
@@ -492,6 +503,29 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 : "튜토리얼과 초반에는 이 콤보 하나로 싸웁니다. 효과는 원소마다 정해진 능력치 + 순서 보너스입니다.";
         }
 
+        // ---------------------------------------------------------------- 아웃 업그레이드 (버튼 OnClick)
+
+        private EnchantTree TreeOf(CharacterData character)
+        {
+            if (skillTrees == null)
+                return null;
+            foreach (EnchantTree tree in skillTrees)
+            {
+                if (tree != null && tree.Character == character)
+                    return tree;
+            }
+            return null;
+        }
+
+        public void OpenOutUpgrade()
+        {
+            if (_busy || Count == 0 || SkillTreeScreen.IsOpen)
+                return;
+
+            CharacterData data = roster[_selected];
+            SkillTreeScreen.Open(skillTreeScreenPrefab, TreeOf(data), data != null ? data.DisplayName : string.Empty);
+        }
+
         // ---------------------------------------------------------------- 시작 (버튼 OnClick)
 
         public void Confirm()
@@ -501,6 +535,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             _busy = true;
             CharacterSelection.Pick(_selected);
+            SkillTreeProgress.Apply(TreeOf(roster[_selected]));   // 이 캐릭터의 스킬 트리 강화를 이번 런에 올림
             RunReset.Begin();
             ComboLoadout.BeginRun();
             // 튜토리얼은 콤보 바인딩 상점이 있는 상점 맵에서 진행
@@ -806,13 +841,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
             comboHint.textWrappingMode = TextWrappingModes.Normal;
             HudUiKit.Place(comboHint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -108f - rowHeight * 2f - 16f), new Vector2(ColumnWidth, 60f));
 
-            // 아웃 업그레이드: 자리만 (아직 연결된 기능 없음)
+            // 아웃 업그레이드: 누르면 스킬 트리 창 (skillTreeScreenPrefab)
             Image upgrade = HudUiKit.NewImage("OutUpgrade", column, HudUiKit.Load("button_normal"), Color.white);
             HudUiKit.Place(upgrade.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 112f), new Vector2(ColumnWidth, 64f));
             upgrade.raycastTarget = true;
             TMP_Text upgradeLabel = HudUiKit.NewText("Label", upgrade.transform, "아웃 업그레이드", 24f, HudUiKit.Title, TextAlignmentOptions.Center, 4f);
             HudUiKit.Stretch(upgradeLabel.rectTransform);
-            NewButton(upgrade);
+            Wire(NewButton(upgrade), OpenOutUpgrade);
             upgrade.gameObject.AddComponent<HoverScale>().Scale = 1.03f;
 
             Image start = HudUiKit.NewImage("Start", column, HudUiKit.Load("button_hover"), Color.white);

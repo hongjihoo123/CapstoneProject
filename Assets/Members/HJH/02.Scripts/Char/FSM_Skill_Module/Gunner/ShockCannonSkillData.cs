@@ -1,5 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
@@ -150,7 +151,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         private void OnShellHit(ISkillContext context, IDamageable target, Vector3 point)
         {
             Color color = FxColor;
-            context.DealDamage(target, shellDamage);
+            context.DealDamage(target, shellDamage, this);
             context.PlayHitFeel(hitStop, shake);
             context.PlayCameraKick(Vector3.down * 0.5f, 0.25f);
 
@@ -168,13 +169,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 VisualSize = 0.25f
             };
 
-            for (int i = 0; i < shrapnelCount; i++)
+            // 스킬 트리: 파편 수 증가
+            int count = shrapnelCount + Mathf.RoundToInt(SkillUpgrades.Exact(SkillUpgradeKind.ShrapnelCount, SkillUpgradeScope.Ultimate));
+            // 집속탄: 파편 수 2배, 한 발 피해 -35%
+            bool dense = SkillUpgrades.Exact(SkillUpgradeKind.ShrapnelDense, SkillUpgradeScope.Ultimate) > 0f;
+            float shrapnelHit = dense ? shrapnelDamage * 0.65f : shrapnelDamage;
+            if (dense)
+                count *= 2;
+            for (int i = 0; i < count; i++)
             {
-                Vector3 direction = Quaternion.Euler(0f, 360f * i / shrapnelCount, 0f) * Vector3.forward;
+                Vector3 direction = Quaternion.Euler(0f, 360f * i / count, 0f) * Vector3.forward;
                 context.Run(new SkillProjectile(context, point, direction, settings,
                     (hit, hitPoint) =>
                     {
-                        context.DealDamage(hit, shrapnelDamage);
+                        context.DealDamage(hit, shrapnelHit, this);
                         SkillBlast.Explode(context, hitPoint, shrapnelBlastRadius, shrapnelBlastDamage, color, 0.02f, 0.15f, 0.8f);
                     }));
             }

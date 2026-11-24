@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
@@ -410,9 +411,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     _boosts.Remove(skill);
             }
 
+            // 아웃게임 스킬 트리 강화: 이 스킬의 원소(또는 모든 원소)에 걸린 피해 보너스
+            if (skill != null)
+                amount *= SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, skill);
+            else
+                amount *= SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, SkillUpgradeScope.Charged);   // 패시브 충전탄
             // 연출(CombatFeedback)이 "스킬로 맞았나 / 패시브로 맞았나"를 알 수 있게 출처를 표시.
             // 스킬 상태 밖에서 이 통로로 들어오는 피해 = 패시브 (충전 관통탄, 룬 공명 등)
             int castId = skill != null && _castIds.TryGetValue(skill, out int id) ? id : 0;
+            SkillUpgradeScope prevSlot = CritSystem.CurrentSlot;
+            CritSystem.CurrentSlot = prevSlot == SkillUpgradeScope.All ? SkillUpgrades.SlotScopeOf(skill) : prevSlot;
             HitSource.Push(skill != null ? HitSourceKind.Skill : HitSourceKind.Passive, castId);
             try
             {
@@ -432,6 +440,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             finally
             {
                 HitSource.Pop();
+                CritSystem.CurrentSlot = prevSlot;
             }
         }
 

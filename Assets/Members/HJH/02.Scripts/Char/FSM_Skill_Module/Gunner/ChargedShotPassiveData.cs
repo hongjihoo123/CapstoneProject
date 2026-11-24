@@ -1,4 +1,5 @@
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
@@ -38,13 +39,38 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         {
             private readonly ChargedShotPassiveData _data;
             private IShotInterceptable _gun;
-            private int _shots;
+            private float _shots;
             private FxHandle _glow;
 
-            public Runtime(ChargedShotPassiveData data, IPassiveHost host) : base(host) => _data = data;
+            public Runtime(ChargedShotPassiveData data, IPassiveHost host) : base(host)
+            {
+                _data = data;
+                CritSystem.Landed += OnCrit;
+                CritSystem.Cast += OnCast;
+            }
 
-            public float Fill => Mathf.Clamp01((float)_shots / _data.shotsToFill);
-            public bool IsFull => _shots >= _data.shotsToFill;
+            // 스킬 트리: 충전 필요 발수 감소
+            private float Need => Mathf.Max(1f, _data.shotsToFill - SkillUpgrades.Bonus(SkillUpgradeKind.ChargeNeed, SkillUpgradeScope.Charged));
+
+            public float Fill => Mathf.Clamp01(_shots / Need);
+            public bool IsFull => _shots >= Need;
+
+            // 스킬 트리: 충전탄이 치명이면 게이지 +, 처치하면 게이지 +
+            private void OnCrit(SkillUpgradeScope slot)
+            {
+                if (slot == SkillUpgradeScope.Charged)
+                    _shots = Mathf.Min(Need, _shots + SkillUpgrades.Exact(SkillUpgradeKind.CritGauge, SkillUpgradeScope.Charged));
+            }
+
+            // 대쉬 시 게이지 (잔류 충전)
+            private void OnCast(Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillSlotId slot)
+            {
+                if (slot == Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillSlotId.Dash)
+                    _shots = Mathf.Min(Need, _shots + SkillUpgrades.Exact(SkillUpgradeKind.DashGauge, SkillUpgradeScope.Charged));
+            }
+
+            public override void OnEnemyKilled() =>
+                _shots = Mathf.Min(Need, _shots + SkillUpgrades.Exact(SkillUpgradeKind.KillGauge, SkillUpgradeScope.Charged));
 
             public override void Tick(float deltaTime)
             {
@@ -54,6 +80,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             public override void Dispose()
             {
+                CritSystem.Landed -= OnCrit;
+                CritSystem.Cast -= OnCast;
                 if (_gun != null)
                     _gun.ShotInterceptor = null;
                 _gun = null;
@@ -90,6 +118,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 Context.Run(new ChargedPiercingShot(Context, muzzle, direction, _data.shot,
                     muzzleSource != null ? () => muzzleSource.CurrentMuzzle : null,
                     _gun as IAnimationTimedShots));   // 애니 이벤트로 쏘는 총이면 PassiveShot 클립의 Anim_Fire 프레임에 발사
+                // 과충전: 충전탄 2연발 (두 번째는 조금 늦게, 시간으로 충전)
+                if (SkillUpgrades.Exact(SkillUpgradeKind.ChargeDouble, SkillUpgradeScope.Charged) > 0f)
+                {
+                    var second = _data.shot;
+                    second.windup += 0.3f;
+                    Context.Run(new ChargedPiercingShot(Context, muzzle, direction, second,
+                        muzzleSource != null ? () => muzzleSource.CurrentMuzzle : null));
+                }
                 return true;
             }
 

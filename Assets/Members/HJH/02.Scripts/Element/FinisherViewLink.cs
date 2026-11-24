@@ -5,9 +5,9 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 피니시 로직(ElementComboChain: 스택, C, 강화, 피니시 스킬)을 JJH 콤보 UI(ElementStackView)에 보여주는 연결.
+    // 피니시 로직(ElementComboChain: 스택, C, 강화)을 JJH 콤보 UI(ElementStackView)에 보여주는 연결.
     // 씬의 체인 옆에 하나 붙이면 끝. 켜져 있는 ElementStackView 를 전부 찾아서
-    //   다이아 = 체인 스택, READY 글자 = 준비 중이면 배율 + 남은 시간, 배너 = 준비 / 피니시 / 놓침 / 피니시 스킬 저장
+    //   다이아 = 체인 스택, READY 글자 = 준비 중이면 배율 + 남은 시간, 배너 = 준비 / 피니시 / 놓침
     // JJH 뷰는 연결되면 자기 스톡 계산과 피니시 키를 끔 (UseExternalFinisher)
     public class FinisherViewLink : MonoBehaviour
     {
@@ -32,7 +32,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 view.UseExternalFinisher();
 
             chain.StockChanged += DrawStock;
-            chain.FinisherStored += OnStored;
             chain.FinisherArmed += OnArmed;
             chain.FinisherExpired += OnExpired;
             chain.FinisherReleased += OnReleased;
@@ -44,7 +43,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             if (chain == null)
                 return;
             chain.StockChanged -= DrawStock;
-            chain.FinisherStored -= OnStored;
             chain.FinisherArmed -= OnArmed;
             chain.FinisherExpired -= OnExpired;
             chain.FinisherReleased -= OnReleased;
@@ -67,13 +65,9 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 view.SetFinisherStock(_names);
         }
 
-        private void OnStored(FinisherBook.Entry finisher) =>
-            Banner("FINISH SKILL", finisher.name, "피니시 스킬 저장", false);
-
         private void OnArmed(int stacks, float scale)
         {
-            int skills = chain.ArmedFinishers.Count;
-            Banner("READY", "피니시 준비", skills > 0 ? $"다음 스킬 ×{scale:0.0#}  +  피니시 스킬 {skills}개" : $"다음 스킬 ×{scale:0.0#}", false);
+            Banner("READY", "피니시 준비", $"다음 스킬 ×{scale:0.0#}", false);
             foreach (ElementStackView view in _views)
                 view.SetFinisherReady(true, scale, chain.ArmedRemaining);
         }
@@ -84,12 +78,9 @@ namespace Assets.Members.HJH._02.Scripts.Element
             NotReady();
         }
 
-        private void OnReleased(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        private void OnReleased(SkillSlotId slot, float scale)
         {
-            var names = new List<string>();
-            foreach (FinisherBook.Entry finisher in fired)
-                names.Add(finisher.name);
-            Banner($"FINISH ×{scale:0.0#}", "피니시", names.Count > 0 ? string.Join("  +  ", names) : "피해 강화", true);
+            Banner($"FINISH ×{scale:0.0#}", "피니시", "피해 강화", true);
             NotReady();
         }
 

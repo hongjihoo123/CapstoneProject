@@ -59,6 +59,7 @@ namespace HJH.EditorTools
                 BakePrefab<ScreenNotice>("PortalNotice");
                 BakePrefab<PickComboRowView>("PickComboRow");
                 BakePrefab<ComboBindPanel>("ComboBindPanel");
+                ComboBuffBarBakeMenu.EnsureStatIconSet();
                 BakePrefab<ComboBuffBarView>("ComboBuffBar");
 
                 BakeShop();

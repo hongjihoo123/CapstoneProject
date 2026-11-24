@@ -90,20 +90,6 @@ namespace HJH.EditorTools
         }
 
         // ───────────────────────── 2. 플레이어 Spot 라이트 ─────────────────────────
-        [MenuItem("HJH/플레이어/Spot 라이트 달기 (PlayerRig 프리팹)")]
-        private static void AddPlayerSpotMenu()
-        {
-            if (EditorApplication.isPlaying) return;
-            var root = PrefabUtility.LoadPrefabContents(RigPath);
-            try
-            {
-                if (!AddPlayerSpot(root.transform)) { Debug.LogWarning("[Spot] PlayerRig 안에서 Player 를 못 찾았습니다."); return; }
-                PrefabUtility.SaveAsPrefabAsset(root, RigPath);
-                Debug.Log("[Spot] PlayerRig 프리팹에 Spot 라이트를 달았습니다. 플레이어 → PlayerSpot 의 Light 값(밝기·각도·그림자)을 맘대로 조절하세요. 모든 맵의 플레이어에 적용됩니다.");
-            }
-            finally { PrefabUtility.UnloadPrefabContents(root); }
-        }
-
         // PlayerRigBuilder 가 프리팹을 새로 만들 때도 부름 (다시 만들어도 Spot 이 유지되게)
         internal static bool AddPlayerSpot(Transform rigRoot)
         {

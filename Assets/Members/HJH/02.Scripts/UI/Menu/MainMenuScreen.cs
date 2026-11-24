@@ -24,6 +24,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("픽 화면 씬 (빌드 설정에 있어야 함)")] private string pickScene = "CharacterPick";
         [SerializeField, Tooltip("처음인가요? 에서 '예' 가 튜토리얼 시작이면 켜 둠 (끄면 '아니요' 가 튜토리얼)")]
         private bool yesStartsTutorial = true;
+        [SerializeField, Tooltip("켜면 게임을 켤 때 한 번 '처음인가요?' 를 먼저 물음. 끄면 바로 타이틀")] private bool askFirstTime;
         [SerializeField, Min(0.05f)] private float fadeTime = 0.45f;
 
         [Serializable]
@@ -32,6 +33,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             public Button button;
             public Image back;
             public TMP_Text label;
+            [Tooltip("고른 버튼 왼쪽에 켜지는 표시 (없어도 됨)")] public Image marker;
         }
 
         [Header("구워 둔 화면 (⋮ > 레이아웃 굽기)")]
@@ -45,6 +47,14 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private GameObject tutorialDone;
         [SerializeField, Tooltip("고른 버튼 / 나머지 버튼 그림")] private Sprite focusedSprite;
         [SerializeField] private Sprite normalSprite;
+
+        [SerializeField, Tooltip("설정 버튼을 눌렀을 때 (설정 화면 연결용)")] private UnityEngine.Events.UnityEvent onSettings = new();
+
+        [Header("버튼 색 (정글 톤)")]
+        [SerializeField] private Color focusedTint = Color.white;
+        [SerializeField] private Color normalTint = new(0.75f, 0.85f, 1f, 1f);
+        [SerializeField] private Color focusedLabel = new(0.84f, 0.72f, 0.47f, 1f);
+        [SerializeField] private Color normalLabel = new(0.91f, 0.94f, 0.97f, 1f);
 
         private MenuButton[] _buttons = Array.Empty<MenuButton>();
         private bool _onQuestion;
@@ -76,7 +86,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             yield return PlayIntro();
 
-            if (!TutorialSession.AskedThisLaunch)
+            if (askFirstTime && !TutorialSession.AskedThisLaunch)
                 ShowQuestion();
             else
                 ShowMenu();
@@ -147,6 +157,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Go(pickScene);
         }
 
+        // 설정 화면은 아직 없음 → 나중에 만들면 인스펙터 onSettings 에 연결 (설정 버튼/톱니 버튼이 호출)
+        public void OpenSettings() => onSettings?.Invoke();
+
         public void Quit()
         {
 #if UNITY_EDITOR
@@ -164,6 +177,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 SceneManager.LoadScene(scene);
                 return;
             }
+            Punch(_focus);
             fade.raycastTarget = true;
             fade.DOFade(1f, fadeTime).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(scene));
         }
@@ -211,9 +225,22 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 root.DOScale(on ? 1.05f : 1f, 0.15f).SetUpdate(true);
                 // 고른 버튼은 밝은 버튼 그림, 나머지는 어두운 그림
                 entry.back.sprite = on ? focusedSprite : normalSprite;
-                entry.back.color = on ? Color.white : new Color(0.75f, 0.85f, 1f, 1f);
-                entry.label.color = on ? HudUiKit.Gold : HudUiKit.Title;
+                entry.back.color = on ? focusedTint : normalTint;
+                entry.label.color = on ? focusedLabel : normalLabel;
+                if (entry.marker != null)
+                    entry.marker.enabled = on;
             }
+        }
+
+        // 누른 버튼이 톡 튀어나왔다 돌아옴
+        private void Punch(int index)
+        {
+            if (index < 0 || index >= _buttons.Length)
+                return;
+            RectTransform root = _buttons[index].back.rectTransform;
+            root.DOKill();
+            root.localScale = Vector3.one * 1.05f;
+            root.DOPunchScale(Vector3.one * -0.08f, 0.2f, 6, 0.6f).SetUpdate(true).SetLink(root.gameObject);
         }
 
         // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)

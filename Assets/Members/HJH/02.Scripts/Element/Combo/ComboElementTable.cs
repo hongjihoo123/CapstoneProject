@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.ElementsSystem;
 using UnityEngine;
 using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
@@ -45,7 +46,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
         public int MinLength => minLength;
         public int MaxLength => maxLength;
-        public float Duration => duration;
+        public float Duration => duration * SkillUpgrades.Multiplier(SkillUpgradeKind.ComboDuration);   // 스킬 트리 강화 포함
         public IReadOnlyList<ElementEffect> Elements => elements;
         public IReadOnlyList<PairBonus> Pairs => pairs;
 

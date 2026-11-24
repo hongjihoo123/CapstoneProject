@@ -1,5 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.UI;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
@@ -15,9 +16,8 @@ namespace Assets.Members.HJH._02.Scripts.Element
     //  - 원소 있는 스킬을 쓸 때마다 입력 하나. 다음 스킬을 chainWindow 안에 쓰면 체인이 이어짐
     //  - 마지막 입력들이 JJH 콤보 표의 콤보가 되면 바로 완성 (기다림 없음). 입력은 안 지워져서 콤보끼리 이어짐
     //  - 완성된 콤보(입력 2개 이상, 서로 다른 것만)는 피니시 스택 +1 (최대 maxStock)
-    //  - 체인 끝이 피니시 스킬 콤보(FinisherBook, 원소 3개)면 그 피니시 스킬도 저장 (최대 maxStored, 스택도 +1)
     //  - C: 스택 전부 써서 readyTime 동안 "피니시 준비". 그 안에 쓰는 Q/E/우클릭/R 하나가
-    //       피해 ×stackScale[스택] 로 강화되고, 저장된 피니시 스킬이 같이 터짐. 시간 안에 안 쓰면 날아감
+    //       피해 ×stackScale[스택] 로 강화됨 (데미지 배수만). 시간 안에 안 쓰면 날아감
     // 완성된 콤보는 JJH 쪽에 ElementBuffTriggeredEvent(콤보 입력들)로 보내서 ElementBuffController 가 버프를 검.
     public class ElementComboChain : MonoBehaviour
     {
@@ -59,8 +59,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
         [Header("피니시 (C)")]
         [SerializeField] private Key finisherKey = Key.C;
-        [SerializeField, Tooltip("피니시 스킬 콤보 표. 비우면 Resources/HJH/FinisherBook")] private FinisherBook finisherBook;
-        [SerializeField, Min(1)] private int maxStored = 3;
         [SerializeField, Tooltip("C 누르고 스킬 쓸 수 있는 시간")] private float readyTime = 5f;
         [SerializeField, Tooltip("쓴 스택 수별 피해 배율 (0번 = 1스택)")] private float[] stackScale = { 1.3f, 1.6f, 2f };
         [SerializeField, Tooltip("강화된 스킬이 배율을 유지하는 시간 (늦게 맞는 투사체, 지연 폭발도 포함되게)")] private float empowerTime = 4f;
@@ -77,8 +75,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
         private readonly List<ComboInput> _inputs = new();
         private readonly List<ElementType> _elements = new();
         private readonly List<ElementComboBook.Recipe> _stock = new();
-        private readonly List<FinisherBook.Entry> _stored = new();
-        private readonly List<FinisherBook.Entry> _armedSkills = new();
         private float _remaining;
         private int _baseInputs;
         private float _armedLeft;
@@ -119,17 +115,17 @@ namespace Assets.Members.HJH._02.Scripts.Element
         }
 
         public string FinisherKeyLabel => finisherKey.ToString();
-        public FinisherBook Finishers => finisherBook;
-        public IReadOnlyList<FinisherBook.Entry> StoredFinishers => _stored;
         public bool IsArmed => _armedLeft > 0f;
         public float ArmedRemaining => Mathf.Max(0f, _armedLeft);
         public float ReadyTime => readyTime;
         public int ArmedStacks => _armedStacks;
         public float ArmedScale => ScaleFor(_armedStacks);
-        public IReadOnlyList<FinisherBook.Entry> ArmedFinishers => _armedSkills;
 
+        // 스킬 트리의 피니셔 강화는 "더해지는 몫"(1.3 -> 0.3)에 곱해짐: 강화해도 1배 밑으로 안 내려감
         public float ScaleFor(int stacks) =>
-            stacks <= 0 || stackScale == null || stackScale.Length == 0 ? 1f : stackScale[Mathf.Clamp(stacks - 1, 0, stackScale.Length - 1)];
+            stacks <= 0 || stackScale == null || stackScale.Length == 0
+                ? 1f
+                : 1f + (stackScale[Mathf.Clamp(stacks - 1, 0, stackScale.Length - 1)] - 1f) * SkillUpgrades.Multiplier(SkillUpgradeKind.FinisherPower);
 
         // 피니시를 실어 보낼 수 있는 칸 (대쉬·평타 제외)
         public static bool CanCarryFinisher(SkillSlotId slot) =>
@@ -151,14 +147,12 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public event Action StockChanged;
         // 콤보 표가 바뀜 (맛보기 선택 / 바인딩 교체)
         public event Action BookChanged;
-        // 피니시 스킬 콤보 완성 → 저장됨
-        public event Action<FinisherBook.Entry> FinisherStored;
         // C 눌러서 준비됨: (쓴 스택, 피해 배율)
         public event Action<int, float> FinisherArmed;
         // 준비 시간 안에 스킬을 안 씀
         public event Action FinisherExpired;
-        // 강화된 스킬 나감: (칸, 피해 배율, 같이 터진 피니시 스킬들)
-        public event Action<SkillSlotId, float, IReadOnlyList<FinisherBook.Entry>> FinisherReleased;
+        // 강화된 스킬 나감: (칸, 피해 배율)
+        public event Action<SkillSlotId, float> FinisherReleased;
 
         private void Awake()
         {
@@ -171,8 +165,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
             _baseInputs = maxInputs;
             RebuildBook();
-            if (finisherBook == null)
-                finisherBook = FinisherBook.Default;
             Debug.Assert(skills != null, $"{name}: ElementComboChain needs the player's SkillStateModule.");
             Debug.Assert(elementsChannel != null, $"{name}: ElementComboChain needs the System event channel.");
         }
@@ -273,7 +265,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
             if (info.Data != null && info.Data.TryGetElement(out ElementType element))
                 AddInput(new ComboInput(element, info.Slot));
 
-            // 강화된 스킬이 먼저 나가고 피니시 스킬이 바로 뒤따라 터짐
+            // 강화된 스킬이 나간 뒤 피니시 연출 (데미지 배수만, 따로 터지는 스킬 없음)
             if (_releasing)
             {
                 _releasing = false;
@@ -306,9 +298,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 if (combo.Length > 1)   // 원소 하나짜리 콤보는 스킬마다 터져서 스택은 안 줌
                     AddToStock(combo);
             }
-
-            if (finisherBook != null && finisherBook.TryFindAtEnd(_elements, out FinisherBook.Entry finisher))
-                StoreFinisher(finisher);
         }
 
         private void AddToStock(ElementComboBook.Recipe combo)
@@ -320,21 +309,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             StockChanged?.Invoke();
         }
 
-        private void StoreFinisher(FinisherBook.Entry finisher)
-        {
-            _stored.RemoveAll(stored => stored.name == finisher.name);
-            if (_stored.Count >= maxStored)
-                _stored.RemoveAt(0);
-            _stored.Add(finisher);
-
-            var recipe = new ElementComboBook.Recipe(finisher.name, finisher.sequence);
-            Debug.Log($"[ComboChain] 피니시 스킬 저장: {finisher.name}");
-            HitFeel.Play(comboHitStop, comboShake);
-            ComboLanded?.Invoke(new LandedCombo(recipe, _inputs.Count - recipe.Length));
-            FinisherStored?.Invoke(finisher);
-            AddToStock(recipe);
-        }
-
         // C: 스택 전부 소모 → 준비. 스택 없거나 이미 준비 중이면 아무 일 없음
         private void TryArm()
         {
@@ -342,13 +316,10 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 return;
 
             _armedStacks = _stock.Count;
-            _armedSkills.Clear();
-            _armedSkills.AddRange(_stored);
             _armedLeft = readyTime;
             _stock.Clear();
-            _stored.Clear();
 
-            Debug.Log($"[ComboChain] 피니시 준비 x{_armedStacks} (피해 x{ArmedScale:0.0#}, 피니시 스킬 {_armedSkills.Count}개)");
+            Debug.Log($"[ComboChain] 피니시 준비 x{_armedStacks} (피해 x{ArmedScale:0.0#})");
             HitFeel.Play(comboHitStop, comboShake);
             FinisherArmed?.Invoke(_armedStacks, ArmedScale);
             StockChanged?.Invoke();
@@ -358,34 +329,20 @@ namespace Assets.Members.HJH._02.Scripts.Element
         {
             _armedLeft = 0f;
             _armedStacks = 0;
-            _armedSkills.Clear();
             Debug.Log("[ComboChain] 피니시 시간 끝 (못 씀)");
             FinisherExpired?.Invoke();
             StockChanged?.Invoke();
         }
 
+        // 배율은 HandleSkillCasting 에서 이미 걸림. 여기선 연출/이벤트만
         private void Release(SkillSlotId slot)
         {
             float scale = ArmedScale;
-            ISkillContext context = skills.Context;
-            var fired = new List<FinisherBook.Entry>(_armedSkills);
-
-            foreach (FinisherBook.Entry finisher in fired)
-            {
-                if (finisher.skill == null || context == null)
-                    continue;
-                context.BoostSkillDamage(finisher.skill, scale, empowerTime);
-                ISkillExecution execution = finisher.skill.Begin(context);
-                if (execution != null)
-                    context.Run(new FinisherRun(execution, Mathf.Max(0.1f, finisher.skill.Duration)));
-            }
-
-            Debug.Log($"[ComboChain] 피니시! x{_armedStacks} 피해 x{scale:0.0#} / 피니시 스킬 {fired.Count}개");
+            Debug.Log($"[ComboChain] 피니시! x{_armedStacks} 피해 x{scale:0.0#}");
             HitFeel.Play(finisherHitStop, finisherShake);
-            FinisherReleased?.Invoke(slot, scale, fired);
+            FinisherReleased?.Invoke(slot, scale);
 
             _armedStacks = 0;
-            _armedSkills.Clear();
             StockChanged?.Invoke();
         }
 
@@ -400,30 +357,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             _elements.Clear();
             ChainCount = 0;
             _remaining = 0f;
-        }
-
-        // 피니시 스킬이 여러 프레임짜리면 스킬 상태 없이 따로 돌려줌
-        private sealed class FinisherRun : ISkillTimedEffect
-        {
-            private readonly ISkillExecution _execution;
-            private readonly float _duration;
-            private float _elapsed;
-
-            public FinisherRun(ISkillExecution execution, float duration)
-            {
-                _execution = execution;
-                _duration = duration;
-            }
-
-            public bool Tick(float deltaTime)
-            {
-                _elapsed += deltaTime;
-                _execution.Tick(_elapsed);
-                if (_elapsed < _duration)
-                    return true;
-                _execution.End();
-                return false;
-            }
         }
     }
 }

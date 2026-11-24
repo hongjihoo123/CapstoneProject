@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
@@ -12,7 +13,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public SkillData Data { get; }
 
         public override float Cooldown => Data.Cooldown;
-        public override int MaxCharges => Data.Charges;
+
+        // 기존 쿨감 스탯 + 스킬 트리의 원소별 쿨감. 최대 75% 까지만
+        protected override float CooldownReduction =>
+            Mathf.Clamp(base.CooldownReduction + SkillUpgrades.Bonus(SkillUpgradeKind.Cooldown, Data) + CritSystem.ChainHasteBonus(), 0f, 0.75f);
+        public override int MaxCharges => Data.Charges + (Slot == SkillSlotId.Dash ? Mathf.RoundToInt(SkillUpgrades.Exact(SkillUpgradeKind.DashCharge, SkillUpgradeScope.Dash)) : 0);
         public override bool AllowsMove => Data.AllowsMove;
         public override bool AllowsFire => Data.AllowsFire;
         public override float MoveSpeedMultiplier => Data.MoveSpeedMultiplier;
@@ -22,12 +27,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             Slot = slot;
             Data = data;
+            SkillUpgrades.BindSlot(data, slot);
         }
 
         public override void Enter()
         {
             base.Enter();
             Host.Context.ActiveSkill = Data;
+            CritSystem.OnCast((Host as SkillStateModule)?.Player, Slot);
             _execution = Data.Begin(Host.Context);
         }
 

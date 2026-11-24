@@ -1,3 +1,4 @@
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using System;
@@ -56,6 +57,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             IDamageable target, Vector3 push)
         {
             ICrowdControlTarget cc = null;
+            // 스킬 트리 강화: 화상 피해/시간, 상태이상 시간, 밀치기 거리 (직격 피해는 DealDamage 에서)
+            float damageUp = SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, skill);
+            float statusUp = SkillUpgrades.Multiplier(SkillUpgradeKind.StatusPower, skill);
             foreach (HitEffect effect in effects)
             {
                 if (target == null || !target.IsAlive)
@@ -67,19 +71,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                         context.DealDamage(target, effect.value, skill);
                         break;
                     case HitEffectKind.Burn:
-                        context.ApplyDamageOverTime(target, effect.value * BurnTick, BurnTick, effect.duration);
+                        context.ApplyDamageOverTime(target, effect.value * damageUp * BurnTick, BurnTick, effect.duration * statusUp);
                         break;
                     case HitEffectKind.Slow:
-                        (cc ??= CrowdControl.Of(target))?.ApplySlow(effect.value, effect.duration);
+                        (cc ??= CrowdControl.Of(target))?.ApplySlow(effect.value, effect.duration * statusUp);
                         break;
                     case HitEffectKind.Root:
-                        (cc ??= CrowdControl.Of(target))?.ApplyRoot(effect.duration);
+                        (cc ??= CrowdControl.Of(target))?.ApplyRoot(effect.duration * statusUp);
                         break;
                     case HitEffectKind.Stun:
-                        (cc ??= CrowdControl.Of(target))?.ApplyStun(effect.duration);
+                        (cc ??= CrowdControl.Of(target))?.ApplyStun(effect.duration * statusUp);
                         break;
                     case HitEffectKind.Knockback:
-                        (cc ??= CrowdControl.Of(target))?.ApplyKnockback(push, effect.value);
+                        (cc ??= CrowdControl.Of(target))?.ApplyKnockback(push, effect.value * statusUp);
                         break;
                 }
             }
@@ -88,15 +92,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         // source = 이번 시전 (버프 지울 때 이걸로 찾음). 시간 있는 버프는 스탯 쪽에서 알아서 끝남
         public static void ApplySelf(ISkillContext context, IReadOnlyList<SelfEffect> effects, object source)
         {
+            // 스킬 트리 강화: 회복·쉴드·방어량 (시전한 스킬의 원소 기준)
+            float supportUp = SkillUpgrades.Multiplier(SkillUpgradeKind.Support, (source as ElementSkillCast)?.Skill);
             foreach (SelfEffect effect in effects)
             {
                 switch (effect.kind)
                 {
                     case SelfEffectKind.Heal:
-                        context.Heal(effect.value);
+                        context.Heal(effect.value * supportUp);
                         break;
                     case SelfEffectKind.Defense:
-                        AddBuff(context, PlayerStatId.DamageReduction, StatModifierType.Flat, effect, source);
+                        AddBuff(context, PlayerStatId.DamageReduction, StatModifierType.Flat, new SelfEffect { kind = effect.kind, value = effect.value * supportUp, duration = effect.duration }, source);
                         break;
                     case SelfEffectKind.MoveSpeed:
                         AddBuff(context, PlayerStatId.MoveSpeed, StatModifierType.PercentAdd, effect, source);
@@ -115,7 +121,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                             context.ReduceCooldown(SkillSlotId.Dash, context.GetCooldownRemaining(SkillSlotId.Dash) + 0.01f);
                         break;
                     case SelfEffectKind.Shield:
-                        context.AddShield(effect.value);
+                        context.AddShield(effect.value * supportUp);
                         break;
                     case SelfEffectKind.Vulnerability:
                         AddBuff(context, PlayerStatId.IncomingDamageTaken, StatModifierType.PercentMore, effect, source);

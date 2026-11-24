@@ -66,8 +66,8 @@ MonoBehaviour:
   background: {fileID: 3799828859547158423}
   roomName: {fileID: 6092755457489620908}
   outline: {fileID: 5321777806026207406}
-  outlineColor: {r: 0, g: 0, b: 0, a: 1}
-  outlineEffectDistance: {x: 7, y: 7}
+  outlineColor: {r: 0.78, g: 0.92, b: 0.42, a: 1}
+  outlineEffectDistance: {x: 3, y: 3}
   mapChannel: {fileID: 11400000, guid: 614892680d75cf04a8e9a48130139e1e, type: 2}
 --- !u!114 &3799828859547158423
 MonoBehaviour:
@@ -120,13 +120,13 @@ MonoBehaviour:
     m_SelectOnRight: {fileID: 0}
   m_Transition: 1
   m_Colors:
-    m_NormalColor: {r: 1, g: 1, b: 1, a: 1}
-    m_HighlightedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
-    m_PressedColor: {r: 0.78431374, g: 0.78431374, b: 0.78431374, a: 1}
+    m_NormalColor: {r: 0.84, g: 0.88, b: 0.8, a: 1}
+    m_HighlightedColor: {r: 1, g: 1, b: 1, a: 1}
+    m_PressedColor: {r: 0.62, g: 0.68, b: 0.58, a: 1}
     m_SelectedColor: {r: 0.9607843, g: 0.9607843, b: 0.9607843, a: 1}
     m_DisabledColor: {r: 1, g: 1, b: 1, a: 1}
     m_ColorMultiplier: 1
-    m_FadeDuration: 0.1
+    m_FadeDuration: 0.08
   m_SpriteState:
     m_HighlightedSprite: {fileID: 0}
     m_PressedSprite: {fileID: 0}
@@ -181,8 +181,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e19747de3f5aca642ab2be37e372fb86, type: 3}
   m_Name: 
   m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Outline
-  m_EffectColor: {r: 0, g: 0, b: 0, a: 0.5}
-  m_EffectDistance: {x: 7, y: -7}
+  m_EffectColor: {r: 0.78, g: 0.92, b: 0.42, a: 1}
+  m_EffectDistance: {x: 3, y: 3}
   m_UseGraphicAlpha: 1
 --- !u!1 &2921790074402615406
 GameObject:
@@ -251,15 +251,15 @@ MonoBehaviour:
       m_Calls: []
   m_text: "\uBC29 \uC774\uB984"
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 907647b5a0ace584b8eec42972db443d, type: 2}
-  m_sharedMaterial: {fileID: -177113659289186289, guid: 907647b5a0ace584b8eec42972db443d, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: 84e6def3d82debf449ab669324df4b57, type: 2}
+  m_sharedMaterial: {fileID: -3687778525203372934, guid: 84e6def3d82debf449ab669324df4b57, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
   m_fontColor32:
     serializedVersion: 2
-    rgba: 4278190080
-  m_fontColor: {r: 0, g: 0, b: 0, a: 1}
+    rgba: 4292604653
+  m_fontColor: {r: 0.93, g: 0.95, b: 0.86, a: 1}
   m_enableVertexGradient: 0
   m_colorMode: 3
   m_fontColorGradient:
@@ -276,8 +276,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 40
+  m_fontSizeBase: 40
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -286,7 +286,7 @@ MonoBehaviour:
   m_HorizontalAlignment: 1
   m_VerticalAlignment: 256
   m_textAlignment: 65535
-  m_characterSpacing: 0
+  m_characterSpacing: 4
   m_characterHorizontalScale: 1
   m_wordSpacing: 0
   m_lineSpacing: 0

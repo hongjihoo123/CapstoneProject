@@ -115,6 +115,13 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 reason = "이미 가지고 있는 콤보입니다.";
                 return false;
             }
+            // 한 콤보가 다른 콤보 안에 통째로 들어 있으면 (불→불 이 있는데 불→불→번개) 짧은 쪽이 긴 쪽 중간에 같이 터짐 → 막음
+            ElementType[] overlap = Owned().FirstOrDefault(owned => Contains(owned, sequence) || Contains(sequence, owned));
+            if (overlap != null)
+            {
+                reason = $"가지고 있는 콤보 [{NameOf(overlap)}] 와 겹칩니다. 한 콤보가 다른 콤보 안에 들어가면 안 됩니다.";
+                return false;
+            }
             if (_bounds.Count >= MaxBound)
             {
                 reason = $"바인딩한 콤보는 {MaxBound}개까지입니다. 위 목록에서 지우고 다시 하세요.";
@@ -171,6 +178,10 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public static string EffectOf(string comboName) =>
             _effects.TryGetValue(comboName, out ComboEffect effect) ? effect.Summary() : string.Empty;
 
+        // 콤보 이름 -> 실제로 걸리는 스탯 효과들 (버프 아이콘을 스탯마다 하나씩 띄울 때 씀). 없으면 빈 목록
+        public static IReadOnlyList<ComboStatBuff.Mod> ModsOf(string comboName) =>
+            _effects.TryGetValue(comboName, out ComboEffect effect) ? effect.Total : Array.Empty<ComboStatBuff.Mod>();
+
         // JJH 콤보 표를 "맛보기 + 바인딩" 으로 바꿈. 긴 콤보가 먼저 오게
         // (컨트롤러가 앞에서부터 찾아서, 짧은 게 앞에 있으면 긴 콤보의 끝부분에 걸려 짧은 쪽 효과가 나감)
         public static void ApplyTo(ElementBuffController controller)
@@ -213,6 +224,31 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
             combos.Sort((a, b) => b.sequence.Length.CompareTo(a.sequence.Length));
             controller.SetCombos(combos);
+        }
+
+        // 지금 들고 있는 콤보 전부 (맛보기 + 바인딩)
+        private static IEnumerable<ElementType[]> Owned()
+        {
+            if (_starter != null)
+                yield return _starter;
+            foreach (ElementType[] bound in _bounds)
+                yield return bound;
+        }
+
+        // outer 안에 inner 가 이어진 그대로 들어 있나 (불→불→번개 는 불→불, 불→번개 를 품음)
+        public static bool Contains(IReadOnlyList<ElementType> outer, IReadOnlyList<ElementType> inner)
+        {
+            if (outer == null || inner == null || inner.Count == 0 || inner.Count > outer.Count)
+                return false;
+            for (int start = 0; start + inner.Count <= outer.Count; start++)
+            {
+                int i = 0;
+                while (i < inner.Count && outer[start + i] == inner[i])
+                    i++;
+                if (i == inner.Count)
+                    return true;
+            }
+            return false;
         }
 
         private static bool Same(IReadOnlyList<ElementType> a, IReadOnlyList<ElementType> b)

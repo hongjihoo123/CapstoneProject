@@ -354,18 +354,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
             FlashListRow(combo);
         }
 
-        // 강화된 스킬이 나감: 배율 + 같이 터진 피니시 스킬 이름
-        private void OnFinisher(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        // 강화된 스킬이 나감: 배율
+        private void OnFinisher(SkillSlotId slot, float scale)
         {
-            var names = new StringBuilder();
-            foreach (FinisherBook.Entry finisher in fired)
-            {
-                if (names.Length > 0)
-                    names.Append("  +  ");
-                names.Append(finisher.name);
-            }
-
-            ShowBanner($"FINISH  ×{scale:0.0#}", "피니시", names.Length > 0 ? names.ToString() : "피해 강화", finisherBarColor);
+            ShowBanner($"FINISH  ×{scale:0.0#}", "피니시", "피해 강화", finisherBarColor);
             Bounce(IconOf(slot), 0.4f);
 
             if (screenFlash != null)
@@ -380,9 +372,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         // C 눌러서 준비됨
         private void OnFinisherArmed(int stacks, float scale)
         {
-            int count = _hud.ArmedFinishers.Count;
-            string detail = count > 0 ? $"다음 스킬 ×{scale:0.0#}  +  피니시 스킬 {count}개" : $"다음 스킬 ×{scale:0.0#}";
-            ShowBanner("READY", "피니시 준비", detail, finisherBarColor);
+            ShowBanner("READY", "피니시 준비", $"다음 스킬 ×{scale:0.0#}", finisherBarColor);
             foreach (SkillSlotId slot in new[] { SkillSlotId.Basic1, SkillSlotId.Basic2, SkillSlotId.Weapon, SkillSlotId.Ultimate })
                 Bounce(IconOf(slot), 0.2f);
         }

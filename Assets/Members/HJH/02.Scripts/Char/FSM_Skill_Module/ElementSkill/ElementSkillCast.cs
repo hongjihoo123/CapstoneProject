@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
@@ -73,6 +74,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         // 원형으로 터뜨림: 이펙트 + 판정 + 손맛. 맞은 수 돌려줌
         public int Impact(Vector3 center, float radius)
         {
+            radius *= SkillUpgrades.Multiplier(SkillUpgradeKind.Range, Skill);   // 스킬 트리 범위 강화
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, center, radius, 0.2f));
             PlayImpact(Ground(center), radius);
 
