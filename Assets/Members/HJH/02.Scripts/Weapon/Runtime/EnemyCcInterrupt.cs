@@ -50,7 +50,8 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
 
         private void LateUpdate()
         {
-            if (_receiver == null || _enemy == null)
+            // Health 는 적 모듈 초기화 후에야 생김 (초기화 전/IHealth 없는 프리팹에서 IsAlive 가 NRE)
+            if (_receiver == null || _enemy == null || _enemy.Health == null)
                 return;
 
             if (!_enemy.IsAlive)
