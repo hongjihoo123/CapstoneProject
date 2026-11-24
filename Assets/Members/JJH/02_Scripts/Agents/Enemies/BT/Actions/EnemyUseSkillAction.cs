@@ -14,12 +14,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
     {
         [SerializeReference] public BlackboardVariable<AbstractEnemy> Enemy;
 
-        [Tooltip("사용하고 싶은 스킬이 있다면 넣기(없다면 스킬 리스트에 들어간 순서대로 실행")]
         [SerializeReference] public BlackboardVariable<EnemySkillSO> EnemySkill;
-        [Tooltip("실행할 스킬의 AnimParamSO")]
         [SerializeReference] public BlackboardVariable<AnimParamSO> AnimParam;
 
-        private IEnemySkillModule _enemySkillModule;
+        private IEnemySkillModule _skillModule;
 
         private int skillIndex = 0;
 
@@ -29,7 +27,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
                 return Status.Failure;
 
 
-            _enemySkillModule = Enemy.Value.SkillModule;
+            _skillModule = Enemy.Value.SkillModule;
             if (EnemySkill == null || EnemySkill.Value == null)
             {
                 if (Enemy.Value.EnemyData.EnemySkills == null || Enemy.Value.EnemyData.EnemySkills.Count == 0)
@@ -37,15 +35,16 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
                 skillIndex %= Enemy.Value.EnemyData.EnemySkills.Count;
 
-                _enemySkillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
-                AnimParam.Value = Enemy.Value.EnemyData.EnemySkills[skillIndex].AnimParam;
+                _skillModule.UseSkill(Enemy.Value.EnemyData.EnemySkills[skillIndex].SkillType);
+                AnimParam.Value = _skillModule.GetSkillSetting(Enemy.Value.EnemyData.EnemySkills[skillIndex])
+                                                                    .AttackAnimParam;
 
                 skillIndex++;
             }
             else
             {
-                _enemySkillModule.UseSkill(EnemySkill.Value.SkillType);
-                AnimParam.Value = EnemySkill.Value.AnimParam;
+                _skillModule.UseSkill(EnemySkill.Value.SkillType);
+                AnimParam.Value = _skillModule.GetSkillSetting(EnemySkill.Value).AttackAnimParam;
             }
 
             return Status.Running;
@@ -53,7 +52,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         protected override Status OnUpdate()
         {
-            return _enemySkillModule.IsSkillUsing()
+            return _skillModule.IsSkillUsing()
                             ? Status.Running : Status.Success;
         }
     }

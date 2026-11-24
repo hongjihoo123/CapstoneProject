@@ -4,16 +4,36 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 새 HUD 위젯들이 코드로 UI 를 만들 때 쓰는 도우미 (스프라이트는 Resources/HJH/UI)
+    // UI 레이아웃을 "구울" 때 쓰는 도우미. 실행 중에는 UI 를 만들지 않음:
+    //  - 각 UI 컴포넌트의 BakeLayout (에디터 전용) 이 이걸로 자식을 만들어 씬/프리팹에 저장
+    //  - 저장된 뒤에는 폰트·크기·위치를 인스펙터에서 직접 고치면 됨 (다시 굽지 않는 한 그대로)
+    // 폰트·스프라이트는 에디터에서만 AssetDatabase 로 읽음 (Resources.Load 안 씀). 빌드에서는 null
     internal static class HudUiKit
     {
+        public const string SpriteFolder = "Assets/Members/HJH/05.Data/Resources/HJH/UI/";
+        public const string FontPath = "Assets/TextMesh Pro/Resources/Fonts & Materials/Pretendard-Medium SDF.asset";
+
         public static readonly Color Gold = new(0.84f, 0.72f, 0.47f, 1f);
         public static readonly Color Cyan = new(0.51f, 0.88f, 1f, 1f);
         public static readonly Color Title = new(0.91f, 0.94f, 0.97f, 1f);
         public static readonly Color Label = new(0.69f, 0.75f, 0.82f, 1f);
         public static readonly Color Value = new(0.93f, 0.96f, 0.98f, 1f);
 
-        public static Sprite Load(string name) => Resources.Load<Sprite>("HJH/UI/" + name);
+        public static Sprite Load(string name)
+        {
+#if UNITY_EDITOR
+            return UnityEditor.AssetDatabase.LoadAssetAtPath<Sprite>(SpriteFolder + name + ".png");
+#else
+            return null;
+#endif
+        }
+
+        // 다시 구울 때 예전 자식 지우기
+        public static void ClearChildren(Transform parent)
+        {
+            for (int i = parent.childCount - 1; i >= 0; i--)
+                Object.DestroyImmediate(parent.GetChild(i).gameObject);
+        }
 
         // 버튼이 눌리려면 씬에 이벤트 시스템이 있어야 함. 없으면 새 입력 시스템용으로 만들고 기본 입력 설정을 연결
         public static void EnsureEventSystem()
@@ -28,8 +48,17 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         // TMP 기본 폰트엔 한글이 없어서 프로젝트 폰트(Pretendard)를 직접 지정
         private static TMP_FontAsset _font;
-        private static TMP_FontAsset Font =>
-            _font != null ? _font : _font = Resources.Load<TMP_FontAsset>("Fonts & Materials/Pretendard-Medium SDF");
+        public static TMP_FontAsset Font
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (_font == null)
+                    _font = UnityEditor.AssetDatabase.LoadAssetAtPath<TMP_FontAsset>(FontPath);
+#endif
+                return _font;
+            }
+        }
 
         public static RectTransform NewRect(string name, Transform parent)
         {

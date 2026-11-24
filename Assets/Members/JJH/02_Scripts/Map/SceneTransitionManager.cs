@@ -17,9 +17,27 @@ namespace Members.JJH._02_Scripts.Map
 
         private bool isTransitioning;
 
+        // 런 동안 하나만 존재 (Start 씬에서 넘어온 것 / 맵 씬을 바로 Play 해서 MapSystemBootstrap 이 만든 것)
+        public static SceneTransitionManager Instance { get; private set; }
+
+        private void OnDestroy()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+
         private void Awake()
         {
-            DontDestroyOnLoad(transform.parent);
+            GameObject root = transform.parent != null ? transform.parent.gameObject : gameObject;
+            if (Instance != null && Instance != this)
+            {
+                root.SetActive(false);   // OnEnable(리스너 등록) 전에 끈다
+                Destroy(root);
+                return;
+            }
+
+            Instance = this;
+            DontDestroyOnLoad(root);
 
             fadeCanvasGroup.alpha = 1f;
             fadeCanvasGroup.blocksRaycasts = true;

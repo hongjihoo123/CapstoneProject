@@ -6,7 +6,8 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 {
-    // Code-only projectile for skills: flies flat, hits damageables (once each), stops on walls.
+    // Code-only projectile for skills: flies along the aim direction hugging the terrain (GroundTrace),
+    // hits damageables (once each), stops on walls.
     public sealed class SkillProjectile : ISkillTimedEffect
     {
         public struct Settings
@@ -34,6 +35,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
         private Vector3 _position;
         private float _travelled;
         private float _waited;
+        private float _hover;
+        private bool _hoverKnown;
         private FxHandle _orb;
 
         public SkillProjectile(ISkillContext context, Vector3 origin, Vector3 direction, Settings settings,
@@ -56,26 +59,38 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
                 return true;
             }
 
-            float step = Mathf.Min(_settings.Speed * deltaTime, _settings.MaxDistance - _travelled);
-            Vector3 next = _position + _direction * step;
-            bool blocked = _context.LineBlocked(_position, next, out Vector3 wallPoint);
-            if (blocked)
-                next = wallPoint;
-
-            foreach (IDamageable target in _context.OverlapCapsule(_position, next, _settings.Radius))
+            // 땅에서 뜬 높이를 유지하면서 지형을 타고 감 (언덕에 박혀 사라지거나 내리막에서 적 위로 지나가지 않게)
+            if (!_hoverKnown)
             {
-                if (ReferenceEquals(target, _settings.Ignore) || !_hit.Add(target))
-                    continue;
-
-                Vector3 point = PointOf(target, next);
-                _onHit?.Invoke(target, point);
-
-                if (!_settings.Pierce)
-                    return Finish(point);
+                _hover = GroundTrace.HoverOf(_context, _position);
+                _hoverKnown = true;
             }
 
-            _position = next;
-            _travelled += step;
+            float remaining = Mathf.Min(_settings.Speed * deltaTime, _settings.MaxDistance - _travelled);
+            bool blocked = false;
+
+            while (remaining > 0.0001f && !blocked)
+            {
+                float step = Mathf.Min(GroundTrace.StepLength, remaining);
+                blocked = GroundTrace.Step(_context, _position, _direction, step, _hover, out Vector3 next);
+
+                foreach (IDamageable target in _context.OverlapCapsule(_position, next, _settings.Radius))
+                {
+                    if (ReferenceEquals(target, _settings.Ignore) || !_hit.Add(target))
+                        continue;
+
+                    Vector3 point = PointOf(target, next);
+                    _onHit?.Invoke(target, point);
+
+                    if (!_settings.Pierce)
+                        return Finish(point);
+                }
+
+                _position = next;
+                _travelled += step;
+                remaining -= step;
+            }
+
             UpdateOrb();
             AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.Skill, _position, _settings.Radius, 0.02f));
 

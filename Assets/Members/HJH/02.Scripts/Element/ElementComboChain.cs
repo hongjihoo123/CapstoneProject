@@ -1,5 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.UI;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
@@ -79,6 +80,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
         private readonly List<FinisherBook.Entry> _stored = new();
         private readonly List<FinisherBook.Entry> _armedSkills = new();
         private float _remaining;
+        private int _baseInputs;
         private float _armedLeft;
         private int _armedStacks;
         private bool _releasing;
@@ -93,6 +95,28 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public IReadOnlyList<ElementComboBook.Recipe> Stock => _stock;
         public int MaxStock => maxStock;
         public SkillStateModule Skills => skills;
+
+        // 이어갈 수 있는 콤보(진행 중인 것 전부) 중 하나라도 다음에 이 속성을 원하면 true
+        public bool IsNextElement(ElementType element)
+        {
+            if (_elements.Count == 0)
+                return false;
+
+            foreach (ElementComboBook.Recipe recipe in Book.Recipes)
+            {
+                int progress = recipe.TailProgress(_elements);
+                if (progress > 0 && progress < recipe.Length && recipe.Sequence[progress] == element)
+                    return true;
+            }
+            return false;
+        }
+
+        // 지금 켜져 있는 콤보 효과의 남은 시간 (꺼져 있으면 false)
+        public bool TryGetEffectRemaining(string comboName, out float seconds)
+        {
+            seconds = 0f;
+            return buffController != null && buffController.TryGetRemaining(comboName, out seconds);
+        }
 
         public string FinisherKeyLabel => finisherKey.ToString();
         public FinisherBook Finishers => finisherBook;
@@ -125,6 +149,8 @@ namespace Assets.Members.HJH._02.Scripts.Element
         // Final chain count, raised before the inputs are cleared.
         public event Action<int> ChainBroken;
         public event Action StockChanged;
+        // 콤보 표가 바뀜 (맛보기 선택 / 바인딩 교체)
+        public event Action BookChanged;
         // 피니시 스킬 콤보 완성 → 저장됨
         public event Action<FinisherBook.Entry> FinisherStored;
         // C 눌러서 준비됨: (쓴 스택, 피해 배율)
@@ -136,28 +162,77 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
         private void Awake()
         {
-            Book = ElementComboBook.From(buffController);
+            // 픽 화면에서 고른 콤보로 표를 바꾼 다음에 읽음 (목록 에셋이 없으면 씬에 적힌 그대로)
+            // 화면의 입력 칸/타이머는 JJH ElementStackManager 의 시간(triggerDelay)으로 줄어듦.
+            // 체인이 다른 시간(5초)을 쓰면 화면은 끝났는데 콤보는 이어지니까, 그 매니저가 있으면 같은 시간을 씀
+            ElementStackManager stackManager = FindFirstObjectByType<ElementStackManager>();
+            if (stackManager != null)
+                chainWindow = stackManager.TriggerDelay;
+
+            _baseInputs = maxInputs;
+            RebuildBook();
             if (finisherBook == null)
                 finisherBook = FinisherBook.Default;
-            maxInputs = Mathf.Max(maxInputs, Book.LongestLength);
             Debug.Assert(skills != null, $"{name}: ElementComboChain needs the player's SkillStateModule.");
             Debug.Assert(elementsChannel != null, $"{name}: ElementComboChain needs the System event channel.");
         }
 
+        private void Start()
+        {
+            // 콤보 배너·효과 바는 HUD(PlayerRig) 하이어라키에 놓여 있음 (예전엔 여기서 붙였음)
+            EnsureStarter();
+            RefreshStackViews();
+        }
+
         private void OnEnable()
         {
+            ComboLoadout.Changed += HandleLoadoutChanged;
             if (skills == null)
                 return;
             skills.SkillUsed += HandleSkillUsed;
             skills.SkillCasting += HandleSkillCasting;
+            skills.LoadoutChanged += EnsureStarter;
         }
 
         private void OnDisable()
         {
+            ComboLoadout.Changed -= HandleLoadoutChanged;
             if (skills == null)
                 return;
             skills.SkillUsed -= HandleSkillUsed;
             skills.SkillCasting -= HandleSkillCasting;
+            skills.LoadoutChanged -= EnsureStarter;
+        }
+
+        // 픽 없이 맵을 열었거나 캐릭터를 바꿨으면 그 캐릭터의 맛보기 콤보로 (바뀌면 Changed 로 표가 다시 만들어짐)
+        private void EnsureStarter()
+        {
+            if (skills != null)
+                ComboLoadout.EnsureStarterFor(skills.GetSkill(SkillSlotId.Weapon), skills.GetSkill(SkillSlotId.Ultimate));
+        }
+
+        // 맛보기/바인딩 콤보가 바뀜 → 표를 새로 만들고 진행 중이던 체인은 끊음 (스택·저장된 피니시는 유지)
+        private void HandleLoadoutChanged()
+        {
+            RebuildBook();
+            if (ChainCount > 0)
+                Break();
+            RefreshStackViews();
+            BookChanged?.Invoke();
+        }
+
+        private void RebuildBook()
+        {
+            ComboLoadout.ApplyTo(buffController);
+            Book = ElementComboBook.From(buffController);
+            maxInputs = Mathf.Max(_baseInputs, Book.LongestLength);
+        }
+
+        // JJH 콤보 목록 UI 는 Awake 에서 씬에 적힌 표로 목록을 만들어서, 표를 바꾼 뒤 다시 만들어 줘야 고른 콤보가 보임
+        private static void RefreshStackViews()
+        {
+            foreach (ElementStackView view in FindObjectsByType<ElementStackView>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                view.RebuildComboList(true, ComboLoadout.EffectOf);   // 속성 하나짜리는 빼고, 줄마다 효과 글자를 채움
         }
 
         private void Update()

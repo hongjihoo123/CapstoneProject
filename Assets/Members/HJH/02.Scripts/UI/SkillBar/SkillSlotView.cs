@@ -17,7 +17,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
     //
     // 부채꼴처럼 계속 바뀌는 건 매 프레임 갱신,
     // 번쩍/흔들림 같은 한 번짜리는 DOTween 으로 재생
-    public class SkillSlotView : MonoBehaviour
+    public class SkillSlotView : MonoBehaviour, IUiBake
     {
         [SerializeField] private Image frame;
         [SerializeField] private Image icon;
@@ -150,6 +150,20 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
         // 네모 슬롯을 동그랗게: 프레임/뒷판을 원형 그림으로, 아이콘·쿨타임은 원 모양으로 자름
+        [SerializeField, Tooltip("동그란 슬롯 그림 (Resources/HJH/UI 의 slot_circle_frame / slot_circle_bg). 비면 예전 네모 모양")]
+        private Sprite circleFrameSprite;
+        [SerializeField] private Sprite circleBackSprite;
+
+        // 그림 연결 (에디터 전용, HJH/UI 굽기 메뉴가 부름)
+        [ContextMenu("그림 연결")]
+        public void BakeLayout()
+        {
+#if UNITY_EDITOR
+            circleFrameSprite = HudUiKit.Load("slot_circle_frame");
+            circleBackSprite = HudUiKit.Load("slot_circle_bg");
+#endif
+        }
+
         private bool _circleApplied;
         private float _circleBox;
 
@@ -160,8 +174,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             if (!_circleApplied)
             {
-                var circleFrame = Resources.Load<Sprite>("HJH/UI/slot_circle_frame");
-                var circleBack = Resources.Load<Sprite>("HJH/UI/slot_circle_bg");
+                Sprite circleFrame = circleFrameSprite;
+                Sprite circleBack = circleBackSprite;
                 if (circleFrame == null)
                     return;     // 에셋을 아직 안 가져옴: 예전 모양 유지
 

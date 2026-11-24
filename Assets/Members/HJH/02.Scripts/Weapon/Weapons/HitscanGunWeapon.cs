@@ -303,7 +303,8 @@ namespace RobotWeapons
                     continue;
                 if (Vector3.Dot(toTarget / horizontal, flatDir) < minDot)
                     continue;
-                if (Mathf.Abs(center.y - start.y) > data.heightAssistMaxDelta)
+                // 멀리 있는 적일수록 언덕 때문에 높이 차가 커짐 -> 거리에 비례해서 더 봐줌
+                if (Mathf.Abs(center.y - start.y) > data.heightAssistMaxDelta + horizontal * Mathf.Max(0f, data.heightAssistSlope))
                     continue;
 
                 bestDistance = horizontal;

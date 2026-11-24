@@ -61,7 +61,7 @@ namespace Assets.Members.HJH._02.Scripts.Quest
 
             foreach (AbstractEnemy enemy in FindObjectsByType<AbstractEnemy>(FindObjectsInactive.Include, FindObjectsSortMode.None))
             {
-                if (_seen.Add(enemy) && !IsSpawnerMade(enemy))
+                if (!IsIgnored(enemy) && _seen.Add(enemy) && !IsSpawnerMade(enemy))
                     _sceneEnemies++;
             }
 
@@ -73,7 +73,7 @@ namespace Assets.Members.HJH._02.Scripts.Quest
 
         private void OnEnemyDied(AbstractEnemy enemy)
         {
-            if (enemy == null || !_dead.Add(enemy))
+            if (enemy == null || IsIgnored(enemy) || !_dead.Add(enemy))
                 return;
 
             // 찾기 전에 죽은 적도 놓치지 않게
@@ -98,6 +98,9 @@ namespace Assets.Members.HJH._02.Scripts.Quest
         }
 
         private static bool IsSpawnerMade(AbstractEnemy enemy) => enemy.GetComponentInParent<SpawnedEnemyTracker>() != null;
+
+        // 튜토리얼 연습용 적 등 (RoomClearIgnore)
+        private static bool IsIgnored(AbstractEnemy enemy) => enemy.GetComponentInParent<RoomClearIgnore>() != null;
 
         [SerializeField, Min(0f), Tooltip("전체 수를 자동 계산할 때, 다 잡은 뒤 이 시간 동안 새 적이 안 나타나야 클리어")]
         private float autoConfirmSeconds = 1f;
@@ -146,7 +149,7 @@ namespace Assets.Members.HJH._02.Scripts.Quest
         {
             foreach (AbstractEnemy enemy in FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None))
             {
-                if (enemy != null && enemy.IsAlive)
+                if (enemy != null && enemy.IsAlive && !IsIgnored(enemy))
                     return true;
             }
             return false;

@@ -398,6 +398,21 @@ namespace Members.JJH._02_Scripts.ElementsSystem
             screenFlash.DOFade(0f, 0.25f).SetUpdate(true).OnComplete(() => screenFlash.enabled = false);
         }
 
+        // (HJH) Rebuild the combo list after the controller's combo table was swapped (picked combos from the pick screen).
+        // hideSingle: leave out one-element combos. effectOf: fills each row's right-hand text (combo name -> effect text).
+        public void RebuildComboList(bool hideSingle = false, System.Func<string, string> effectOf = null)
+        {
+            _hideSingle = hideSingle;
+            _effectOf = effectOf;
+            BuildComboList();
+        }
+
+        // (HJH) Another UI draws the combo banner instead.
+        public bool SuppressBanner { get; set; }
+
+        private bool _hideSingle;
+        private System.Func<string, string> _effectOf;
+
         private void BuildComboList()
         {
             if (buffController == null || listRowTemplate == null || listRowParent == null)
@@ -418,12 +433,16 @@ namespace Members.JJH._02_Scripts.ElementsSystem
                 string comboName = buffController.GetComboName(i);
                 IReadOnlyList<ElementType> source = buffController.GetComboSequence(i);
 
-                if (source == null || source.Count == 0)
+                if (source == null || source.Count == 0 || (_hideSingle && source.Count < 2))
                     continue;
 
                 RectTransform rowRoot = Instantiate(listRowTemplate, listRowParent);
                 rowRoot.gameObject.SetActive(true);
                 rowRoot.name = $"Row_{comboName}";
+
+                if (_effectOf != null && rowRoot.Find("Name") is Transform nameTransform
+                    && nameTransform.TryGetComponent(out TextMeshProUGUI effectText))
+                    effectText.text = _effectOf(comboName);
 
                 //TextMeshProUGUI nameText = rowRoot.Find("Name")?.GetComponent<TextMeshProUGUI>();
                 /* if (nameText != null)
@@ -651,7 +670,7 @@ namespace Members.JJH._02_Scripts.ElementsSystem
 
         private void ShowBanner(string header, string title, string detail, Color barColor)
         {
-            if (banner == null || bannerGroup == null)
+            if (SuppressBanner || banner == null || bannerGroup == null)
                 return;
 
             if (bannerHeader != null)

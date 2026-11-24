@@ -12,8 +12,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
 {
     // 플레이어가 죽으면 (쓰러지는 연출이 끝날 즈음) 화면이 어두워지며 "쓰러졌습니다" + 버튼이 뜸.
     // 버튼(임시)을 누르면 고른 캐릭터를 지우고 캐릭터 픽 화면으로 돌아감. Enter 키도 같은 동작.
-    // 모양은 코드로 만들고, HUD_Canvas 아래 빈 오브젝트 하나로 붙임.
-    public class DeathOverlay : MonoBehaviour
+    // 모양은 HUD_Canvas 아래 하이어라키에 저장된 그대로 (인스펙터에서 수정).
+    public class DeathOverlay : MonoBehaviour, IUiBake
     {
         [SerializeField, Tooltip("캐릭터 픽 화면 씬 이름 (빌드 설정에 있어야 함)")]
         private string pickScene = "CharacterPick";
@@ -21,21 +21,32 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private float showDelay = 1.6f;
         [SerializeField, Min(0.05f)] private float fadeTime = 0.6f;
 
+        [SerializeField] private CanvasGroup group;
+
         private PlayerAgent _agent;
-        private CanvasGroup _group;
         private float _deadSince = -1f;
         private bool _shown;
         private bool _leaving;
 
         private void Awake()
         {
+            if (group == null)
+                return;
+            group.alpha = 0f;
+            group.blocksRaycasts = false;
+            group.interactable = false;
+        }
+
+        [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
+        public void BakeLayout()
+        {
+#if UNITY_EDITOR
+            HudUiKit.ClearChildren(transform);
             var rect = (RectTransform)transform;
             HudUiKit.Stretch(rect);
             rect.SetAsLastSibling();
-            _group = gameObject.AddComponent<CanvasGroup>();
-            _group.alpha = 0f;
-            _group.blocksRaycasts = false;
-            _group.interactable = false;
+            group = GetComponent<CanvasGroup>() ? GetComponent<CanvasGroup>() : gameObject.AddComponent<CanvasGroup>();
+            group.alpha = 0f;
 
             Image dim = HudUiKit.NewImage("Dim", transform, null, new Color(0.02f, 0.01f, 0.03f, 0.72f));
             HudUiKit.Stretch(dim.rectTransform);
@@ -57,10 +68,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             var button = buttonBack.gameObject.AddComponent<Button>();
             button.targetGraphic = buttonBack;
             button.transition = Selectable.Transition.None;
-            button.onClick.AddListener(GoToPick);
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(button.onClick, GoToPick);   // 인스펙터 OnClick 에 보임
 
             TMP_Text hint = HudUiKit.NewText("Hint", transform, "(임시) 버튼 또는 Enter 키", 16f, HudUiKit.Label, TextAlignmentOptions.Center);
             HudUiKit.Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -100f), new Vector2(500f, 28f));
+#endif
         }
 
         private void Update()
@@ -104,9 +116,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             foreach (AimCursorView aim in FindObjectsByType<AimCursorView>(FindObjectsSortMode.None))
                 aim.gameObject.SetActive(false);
 
-            _group.blocksRaycasts = true;
-            _group.interactable = true;
-            _group.DOFade(1f, fadeTime).SetUpdate(true);
+            group.blocksRaycasts = true;
+            group.interactable = true;
+            group.DOFade(1f, fadeTime).SetUpdate(true);
         }
 
         public bool IsShown => _shown;
@@ -114,7 +126,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
         // 테스트 도구용 (버튼을 누른 것과 같음)
         public void DebugGoToPick() => GoToPick();
 
-        private void GoToPick()
+        // 버튼 OnClick 에 연결됨 (인스펙터)
+        public void GoToPick()
         {
             if (_leaving)
                 return;
@@ -122,7 +135,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _leaving = true;
             Time.timeScale = 1f;
             CharacterSelection.Clear();
-            _group.DOFade(0f, 0.2f).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(pickScene));
+            group.DOFade(0f, 0.2f).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(pickScene));
         }
     }
 }

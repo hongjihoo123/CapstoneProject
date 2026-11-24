@@ -1,301 +1,829 @@
+using System;
+using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Element;
+using Assets.Members.HJH._02.Scripts.Tutorial;
 using DG.Tweening;
+using Members.JJH._02_Scripts.ElementsSystem;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 캐릭터 픽 화면. 캐릭터 3명의 카드가 나오고, 하나를 눌러 고른 뒤 "이 캐릭터로 시작"을 누르면
-    //   고른 캐릭터를 CharacterSelection 에 기억시키고 → 런 상태를 정리하고 → 다음 씬으로 넘어감.
-    // 이후 모든 씬의 플레이어는 이 캐릭터로 시작함 (죽을 때까지). 키보드: 1~3 고르기, Enter 시작.
-    // 화면은 코드로 그려서, 씬에는 이 컴포넌트 하나와 캐릭터 목록만 있으면 됨. 초상화(CharacterData.Portrait)를 채우면 카드에 나옴.
-    public class CharacterPickScreen : MonoBehaviour
+    // 캐릭터 픽 화면. 3단 배치:
+    //   왼쪽  = 캐릭터 3명 고르기 + 이름·태그(원거리/근거리, 플레이 스타일)·짧은 설명 + 고정 스킬 4개(패시브, 우클릭, 대시, 궁극기)
+    //   가운데 = 고른 캐릭터 모델 (모델 없는 캐릭터는 테마색 원판 + 이름 첫 글자)
+    //   오른쪽 = 시작 콤보(우클릭·궁극기 원소 A→B / B→A 중 1개, 줄은 PickComboRow 프리팹) + 아웃 업그레이드 버튼 + 게임 시작
+    // "게임 시작"을 누르면 고른 캐릭터를 CharacterSelection 에, 고른 시작 콤보는 ComboLoadout 에 남기고 다음 씬으로 넘어감.
+    // Q/E 스킬은 비운 채로 시작함 (게임 안에서 주워서 채움).
+    // 키보드: 1~3 또는 ←/→ 캐릭터, Enter 시작.
+    // 화면은 씬 하이어라키(PickCanvas)에 저장된 그대로 → 폰트·크기·위치는 인스펙터에서 수정. 처음 만들 때만 ⋮ > 레이아웃 굽기.
+    // 실행 중에는 고른 캐릭터에 맞춰 글자·아이콘·색만 바꿈. 버튼은 OnClick 에 연결돼 있음 (SelectCharacter, SelectPrev/Next, SelectSkill, Confirm)
+    // 튜토리얼에는 ITutorialPickScreen 으로 자리(초상화/스킬/콤보/시작)와 바꾼 횟수만 알려 줌.
+    public class CharacterPickScreen : MonoBehaviour, ITutorialPickScreen, IUiBake
     {
         [SerializeField] private CharacterData[] roster;
         [SerializeField, Tooltip("캐릭터를 고른 뒤 넘어갈 씬 (빌드 설정에 있어야 함)")]
         private string nextScene = "Map_Bridge_Normal";
         [SerializeField, Min(0.05f)] private float fadeTime = 0.5f;
 
-        private sealed class Card
+        [Header("가운데 모델")]
+        [SerializeField, Range(0.3f, 0.9f), Tooltip("모델 키가 화면 높이에서 차지하는 비율")] private float modelScreenHeight = 0.62f;
+        [SerializeField, Tooltip("모델을 정면에서 이만큼 돌려 세움 (도)")] private float modelTurn = -22f;
+        [SerializeField, Tooltip("모델이 올라가는 자리")] private Transform stage;
+
+        [Serializable]
+        public sealed class PortraitView
         {
             public RectTransform root;
-            public Image panel;
-            public Image glow;
             public CanvasGroup group;
         }
 
-        private readonly System.Collections.Generic.List<Card> _cards = new();
-        private Button _confirm;
-        private CanvasGroup _confirmGroup;
-        private Image _fade;
-        private int _selected = -1;
+        [Serializable]
+        public sealed class TagView
+        {
+            public GameObject root;
+            public TMP_Text text;
+            public Image line;
+        }
+
+        [Serializable]
+        public sealed class SkillSlotView
+        {
+            public RectTransform root;
+            public CanvasGroup group;
+            public Image icon;
+            public Image ring;
+            public Image elementDot;
+            public TMP_Text key;
+            public TMP_Text elementName;
+        }
+
+        [Header("구워 둔 화면 (⋮ > 레이아웃 굽기)")]
+        [SerializeField] private ElementPalette palette;
+        [SerializeField] private PickComboRowView comboRowPrefab;
+        [SerializeField] private List<PortraitView> portraits = new();
+        [SerializeField] private RectTransform portraitRow;
+        [SerializeField] private RectTransform info;
+        [SerializeField] private TMP_Text nameText;
+        [SerializeField] private TagView[] tags;
+        [SerializeField] private TMP_Text descText;
+        [SerializeField] private RectTransform skillsArea;
+        [SerializeField] private TMP_Text skillNone;
+        [SerializeField] private SkillSlotView[] skillSlots;
+        [SerializeField] private GameObject skillDetail;
+        [SerializeField] private TMP_Text detailName;
+        [SerializeField] private Image detailBadge;
+        [SerializeField] private TMP_Text detailElement;
+        [SerializeField] private Image detailLine;
+        [SerializeField] private TMP_Text detailDesc;
+        [SerializeField] private GameObject placeholder;
+        [SerializeField] private Image placeholderGlow;
+        [SerializeField] private Image placeholderDisc;
+        [SerializeField] private Image placeholderFace;
+        [SerializeField] private TMP_Text placeholderInitial;
+        [SerializeField] private Image placeholderRing;
+        [SerializeField] private TMP_Text pageText;
+        [SerializeField] private RectTransform comboArea;
+        [SerializeField] private TMP_Text comboHint;
+        [SerializeField] private RectTransform startButton;
+        [SerializeField] private Image fade;
+
+        private const float ColumnWidth = 580f;
+        private const float SideMargin = 70f;
+        private static readonly Color Warn = new(1f, 0.55f, 0.45f, 1f);
+
+        private readonly struct SkillEntry
+        {
+            public readonly string key, title, description;
+            public readonly Sprite icon;
+            public readonly bool hasElement;
+            public readonly ElementType element;
+
+            public SkillEntry(string key, Sprite icon, string title, string description, SkillData skill)
+            {
+                this.key = key;
+                this.icon = icon;
+                this.title = title;
+                this.description = description;
+                element = default;
+                hasElement = skill != null && skill.TryGetElement(out element);
+            }
+        }
+
+        private readonly List<PickComboRowView> _comboRows = new();
+        private readonly List<SkillEntry> _entries = new();
+        private string _comboKey;
+        private GameObject _model;
+        private Camera _camera;
+        private int _selected;
+        private int _skill;
+        private Color _theme = Color.white;
         private bool _busy;
+
+        public int SelectionChanges { get; private set; }
+        public int ComboChanges { get; private set; }
+
+        public bool TryGetAnchor(string id, out RectTransform rect)
+        {
+            rect = id switch
+            {
+                TutorialAnchorIds.PickPortraits => portraitRow,
+                TutorialAnchorIds.PickSkills => skillsArea,
+                TutorialAnchorIds.PickCombos => comboArea,
+                TutorialAnchorIds.PickStart => startButton,
+                _ => null,
+            };
+            return rect != null;
+        }
 
         private void Start()
         {
             Time.timeScale = 1f;
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
+            _camera = Camera.main;
+            HudUiKit.EnsureEventSystem();
 
-            Transform canvas = BuildCanvas();
-            BuildTexts(canvas);
-            BuildCards(canvas);
-            BuildConfirm(canvas);
+            if (fade != null)
+            {
+                fade.raycastTarget = true;
+                fade.color = Color.black;
+                fade.DOFade(0f, fadeTime).SetUpdate(true).OnComplete(() => fade.raycastTarget = false);
+            }
 
-            _fade = HudUiKit.NewImage("Fade", canvas, null, new Color(0f, 0f, 0f, 1f));
-            HudUiKit.Stretch(_fade.rectTransform);
-            _fade.raycastTarget = true;
-            _fade.DOFade(0f, fadeTime).SetUpdate(true).OnComplete(() => _fade.raycastTarget = false);
-
-            RefreshCards(animate: false);
+            _selected = Mathf.Clamp(CharacterSelection.HasPick ? CharacterSelection.Index : 0, 0, Mathf.Max(0, Count - 1));
+            ShowCharacter();
+            RefreshCombos();
         }
+
+        private int Count => roster != null ? roster.Length : 0;
+
+        private ElementPalette Palette => palette != null ? palette : ElementPalette.Default;
 
         private void Update()
         {
-            if (_busy || Keyboard.current == null)
+            if (_busy || Keyboard.current == null || Count == 0)
                 return;
 
-            for (int i = 0; i < _cards.Count && i < 9; i++)
+            for (int i = 0; i < Count && i < 9; i++)
             {
                 if (Keyboard.current[Key.Digit1 + i].wasPressedThisFrame)
-                    Select(i);
+                    SelectCharacter(i);
             }
 
-            if (_selected >= 0 && (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame))
+            if (Keyboard.current.leftArrowKey.wasPressedThisFrame)
+                SelectPrev();
+            if (Keyboard.current.rightArrowKey.wasPressedThisFrame)
+                SelectNext();
+
+            if (Keyboard.current.enterKey.wasPressedThisFrame || Keyboard.current.numpadEnterKey.wasPressedThisFrame)
                 Confirm();
         }
 
-        // ---------------------------------------------------------------- 화면 만들기
+        // ---------------------------------------------------------------- 모델
 
-        private Transform BuildCanvas()
+        // 고른 캐릭터의 모델을 무대에 세우고 카메라를 키에 맞춰 당김. 모델이 없으면 false
+        private bool ShowModel(CharacterData data)
         {
-            var go = new GameObject("PickCanvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
-            go.transform.SetParent(transform, false);
-            var canvas = go.GetComponent<Canvas>();
-            canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            var scaler = go.GetComponent<CanvasScaler>();
-            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
-            scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.matchWidthOrHeight = 0.5f;
+            if (_model != null)
+                Destroy(_model);
+            _model = null;
 
-            // 위는 짙은 남색, 아래는 더 어둡게
-            var tex = new Texture2D(1, 64) { wrapMode = TextureWrapMode.Clamp };
-            for (int y = 0; y < 64; y++)
-                tex.SetPixel(0, y, Color.Lerp(new Color(0.02f, 0.03f, 0.06f), new Color(0.07f, 0.1f, 0.17f), y / 63f));
-            tex.Apply();
-            var bg = new GameObject("Background", typeof(RectTransform), typeof(RawImage));
-            bg.transform.SetParent(go.transform, false);
-            HudUiKit.Stretch((RectTransform)bg.transform);
-            bg.GetComponent<RawImage>().texture = tex;
+            if (data == null || data.Model == null || stage == null)
+                return false;
 
-            Image glow = HudUiKit.NewImage("BackGlow", go.transform, HudUiKit.Load("soft_glow"), new Color(0.3f, 0.6f, 1f, 0.22f));
-            HudUiKit.Place(glow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 40f), new Vector2(2200f, 1100f));
-
-            HudUiKit.EnsureEventSystem();
-
-            return go.transform;
-        }
-
-        private void BuildTexts(Transform canvas)
-        {
-            TMP_Text title = HudUiKit.NewText("Title", canvas, "캐릭터 선택", 54f, HudUiKit.Title, TextAlignmentOptions.Center, 8f);
-            HudUiKit.Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -86f), new Vector2(900f, 80f));
-
-            Image line = HudUiKit.NewImage("TitleLine", canvas, HudUiKit.Load("divider"), new Color(1f, 1f, 1f, 0.7f));
-            HudUiKit.Place(line.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -140f), new Vector2(520f, 18f));
-
-            TMP_Text sub = HudUiKit.NewText("Sub", canvas, "함께할 영웅을 고르세요. 쓰러지기 전까지 이 캐릭터로 모험합니다.", 22f, HudUiKit.Label, TextAlignmentOptions.Center);
-            HudUiKit.Place(sub.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -176f), new Vector2(1100f, 36f));
-
-            if (roster == null || roster.Length == 0)
+            // 모델 프리팹에 붙은 게임용 스크립트는 플레이어가 없는 여기서 돌면 안 됨 -> 꺼진 부모 밑에 만들어서 깨어나기 전에 떼어냄
+            var holder = new GameObject("ModelHolder");
+            holder.SetActive(false);
+            holder.transform.SetParent(stage, false);
+            GameObject model = Instantiate(data.Model, holder.transform);
+            for (int pass = 0; pass < 3; pass++)
             {
-                TMP_Text warn = HudUiKit.NewText("Warn", canvas, "캐릭터 목록이 비어 있습니다 (CharacterPickScreen > Roster)", 26f, new Color(1f, 0.5f, 0.4f), TextAlignmentOptions.Center);
-                HudUiKit.Place(warn.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1200f, 60f));
+                foreach (MonoBehaviour script in model.GetComponentsInChildren<MonoBehaviour>(true))
+                {
+                    if (script != null)
+                        DestroyImmediate(script);
+                }
             }
+
+            model.transform.localPosition = data.ModelOffset;
+            model.transform.localRotation = Quaternion.Euler(0f, 180f + modelTurn, 0f) * data.ModelRotation;
+            model.transform.localScale = Vector3.one * data.ModelScale;
+
+            var animator = model.GetComponentInChildren<Animator>(true);
+            if (animator != null && data.AnimatorController != null)
+            {
+                animator.runtimeAnimatorController = data.AnimatorController;
+                animator.applyRootMotion = false;
+                animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+            }
+
+            holder.SetActive(true);
+            _model = holder;
+            FrameModel(model);
+            return true;
         }
 
-        private void BuildCards(Transform canvas)
+        private void FrameModel(GameObject model)
         {
-            if (roster == null)
+            Renderer[] renderers = model.GetComponentsInChildren<Renderer>();
+            if (renderers.Length == 0 || _camera == null)
                 return;
 
-            const float width = 440f, height = 600f, gap = 56f;
-            int n = roster.Length;
-            float start = -(n - 1) * (width + gap) * 0.5f;
+            Bounds bounds = renderers[0].bounds;
+            for (int i = 1; i < renderers.Length; i++)
+                bounds.Encapsulate(renderers[i].bounds);
 
-            for (int i = 0; i < n; i++)
-            {
-                CharacterData data = roster[i];
-                if (data == null)
-                    continue;
-
-                int index = i;
-                Color theme = data.ThemeColor;
-
-                RectTransform root = HudUiKit.NewRect("Card_" + i, canvas);
-                HudUiKit.Place(root, new Vector2(0.5f, 0.5f), new Vector2(start + i * (width + gap), 10f), new Vector2(width, height));
-                var group = root.gameObject.AddComponent<CanvasGroup>();
-
-                Image glow = HudUiKit.NewImage("Glow", root, HudUiKit.Load("soft_glow"), new Color(theme.r, theme.g, theme.b, 0f));
-                HudUiKit.Place(glow.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(width + 360f, height + 300f));
-
-                Image panel = HudUiKit.NewImage("Panel", root, HudUiKit.Load("panel_9slice"), Color.white, Image.Type.Sliced);
-                HudUiKit.Stretch(panel.rectTransform);
-                panel.raycastTarget = true;
-
-                // 초상화: 있으면 그 그림, 없으면 테마색 원판 + 이름 첫 글자
-                Image disc = HudUiKit.NewImage("PortraitBack", root, HudUiKit.Load("slot_circle_bg"), new Color(theme.r * 0.45f, theme.g * 0.45f, theme.b * 0.45f, 1f));
-                HudUiKit.Place(disc.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(230f, 230f));
-                if (data.Portrait != null)
-                {
-                    Image portrait = HudUiKit.NewImage("Portrait", root, data.Portrait, Color.white);
-                    portrait.preserveAspect = true;
-                    HudUiKit.Place(portrait.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(190f, 190f));
-                }
-                else
-                {
-                    string initial = string.IsNullOrEmpty(data.DisplayName) ? "?" : data.DisplayName.Substring(0, 1);
-                    TMP_Text letter = HudUiKit.NewText("Initial", root, initial, 100f, theme, TextAlignmentOptions.Center);
-                    HudUiKit.Place(letter.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(200f, 150f));
-                }
-                Image ring = HudUiKit.NewImage("PortraitRing", root, HudUiKit.Load("slot_circle_frame"), theme);
-                HudUiKit.Place(ring.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -150f), new Vector2(230f, 230f));
-
-                TMP_Text nameText = HudUiKit.NewText("Name", root, data.DisplayName, 38f, HudUiKit.Title, TextAlignmentOptions.Center, 2f);
-                HudUiKit.Place(nameText.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -296f), new Vector2(width - 40f, 54f));
-
-                TMP_Text role = HudUiKit.NewText("Role", root, data.Role, 18f, theme, TextAlignmentOptions.Center);
-                HudUiKit.Place(role.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -340f), new Vector2(width - 40f, 32f));
-
-                Image divider = HudUiKit.NewImage("Divider", root, HudUiKit.Load("divider"), new Color(1f, 1f, 1f, 0.5f));
-                HudUiKit.Place(divider.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -372f), new Vector2(width - 80f, 16f));
-
-                TMP_Text desc = HudUiKit.NewText("Description", root, data.Description, 19f, HudUiKit.Label, TextAlignmentOptions.Top);
-                desc.textWrappingMode = TextWrappingModes.Normal;
-                desc.overflowMode = TextOverflowModes.Ellipsis;
-                desc.lineSpacing = 6f;
-                HudUiKit.Place(desc.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -392f), new Vector2(width - 70f, 170f));
-
-                TMP_Text key = HudUiKit.NewText("Key", root, $"[ {i + 1} ]", 17f, HudUiKit.Gold, TextAlignmentOptions.Center, 2f);
-                HudUiKit.Place(key.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 24f), new Vector2(200f, 28f));
-
-                var button = root.gameObject.AddComponent<Button>();
-                button.targetGraphic = panel;
-                button.transition = Selectable.Transition.None;
-                button.onClick.AddListener(() => Select(index));
-                root.gameObject.AddComponent<HoverScale>();
-
-                _cards.Add(new Card { root = root, panel = panel, glow = glow, group = group });
-            }
+            float height = Mathf.Max(0.5f, bounds.size.y);
+            float distance = height / modelScreenHeight / (2f * Mathf.Tan(_camera.fieldOfView * 0.5f * Mathf.Deg2Rad));
+            Vector3 lookAt = bounds.center;
+            _camera.transform.position = lookAt + new Vector3(0f, height * 0.08f, -distance);
+            _camera.transform.LookAt(lookAt);
         }
 
-        private void BuildConfirm(Transform canvas)
-        {
-            Image back = HudUiKit.NewImage("Confirm", canvas, HudUiKit.Load("button_hover"), Color.white);
-            HudUiKit.Place(back.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 96f), new Vector2(480f, 72f));
-            back.raycastTarget = true;
-            _confirmGroup = back.gameObject.AddComponent<CanvasGroup>();
-
-            TMP_Text label = HudUiKit.NewText("Label", back.transform, "이 캐릭터로 시작", 28f, HudUiKit.Title, TextAlignmentOptions.Center, 2f);
-            HudUiKit.Stretch(label.rectTransform);
-
-            _confirm = back.gameObject.AddComponent<Button>();
-            _confirm.targetGraphic = back;
-            _confirm.transition = Selectable.Transition.None;
-            _confirm.onClick.AddListener(Confirm);
-            back.gameObject.AddComponent<HoverScale>();
-        }
-
-        // ---------------------------------------------------------------- 선택 / 시작
+        // ---------------------------------------------------------------- 캐릭터 고르기 (버튼 OnClick)
 
         // 테스트 도구용: 마우스 없이 고르고 시작까지
         public void DebugPick(int index)
         {
-            Select(index);
+            SelectCharacter(index);
             Confirm();
         }
 
-        private void Select(int index)
+        public void SelectPrev() => SelectCharacter((_selected + Count - 1) % Mathf.Max(1, Count));
+        public void SelectNext() => SelectCharacter((_selected + 1) % Mathf.Max(1, Count));
+
+        public void SelectCharacter(int index)
         {
-            if (_busy || index < 0 || index >= _cards.Count)
+            if (_busy || index < 0 || index >= Count || index == _selected)
                 return;
 
             _selected = index;
-            RefreshCards(animate: true);
+            SelectionChanges++;
+            ShowCharacter();
+            RefreshCombos();
         }
 
-        private void RefreshCards(bool animate)
+        private void ShowCharacter()
         {
-            for (int i = 0; i < _cards.Count; i++)
+            if (Count == 0)
+                return;
+
+            CharacterData data = roster[_selected];
+            _theme = data != null ? data.ThemeColor : Color.white;
+
+            for (int i = 0; i < portraits.Count; i++)
             {
-                Card card = _cards[i];
-                bool selected = i == _selected;
-                bool dimmed = _selected >= 0 && !selected;
-                Color theme = roster[i].ThemeColor;
-
-                float scale = selected ? 1.05f : 1f;
-                float alpha = dimmed ? 0.6f : 1f;
-                Color glow = new(theme.r, theme.g, theme.b, selected ? 0.55f : 0f);
-                Color panel = selected ? Color.Lerp(Color.white, theme, 0.3f) : Color.white;
-
-                card.root.DOKill();
-                card.glow.DOKill();
-                if (animate)
-                {
-                    card.root.DOScale(scale, 0.18f).SetEase(Ease.OutQuad).SetUpdate(true);
-                    card.glow.DOColor(glow, 0.2f).SetUpdate(true);
-                }
-                else
-                {
-                    card.root.localScale = Vector3.one * scale;
-                    card.glow.color = glow;
-                }
-
-                card.group.alpha = alpha;
-                card.panel.color = panel;
+                bool on = i == _selected;
+                PortraitView portrait = portraits[i];
+                portrait.root.DOKill();
+                portrait.root.DOScale(on ? 1.12f : 0.9f, 0.18f).SetEase(Ease.OutQuad).SetUpdate(true);
+                portrait.group.alpha = on ? 1f : 0.55f;
             }
 
-            if (_confirmGroup != null)
+            if (pageText != null)
+                pageText.text = $"{_selected + 1} / {Count}";
+
+            info.gameObject.SetActive(data != null);
+            if (data == null)
             {
-                _confirmGroup.alpha = _selected >= 0 ? 1f : 0.35f;
-                _confirm.interactable = _selected >= 0;
+                placeholder.SetActive(false);
+                return;
             }
+
+            FillInfo(data);
+            bool hasModel = ShowModel(data);
+            placeholder.SetActive(!hasModel);
+            if (!hasModel)
+                FillPlaceholder(data);
         }
 
-        private void Confirm()
+        private void FillInfo(CharacterData data)
         {
-            if (_busy || _selected < 0)
+            nameText.text = data.DisplayName;
+
+            // 역할 글("원거리 카이팅 · 단일 특화")을 가운뎃점으로 잘라 태그로 (태그 칸 수만큼)
+            var roles = new List<string>();
+            foreach (string raw in (data.Role ?? "").Split('·'))
+            {
+                if (raw.Trim().Length > 0)
+                    roles.Add(raw.Trim());
+            }
+            for (int i = 0; i < tags.Length; i++)
+            {
+                bool has = i < roles.Count;
+                tags[i].root.SetActive(has);
+                if (!has)
+                    continue;
+                tags[i].text.text = roles[i];
+                tags[i].text.color = _theme;
+                tags[i].line.color = new Color(_theme.r, _theme.g, _theme.b, 0.6f);
+            }
+
+            descText.text = data.Description;
+
+            _entries.Clear();
+            WeaponKitData kit = data.Kit;
+            if (kit != null)
+            {
+                if (kit.passive != null)
+                    _entries.Add(new SkillEntry("패시브", kit.passive.Icon, kit.passive.DisplayName, kit.passive.Description, null));
+                AddEntry("우클릭", kit.weaponSkill);
+                AddEntry("Space", kit.dash);
+                AddEntry("R", kit.ultimate);
+            }
+            skillNone.gameObject.SetActive(kit == null);
+            skillDetail.SetActive(_entries.Count > 0);
+
+            for (int i = 0; i < skillSlots.Length; i++)
+            {
+                SkillSlotView slot = skillSlots[i];
+                bool has = i < _entries.Count;
+                slot.root.gameObject.SetActive(has);
+                slot.key.gameObject.SetActive(has);
+                slot.elementName.gameObject.SetActive(has);
+                if (!has)
+                    continue;
+
+                SkillEntry entry = _entries[i];
+                slot.icon.gameObject.SetActive(entry.icon != null);
+                slot.icon.sprite = entry.icon;
+                slot.elementDot.gameObject.SetActive(entry.hasElement);
+                if (entry.hasElement)
+                {
+                    slot.elementDot.sprite = ElementSprite(entry.element);
+                    slot.elementDot.color = ElementTint(entry.element);
+                }
+                slot.key.text = entry.key;
+                slot.elementName.text = ElementLabel(entry);
+                slot.elementName.color = entry.hasElement ? ElementTint(entry.element) : HudUiKit.Label * 0.8f;
+            }
+
+            _skill = 0;
+            RefreshSkill();
+        }
+
+        private void AddEntry(string key, SkillData skill)
+        {
+            if (skill != null)
+                _entries.Add(new SkillEntry(key, skill.Icon, skill.DisplayName, skill.Description, skill));
+        }
+
+        // 스킬 아이콘 클릭/마우스 올림 (인스펙터 OnClick, HoverSelect 에 연결)
+        public void SelectSkill(int index)
+        {
+            if (index < 0 || index >= _entries.Count || index == _skill)
+                return;
+            _skill = index;
+            RefreshSkill();
+        }
+
+        private void RefreshSkill()
+        {
+            for (int i = 0; i < skillSlots.Length && i < _entries.Count; i++)
+            {
+                bool on = i == _skill;
+                SkillSlotView slot = skillSlots[i];
+                slot.root.DOKill();
+                slot.root.DOScale(on ? 1.1f : 0.94f, 0.15f).SetUpdate(true);
+                slot.group.alpha = on ? 1f : 0.6f;
+                slot.ring.color = on ? HudUiKit.Gold : new Color(_theme.r, _theme.g, _theme.b, 0.85f);
+            }
+
+            if (_entries.Count == 0)
+                return;
+
+            SkillEntry entry = _entries[_skill];
+            detailName.text = entry.title;
+            Color chip = entry.hasElement ? ElementTint(entry.element) : HudUiKit.Label;
+            detailBadge.gameObject.SetActive(entry.hasElement);
+            if (entry.hasElement)
+            {
+                detailBadge.sprite = ElementSprite(entry.element);
+                detailBadge.color = ElementTint(entry.element);
+            }
+            detailElement.text = ElementLabel(entry);
+            detailElement.color = chip;
+            detailLine.color = new Color(chip.r, chip.g, chip.b, 0.5f);
+            detailDesc.text = string.IsNullOrEmpty(entry.description) ? "설명 준비 중" : entry.description;
+        }
+
+        private static string ElementLabel(SkillEntry entry) =>
+            entry.hasElement ? ElementComboBook.KoreanName(entry.element) + " 속성" : (entry.key == "패시브" ? "상시" : "무속성");
+
+        private Color ElementTint(ElementType element) =>
+            Palette != null ? Palette.ColorOf(element) : Color.white;
+
+        // 배지 그림이 있으면 그걸, 없으면 색 원 (원 그림은 프리팹/씬의 원래 스프라이트 그대로)
+        private Sprite ElementSprite(ElementType element)
+        {
+            Sprite badge = Palette != null ? Palette.BadgeOf(element) : null;
+            return badge != null ? badge : placeholderDisc.sprite;
+        }
+
+        // 모델 없는 캐릭터: 테마색 원판 + 이름 첫 글자 (또는 초상화)
+        private void FillPlaceholder(CharacterData data)
+        {
+            placeholderGlow.color = new Color(_theme.r, _theme.g, _theme.b, 0.35f);
+            placeholderDisc.color = new Color(_theme.r * 0.35f, _theme.g * 0.35f, _theme.b * 0.35f, 1f);
+            placeholderRing.color = _theme;
+            placeholderFace.gameObject.SetActive(data.Portrait != null);
+            placeholderFace.sprite = data.Portrait;
+            placeholderInitial.gameObject.SetActive(data.Portrait == null);
+            placeholderInitial.text = Initial(data);
+            placeholderInitial.color = _theme;
+        }
+
+        private static string Initial(CharacterData data) =>
+            string.IsNullOrEmpty(data.DisplayName) ? "?" : data.DisplayName.Substring(0, 1);
+
+        // ---------------------------------------------------------------- 시작 콤보 고르기
+
+        private void ChooseCombo(ElementType[] sequence)
+        {
+            if (_busy)
+                return;
+            ComboLoadout.ChooseStarter(sequence);
+            ComboChanges++;
+            RefreshCombos();
+        }
+
+        // 지금 캐릭터의 시작 콤보 줄(프리팹 복제)을 새로 만들고, 고른 것이 이 캐릭터 것이 아니면 첫 번째로
+        private void RefreshCombos()
+        {
+            if (comboArea == null || Count == 0)
+                return;
+
+            WeaponKitData kit = roster[_selected] != null ? roster[_selected].Kit : null;
+            List<ElementType[]> options = kit != null ? ComboLoadout.StarterOptions(kit.weaponSkill, kit.ultimate) : new List<ElementType[]>();
+            if (kit != null)
+                ComboLoadout.EnsureStarterFor(kit.weaponSkill, kit.ultimate);
+
+            string key = string.Join(",", options.ConvertAll(ComboLoadout.NameOf));
+            if (key != _comboKey && comboRowPrefab != null)
+            {
+                _comboKey = key;
+                foreach (PickComboRowView old in _comboRows)
+                {
+                    if (old != null)
+                        Destroy(old.gameObject);
+                }
+                _comboRows.Clear();
+                foreach (ElementType[] option in options)
+                {
+                    PickComboRowView row = Instantiate(comboRowPrefab, comboArea);
+                    row.name = "Combo_" + ComboLoadout.NameOf(option);
+                    ElementType[] sequence = option;
+                    row.Setup(sequence, Palette, () => ChooseCombo(sequence));
+                    _comboRows.Add(row);
+                }
+            }
+
+            foreach (PickComboRowView row in _comboRows)
+                row.SetSelected(ComboLoadout.NameOf(row.Sequence) == ComboLoadout.NameOf(ComboLoadout.Starter));
+
+            comboHint.text = options.Count == 0
+                ? "이 캐릭터는 우클릭/궁극기에 원소가 없어 시작 콤보가 없습니다."
+                : "튜토리얼과 초반에는 이 콤보 하나로 싸웁니다. 효과는 원소마다 정해진 능력치 + 순서 보너스입니다.";
+        }
+
+        // ---------------------------------------------------------------- 시작 (버튼 OnClick)
+
+        public void Confirm()
+        {
+            if (_busy || Count == 0)
                 return;
 
             _busy = true;
             CharacterSelection.Pick(_selected);
             RunReset.Begin();
+            ComboLoadout.BeginRun();
+            // 튜토리얼은 콤보 바인딩 상점이 있는 상점 맵에서 진행
+            string scene = TutorialSession.Active ? TutorialDefaults.ShopScene : nextScene;
 
-            _fade.raycastTarget = true;
-            _fade.DOFade(1f, fadeTime).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(nextScene));
+            if (fade == null)
+            {
+                SceneManager.LoadScene(scene);
+                return;
+            }
+            fade.raycastTarget = true;
+            fade.DOFade(1f, fadeTime).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(scene));
         }
 
-        // 마우스를 올리면 살짝 커지는 효과 (선택된 카드/버튼의 기본 크기 위에 곱함)
-        private sealed class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
-        {
-            private Vector3 _base = Vector3.one;
-            private bool _hover;
+        // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)
 
-            private void Update()
+        [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
+        public void BakeLayout()
+        {
+#if UNITY_EDITOR
+            HudUiKit.ClearChildren(transform);
+            palette = palette != null ? palette : ElementPalette.Default;
+            comboRowPrefab = comboRowPrefab != null ? comboRowPrefab
+                : UnityEditor.AssetDatabase.LoadAssetAtPath<PickComboRowView>("Assets/Members/HJH/05.Data/Prefab/UI/PickComboRow.prefab");
+
+            // 무대: 카메라 배경, 조명, 모델 자리 + 마우스로 돌리기
+            Camera cam = Camera.main;
+            if (cam != null)
             {
-                // 다른 쪽(선택 연출)이 크기를 바꾸는 중이 아닐 때만 호버 보정
-                if (_hover && transform.localScale.x < 1.04f && !DOTween.IsTweening(transform))
-                    transform.localScale = Vector3.Lerp(transform.localScale, _base * 1.03f, Time.unscaledDeltaTime * 14f);
-                else if (!_hover && transform.localScale.x > 1.0f && transform.localScale.x < 1.04f && !DOTween.IsTweening(transform))
-                    transform.localScale = Vector3.Lerp(transform.localScale, _base, Time.unscaledDeltaTime * 14f);
+                cam.clearFlags = CameraClearFlags.SolidColor;
+                cam.backgroundColor = new Color(0.035f, 0.05f, 0.09f);
+            }
+            var keyLight = new GameObject("Key Light", typeof(Light));
+            keyLight.transform.SetParent(transform, false);
+            keyLight.transform.rotation = Quaternion.Euler(35f, 25f, 0f);
+            var light = keyLight.GetComponent<Light>();
+            light.type = LightType.Directional;
+            light.intensity = 1.3f;
+            light.color = new Color(1f, 0.97f, 0.92f);
+            stage = new GameObject("Stage").transform;
+            stage.SetParent(transform, false);
+            var spin = GetComponent<PickModelSpin>() ? GetComponent<PickModelSpin>() : gameObject.AddComponent<PickModelSpin>();
+            spin.Stage = stage;
+
+            // 캔버스: 카메라 바로 앞 (모델보다 앞). 화면 캡처 도구가 카메라로 찍어도 UI 가 같이 나옴
+            var canvasGo = new GameObject("PickCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+            canvasGo.transform.SetParent(transform, false);
+            var canvas = canvasGo.GetComponent<Canvas>();
+            canvas.renderMode = RenderMode.ScreenSpaceCamera;
+            canvas.worldCamera = cam;
+            canvas.planeDistance = 0.5f;
+            var scaler = canvasGo.GetComponent<CanvasScaler>();
+            scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
+            scaler.referenceResolution = new Vector2(1920f, 1080f);
+            scaler.matchWidthOrHeight = 0.5f;
+            Transform root = canvasGo.transform;
+
+            Image glow = HudUiKit.NewImage("BackGlow", root, HudUiKit.Load("soft_glow"), new Color(0.3f, 0.6f, 1f, 0.10f));
+            HudUiKit.Place(glow.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(1500f, 1300f));
+            foreach (float side in new[] { 0f, 1f })
+            {
+                Image shade = HudUiKit.NewImage(side < 0.5f ? "ShadeLeft" : "ShadeRight", root, null, new Color(0.01f, 0.015f, 0.03f, 0.55f));
+                HudUiKit.Place(shade.rectTransform, new Vector2(side, 0.5f), Vector2.zero, new Vector2(ColumnWidth + SideMargin * 2f, 1400f));
             }
 
-            public void OnPointerEnter(PointerEventData eventData) => _hover = true;
-            public void OnPointerExit(PointerEventData eventData) => _hover = false;
+            BakeLeft(root);
+            BakeCenter(root);
+            BakeRight(root);
+
+            fade = HudUiKit.NewImage("Fade", root, null, new Color(0f, 0f, 0f, 0f));
+            HudUiKit.Stretch(fade.rectTransform);
+#endif
         }
+
+#if UNITY_EDITOR
+        private static void Wire(Button button, UnityEngine.Events.UnityAction action) =>
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(button.onClick, action);
+
+        private static void Wire(UnityEngine.Events.UnityEvent target, UnityEngine.Events.UnityAction<int> action, int argument) =>
+            UnityEditor.Events.UnityEventTools.AddIntPersistentListener(target, action, argument);
+
+        private static Button NewButton(Image target)
+        {
+            var button = target.gameObject.AddComponent<Button>();
+            button.targetGraphic = target;
+            button.transition = Selectable.Transition.None;
+            return button;
+        }
+
+        // 왼쪽: 초상화(캐릭터 목록 수만큼) + 정보(이름, 태그, 설명, 스킬 4칸, 고른 스킬 설명)
+        private void BakeLeft(Transform root)
+        {
+            RectTransform column = HudUiKit.NewRect("Left", root);
+            HudUiKit.Place(column, new Vector2(0f, 1f), new Vector2(SideMargin, -48f), new Vector2(ColumnWidth, 990f));
+
+            portraits = new List<PortraitView>();
+            if (Count == 0)
+            {
+                TMP_Text warn = HudUiKit.NewText("Warn", column, "캐릭터 목록이 비어 있습니다 (CharacterPickScreen > Roster)", 22f, Warn);
+                HudUiKit.Place(warn.rectTransform, new Vector2(0f, 1f), Vector2.zero, new Vector2(ColumnWidth, 40f));
+            }
+
+            for (int i = 0; i < Count; i++)
+            {
+                CharacterData data = roster[i];
+                Color theme = data != null ? data.ThemeColor : Color.white;
+
+                RectTransform portrait = HudUiKit.NewRect("Portrait_" + i, column);
+                HudUiKit.Place(portrait, new Vector2(0f, 1f), new Vector2(46f + i * 112f, -46f), new Vector2(92f, 92f), new Vector2(0.5f, 0.5f));
+                var group = portrait.gameObject.AddComponent<CanvasGroup>();
+
+                Image disc = HudUiKit.NewImage("Back", portrait, HudUiKit.Load("slot_circle_bg"), new Color(theme.r * 0.4f, theme.g * 0.4f, theme.b * 0.4f, 1f));
+                HudUiKit.Stretch(disc.rectTransform);
+                disc.raycastTarget = true;
+
+                if (data != null && data.Portrait != null)
+                {
+                    Image face = HudUiKit.NewImage("Face", portrait, data.Portrait, Color.white);
+                    face.preserveAspect = true;
+                    HudUiKit.Stretch(face.rectTransform, 10f);
+                }
+                else
+                {
+                    TMP_Text letter = HudUiKit.NewText("Initial", portrait, data != null ? Initial(data) : "?", 40f, theme, TextAlignmentOptions.Center);
+                    HudUiKit.Stretch(letter.rectTransform);
+                }
+
+                Image ring = HudUiKit.NewImage("Ring", portrait, HudUiKit.Load("slot_circle_frame"), theme);
+                HudUiKit.Stretch(ring.rectTransform);
+
+                Wire(NewButton(disc).onClick, SelectCharacter, i);
+                portraits.Add(new PortraitView { root = portrait, group = group });
+            }
+
+            // 튜토리얼 강조용 자리 (초상화 줄 전체)
+            portraitRow = HudUiKit.NewRect("PortraitRow", column);
+            HudUiKit.Place(portraitRow, new Vector2(0f, 1f), new Vector2(-6f, 6f), new Vector2(Mathf.Max(1, Count) * 112f, 104f));
+
+            info = HudUiKit.NewRect("Info", column);
+            HudUiKit.Place(info, new Vector2(0f, 1f), new Vector2(0f, -120f), new Vector2(ColumnWidth, 870f));
+
+            nameText = HudUiKit.NewText("Name", info, "캐릭터 이름", 56f, HudUiKit.Title, TextAlignmentOptions.TopLeft, 4f);
+            HudUiKit.Place(nameText.rectTransform, new Vector2(0f, 1f), Vector2.zero, new Vector2(ColumnWidth, 72f));
+
+            // 태그 줄: 글자 길이에 맞춰 칸 너비가 정해짐 (ContentSizeFitter), 칸끼리는 가로 줄
+            RectTransform tagRow = HudUiKit.NewRect("Tags", info);
+            HudUiKit.Place(tagRow, new Vector2(0f, 1f), new Vector2(0f, -80f), new Vector2(ColumnWidth, 32f));
+            var tagLayout = tagRow.gameObject.AddComponent<HorizontalLayoutGroup>();
+            tagLayout.spacing = 10f;
+            tagLayout.childAlignment = TextAnchor.MiddleLeft;
+            tagLayout.childControlWidth = false;
+            tagLayout.childControlHeight = false;
+            tagLayout.childForceExpandWidth = false;
+            tagLayout.childForceExpandHeight = false;
+            tags = new TagView[4];
+            for (int i = 0; i < tags.Length; i++)
+            {
+                RectTransform tag = HudUiKit.NewRect("Tag_" + i, tagRow);
+                tag.sizeDelta = new Vector2(120f, 32f);
+                var pad = tag.gameObject.AddComponent<HorizontalLayoutGroup>();
+                pad.padding = new RectOffset(14, 14, 0, 0);
+                pad.childControlWidth = true;
+                pad.childControlHeight = true;
+                tag.gameObject.AddComponent<ContentSizeFitter>().horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+                TMP_Text text = HudUiKit.NewText("Text", tag, "태그", 18f, HudUiKit.Title, TextAlignmentOptions.Center);
+                Image line = HudUiKit.NewImage("Line", tag, null, new Color(1f, 1f, 1f, 0.6f));
+                line.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
+                line.rectTransform.anchorMin = new Vector2(0f, 0f);
+                line.rectTransform.anchorMax = new Vector2(1f, 0f);
+                line.rectTransform.pivot = new Vector2(0.5f, 0f);
+                line.rectTransform.offsetMin = new Vector2(6f, 0f);
+                line.rectTransform.offsetMax = new Vector2(-6f, 1.5f);
+                tags[i] = new TagView { root = tag.gameObject, text = text, line = line };
+            }
+
+            descText = HudUiKit.NewText("Description", info, "캐릭터 설명", 19f, HudUiKit.Label, TextAlignmentOptions.TopLeft);
+            descText.textWrappingMode = TextWrappingModes.Normal;
+            descText.overflowMode = TextOverflowModes.Ellipsis;
+            descText.lineSpacing = 6f;
+            HudUiKit.Place(descText.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -126f), new Vector2(ColumnWidth, 96f));
+
+            skillsArea = HudUiKit.NewRect("Skills", info);
+            HudUiKit.Place(skillsArea, new Vector2(0f, 1f), new Vector2(0f, -246f), new Vector2(ColumnWidth, 600f));
+            HudUiKit.BuildHeader(skillsArea, "스킬", ColumnWidth);
+
+            skillNone = HudUiKit.NewText("None", skillsArea, "스킬 정보가 없습니다.", 18f, HudUiKit.Label);
+            HudUiKit.Place(skillNone.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -64f), new Vector2(ColumnWidth, 30f));
+
+            skillSlots = new SkillSlotView[4];
+            for (int i = 0; i < skillSlots.Length; i++)
+            {
+                RectTransform slot = HudUiKit.NewRect("Skill_" + i, skillsArea);
+                HudUiKit.Place(slot, new Vector2(0f, 1f), new Vector2(i * 138f + 42f, -64f), new Vector2(84f, 84f), new Vector2(0.5f, 1f));
+                var group = slot.gameObject.AddComponent<CanvasGroup>();
+
+                Image disc = HudUiKit.NewImage("IconBack", slot, HudUiKit.Load("slot_circle_bg"), new Color(0.08f, 0.11f, 0.17f, 1f));
+                HudUiKit.Stretch(disc.rectTransform);
+                disc.raycastTarget = true;
+                Image icon = HudUiKit.NewImage("Icon", slot, null, Color.white);
+                icon.preserveAspect = true;
+                HudUiKit.Stretch(icon.rectTransform, 10f);
+                Image ring = HudUiKit.NewImage("IconRing", slot, HudUiKit.Load("slot_circle_frame"), Color.white);
+                HudUiKit.Stretch(ring.rectTransform);
+                Image dot = HudUiKit.NewImage("ElementDot", slot, HudUiKit.Load("slot_circle_bg"), Color.white);
+                dot.preserveAspect = true;
+                HudUiKit.Place(dot.rectTransform, new Vector2(1f, 0f), new Vector2(4f, -2f), new Vector2(30f, 30f), new Vector2(1f, 0f));
+
+                Wire(NewButton(disc).onClick, SelectSkill, i);
+                Wire(slot.gameObject.AddComponent<HoverSelect>().OnEnter, SelectSkill, i);
+
+                TMP_Text key = HudUiKit.NewText("Key_" + i, skillsArea, "키", 16f, HudUiKit.Gold, TextAlignmentOptions.Center, 2f);
+                HudUiKit.Place(key.rectTransform, new Vector2(0f, 1f), new Vector2(i * 138f - 18f, -160f), new Vector2(120f, 24f));
+                TMP_Text elementName = HudUiKit.NewText("ElementName_" + i, skillsArea, "속성", 15f, HudUiKit.Label, TextAlignmentOptions.Center);
+                HudUiKit.Place(elementName.rectTransform, new Vector2(0f, 1f), new Vector2(i * 138f - 18f, -184f), new Vector2(120f, 22f));
+
+                skillSlots[i] = new SkillSlotView { root = slot, group = group, icon = icon, ring = ring, elementDot = dot, key = key, elementName = elementName };
+            }
+
+            // 고른 스킬 설명
+            RectTransform detail = HudUiKit.NewRect("Detail", skillsArea);
+            HudUiKit.Place(detail, new Vector2(0f, 1f), new Vector2(0f, -236f), new Vector2(ColumnWidth, 240f));
+            skillDetail = detail.gameObject;
+            detailName = HudUiKit.NewText("Name", detail, "스킬 이름", 28f, HudUiKit.Title, TextAlignmentOptions.TopLeft, 2f);
+            HudUiKit.Place(detailName.rectTransform, new Vector2(0f, 1f), Vector2.zero, new Vector2(ColumnWidth - 190f, 40f));
+            detailBadge = HudUiKit.NewImage("ElementBadge", detail, HudUiKit.Load("slot_circle_bg"), Color.white);
+            detailBadge.preserveAspect = true;
+            HudUiKit.Place(detailBadge.rectTransform, new Vector2(1f, 1f), new Vector2(-96f, -4f), new Vector2(30f, 30f), new Vector2(1f, 1f));
+            detailElement = HudUiKit.NewText("ElementText", detail, "속성", 19f, HudUiKit.Label, TextAlignmentOptions.TopRight, 1f);
+            HudUiKit.Place(detailElement.rectTransform, new Vector2(1f, 1f), new Vector2(0f, -4f), new Vector2(92f, 30f), new Vector2(1f, 1f));
+            detailLine = HudUiKit.NewImage("Line", detail, HudUiKit.Load("divider"), new Color(1f, 1f, 1f, 0.5f));
+            HudUiKit.Place(detailLine.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -42f), new Vector2(ColumnWidth, 14f));
+            detailDesc = HudUiKit.NewText("Description", detail, "스킬 설명", 18f, HudUiKit.Label, TextAlignmentOptions.TopLeft);
+            detailDesc.textWrappingMode = TextWrappingModes.Normal;
+            detailDesc.overflowMode = TextOverflowModes.Ellipsis;
+            detailDesc.lineSpacing = 6f;
+            HudUiKit.Place(detailDesc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -62f), new Vector2(ColumnWidth, 150f));
+        }
+
+        // 가운데: 모델 없는 캐릭터용 원판 + 아래 쪽수 · 화살표
+        private void BakeCenter(Transform root)
+        {
+            RectTransform center = HudUiKit.NewRect("Center", root);
+            HudUiKit.Place(center, new Vector2(0.5f, 0.5f), new Vector2(0f, 30f), new Vector2(420f, 420f));
+            placeholder = center.gameObject;
+            placeholderGlow = HudUiKit.NewImage("Glow", center, HudUiKit.Load("soft_glow"), new Color(1f, 1f, 1f, 0.35f));
+            HudUiKit.Place(placeholderGlow.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 900f));
+            placeholderDisc = HudUiKit.NewImage("Disc", center, HudUiKit.Load("slot_circle_bg"), new Color(0.3f, 0.3f, 0.3f, 1f));
+            HudUiKit.Stretch(placeholderDisc.rectTransform);
+            placeholderFace = HudUiKit.NewImage("Face", center, null, Color.white);
+            placeholderFace.preserveAspect = true;
+            HudUiKit.Stretch(placeholderFace.rectTransform, 40f);
+            placeholderInitial = HudUiKit.NewText("Initial", center, "?", 190f, Color.white, TextAlignmentOptions.Center);
+            HudUiKit.Stretch(placeholderInitial.rectTransform);
+            placeholderRing = HudUiKit.NewImage("Ring", center, HudUiKit.Load("slot_circle_frame"), Color.white);
+            HudUiKit.Stretch(placeholderRing.rectTransform);
+            TMP_Text note = HudUiKit.NewText("Note", center, "모델 준비 중", 18f, HudUiKit.Label, TextAlignmentOptions.Center, 2f);
+            HudUiKit.Place(note.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, -44f), new Vector2(300f, 28f));
+            center.gameObject.SetActive(false);
+
+            RectTransform pager = HudUiKit.NewRect("Pager", root);
+            HudUiKit.Place(pager, new Vector2(0.5f, 0f), new Vector2(0f, 70f), new Vector2(360f, 56f));
+            pageText = HudUiKit.NewText("Page", pager, "1 / 3", 22f, HudUiKit.Label, TextAlignmentOptions.Center, 4f);
+            HudUiKit.Stretch(pageText.rectTransform);
+            BakeArrow(pager, "Prev", "<", 0f, SelectPrev);
+            BakeArrow(pager, "Next", ">", 1f, SelectNext);
+        }
+
+        private static void BakeArrow(Transform parent, string name, string glyph, float side, UnityEngine.Events.UnityAction onClick)
+        {
+            Image hit = HudUiKit.NewImage(name, parent, null, new Color(1f, 1f, 1f, 0f));
+            HudUiKit.Place(hit.rectTransform, new Vector2(side, 0.5f), Vector2.zero, new Vector2(64f, 56f));
+            hit.raycastTarget = true;
+            TMP_Text text = HudUiKit.NewText("Glyph", hit.transform, glyph, 44f, HudUiKit.Title, TextAlignmentOptions.Center);
+            HudUiKit.Stretch(text.rectTransform);
+            Wire(NewButton(hit), onClick);
+            hit.gameObject.AddComponent<HoverScale>().Scale = 1.03f;
+        }
+
+        // 오른쪽: 시작 콤보(프리팹 줄이 들어갈 세로 줄) + 아웃 업그레이드 + 게임 시작
+        private void BakeRight(Transform root)
+        {
+            RectTransform column = HudUiKit.NewRect("Right", root);
+            HudUiKit.Place(column, new Vector2(1f, 1f), new Vector2(-SideMargin, -48f), new Vector2(ColumnWidth, 990f));
+
+            HudUiKit.BuildHeader(column, "시작 콤보", ColumnWidth);
+
+            TMP_Text guide = HudUiKit.NewText("Guide", column,
+                "우클릭 스킬과 궁극기 원소로 만든 콤보 중 하나를 들고 갑니다.\n게임 중 상점에서 새 콤보를 바인딩할 수 있습니다.", 16f, HudUiKit.Label);
+            HudUiKit.Place(guide.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -52f), new Vector2(ColumnWidth, 46f));
+
+            const float rowHeight = 116f;
+            comboArea = HudUiKit.NewRect("ComboArea", column);
+            HudUiKit.Place(comboArea, new Vector2(0f, 1f), new Vector2(0f, -108f), new Vector2(ColumnWidth, rowHeight * 2f + 8f));
+            var rows = comboArea.gameObject.AddComponent<VerticalLayoutGroup>();
+            rows.spacing = 6f;
+            rows.childAlignment = TextAnchor.UpperLeft;
+            rows.childControlWidth = false;
+            rows.childControlHeight = false;
+            rows.childForceExpandWidth = false;
+            rows.childForceExpandHeight = false;
+
+            comboHint = HudUiKit.NewText("Hint", column, "", 16f, HudUiKit.Label);
+            comboHint.textWrappingMode = TextWrappingModes.Normal;
+            HudUiKit.Place(comboHint.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -108f - rowHeight * 2f - 16f), new Vector2(ColumnWidth, 60f));
+
+            // 아웃 업그레이드: 자리만 (아직 연결된 기능 없음)
+            Image upgrade = HudUiKit.NewImage("OutUpgrade", column, HudUiKit.Load("button_normal"), Color.white);
+            HudUiKit.Place(upgrade.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 112f), new Vector2(ColumnWidth, 64f));
+            upgrade.raycastTarget = true;
+            TMP_Text upgradeLabel = HudUiKit.NewText("Label", upgrade.transform, "아웃 업그레이드", 24f, HudUiKit.Title, TextAlignmentOptions.Center, 4f);
+            HudUiKit.Stretch(upgradeLabel.rectTransform);
+            NewButton(upgrade);
+            upgrade.gameObject.AddComponent<HoverScale>().Scale = 1.03f;
+
+            Image start = HudUiKit.NewImage("Start", column, HudUiKit.Load("button_hover"), Color.white);
+            HudUiKit.Place(start.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 0f), new Vector2(ColumnWidth, 92f));
+            start.raycastTarget = true;
+            TMP_Text startLabel = HudUiKit.NewText("Label", start.transform, "게임 시작", 34f, HudUiKit.Title, TextAlignmentOptions.Center, 8f);
+            HudUiKit.Stretch(startLabel.rectTransform);
+            Wire(NewButton(start), Confirm);
+            startButton = start.rectTransform;
+            start.gameObject.AddComponent<HoverScale>().Scale = 1.03f;
+        }
+#endif
     }
 }

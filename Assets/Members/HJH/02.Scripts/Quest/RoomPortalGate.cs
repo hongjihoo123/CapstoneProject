@@ -42,16 +42,16 @@ namespace Assets.Members.HJH._02.Scripts.Quest
         private bool _locked;
         private Transform _player;
 
-        private CanvasGroup _noticeGroup;
-        private TMP_Text _noticeText;
-        private float _noticeUntil;
-        private bool _noticeIsOpened;
+        [SerializeField, Tooltip("포탈 안내 프리팹 (05.Data/Prefab/UI/PortalNotice). 모양은 프리팹에서 수정")]
+        private ScreenNotice noticePrefab;
+        private ScreenNotice _notice;
 
         public void Bind(RoomClearTracker tracker)
         {
             _tracker = tracker;
             _tracker.Cleared += OnCleared;
-            BuildNotice();
+            if (noticePrefab != null)
+                _notice = Instantiate(noticePrefab);
             StartCoroutine(LockWhenEnemiesExist());
         }
 
@@ -59,19 +59,6 @@ namespace Assets.Members.HJH._02.Scripts.Quest
         {
             if (_tracker != null)
                 _tracker.Cleared -= OnCleared;
-        }
-
-        // 화면 아래쪽 가운데 안내 문구
-        private void BuildNotice()
-        {
-            Transform canvas = transform.parent != null ? transform.parent : transform;
-            RectTransform rect = HudUiKit.NewRect("PortalNotice", canvas);
-            HudUiKit.Place(rect, new Vector2(0.5f, 0f), new Vector2(0f, 330f), new Vector2(700f, 48f));
-            _noticeGroup = rect.gameObject.AddComponent<CanvasGroup>();
-            _noticeGroup.alpha = 0f;
-            _noticeGroup.blocksRaycasts = false;
-            _noticeText = HudUiKit.NewText("Text", rect, lockedMessage, 26f, HudUiKit.Title, TextAlignmentOptions.Center);
-            HudUiKit.Stretch(_noticeText.rectTransform);
         }
 
         // 한 프레임 + 잠깐 기다려서 적 수가 잡힌 뒤에 판단
@@ -115,36 +102,19 @@ namespace Assets.Members.HJH._02.Scripts.Quest
 
         private void Update()
         {
-            bool showing = false;
+            if (!_locked || _notice == null)
+                return;
 
-            if (_locked)
-            {
-                Transform player = FindPlayer();
-                if (player != null && NearAnyPortal(player.position))
-                {
-                    showing = true;
-                    if (_noticeIsOpened)
-                    {
-                        _noticeIsOpened = false;
-                        _noticeText.color = HudUiKit.Title;
-                    }
+            Transform player = FindPlayer();
+            if (player == null || !NearAnyPortal(player.position))
+                return;
 
-                    int left = _tracker != null ? Mathf.Max(0, _tracker.Total - _tracker.Kills) : 0;
-                    _noticeText.text = left > 0 ? $"{lockedMessage}\n<size=20><color=#9FB4C8>남은 적 {left}마리</color></size>" : lockedMessage;
-                    _noticeUntil = Time.unscaledTime + 0.15f;
+            int left = _tracker != null ? Mathf.Max(0, _tracker.Total - _tracker.Kills) : 0;
+            _notice.Hold(left > 0 ? $"{lockedMessage}\n<size=20><color=#9FB4C8>남은 적 {left}마리</color></size>" : lockedMessage, HudUiKit.Title);
 
-                    // F 를 누르면 안내가 한 번 튐
-                    if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
-                    {
-                        _noticeGroup.transform.DOKill(true);
-                        _noticeGroup.transform.DOPunchScale(Vector3.one * 0.1f, 0.25f, 6, 0.6f).SetUpdate(true);
-                    }
-                }
-            }
-
-            bool visible = showing || Time.unscaledTime < _noticeUntil;
-            float target = visible ? 1f : 0f;
-            _noticeGroup.alpha = Mathf.MoveTowards(_noticeGroup.alpha, target, Time.unscaledDeltaTime * (visible ? 6f : 2.5f));
+            // F 를 누르면 안내가 한 번 튐
+            if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
+                _notice.Punch();
         }
 
         private Transform FindPlayer()
@@ -202,10 +172,8 @@ namespace Assets.Members.HJH._02.Scripts.Quest
             }
 
             // "활성화되었습니다" 안내를 잠깐 금색으로
-            _noticeIsOpened = true;
-            _noticeText.text = openedMessage;
-            _noticeText.color = HudUiKit.Gold;
-            _noticeUntil = Time.unscaledTime + 2.2f;
+            if (_notice != null)
+                _notice.ShowText(openedMessage, HudUiKit.Gold, 2.2f);
 
             Debug.Log($"[RoomPortalGate] 포탈 {_portals.Count}개 활성화");
             _portals.Clear();

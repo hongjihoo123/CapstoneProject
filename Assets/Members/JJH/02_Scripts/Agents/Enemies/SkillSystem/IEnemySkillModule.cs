@@ -2,6 +2,7 @@
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills;
 using System;
 using UnityEngine;
+using static Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.EnemySkillSO;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
 {
@@ -19,5 +20,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem
         bool IsSkillUsing();
         bool HasAvailableSkill(float distance);
         bool HasSkillInRange(float distance);
+        EnemySkillSetting GetSkillSetting(EnemySkillSO skillData);
     }
 }

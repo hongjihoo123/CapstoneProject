@@ -7,6 +7,7 @@ using Assets.Members.HJH._02.Scripts.SkillSwap;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
+using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Hud
@@ -104,6 +105,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
+        // 들고 있는 콤보가 바뀜 (맛보기 선택, 바인딩 교체) → 콤보 목록을 다시 그려야 함
+        public event Action ComboListChanged;
         // 피니시: 준비됨(스택, 배율) / 시간 끝 / 나감(칸, 배율, 같이 터진 피니시 스킬)
         public event Action<int, float> FinisherArmed;
         public event Action FinisherExpired;
@@ -132,6 +135,25 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         }
 
         public string KeyLabel(SkillSlotId slot) => ComboKeyMap.Key(Player, slot);
+
+        // A combo effect that is on right now: seconds left and the full length (false when it is off).
+        public bool TryGetComboEffectTime(string comboName, out float remaining, out float total)
+        {
+            total = ComboLoadout.DurationOf(comboName);
+            remaining = 0f;
+            return comboChain != null && comboChain.TryGetEffectRemaining(comboName, out remaining);
+        }
+
+        // How much the active combo effects add to a stat right now (current value minus the value without them).
+        // 0 when no combo buff touches it. Changes the moment a combo effect starts or ends.
+        public float ComboStatBonus(PlayerStatId stat)
+        {
+            var stats = Player != null ? Player.Stats : null;
+            if (stats == null || stats.Tree == null)
+                return 0f;
+
+            return stats.Get(stat) - stats.GetExcluding(stat, ComboStatBuff.IsComboSource);
+        }
 
         public SlotInfo GetSlot(SkillSlotId slot)
         {
@@ -186,6 +208,9 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             progress = 0;
             return false;
         }
+
+        // True when any combo still in reach (not only the best one) wants this element next.
+        public bool IsNextElement(ElementType element) => comboChain != null && comboChain.IsNextElement(element);
 
         // Key(s) that cast this element with the current loadout: "Q", "Q/E", or "-" when none does.
         public string KeyFor(ElementType element) => ComboKeyMap.KeyFor(_elementKeys, element);
@@ -262,6 +287,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
                 comboChain.StockChanged += HandleComboChanged;
                 comboChain.ComboLanded += HandleComboLanded;
                 comboChain.ChainBroken += HandleComboBroken;
+                comboChain.BookChanged += HandleComboListChanged;
                 comboChain.FinisherReleased += HandleFinisher;
                 comboChain.FinisherArmed += HandleFinisherArmed;
                 comboChain.FinisherExpired += HandleFinisherExpired;
@@ -295,6 +321,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
                 comboChain.StockChanged -= HandleComboChanged;
                 comboChain.ComboLanded -= HandleComboLanded;
                 comboChain.ChainBroken -= HandleComboBroken;
+                comboChain.BookChanged -= HandleComboListChanged;
                 comboChain.FinisherReleased -= HandleFinisher;
                 comboChain.FinisherArmed -= HandleFinisherArmed;
                 comboChain.FinisherExpired -= HandleFinisherExpired;
@@ -328,6 +355,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         }
         private void HandleComboChanged() => ComboChanged?.Invoke();
         private void HandleComboLanded(ElementComboChain.LandedCombo landed) => ComboLanded?.Invoke(landed.Combo);
+
+        private void HandleComboListChanged() => ComboListChanged?.Invoke();
 
         private void HandleComboBroken(int finalCount)
         {

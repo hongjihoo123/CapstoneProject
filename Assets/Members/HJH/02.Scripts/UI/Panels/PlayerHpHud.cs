@@ -7,45 +7,19 @@ using UnityEngine.UI;
 namespace Assets.Members.HJH._02.Scripts.UI
 {
     // 좌상단 플레이어 체력바 (기울어진 얇은 유리 바). 체력은 HealthSignal 이 알려주는 값만 읽음.
-    // 깎이면 연한 잔상이 늦게 따라 내려옴. 모양은 코드로 만들어서 프리팹엔 빈 오브젝트 하나만 있으면 됨.
-    public class PlayerHpHud : MonoBehaviour
+    // 깎이면 연한 잔상이 늦게 따라 내려옴. 모양은 하이어라키에 저장된 자식 그대로 (인스펙터에서 수정)
+    public class PlayerHpHud : MonoBehaviour, IUiBake
     {
-        [SerializeField] private Vector2 size = new(350f, 50f);
         [SerializeField, Min(0.01f)] private float trailSpeed = 0.5f;
         [SerializeField] private float trailDelay = 0.35f;
+        [SerializeField] private Image fill;
+        [SerializeField] private Image trail;
+        [SerializeField] private TMP_Text label;
 
-        private Image _fill;
-        private Image _trail;
-        private TMP_Text _label;
         private IHealthSignal _signal;
         private float _ratio = 1f;
         private float _trailRatio = 1f;
         private float _holdUntil;
-
-        private void Awake()
-        {
-            var rect = (RectTransform)transform;
-            HudUiKit.Place(rect, new Vector2(0f, 1f), new Vector2(34f, -28f), size);
-
-            Image back = HudUiKit.NewImage("Back", transform, HudUiKit.Load("hpbar_slant_bg"), Color.white);
-            HudUiKit.Stretch(back.rectTransform);
-            _trail = HudUiKit.NewImage("Trail", transform, HudUiKit.Load("hpbar_slant_fill"), new Color(1f, 1f, 1f, 0.35f));
-            HudUiKit.Stretch(_trail.rectTransform);
-            _fill = HudUiKit.NewImage("Fill", transform, HudUiKit.Load("hpbar_slant_fill"), Color.white);
-            HudUiKit.Stretch(_fill.rectTransform);
-            foreach (Image bar in new[] { _trail, _fill })
-            {
-                bar.type = Image.Type.Filled;
-                bar.fillMethod = Image.FillMethod.Horizontal;
-            }
-
-            Image frame = HudUiKit.NewImage("Frame", transform, HudUiKit.Load("hpbar_slant_frame"), Color.white);
-            HudUiKit.Stretch(frame.rectTransform);
-
-            _label = HudUiKit.NewText("Label", transform, string.Empty, 20f, HudUiKit.Value, TextAlignmentOptions.MidlineLeft);
-            HudUiKit.Stretch(_label.rectTransform);
-            _label.rectTransform.offsetMin = new Vector2(28f, 0f);
-        }
 
         private void Start() => TryBind();
 
@@ -78,8 +52,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
             else
                 _trailRatio = Mathf.Max(_trailRatio, _ratio);
 
-            if (_label != null)
-                _label.text = $"{Mathf.CeilToInt(change.Current)}/{Mathf.CeilToInt(change.Max)}";
+            if (label != null)
+                label.text = $"{Mathf.CeilToInt(change.Current)}/{Mathf.CeilToInt(change.Max)}";
         }
 
         private void Update()
@@ -87,13 +61,41 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (_signal == null)
                 TryBind();
 
-            if (_fill == null)
+            if (fill == null || trail == null)
                 return;
 
-            _fill.fillAmount = _ratio;
+            fill.fillAmount = _ratio;
             if (Time.unscaledTime >= _holdUntil && _trailRatio > _ratio)
                 _trailRatio = Mathf.Max(_ratio, _trailRatio - trailSpeed * Time.unscaledDeltaTime);
-            _trail.fillAmount = _trailRatio;
+            trail.fillAmount = _trailRatio;
+        }
+
+        [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
+        public void BakeLayout()
+        {
+#if UNITY_EDITOR
+            HudUiKit.ClearChildren(transform);
+            HudUiKit.Place((RectTransform)transform, new Vector2(0f, 1f), new Vector2(34f, -28f), new Vector2(350f, 50f));
+
+            Image back = HudUiKit.NewImage("Back", transform, HudUiKit.Load("hpbar_slant_bg"), Color.white);
+            HudUiKit.Stretch(back.rectTransform);
+            trail = HudUiKit.NewImage("Trail", transform, HudUiKit.Load("hpbar_slant_fill"), new Color(1f, 1f, 1f, 0.35f));
+            HudUiKit.Stretch(trail.rectTransform);
+            fill = HudUiKit.NewImage("Fill", transform, HudUiKit.Load("hpbar_slant_fill"), Color.white);
+            HudUiKit.Stretch(fill.rectTransform);
+            foreach (Image bar in new[] { trail, fill })
+            {
+                bar.type = Image.Type.Filled;
+                bar.fillMethod = Image.FillMethod.Horizontal;
+            }
+
+            Image frame = HudUiKit.NewImage("Frame", transform, HudUiKit.Load("hpbar_slant_frame"), Color.white);
+            HudUiKit.Stretch(frame.rectTransform);
+
+            label = HudUiKit.NewText("Label", transform, "100/100", 20f, HudUiKit.Value, TextAlignmentOptions.MidlineLeft);
+            HudUiKit.Stretch(label.rectTransform);
+            label.rectTransform.offsetMin = new Vector2(28f, 0f);
+#endif
         }
     }
 }

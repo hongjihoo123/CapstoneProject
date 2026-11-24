@@ -26,25 +26,37 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 yield break;
 
             Quaternion rotation = _enemy.transform.rotation;
+            Vector3 origin = _enemy.transform.position;
+            int safeLane = Random.Range(0, rootCount);
 
-            for (int i = 0; i < rootRepeatCount; i++)
-            {
-                Vector3 origin = _enemy.transform.position;
-                int safeLane = Random.Range(0, rootCount);
+            ShowWarnings(origin, rotation, safeLane);
 
-                ShowWarnings(origin, rotation, safeLane);
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: SkillSetting.PrepareTime);
 
-                yield return new WaitForSeconds(SkillSetting.PrepareTime);
-
-                FireRoots(origin, rotation, safeLane);
-
-                if (i < rootRepeatCount - 1)
-                    yield return new WaitForSeconds(rootRepeatDelay);
-            }
-
-            yield return new WaitForSeconds(SkillSetting.AttackDutation);
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteRootAttacks(rotation, origin, safeLane));
 
             Boss.CompletePhaseTransition();
+        }
+
+        private IEnumerator ExecuteRootAttacks(Quaternion rotation, Vector3 origin, int safeLane)
+        {
+            for (int i = 0; i < rootRepeatCount; i++)
+            {
+                if (i > 0)
+                {
+                    yield return new WaitForSeconds(rootRepeatDelay);
+
+                    origin = _enemy.transform.position;
+                    safeLane = Random.Range(0, rootCount);
+
+                    ShowWarnings(origin, rotation, safeLane);
+
+                    yield return new WaitForSeconds(SkillSetting.PrepareTime);
+                }
+
+                FireRoots(origin, rotation, safeLane);
+            }
         }
 
         private void ShowWarnings(Vector3 origin, Quaternion rotation, int safeLane)

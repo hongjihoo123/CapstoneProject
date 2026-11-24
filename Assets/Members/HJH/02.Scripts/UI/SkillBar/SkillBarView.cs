@@ -149,7 +149,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
         // 콤보 진행 상황을 읽어서 슬롯마다 링 세기/크기를 정함
-        //  평소: 모두 기본 / 콤보 중: 방금 쓴 스킬은 번쩍, 이어지는(NEXT) 속성의 스킬은 크고 세게, 나머지는 잠잠
+        //  평소: 모두 기본 / 콤보 중: 방금 쓴 스킬은 번쩍, 이어갈 수 있는 콤보(목록에 보이는 것 전부)의 다음 속성 스킬은 크고 세게, 나머지는 잠잠
         private void UpdateComboEmphasis(SkillStateModule skills)
         {
             PlayerHudSource hud = PlayerHudSource.Instance;
@@ -189,7 +189,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                         intensity = lastUsedIntensity;
 
                     SkillData skill = skills.GetSkill(binding.slot);
-                    if (hasNext && skill != null && skill.TryGetElement(out ElementType element) && element == next)
+                    if (hud != null && skill != null && skill.TryGetElement(out ElementType element) && hud.IsNextElement(element))
                     {
                         intensity = nextIntensity;
                         scale = nextScale;
