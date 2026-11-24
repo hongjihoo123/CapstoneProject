@@ -17,29 +17,24 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
             Collider[] hits = Physics.OverlapBox(center, attackBoxSize * 0.5f, rotation, targetLayer);
 
-            IDamageable closest = null;
-            float closestSqr = float.MaxValue;
-
             foreach (Collider hit in hits)
             {
                 if (hit.transform.IsChildOf(transform))
                     continue;
 
-                if (!hit.TryGetComponent<IDamageable>(out var damageable))
-                    damageable = hit.GetComponentInParent<IDamageable>();
-
-                if (damageable == null || !damageable.IsAlive)
-                    continue;
-
-                float sqr = (hit.transform.position - transform.position).sqrMagnitude;
-                if (sqr < closestSqr)
+                if (hit.TryGetComponent<IDamageable>(out var damageable) ||
+                    hit.GetComponentInParent<IDamageable>() is IDamageable parentDamageable &&
+                    (damageable = parentDamageable) != null)
                 {
-                    closestSqr = sqr;
-                    closest = damageable;
+                    if (damageable.IsAlive)
+                    {
+                        damageable.TakeDamage(attackDamage, gameObject);
+                        return;
+                    }
                 }
             }
 
-            closest?.TakeDamage(attackDamage, gameObject);
+            Debug.LogWarning("[NormalAttack] 공격 범위 안에서 플레이어를 찾지 못했습니다.");
         }
 
         private void GetAttackBox(out Vector3 center, out Quaternion rotation)
@@ -48,5 +43,23 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
             center = transform.position + transform.forward * (attackBoxSize.z * 0.5f)
                                 + Vector3.up * (attackBoxSize.y * 0.5f);
         }
+
+#if UNITY_EDITOR
+
+        private void OnDrawGizmosSelected()
+        {
+            GetAttackBox(out Vector3 center, out Quaternion rotation);
+
+            Gizmos.color = new Color(1f, 0.3f, 0.2f, 0.9f);
+
+            Matrix4x4 matrix = Gizmos.matrix;
+            Gizmos.matrix = Matrix4x4.TRS(center, rotation, Vector3.one);
+
+            Gizmos.DrawWireCube(Vector3.zero, attackBoxSize);
+
+            Gizmos.matrix = matrix;
+        }
+
+#endif
     }
 }
