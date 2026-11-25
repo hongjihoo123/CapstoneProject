@@ -459,7 +459,7 @@ AnimationClip:
   m_HasGenericRootTransform: 1
   m_HasMotionFloatCurves: 0
   m_Events:
-  - time: 0.28333333
+  - time: 0
     functionName: AnimationAttackEvent
     data: 
     objectReferenceParameter: {fileID: 0}
@@ -467,14 +467,14 @@ AnimationClip:
     intParameter: 0
     messageOptions: 0
   - time: 0.28333333
-    functionName: AnimationEndEvent
+    functionName: OnAnimationDead
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
     intParameter: 0
     messageOptions: 0
   - time: 0.28333333
-    functionName: OnAnimationDead
+    functionName: AnimationEndEvent
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0

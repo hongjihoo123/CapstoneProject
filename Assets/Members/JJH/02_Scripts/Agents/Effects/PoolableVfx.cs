@@ -16,6 +16,8 @@ namespace Members.JJH._02_Scripts.Agents.Effects
 
         private Coroutine _playCoroutine;
 
+        private bool _isPlaying;
+
         private void Awake()
         {
             _playableVfx = effectObject.GetComponent<IPlayableVFX>();
@@ -36,7 +38,9 @@ namespace Members.JJH._02_Scripts.Agents.Effects
                 StopCoroutine(_playCoroutine);
                 _playCoroutine = null;
             }
-            _playableVfx?.StopVfx();
+
+            _isPlaying = false;
+            _playableVfx.StopVfx();
         }
 
         public void PlayVfx(Vector3 position, Quaternion rotation)
@@ -49,15 +53,42 @@ namespace Members.JJH._02_Scripts.Agents.Effects
         {
             if (_playCoroutine != null)
                 StopCoroutine(_playCoroutine);
+
+            _isPlaying = true;
             _playCoroutine = StartCoroutine(PlayVfxCoroutine());
         }
 
         private IEnumerator PlayVfxCoroutine()
         {
-            if (_playableVfx == null) yield break;
             _playableVfx.PlayVfx();
+
             yield return new WaitForSeconds(_playableVfx.VfxDuration);
+
+            EndVfx();
+        }
+
+        public void StopVfx()
+        {
+            if (!_isPlaying) return;
+
+            if (_playCoroutine != null)
+            {
+                StopCoroutine(_playCoroutine);
+                _playCoroutine = null;
+            }
+
+            _playableVfx.StopVfx();
+            EndVfx();
+        }
+
+        private void EndVfx()
+        {
+            if (!_isPlaying) return;
+
+            _isPlaying = false;
             _playCoroutine = null;
+
+            _playableVfx.StopVfx();
             OnVfxEnd?.Invoke(this);
         }
     }

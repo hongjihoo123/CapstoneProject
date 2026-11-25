@@ -12,11 +12,10 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             float prepare = SkillSetting.PrepareTime;
             float range = SkillSetting.Range;
 
-            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning, center, range,
-                                                                                                prepare + SkillSetting.AttackDutation + 0.5f));
+            _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
+                                                                                                center, range, prepare));
 
             yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: prepare);
-            PlaySkillVfx();
 
             yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
                 () => ExecuteExplosion(center, range));
@@ -26,6 +25,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
         private IEnumerator ExecuteExplosion(Vector3 center, float range)
         {
+            PlaySkillVfx();
             DamageInCircle(center, range);
             yield break;
         }

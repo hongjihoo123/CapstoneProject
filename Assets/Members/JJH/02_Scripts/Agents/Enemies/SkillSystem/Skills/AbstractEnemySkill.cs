@@ -122,7 +122,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 
             _playingVfxHash = _skillModule.GetSkillSetting(SkillSO).VFXParam.HashValue;
             _hasPlayingVfx = true;
-            _enemy.VFXModule.PlayVfx(_playingVfxHash);
+            _enemy.VFXModule.PlayVfx(_playingVfxHash, transform.parent.position, Quaternion.identity);
         }
 
         private void StopSkillVfx()
@@ -130,7 +130,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             if (!_hasPlayingVfx)
                 return;
 
-            _enemy.VFXModule.StopVfx(_playingVfxHash);
             _hasPlayingVfx = false;
         }
 
