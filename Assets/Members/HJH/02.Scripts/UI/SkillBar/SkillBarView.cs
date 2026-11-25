@@ -70,6 +70,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 _subscribed.SkillDenied += HandleSkillDenied;
                 _subscribed.SkillReady += HandleSkillReady;
+                _subscribed.CooldownReduced += HandleCooldownReduced;
             }
 
             _hud = PlayerHudSource.Instance;
@@ -94,6 +95,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 _subscribed.SkillDenied -= HandleSkillDenied;
                 _subscribed.SkillReady -= HandleSkillReady;
+                _subscribed.CooldownReduced -= HandleCooldownReduced;
             }
 
             if (_hud != null)
@@ -112,6 +114,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             if (TryGetView(slot, out SkillSlotView view))
                 view.PlayReady();
+        }
+
+        // 쿨이 줄거나 초기화됨: 그 칸 아이콘이 반응
+        private void HandleCooldownReduced(SkillSlotId slot, float seconds, bool reset)
+        {
+            if (TryGetView(slot, out SkillSlotView view))
+                view.PlayRefund(seconds, reset);
         }
 
         private void LateUpdate()

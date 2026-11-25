@@ -15,6 +15,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
         private Vector3 _velocity;
         private Vector3 _followPosition;
 
+        // 카메라가 따라가는 대상 (효과음 "귀" 위치가 이걸 따라감)
+        public Transform Target => target;
+
         private void OnEnable()
         {
             if (target == null)

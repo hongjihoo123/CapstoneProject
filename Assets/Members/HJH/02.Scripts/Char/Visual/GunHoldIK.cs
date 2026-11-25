@@ -84,6 +84,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _anim = GetComponent<CharacterAnimator>();
         }
 
+        private Animator _standalone;
+
+        // 플레이어(CharacterModel/CharacterAnimator) 없이 모델 단독으로 쓸 때(픽 화면): 이 애니메이터를 "낮춰 든 자세"로 고정해서 잡음
+        public void BindStandalone(Animator animator)
+        {
+            _standalone = animator;
+        }
+
         private void OnDisable()
         {
             _bound = null;
@@ -92,7 +100,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void LateUpdate()
         {
-            Animator animator = _model != null ? _model.Animator : null;
+            Animator animator = _standalone != null ? _standalone : _model != null ? _model.Animator : null;
             if (animator == null || animator.runtimeAnimatorController == null)
             {
                 _bound = null;
@@ -101,10 +109,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
             if (animator != _bound)
                 Bind(animator);
-            if (!_ready || _anim == null)
+            if (!_ready || (_anim == null && _standalone == null))
                 return;
 
-            CharacterAnimator.GunHold hold = _anim.Hold;
+            CharacterAnimator.GunHold hold = _anim != null ? _anim.Hold : CharacterAnimator.GunHold.Idle;
             bool lowered = hold == CharacterAnimator.GunHold.Idle || hold == CharacterAnimator.GunHold.Run;
             bool aiming = hold == CharacterAnimator.GunHold.Aim || hold == CharacterAnimator.GunHold.Shoot;
             float target = lowered || hold == CharacterAnimator.GunHold.Aim ? weight : 0f;

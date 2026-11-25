@@ -45,6 +45,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.FinisherArmed += OnFinisherArmed;
             _hud.FinisherExpired += OnFinisherExpired;
             _hud.FinisherReleased += OnFinisherReleased;
+            _hud.UltimateChained += OnUltimateChained;
             _bound = true;
         }
 
@@ -57,7 +58,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.FinisherArmed -= OnFinisherArmed;
             _hud.FinisherExpired -= OnFinisherExpired;
             _hud.FinisherReleased -= OnFinisherReleased;
+            _hud.UltimateChained -= OnUltimateChained;
         }
+
+        // 치명 연쇄로 궁극기가 초기화됨: 같은 배너를 금색으로 띄움 (HitFeel 은 CritSystem 쪽에서 이미 재생)
+        private void OnUltimateChained(int chain) =>
+            Show($"CHAIN  ×{chain}", "궁극기 초기화", "바로 다시 쓸 수 있어요", string.Empty, HudUiKit.Gold);
 
         private void OnComboLanded(ElementComboBook.Recipe combo) =>
             Show("COMBO", combo.Name, ComboLoadout.EffectOf(combo.Name), KeySequence(combo.Sequence), HudUiKit.Cyan);

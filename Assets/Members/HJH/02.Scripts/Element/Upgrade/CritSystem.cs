@@ -1,7 +1,9 @@
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.KYR._01.Scripts.Player;
+using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using UnityEngine;
 
@@ -16,10 +18,10 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
     {
         public const float BaseMultiplier = 1.5f;    // 치명 기본 배율 (치명 피해 강화는 여기에 더함)
         private const float RefundCapPerSecond = 0.5f;   // 쿨 환류 합계 상한 (초당 0.5초)
-        private const float UltDefaultWindow = 3f;       // 궁극기 파편 치명 집계 기본 시간
-        private const int UltDefaultNeed = 8;            // 궁극기 초기화에 필요한 기본 파편 치명 횟수
-        private const int UltDefaultChainCap = 1;        // 기본 연쇄 상한
-        private const float ChainBaseTime = 6f;          // 연쇄가 이어지는 기본 시간
+        public const float UltDefaultWindow = 3f;       // 궁극기 파편 치명 집계 기본 시간
+        public const int UltDefaultNeed = 8;            // 궁극기 초기화에 필요한 기본 파편 치명 횟수
+        public const int UltDefaultChainCap = 1;        // 기본 연쇄 상한
+        public const float ChainBaseTime = 6f;          // 연쇄가 이어지는 기본 시간
         private const float UltCountAnyTime = 4f;        // 정밀 집계: 궁극기 후 이 시간 동안
         private const int StackMax = 5;
         private const float StackTime = 3f;
@@ -42,6 +44,9 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
 
         // 스킬 시전 알림 (칸). 대쉬 시 게이지 같은 구독자가 듣는다
         public static event Action<SkillSlotId> Cast;
+
+        // 궁극기 쿨이 초기화돼서 연쇄가 한 단계 올라감 (새 연쇄 단계). 배너/연출이 듣는다
+        public static event Action<int> UltChained;
 
         // ---- 상태
         private static int _stacks;
@@ -82,7 +87,13 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             Suppressed = false;
             Landed = null;
             Cast = null;
+            UltChained = null;
         }
+
+        // 스탯 트리(PlayerStatId.CritChance / CritDamage) 몫. 스킬 트리 값에 더해서 쓰고, 스탯 창에도 같은 값이 보임
+        // CritDamage 는 배율에 더하는 값 (0.5 = 치명 배율 +0.5)
+        public static float StatValue(PlayerAgent player, PlayerStatId id) =>
+            player != null && player.Stats != null && player.Stats.Tree != null ? player.Stats.Tree.Get(id) : 0f;
 
         public static SkillUpgradeScope SlotNow()
         {
@@ -199,7 +210,7 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
 
             if (!sure)
             {
-                float chance = ChanceFor(slot, target);
+                float chance = Mathf.Clamp01(ChanceFor(slot, target) + StatValue(player, PlayerStatId.CritChance));
                 if (chance <= 0f || UnityEngine.Random.value >= chance)
                 {
                     if (slot == SkillUpgradeScope.Attack)
@@ -209,7 +220,7 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             }
 
             crit = true;
-            amount *= MultiplierFor(slot, target, distance);
+            amount *= MultiplierFor(slot, target, distance) + StatValue(player, PlayerStatId.CritDamage);
             OnCrit(player, slot);
             return amount;
         }
@@ -345,6 +356,20 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             return Mathf.Max(1, need);
         }
 
+        // ---- HUD 가 읽는 값: 궁극기 초기화 규칙과 지금 진행도
+        public static float UltWindowSeconds() => UltDefaultWindow + SkillUpgrades.Exact(SkillUpgradeKind.UltWindow, SkillUpgradeScope.Ultimate);
+        public static float ChainSeconds() => ChainTime();
+        public static int UltChainStage => _ultChain;
+
+        // 파편 치명을 세는 중이면 true (지금까지 횟수, 필요한 횟수, 남은 집계 시간). 연쇄 상한에 닿았으면 세지 않음
+        public static bool TryGetUltProgress(out int crits, out int need, out float timeLeft)
+        {
+            crits = _ultCrits;
+            need = UltNeed();
+            timeLeft = Mathf.Max(0f, _ultWindowUntil - Time.time);
+            return _ultCounting && timeLeft > 0f && _ultChain < UltChainCap();
+        }
+
         public static int UltChainCap() =>
             UltDefaultChainCap + Mathf.RoundToInt(SkillUpgrades.Exact(SkillUpgradeKind.ChainCap, SkillUpgradeScope.Ultimate));
 
@@ -363,6 +388,11 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             _ultCarry = true;
             _chainUntil = now + ChainTime();
             player.SkillFsm.ReduceCooldown(SkillSlotId.Ultimate, 9999f);
+
+            // 초기화되는 순간의 한 방: 짧은 멈춤 + 흔들림 + 살짝 다가감, 배너는 UltChained 를 듣는 쪽이 띄움
+            HitFeel.Play(0.07f, 0.4f);
+            HitFeel.Zoom(0.045f, 0.4f);
+            UltChained?.Invoke(_ultChain);
         }
     }
 }

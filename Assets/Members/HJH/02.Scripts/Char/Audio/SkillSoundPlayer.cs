@@ -17,7 +17,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
     public class SkillSoundPlayer : MonoBehaviour
     {
         private const string Folder = "HJH/SkillSounds";
-        private const int Voices = 16;
         private const float AnimEventWindow = 4f;   // 스킬 쓴 뒤 이 시간 안에 온 애니 이벤트만 그 스킬 것으로 봄
 
         private sealed class Caster
@@ -40,9 +39,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
 
         private readonly Dictionary<SkillStateModule, Caster> _casters = new();
         private readonly List<Pending> _pending = new();
-        private readonly List<AudioSource> _sources = new();
-        private readonly Dictionary<AudioSource, float> _stopAt = new();
-        private int _next;
         private float _nextScan;
 
         public static int PlayedCount { get; private set; }
@@ -69,8 +65,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         {
             if (skill == null)
                 return null;
-            // SfxBank 의 skillSounds 가 꺼져 있으면 전용 소리 없음 → 재생도 안 하고, 공통 소리도 안 막음
-            if (Sfx.Bank == null || !Sfx.Bank.skillSounds)
+            // SoundLibrary 의 skillSounds 가 꺼져 있으면 전용 소리 없음 → 재생도 안 하고, 공통 소리도 안 막음
+            if (SoundManager.Library == null || !SoundManager.Library.skillSounds)
                 return null;
             if (_bySkill == null)
             {
@@ -206,25 +202,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         {
             if (e.clip == null)
                 return;
-            SfxBank bank = Sfx.Bank;
-            if (bank != null && bank.muteFxSounds)
+            SoundLibrary library = SoundManager.Library;
+            if (library != null && library.muteFxSounds)
                 return;
-            float now = Time.unscaledTime;
-            if (now >= e.LastPlayed && now - e.LastPlayed < e.minInterval)
-                return;
-            e.LastPlayed = now;
 
-            AudioSource source = NextSource();
-            source.clip = e.clip;
-            source.loop = e.loop;
-            source.volume = Mathf.Clamp01(e.volume * Sfx.MasterVolume);
-            source.pitch = 1f + UnityEngine.Random.Range(-e.pitchRandom, e.pitchRandom);
-            source.panStereo = PanOf(position);
-            source.Play();
+            SoundHandle handle = SoundManager.Play(e.Cue, position);
+            if (!handle.IsPlaying)
+                return;   // 막혔음 (너무 멀다·간격·통 부족)
             if (e.holdTime > 0f)
-                _stopAt[source] = Time.time + e.holdTime;
-            else
-                _stopAt.Remove(source);
+                handle.StopAfter(e.holdTime);
             PlayedCount++;
         }
 
@@ -237,21 +223,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
                 Pending p = _pending[i];
                 _pending.RemoveAt(i);
                 Play(p.Entry, p.Position);
-            }
-
-            if (_stopAt.Count > 0)
-            {
-                List<AudioSource> done = null;
-                foreach (var pair in _stopAt)
-                    if (pair.Key == null || Time.time >= pair.Value)
-                        (done ??= new List<AudioSource>()).Add(pair.Key);
-                if (done != null)
-                    foreach (AudioSource s in done)
-                    {
-                        _stopAt.Remove(s);
-                        if (s != null)
-                            s.Stop();
-                    }
             }
 
             ScanCasters();
@@ -280,42 +251,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             if (model == null)
                 model = caster.GetComponentInChildren<CharacterModel>();
             return model != null && model.Animator != null && model.Animator.isActiveAndEnabled;
-        }
-
-        private AudioSource NextSource()
-        {
-            if (_sources.Count == 0)
-            {
-                for (int i = 0; i < Voices; i++)
-                {
-                    var s = gameObject.AddComponent<AudioSource>();
-                    s.playOnAwake = false;
-                    s.spatialBlend = 0f;
-                    _sources.Add(s);
-                }
-            }
-            for (int i = 0; i < _sources.Count; i++)
-            {
-                int index = (_next + i) % _sources.Count;
-                if (!_sources[index].isPlaying)
-                {
-                    _next = (index + 1) % _sources.Count;
-                    return _sources[index];
-                }
-            }
-            AudioSource oldest = _sources[_next];
-            _next = (_next + 1) % _sources.Count;
-            oldest.Stop();
-            return oldest;
-        }
-
-        private static float PanOf(Vector3 position)
-        {
-            Camera cam = Camera.main;
-            if (cam == null)
-                return 0f;
-            Vector3 view = cam.WorldToViewportPoint(position);
-            return Mathf.Clamp((view.x - 0.5f) * 1.2f, -0.6f, 0.6f);
         }
 
         // 이펙트 칸 객체 → 필드 이름 (castFx, impactFx ...)

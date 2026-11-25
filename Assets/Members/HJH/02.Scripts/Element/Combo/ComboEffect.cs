@@ -112,7 +112,9 @@ namespace Assets.Members.HJH._02.Scripts.Element
         {
             string sign = mod.value >= 0f ? "+" : "-";
             float abs = UnityEngine.Mathf.Abs(mod.value);
-            return mod.type == StatModifierType.Flat ? $"{sign}{abs:0}" : $"{sign}{abs * 100f:0}%";
+            // 1 미만의 고정값은 비율 스탯(피해 감소 등)이라 % 로 보여줌
+            bool whole = mod.type == StatModifierType.Flat && (abs >= 1f || abs == 0f);
+            return whole ? $"{sign}{abs:0}" : $"{sign}{abs * 100f:0}%";
         }
 
         public static string StatName(PlayerStatId stat) => stat switch

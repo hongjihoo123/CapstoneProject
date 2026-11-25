@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Assets.Members.HJH._02.Scripts.Element;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.Tutorial;
@@ -13,6 +14,7 @@ using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using UnityEngine.Video;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
@@ -87,6 +89,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private TMP_Text detailElement;
         [SerializeField] private Image detailLine;
         [SerializeField] private TMP_Text detailDesc;
+        [Header("스킬 미리보기 영상 (SkillData.PreviewClip)")]
+        [SerializeField, Tooltip("영상이 그려지는 칸")] private RawImage detailPreview;
+        [SerializeField, Tooltip("영상 재생기 (소리 없음, 반복)")] private VideoPlayer previewPlayer;
+        [SerializeField, Tooltip("영상이 없는 스킬에 보이는 안내")] private TMP_Text previewNote;
         [SerializeField] private GameObject placeholder;
         [SerializeField] private Image placeholderGlow;
         [SerializeField] private Image placeholderDisc;
@@ -94,6 +100,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private TMP_Text placeholderInitial;
         [SerializeField] private Image placeholderRing;
         [SerializeField] private TMP_Text pageText;
+        [SerializeField, Tooltip("준비 안 된 캐릭터를 고르려 할 때 잠깐 뜨는 글자")] private TMP_Text notReadyText;
         [SerializeField] private RectTransform comboArea;
         [SerializeField] private TMP_Text comboHint;
         [SerializeField] private RectTransform startButton;
@@ -109,9 +116,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             public readonly Sprite icon;
             public readonly bool hasElement;
             public readonly ElementType element;
+            public readonly SkillData skill;
 
             public SkillEntry(string key, Sprite icon, string title, string description, SkillData skill)
             {
+                this.skill = skill;
                 this.key = key;
                 this.icon = icon;
                 this.title = title;
@@ -227,6 +236,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 animator.runtimeAnimatorController = data.AnimatorController;
                 animator.applyRootMotion = false;
                 animator.cullingMode = AnimatorCullingMode.AlwaysAnimate;
+
+                // 게임에선 GunHoldIK 가 양손을 총에 맞춰 줌 -> 여기도 붙여야 팔이 클립 원본 자세로 어색하게 안 뜸 (스크립트 제거 뒤에 붙임)
+                if (!animator.TryGetComponent(out GunHoldIK ik))
+                    ik = animator.gameObject.AddComponent<GunHoldIK>();
+                ik.BindStandalone(animator);
             }
 
             holder.SetActive(true);
@@ -264,10 +278,34 @@ namespace Assets.Members.HJH._02.Scripts.UI
         public void SelectPrev() => SelectCharacter((_selected + Count - 1) % Mathf.Max(1, Count));
         public void SelectNext() => SelectCharacter((_selected + 1) % Mathf.Max(1, Count));
 
+        // 아직 모델이 없는 캐릭터는 고를 수 없음 (체인 브루저, 룬 마검사). 모델이 들어오면 저절로 열림
+        private static bool IsReady(CharacterData data) => data != null && data.Model != null;
+
+        private void ShowNotReady()
+        {
+            if (notReadyText == null)
+                return;
+
+            notReadyText.DOKill();
+            notReadyText.rectTransform.DOKill();
+            notReadyText.gameObject.SetActive(true);
+            notReadyText.alpha = 1f;
+            notReadyText.rectTransform.localScale = Vector3.one * 1.12f;
+            notReadyText.rectTransform.DOScale(1f, 0.18f).SetEase(Ease.OutQuad).SetUpdate(true);
+            notReadyText.DOFade(0f, 0.35f).SetDelay(1.3f).SetUpdate(true)
+                .OnComplete(() => notReadyText.gameObject.SetActive(false));
+        }
+
         public void SelectCharacter(int index)
         {
             if (_busy || index < 0 || index >= Count || index == _selected)
                 return;
+
+            if (!IsReady(roster[index]))
+            {
+                ShowNotReady();
+                return;
+            }
 
             _selected = index;
             SelectionChanges++;
@@ -422,7 +460,62 @@ namespace Assets.Members.HJH._02.Scripts.UI
             detailElement.color = chip;
             detailLine.color = new Color(chip.r, chip.g, chip.b, 0.5f);
             detailDesc.text = string.IsNullOrEmpty(entry.description) ? "설명 준비 중" : entry.description;
+            RefreshPreview(entry);
         }
+
+        // 스킬 미리보기 영상 칸을 굽는가. 영상이 아직 없어서 꺼 둠 (필드가 비면 RefreshPreview 는 아무것도 안 함)
+        private const bool BakePreviewFrame = false;
+
+        private RenderTexture _previewTexture;
+        private VideoClip _previewClip;
+
+        // 고른 스킬의 미리보기 영상을 반복 재생. 영상이 없으면 안내 글자
+        private void RefreshPreview(SkillEntry entry)
+        {
+            if (detailPreview == null || previewPlayer == null)
+                return;
+
+            VideoClip clip = entry.skill != null ? entry.skill.PreviewClip : null;
+            detailPreview.gameObject.SetActive(clip != null);
+            if (previewNote != null)
+                previewNote.gameObject.SetActive(clip == null);
+
+            if (clip == null)
+            {
+                previewPlayer.Stop();
+                _previewClip = null;
+                return;
+            }
+
+            if (clip == _previewClip && previewPlayer.isPlaying)
+                return;
+
+            _previewClip = clip;
+            if (_previewTexture == null || _previewTexture.width != (int)clip.width || _previewTexture.height != (int)clip.height)
+            {
+                ReleasePreviewTexture();
+                _previewTexture = new RenderTexture((int)clip.width, (int)clip.height, 0) { name = "SkillPreview" };
+                previewPlayer.targetTexture = _previewTexture;
+                detailPreview.texture = _previewTexture;
+            }
+
+            previewPlayer.Stop();
+            previewPlayer.clip = clip;
+            previewPlayer.isLooping = true;
+            previewPlayer.audioOutputMode = VideoAudioOutputMode.None;
+            previewPlayer.Play();
+        }
+
+        private void ReleasePreviewTexture()
+        {
+            if (_previewTexture == null)
+                return;
+            _previewTexture.Release();
+            Destroy(_previewTexture);
+            _previewTexture = null;
+        }
+
+        private void OnDestroy() => ReleasePreviewTexture();
 
         private static string ElementLabel(SkillEntry entry) =>
             entry.hasElement ? ElementComboBook.KoreanName(entry.element) + " 속성" : (entry.key == "패시브" ? "상시" : "무속성");
@@ -771,7 +864,35 @@ namespace Assets.Members.HJH._02.Scripts.UI
             detailDesc.textWrappingMode = TextWrappingModes.Normal;
             detailDesc.overflowMode = TextOverflowModes.Ellipsis;
             detailDesc.lineSpacing = 6f;
-            HudUiKit.Place(detailDesc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -62f), new Vector2(ColumnWidth, 150f));
+            HudUiKit.Place(detailDesc.rectTransform, new Vector2(0f, 1f), new Vector2(0f, -62f), new Vector2(ColumnWidth, 110f));
+
+            // 미리보기 영상 칸은 영상이 준비될 때까지 굽지 않음 (켜려면 BakePreviewFrame = true 로 바꾸고 다시 굽기)
+            if (!BakePreviewFrame)
+                return;
+
+            // 미리보기 영상: 설명 아래 빈 공간. 16:9 칸 + 영상이 없을 때 안내
+            RectTransform frame = HudUiKit.NewRect("Preview", detail);
+            HudUiKit.Place(frame, new Vector2(0f, 1f), new Vector2(0f, -184f), new Vector2(ColumnWidth, ColumnWidth * 9f / 16f));
+            Image previewBack = HudUiKit.NewImage("Back", frame, null, new Color(0.02f, 0.04f, 0.07f, 0.9f));
+            HudUiKit.Stretch(previewBack.rectTransform);
+            detailPreview = HudUiKit.NewRect("Video", frame).gameObject.AddComponent<RawImage>();
+            detailPreview.raycastTarget = false;
+            HudUiKit.Stretch(detailPreview.rectTransform);
+            previewPlayer = detail.gameObject.AddComponent<VideoPlayer>();
+            previewPlayer.playOnAwake = false;
+            previewPlayer.isLooping = true;
+            previewPlayer.renderMode = VideoRenderMode.RenderTexture;
+            previewPlayer.audioOutputMode = VideoAudioOutputMode.None;
+            previewNote = HudUiKit.NewText("Note", frame, "미리보기 영상 준비 중", 18f, HudUiKit.Label * 0.8f, TextAlignmentOptions.Center);
+            HudUiKit.Stretch(previewNote.rectTransform);
+            Image previewEdge = HudUiKit.NewImage("Edge", frame, null, new Color(1f, 1f, 1f, 0.12f));
+            previewEdge.raycastTarget = false;
+            previewEdge.rectTransform.anchorMin = new Vector2(0f, 0f);
+            previewEdge.rectTransform.anchorMax = new Vector2(1f, 0f);
+            previewEdge.rectTransform.pivot = new Vector2(0.5f, 0f);
+            previewEdge.rectTransform.offsetMin = Vector2.zero;
+            previewEdge.rectTransform.offsetMax = new Vector2(0f, 1.5f);
+            detailPreview.gameObject.SetActive(false);
         }
 
         // 가운데: 모델 없는 캐릭터용 원판 + 아래 쪽수 · 화살표
@@ -801,6 +922,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Stretch(pageText.rectTransform);
             BakeArrow(pager, "Prev", "<", 0f, SelectPrev);
             BakeArrow(pager, "Next", ">", 1f, SelectNext);
+
+            // 준비 안 된 캐릭터를 고르려 할 때 쪽수 위에 잠깐 뜨는 안내 (평소엔 꺼져 있음)
+            notReadyText = HudUiKit.NewText("NotReady", root, "아직 준비되지 않았습니다.", 28f, Warn, TextAlignmentOptions.Center, 2f);
+            HudUiKit.Place(notReadyText.rectTransform, new Vector2(0.5f, 0f), new Vector2(0f, 150f), new Vector2(560f, 44f));
+            notReadyText.gameObject.SetActive(false);
         }
 
         private static void BakeArrow(Transform parent, string name, string glyph, float side, UnityEngine.Events.UnityAction onClick)

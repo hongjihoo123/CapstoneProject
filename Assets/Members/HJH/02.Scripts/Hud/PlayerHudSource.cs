@@ -2,7 +2,9 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill;
 using Assets.Members.HJH._02.Scripts.Element;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.SkillSwap;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01_Scripts;
@@ -99,6 +101,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action<SkillSlotId> SkillDenied;
         public event Action<SkillSlotId> SkillReady;
         public event Action<CharacterData> CharacterChanged;
+        // 치명 연쇄로 궁극기 쿨이 초기화됨 (인자 = 새 연쇄 단계). 배너가 듣는다
+        public event Action<int> UltimateChained;
 
         // A skill just added an input to the combo trail (ComboChanged follows right after).
         public event Action ComboInputAdded;
@@ -152,7 +156,69 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             if (stats == null || stats.Tree == null)
                 return 0f;
 
-            return stats.Get(stat) - stats.GetExcluding(stat, ComboStatBuff.IsComboSource);
+            // 콤보 효과 + 스킬이 건 시간제 버프(BuffSkill, 원소 스킬의 자기 효과 등)가 준 몫
+            return stats.Get(stat) - stats.Tree.GetExcludingModifiers(stat, m => m.IsTimed || ComboStatBuff.IsComboSource(m.Source));
+        }
+
+        // 궁극기 초기화 규칙 (치명 연쇄): 설명 글과 진행도 표시용. 숫자는 스킬 트리 강화가 반영된 지금 값
+        public readonly struct UltRule
+        {
+            public readonly int Need;
+            public readonly float Window;
+            public readonly float ChainTime;
+            public readonly int Stage;
+            public readonly int Cap;
+
+            public UltRule(int need, float window, float chainTime, int stage, int cap)
+            {
+                Need = need; Window = window; ChainTime = chainTime; Stage = stage; Cap = cap;
+            }
+        }
+
+        public UltRule UltimateRule => new(CritSystem.UltNeed(), CritSystem.UltWindowSeconds(), CritSystem.ChainSeconds(),
+            CritSystem.UltChainStage, CritSystem.UltChainCap());
+
+        public bool TryGetUltimateProgress(out int crits, out int need, out float timeLeft) =>
+            CritSystem.TryGetUltProgress(out crits, out need, out timeLeft);
+
+        // 스킬이 건 시간제 스탯 버프 하나 (콤보 효과는 따로 ComboList 로 나옴)
+        public readonly struct TimedBuff
+        {
+            public readonly string Name;
+            public readonly PlayerStatId Stat;
+            public readonly StatModifierType Type;
+            public readonly float Value;
+            public readonly float Left;
+            public readonly float Total;
+
+            public TimedBuff(string name, PlayerStatId stat, StatModifierType type, float value, float left, float total)
+            {
+                Name = name; Stat = stat; Type = type; Value = value; Left = left; Total = total;
+            }
+        }
+
+        private readonly List<(PlayerStatId Stat, StatModifier Modifier, float Remaining)> _timedScratch = new();
+
+        // 지금 걸려 있는 시간제 스킬 버프를 `into` 에 채움 (비우고 시작)
+        public void CollectTimedBuffs(List<TimedBuff> into)
+        {
+            into.Clear();
+            var stats = Player != null ? Player.Stats : null;
+            if (stats == null || stats.Tree == null)
+                return;
+
+            _timedScratch.Clear();
+            stats.Tree.CollectTimed(_timedScratch);
+            foreach (var t in _timedScratch)
+            {
+                string name = t.Modifier.Source switch
+                {
+                    SkillData skill => skill.DisplayName,
+                    ElementSkillCast cast => cast.Skill.DisplayName,
+                    _ => "스킬 효과"
+                };
+                into.Add(new TimedBuff(name, t.Stat, t.Modifier.Type, t.Modifier.Value, t.Remaining, t.Modifier.Duration));
+            }
         }
 
         public SlotInfo GetSlot(SkillSlotId slot)
@@ -278,6 +344,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             _skills.SkillUsed += HandleSkillUsed;
             _skills.SkillDenied += HandleSkillDenied;
             _skills.SkillReady += HandleSkillReady;
+            CritSystem.UltChained += HandleUltChained;
 
             if (comboChain != null)
             {
@@ -312,6 +379,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             _skills.SkillUsed -= HandleSkillUsed;
             _skills.SkillDenied -= HandleSkillDenied;
             _skills.SkillReady -= HandleSkillReady;
+            CritSystem.UltChained -= HandleUltChained;
 
             if (comboChain != null)
             {
@@ -344,6 +412,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         private void HandleSkillUsed(SkillUsedInfo info) => SkillUsed?.Invoke(info.Slot, info.Data);
         private void HandleSkillDenied(SkillSlotId slot) => SkillDenied?.Invoke(slot);
         private void HandleSkillReady(SkillSlotId slot) => SkillReady?.Invoke(slot);
+        private void HandleUltChained(int chain) => UltimateChained?.Invoke(chain);
         private void HandleCharacterChanged(CharacterData character) => CharacterChanged?.Invoke(character);
 
         private void HandleComboInput(bool shifted)

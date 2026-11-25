@@ -18,6 +18,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Tooltip("줄어든 뒤 떠 있는 시간")] private float floatTime = 0.5f;
         [SerializeField] private float fadeOutTime = 0.2f;
 
+        public enum Motion { Classic, Arc, Bounce, Elastic, Swing }
+
+        [Header("움직임 종류 (이징)")]
+        [SerializeField, Tooltip("켜면 숫자마다 아래 종류 중 하나를 무작위로 씀")] private bool randomMotion = true;
+        [SerializeField, Tooltip("랜덤이 꺼져 있을 때 쓰는 종류")] private Motion fixedMotion = Motion.Classic;
+        [SerializeField, Tooltip("랜덤으로 뽑을 종류 (비면 전부)")] private Motion[] motionPool = { Motion.Classic, Motion.Arc, Motion.Bounce, Motion.Elastic, Motion.Swing };
+
+        [SerializeField, Tooltip("시작 위치(체력바 윗면)에서 올라가는 최대 높이(m). 곡선은 이 값에 맞춰 늘고 줄어듦")] private float maxRise = 0.9f;
+        [SerializeField, Tooltip("그리는 순서. 체력바(월드 캔버스)보다 크게 해서 항상 앞에 보이게")] private int sortingOrder = 500;
+
+        private void Awake()
+        {
+            if (text != null && text.TryGetComponent(out Renderer meshRenderer))
+                meshRenderer.sortingOrder = sortingOrder;
+        }
+
         [Header("크기 (줄어든 뒤 = 1)")]
         [SerializeField, Tooltip("가장 클 때 크기: x 일반 / y 크리 / z 받은 피해")]
         private Vector3 peakScale = new(1.4f, 1.7f, 1.3f);
@@ -64,6 +80,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _peak;
         private float _time;
         private bool _playing;
+        private Motion _motion;
+        private float _side;
+        private float _riseCap;
         private TMP_FontAsset _defaultFont;
 
         private static TMP_FontAsset _koreanFont;
@@ -100,6 +119,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _position = transform.position + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
             _time = 0f;
             _playing = true;
+            _side = Random.value < 0.5f ? -1f : 1f;
+            _riseCap = parameters.MaxRise > 0f ? parameters.MaxRise : maxRise;
+            _motion = string.IsNullOrEmpty(parameters.Text) ? PickMotion() : Motion.Classic;
 
             DamageNumberStyle style = parameters.NumberStyle;
             _peak = style switch
@@ -117,6 +139,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (isText)
             {
                 text.font = korean != null ? korean : _defaultFont;
+                DrawOnTop();
                 text.text = parameters.Text;
                 bool textCrit = style == DamageNumberStyle.Crit;
                 text.outlineColor = textCrit ? critOutline : normalOutline;
@@ -128,6 +151,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             bool isCrit = style == DamageNumberStyle.Crit;
             TMP_FontAsset chosen = isCrit ? CritFont : NumberFont;
             text.font = chosen != null ? chosen : _defaultFont;
+            DrawOnTop();
             text.text = Mathf.RoundToInt(parameters.Value).ToString();
 
             Look look = style switch
@@ -146,6 +170,46 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 
         public void Stop() => _playing = false;
+
+        // 적 몸/벽 뒤로 가려지지 않게: 깊이 검사를 끄고 가장 마지막에 그림 (글꼴을 바꾼 뒤마다 다시 적용)
+        private void DrawOnTop()
+        {
+            Material material = text.fontMaterial;
+            material.SetInt("unity_GUIZTestMode", (int)UnityEngine.Rendering.CompareFunction.Always);
+            material.renderQueue = 4000;
+        }
+
+        private Motion PickMotion()
+        {
+            if (!randomMotion)
+                return fixedMotion;
+            return motionPool != null && motionPool.Length > 0
+                ? motionPool[Random.Range(0, motionPool.Length)]
+                : (Motion)Random.Range(0, 5);
+        }
+
+        private static float OutBounce(float t)
+        {
+            const float n = 7.5625f, d = 2.75f;
+            if (t < 1f / d) return n * t * t;
+            if (t < 2f / d) { t -= 1.5f / d; return n * t * t + 0.75f; }
+            if (t < 2.5f / d) { t -= 2.25f / d; return n * t * t + 0.9375f; }
+            t -= 2.625f / d; return n * t * t + 0.984375f;
+        }
+
+        private static float OutElastic(float t)
+        {
+            if (t <= 0f) return 0f;
+            if (t >= 1f) return 1f;
+            return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * (2f * Mathf.PI / 3f)) + 1f;
+        }
+
+        private static float OutBack(float t)
+        {
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            float u = t - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
 
         private void Update()
         {
@@ -168,35 +232,75 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float holdEnd = popInTime + popHoldTime;
             float shrinkEnd = ShrinkEnd;
 
+            float lateral = 0f;
             float size;
             float rise;
-            if (_time < popInTime)
+            if (_motion == Motion.Classic)
             {
-                float t = _time / Mathf.Max(0.001f, popInTime);
-                size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));   // 빨리 커졌다가 끝에서 멈춤
-                rise = 0f;
-            }
-            else if (_time < holdEnd)
-            {
-                size = _peak;
-                rise = 0f;
-            }
-            else if (_time < shrinkEnd)
-            {
-                float t = Mathf.SmoothStep(0f, 1f, (_time - holdEnd) / Mathf.Max(0.001f, shrinkTime));
-                size = Mathf.Lerp(_peak, 1f, t);
-                rise = shrinkRise * t;
+                if (_time < popInTime)
+                {
+                    float t = _time / Mathf.Max(0.001f, popInTime);
+                    size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));   // 빨리 커졌다가 끝에서 멈춤
+                    rise = 0f;
+                }
+                else if (_time < holdEnd)
+                {
+                    size = _peak;
+                    rise = 0f;
+                }
+                else if (_time < shrinkEnd)
+                {
+                    float t = Mathf.SmoothStep(0f, 1f, (_time - holdEnd) / Mathf.Max(0.001f, shrinkTime));
+                    size = Mathf.Lerp(_peak, 1f, t);
+                    rise = shrinkRise * t;
+                }
+                else
+                {
+                    size = 1f;
+                    rise = shrinkRise + floatSpeed * (_time - shrinkEnd);
+                }
             }
             else
             {
-                size = 1f;
-                rise = shrinkRise + floatSpeed * (_time - shrinkEnd);
+                // 크기: 이징으로 튀어나왔다가 1 로 정착. 위치: 종류마다 다른 곡선 (전체 수명 q 0~1)
+                float q = Mathf.Clamp01(_time / Life);
+                float popTarget = Mathf.Lerp(1f, _peak, 0.7f);
+                float popP = Mathf.Clamp01(_time / (popInTime + popHoldTime + 0.12f));
+                float settle = Mathf.SmoothStep(0f, 1f, (_time - shrinkEnd) / Mathf.Max(0.001f, shrinkTime * 2f));
+                switch (_motion)
+                {
+                    case Motion.Arc:      // 옆으로 포물선을 그리며 튀어 올랐다 떨어짐
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, 1f - (1f - popP) * (1f - popP)), 1f, settle);
+                        rise = 4f * q * (1f - q) + 0.15f * q;
+                        lateral = _side * 0.9f * (1f - (1f - q) * (1f - q));
+                        break;
+                    case Motion.Bounce:   // 통통 튀며 자리 잡고 천천히 뜸
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.3f, popTarget, OutBounce(popP)), 1f, settle);
+                        rise = 0.55f * OutBounce(Mathf.Clamp01(_time / (Life * 0.55f))) + floatSpeed * 0.5f * q;
+                        break;
+                    case Motion.Elastic:  // 고무줄처럼 늘었다 줄었다 하며 위로
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.25f, popTarget, OutElastic(popP)), 1f, settle);
+                        rise = 0.75f * OutElastic(Mathf.Clamp01(_time / (Life * 0.7f)));
+                        break;
+                    default:              // Swing: 살짝 넘쳤다 돌아오며 좌우로 흔들림
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, OutBack(popP)), 1f, settle);
+                        rise = 0.95f * OutBack(q);
+                        lateral = _side * 0.3f * Mathf.Sin(q * Mathf.PI * 3f) * (1f - q);
+                        break;
+                }
             }
+
+            // 머리 위 체력바를 가리지 않게 올라가는 높이 제한 (Classic 포함)
+            if (_motion != Motion.Classic)
+                rise *= _riseCap / 0.95f;   // 곡선은 최대 약 0.95 기준으로 짜여 있어서 비율로 줄여 모양을 지킴
+            rise = Mathf.Min(rise, _riseCap * 1.15f);
 
             float alpha = 1f - Mathf.Clamp01((_time - (Life - fadeOutTime)) / Mathf.Max(0.001f, fadeOutTime));
 
-            transform.position = _position + Vector3.up * rise;
-            transform.localScale = Vector3.one * size * _scale;
+            Camera sideView = Camera.main;
+            Vector3 right = sideView != null ? sideView.transform.right : Vector3.right;
+            transform.position = _position + Vector3.up * rise + right * lateral;
+            transform.localScale = Vector3.one * Mathf.Max(0.01f, size) * _scale;
 
             Camera view = Camera.main;
             if (view != null)

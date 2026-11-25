@@ -121,6 +121,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             subtitleText.text = tree != null
                 ? characterName + " · 소울로 노드를 배웁니다. 윗 노드를 먼저 배워야 아래가 열립니다."
                 : characterName;
+            _subtitleBase = subtitleText.text;
 
             if (tree == null || tree.Nodes.Count == 0)
             {
@@ -220,10 +221,24 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
+        // 궁극기 탭에서만 보이는 기본 규칙. 숫자는 코드의 기본값(CritSystem)을 읽어서, 값이 바뀌어도 글이 맞음.
+        // 노드(초기화 필요 치명 횟수, 집계 시간, 연쇄 …)는 이 기본값을 바꾸는 것
+        private const string UltimateTab = "궁극기";
+        private string _subtitleBase;
+
+        private static string UltimateRuleText() =>
+            $"궁극기 파편이 {CritSystem.UltDefaultWindow:0.#}초 안에 치명타를 {CritSystem.UltDefaultNeed}번 터뜨리면 궁극기가 초기화됩니다.";
+
+        private static string UltimateRuleDetail() =>
+            UltimateRuleText() + $"\n\n초기화된 뒤 {CritSystem.ChainBaseTime:0.#}초 안에 궁극기를 다시 쓰면 연쇄가 이어집니다 (기본 {CritSystem.UltDefaultChainCap}번까지).\n" +
+            "아래 노드로 필요한 횟수, 집계 시간, 연쇄 상한을 바꿀 수 있습니다.";
+
         private void SelectTab(string tab)
         {
             _tab = tab;
             _selected = null;
+            if (_subtitleBase != null)
+                subtitleText.text = SkillTreeProgress.SameTab(tab, UltimateTab) ? UltimateRuleText() : _subtitleBase;
             BuildGraph();
             Refresh();
         }
@@ -370,7 +385,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             nodeKind.text = string.Empty;
             nodeRank.text = string.Empty;
             nodeEffect.text = string.Empty;
-            nodeDesc.text = "누르면 여기에 효과와 비용이 나옵니다.";
+            nodeDesc.text = SkillTreeProgress.SameTab(_tab, UltimateTab)
+                ? UltimateRuleDetail()
+                : "누르면 여기에 효과와 비용이 나옵니다.";
             nodeMessage.text = string.Empty;
             learnButton.gameObject.SetActive(false);
             refundButton.gameObject.SetActive(false);
@@ -511,10 +528,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Place(graphContent, new Vector2(0.5f, 1f), new Vector2(0f, -24f), new Vector2(10f, 10f));
             emptyText = Label("Empty", graph.transform, "", 28f, Muted, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(900f, 60f));
             emptyText.gameObject.SetActive(false);
-
-            // 범례: 그래프 칸 왼쪽 위 (노드는 가운데에 모여 있어서 비어 있음)
-            Label("Legend", graph.transform, "◆ 스탯 (여러 랭크)\n● 특성 (둘 중 하나)\n■ 계열 입구\n■(금색) 핵심\n선: 윗 노드를 먼저 배워야 열림", 16f, Muted,
-                TextAlignmentOptions.BottomLeft, new Vector2(0f, 0f), new Vector2(20f, 16f), new Vector2(300f, 110f));
 
             BuildSide();
             BuildTemplates();

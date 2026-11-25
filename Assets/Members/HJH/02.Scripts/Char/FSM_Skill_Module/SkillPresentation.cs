@@ -143,26 +143,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private static void PlayCastSound(SkillData skill, Vector3 at, float w)
         {
-            SfxBank bank = Sfx.Bank;
+            SoundLibrary bank = SoundManager.Library;
             if (bank == null || skill is ElementSkillBase e && HasOwnAudio(e.CastFx) || SkillSoundPlayer.ReplacesGenericCast(skill))
                 return;   // 이 스킬 전용 소리(SkillSoundData)가 있으면 그게 냄
-            SfxCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.cast : null;
-            SfxCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 시전음
-            Sfx.Play(cue ?? bank.skillCast, at, Mathf.Clamp(0.6f + 0.25f * w, 0.6f, 1f), PitchOf(w));
-            Sfx.Announce(own);   // 소리 고르기 창: 대신 쓴 공통 소리가 아니라 이 원소 칸으로 따라가게
+            SoundCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.cast : null;
+            SoundCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 시전음
+            SoundManager.Play(cue ?? bank.skillCast, at, Mathf.Clamp(0.6f + 0.25f * w, 0.6f, 1f), PitchOf(w));
         }
 
         private static void PlayImpactSound(SkillData skill, Vector3 at, float w)
         {
-            SfxBank bank = Sfx.Bank;
+            SoundLibrary bank = SoundManager.Library;
             if (bank == null || skill is ElementSkillBase e && HasOwnAudio(e.ImpactFx) || SkillSoundPlayer.ReplacesGenericImpact(skill))
                 return;
-            SfxCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.impact : null;
-            SfxCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 폭발음
-            Sfx.Play(cue ?? bank.skillImpact, at, Mathf.Clamp(0.65f + 0.2f * w, 0.65f, 1f), PitchOf(w));
+            SoundCue own = skill is ElementSkillBase ? bank.Of(skill.Element)?.impact : null;
+            SoundCue cue = own != null && own.HasClips ? own : null;   // 원소 칸이 비어 있으면 공통 폭발음
+            SoundManager.Play(cue ?? bank.skillImpact, at, Mathf.Clamp(0.65f + 0.2f * w, 0.65f, 1f), PitchOf(w));
             if (w >= 1.5f)
-                Sfx.Play(bank.heavyImpact, at, Mathf.Clamp01(w - 1f));
-            Sfx.Announce(own);
+                SoundManager.Play(bank.heavyImpact, at, Mathf.Clamp01(w - 1f));
         }
 
         private static float PitchOf(float w) => Mathf.Clamp(1.12f - 0.12f * w, 0.85f, 1.08f);

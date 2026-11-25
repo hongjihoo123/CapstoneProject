@@ -105,9 +105,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             HitFeel.Shake(deathShake, 0.4f);
             HitFeel.Zoom(deathZoom, deathSlowTime);
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
-                Sfx.Play(sounds.heavyImpact, transform.position, 1f, 0.7f);
+                SoundManager.Play(sounds.heavyImpact, transform.position, 1f, 0.7f);
         }
 
         private void HandleDamageTaken(float amount, GameObject source)
@@ -148,11 +148,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_animator != null)
                 _animator.PlayHit();
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
             {
-                SfxCue light = sounds.playerHurt.HasClips ? sounds.playerHurt : sounds.hit;
-                Sfx.Play(heavy ? sounds.heavyImpact : light, transform.position, heavy ? 1f : 0.7f, 0.8f);
+                SoundCue light = sounds.playerHurt.HasClips ? sounds.playerHurt : sounds.hit;
+                SoundManager.Play(heavy ? sounds.heavyImpact : light, transform.position, heavy ? 1f : 0.7f, 0.8f);
             }
         }
 

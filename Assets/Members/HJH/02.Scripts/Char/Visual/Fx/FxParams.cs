@@ -23,6 +23,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public string Text;
         // 데미지 숫자 모양 (일반 / 크리 / 내가 받은 피해)
         public DamageNumberStyle NumberStyle;
+        // 데미지 숫자가 시작점에서 올라갈 수 있는 최대 높이(m). 0 = 드라이버 기본값 (체력바를 안 가리게 호출 쪽이 정함)
+        public float MaxRise;
     }
 
     public enum DamageNumberStyle

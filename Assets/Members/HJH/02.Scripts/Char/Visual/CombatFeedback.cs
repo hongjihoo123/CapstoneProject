@@ -1,7 +1,9 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Audio;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01_Scripts;
+using Members.KYR._01.Scripts.UI;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
@@ -27,6 +29,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private Color critNumberColor = new(1f, 0.22f, 0.16f);
         [SerializeField, Tooltip("맞은 번쩍임 다음 프레임에 숫자가 뜨게 (SoD: 번쩍 → 숫자 순서)")]
         private float numberDelay = 0.033f;
+        [SerializeField, Tooltip("데미지 숫자 시작 높이: 몸통 중심에서 얼마나 아래(m). 클수록 배/다리 쪽")] private float numberBelowBody = 0.25f;
+        [SerializeField, Tooltip("숫자가 올라가다 멈추는 높이: 체력바 밑면에서 얼마나 떨어뜨릴지(m). 글자 크기까지 고려해서 넉넉히")] private float numberBarGap = 0.45f;
 
         [Header("Hit flash / knockback")]
         [SerializeField, Tooltip("적 몸 번쩍 시간: 일반 / 크리 (1~2프레임)")]
@@ -123,6 +127,27 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             UpdateMovementTrails();
         }
 
+        // LoL 처럼 숫자는 적 몸통 쪽(체력바 한참 아래)에서 뜨고, 체력바 밑면에 닿기 전에 멈추도록 올라갈 높이를 제한.
+        // start = 시작 위치, riseCap = 거기서 올라갈 수 있는 최대 높이
+        private void NumberSpot(Component target, Vector3 body, out Vector3 start, out float riseCap)
+        {
+            start = body - Vector3.up * numberBelowBody;
+            riseCap = 0.5f;
+
+            ModuleOwner owner = target.GetComponentInParent<ModuleOwner>();
+            Transform scope = owner != null ? owner.transform : target.transform;
+            HeadHealthBar bar = scope.GetComponentInChildren<HeadHealthBar>(true);
+            if (bar == null)
+                return;
+
+            float half = 0f;
+            if (bar.transform is RectTransform rect)
+                half = rect.rect.height * Mathf.Abs(rect.lossyScale.y) * 0.5f;
+            float barBottom = bar.transform.position.y - half;
+            // 글자 윗면이 바 밑면에서 numberBarGap 만큼 떨어진 곳까지만
+            riseCap = Mathf.Clamp(barBottom - start.y - numberBarGap, 0.1f, 0.9f);
+        }
+
         private void HandleDamageDealt(DamageDealtInfo info)
         {
             if (info.Target is not Component component)
@@ -156,7 +181,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             // 2) 다음 프레임에 숫자. 크리는 고정 빨강(크리라는 게 바로 보이게), 일반은 주황에 원소 색을 조금
             Color numberColor = crit ? critNumberColor
                 : skillHit ? Color.Lerp(normalNumberColor, elementColor, 0.35f) : normalNumberColor;
-            Vector3 numberAt = body + Vector3.up * 0.7f;
+            NumberSpot(component, body, out Vector3 numberAt, out float numberRise);
             float amount = info.Amount;
             // 크리 > 약한 피해(흰색) > 원소 스킬 = 마법(파랑) > 그 외 = 물리(주황)
             // (위의 crit 는 연출용이라 기준이 낮음(30). 숫자 모양은 따로: 약점/처치/아주 큰 한 방만 크리 숫자)
@@ -168,9 +193,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 : DamageNumberStyle.Normal;
             float numberScale = numberCrit ? 1.3f : weakHit ? 0.8f : 0.9f;
             if (numberDelay > 0f)
-                Fx.After(numberDelay, () => Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style));
+                Fx.After(numberDelay, () => Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style, numberRise));
             else
-                Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style);
+                Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style, numberRise);
 
             bool big = crit;
             // 원소 스킬 피격은 스킬 에셋의 PBR 피격 이펙트가 맡음 → 납작한 불꽃은 일반 공격에만
@@ -202,12 +227,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             bool strong = IsStrongKill(info, source);
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
             {
-                Sfx.Play(info.IsWeakpoint ? sounds.weakpointHit : sounds.hit, impact, big ? 1f : 0.8f);
+                SoundManager.Play(info.IsWeakpoint ? sounds.weakpointHit : sounds.hit, impact, big ? 1f : 0.8f);
                 if (info.Killed && !strong)
-                    Sfx.Play(sounds.kill, impact);
+                    SoundManager.Play(sounds.kill, impact);
             }
 
             if (info.Killed)
@@ -349,13 +374,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 ScreenPulse.ImpactFrame(s.impactFrameTime);
             Fx.Shockwave(position + Vector3.up * 0.1f, color, 1.6f);
 
-            Sfx.Punch(s.volumeGain, s.volumeHold, s.volumeRelease);
-            SfxBank sounds = Sfx.Bank;
+            SoundManager.Punch(s.volumeGain, s.volumeHold, s.volumeRelease);
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds == null)
                 return;
-            Sfx.Play(sounds.kill, impact, s.killVolume, s.killPitch);
+            SoundManager.Play(sounds.kill, impact, s.killVolume, s.killPitch);
             if (s.layerHeavyImpact)
-                Sfx.Play(sounds.heavyImpact, impact, 1f, 0.8f);
+                SoundManager.Play(sounds.heavyImpact, impact, 1f, 0.8f);
         }
 
         // ------------------------------------------------ 섬광
@@ -382,8 +407,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             Vector3 direction = shot.End - shot.Start;
             GunnerFx.Shot(shot.Start, direction, shot.Color, shot.Empowered);   // 총구 섬광 + 하얀 심 + 순간 조명 (강화탄은 파동·화면 펄스)
-            if (Sfx.Bank != null)
-                Sfx.Play(shot.Empowered ? Sfx.Bank.empoweredShot : Sfx.Bank.shot, shot.Start);
+            if (SoundManager.Library != null)
+                SoundManager.Play(shot.Empowered ? SoundManager.Library.empoweredShot : SoundManager.Library.shot, shot.Start);
 
             // Travelling shots get their orb from HandleProjectileLaunched; instant shots get a tracer.
             if (!shot.Projectile)
@@ -447,7 +472,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Fx.Swipe(swing.Origin, swing.Reach, shape, swing.Color, swing.Delay, swing.Duration);
 
             // 휘두르는 소리는 칼날이 실제로 지나갈 때 (Delay 뒤). 마지막 타는 낮고 크게
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds == null || swing.Origin == null)
                 return;
             bool finisher = swing.Step == swing.StepCount - 1;
@@ -455,7 +480,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Fx.After(swing.Delay, () =>
             {
                 if (origin != null)
-                    Sfx.Play(sounds.swing, origin.position, finisher ? 1f : 0.8f, finisher ? 0.85f : 1f + 0.05f * swing.Step);
+                    SoundManager.Play(sounds.swing, origin.position, finisher ? 1f : 0.8f, finisher ? 0.85f : 1f + 0.05f * swing.Step);
             });
         }
 
@@ -475,9 +500,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (finisher)
                 HitFeel.Zoom(finisherZoom, 0.26f);
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
-                Sfx.Play(finisher ? sounds.finisherHit : sounds.swingHit, transform.position + forward, Mathf.Min(more, 1.2f));
+                SoundManager.Play(finisher ? sounds.finisherHit : sounds.swingHit, transform.position + forward, Mathf.Min(more, 1.2f));
         }
 
         private void UpdateMovementTrails()
@@ -485,8 +510,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _dashTrail ??= Fx.DashTrail(transform, themeColor);
             bool dashing = player != null && player.Mover != null && player.Mover.IsDashing;
             _dashTrail.SetValue(dashing ? 1f : 0f);
-            if (dashing && !_wasDashing && Sfx.Bank != null)
-                Sfx.Play(Sfx.Bank.dash, transform.position);
+            if (dashing && !_wasDashing && SoundManager.Library != null)
+                SoundManager.Play(SoundManager.Library.dash, transform.position);
             _wasDashing = dashing;
 
             // 스킬 돌진이면 잔상을 원소 색으로 (아니면 캐릭터 테마색)

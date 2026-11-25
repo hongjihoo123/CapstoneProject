@@ -68,27 +68,41 @@ namespace Members.KYR._01.Scripts.Stats
             }
         }
 
-        public float ComputeFinal() => ComputeFinal(null);
+        public float ComputeFinal() => ComputeFinalWithout(null);
 
         // (HJH) excludeSource returns true for sources to leave out (UI shows what one source adds). null = include all.
-        public float ComputeFinal(Predicate<object> excludeSource)
+        public float ComputeFinal(Predicate<object> excludeSource) =>
+            ComputeFinalWithout(excludeSource == null ? null : m => excludeSource(m.Source));
+
+        // (HJH) exclude by whole modifier (e.g. every timed one). null = include all.
+        public float ComputeFinalWithout(Predicate<StatModifier> exclude)
         {
             float flat = 0f;
             float percentAdd = 0f;
             float percentMore = 1f;
 
             for (StatNode node = this; node != null; node = node.Parent)
-                Accumulate(node, excludeSource, ref flat, ref percentAdd, ref percentMore);
+                Accumulate(node, exclude, ref flat, ref percentAdd, ref percentMore);
 
             return (BaseValue + flat) * (1f + percentAdd) * percentMore;
         }
 
-        private static void Accumulate(StatNode node, Predicate<object> excludeSource, ref float flat, ref float percentAdd, ref float percentMore)
+        // (HJH) 시간 제한이 있는 modifier 를 (스탯, modifier, 남은 시간) 으로 모아줌 — HUD 버프 바용
+        public void CollectTimed(List<(PlayerStatId Stat, StatModifier Modifier, float Remaining)> into)
+        {
+            for (int i = 0; i < _modifiers.Count; i++)
+            {
+                if (_modifiers[i].Remaining >= 0f)
+                    into.Add((Id, _modifiers[i].Modifier, _modifiers[i].Remaining));
+            }
+        }
+
+        private static void Accumulate(StatNode node, Predicate<StatModifier> exclude, ref float flat, ref float percentAdd, ref float percentMore)
         {
             for (int i = 0; i < node._modifiers.Count; i++)
             {
                 StatModifier modifier = node._modifiers[i].Modifier;
-                if (excludeSource != null && excludeSource(modifier.Source))
+                if (exclude != null && exclude(modifier))
                     continue;
                 switch (modifier.Type)
                 {

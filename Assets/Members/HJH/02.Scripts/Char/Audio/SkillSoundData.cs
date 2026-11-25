@@ -36,7 +36,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         [Tooltip("타이밍 추정이 애매했던 소리")] public bool ambiguous;
         [TextArea] public string note;
 
-        [NonSerialized] public float LastPlayed = -999f;
+        [NonSerialized] private SoundCue _cue;
+
+        // 이 항목의 소리를 SoundManager 에 넘길 SoundCue (처음 쓸 때 한 번 만들어 둠)
+        public SoundCue Cue => _cue ??= new SoundCue
+        {
+            clips = clip != null ? new[] { clip } : null,
+            bus = SoundBus.Sfx,
+            volume = volume,
+            pitch = new Vector2(1f - pitchRandom, 1f + pitchRandom),
+            priority = SoundPriority.High,
+            maxVoices = 0,
+            minInterval = minInterval,
+            loop = loop
+        };
     }
 
     // 스킬 하나의 소리 목록. Resources/HJH/SkillSounds/<스킬 이름>.asset
@@ -46,9 +59,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
     {
         public string skillId;
         public SkillData skill;
-        [Tooltip("켜면 이 스킬은 공통 원소 시전음(SfxBank)을 안 냄 — 여기 시전 소리가 대신")]
+        [Tooltip("켜면 이 스킬은 공통 원소 시전음(SoundLibrary)을 안 냄 — 여기 시전 소리가 대신")]
         public bool replacesGenericCast = true;
-        [Tooltip("켜면 이 스킬은 공통 원소 폭발음(SfxBank)을 안 냄 — 여기 폭발 소리가 대신")]
+        [Tooltip("켜면 이 스킬은 공통 원소 폭발음(SoundLibrary)을 안 냄 — 여기 폭발 소리가 대신")]
         public bool replacesGenericImpact = true;
         public List<SkillSoundEntry> entries = new();
     }

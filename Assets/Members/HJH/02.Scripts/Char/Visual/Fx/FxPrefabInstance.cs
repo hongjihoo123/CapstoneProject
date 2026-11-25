@@ -254,7 +254,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 driver.Play(parameters);
 
             // 이펙트에 붙은 소리: 공통 효과음 음소거(muted)와 따로 켜고 끔 (muteFxSounds)
-            bool muted = Audio.Sfx.Bank != null && Audio.Sfx.Bank.muteFxSounds;
+            bool muted = Audio.SoundManager.Library != null && Audio.SoundManager.Library.muteFxSounds;
             foreach (AudioSource source in _audio)
                 source.mute = muted;
 

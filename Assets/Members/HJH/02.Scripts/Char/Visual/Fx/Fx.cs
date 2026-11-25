@@ -28,9 +28,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Play(Library?.groundSlam, center, Quaternion.identity, radius, color);
 
         public static void DamageNumber(Vector3 position, float amount, Color color, float scale = 1f,
-            DamageNumberStyle style = DamageNumberStyle.Normal) =>
+            DamageNumberStyle style = DamageNumberStyle.Normal, float maxRise = 0f) =>
             Play(Library?.damageNumber, position, Quaternion.identity, 1f, color,
-                new FxParams { Value = amount, Radius = scale, NumberStyle = style });
+                new FxParams { Value = amount, Radius = scale, NumberStyle = style, MaxRise = maxRise });
 
         // 짧은 글자 팝업 ("2단!", "격파!"). 데미지 숫자와 같은 움직임
         public static void PopText(Vector3 position, string text, Color color, float scale = 1f) =>

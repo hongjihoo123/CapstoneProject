@@ -86,20 +86,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
-        public void ReduceCooldown(float seconds)
+        // 실제로 깎인 초를 돌려줌 (이미 쿨이 없으면 0). UI 연출이 "줄었다"를 알려면 이 값이 필요함
+        public float ReduceCooldown(float seconds)
         {
             if (seconds <= 0f)
-                return;
+                return 0f;
             if (!_recharging)
             {
                 // 시전 중(아직 쿨이 안 돌기 시작함)이면 쿨이 돌기 시작할 때 한꺼번에 깎음
                 if (_spentCharges > 0)
+                {
                     _pendingReduce += seconds;
-                return;
+                    return seconds;
+                }
+                return 0f;
             }
 
+            float remaining = Mathf.Max(0f, _rechargeEndTime - Time.time);
             _rechargeEndTime -= seconds;
             Refresh();
+            return Mathf.Min(seconds, remaining);
         }
 
         public virtual void Enter()

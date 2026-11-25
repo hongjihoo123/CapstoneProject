@@ -50,6 +50,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         [Header("쿨타임")]
         [SerializeField] private Color cooldownIconTint = new Color(0.42f, 0.42f, 0.46f, 1f);
+        [SerializeField, Tooltip("쿨 도는 부채꼴 색 (롤: 아이콘을 덮는 진한 파랑). 알파 0 이면 프리팹에 구워 둔 색 그대로")]
+        private Color cooldownBlue = new Color(0.04f, 0.3f, 0.7f, 0.82f);
 
         [Header("쿨 끝남")]
         [SerializeField] private Color readyColor = new Color(1f, 0.96f, 0.82f, 1f);
@@ -70,6 +72,16 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("Icon pop when a swapped-in skill lands in the slot.")]
         private float swapPunch = 0.18f;
 
+        [Header("쿨 줄어듦 (롤 나보리처럼)")]
+        [SerializeField, Tooltip("쿨이 완전히 초기화될 때 색")] private Color resetColor = new Color(1f, 0.82f, 0.3f, 1f);
+        [SerializeField, Range(0f, 1f)] private float refundFlashAlpha = 0.5f;
+        [SerializeField] private float refundFlashDuration = 0.18f;
+        [SerializeField] private float refundPunch = 0.14f;
+        [SerializeField] private float resetPunch = 0.3f;
+        [SerializeField, Tooltip("깎인 만큼의 쿨 막대가 쭉 당겨지고 깜빡이는 시간 (롤 처럼)")] private float refundPullTime = 0.36f;
+        [SerializeField, Tooltip("깜빡일 때의 밝은 회색 (막대와 아이콘 위 번쩍 둘 다). 롤은 연한 회청색")] private Color refundBarColor = new Color(0.8f, 0.84f, 0.9f, 0.92f);
+        [SerializeField, Range(1, 4), Tooltip("딱딱 깜빡이는 횟수")] private int refundBlinks = 2;
+
         private SkillData _bound;
         private bool _hasBound;
         private bool _blocked;
@@ -81,11 +93,18 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private Sequence _deniedTween;
         private Sequence _burstTween;
         private Tween _punchTween;
+        private Tween _refundPunchTween;
+        private float _pullSeconds;
+        private float _pullStart;
 
         private void Awake()
         {
             if (cooldownOverlay != null)
+            {
+                if (cooldownBlue.a > 0f)
+                    cooldownOverlay.color = cooldownBlue;
                 _overlayColor = cooldownOverlay.color;
+            }
             if (cooldownText != null)
                 _textColor = cooldownText.color;
             if (readyFlash != null)
@@ -161,7 +180,24 @@ namespace Assets.Members.HJH._02.Scripts.UI
 #if UNITY_EDITOR
             circleFrameSprite = HudUiKit.Load("slot_circle_frame");
             circleBackSprite = HudUiKit.Load("slot_circle_bg");
+            circleWhiteSprite = HudUiKit.Load("slot_circle_white");
 #endif
+        }
+
+        [SerializeField, Tooltip("번쩍/깜빡임용 흰 원 (Resources/HJH/UI/slot_circle_white). 비면 에디터에서는 자동으로 찾음")]
+        private Sprite circleWhiteSprite;
+
+        // 에디터에서는 연결을 안 해도 파일에서 바로 찾음 (빌드는 '그림 연결' 한 번 필요)
+        private Sprite WhiteCircle
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (circleWhiteSprite == null)
+                    circleWhiteSprite = HudUiKit.Load("slot_circle_white");
+#endif
+                return circleWhiteSprite;
+            }
         }
 
         private bool _circleApplied;
@@ -196,10 +232,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     ((RectTransform)back).sizeDelta = Vector2.one * box * circleFraction;
                 }
 
-                if (cooldownOverlay != null && circleBack != null)
-                    cooldownOverlay.sprite = circleBack;
-                if (readyFlash != null && circleBack != null)
-                    readyFlash.sprite = circleBack;
+                // 쿨 부채꼴도 흰 원 그림 + 색 (어두운 남색 그림에 파랑을 곱하면 칙칙해서 롤 같은 선명한 파랑이 안 나옴)
+                if (cooldownOverlay != null && (WhiteCircle != null || circleBack != null))
+                    cooldownOverlay.sprite = WhiteCircle != null ? WhiteCircle : circleBack;
+                // 번쩍은 흰 원 그림으로 (어두운 남색 그림에 색을 곱하면 어둡게 번쩍임)
+                if (readyFlash != null && (WhiteCircle != null || circleBack != null))
+                    readyFlash.sprite = WhiteCircle != null ? WhiteCircle : circleBack;
             }
 
             if (Mathf.Approximately(_circleBox, box))
@@ -269,6 +307,38 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _deniedTween.OnKill(() => _deniedTween = null).SetUpdate(true).SetLink(gameObject);
         }
 
+        // 쿨이 줄었을 때 (SkillStateModule.CooldownReduced). 롤 나보리 같은 반응
+        //   줄어듦 - 아이콘이 짧게 번쩍 + 톡, 숫자 자리에 "-0.6" (연달아 오면 합쳐서 보여줌)
+        //   초기화 - 금색으로 크게 번쩍 + 링 + 번짐, 숫자 자리에 "초기화"
+        public void PlayRefund(float seconds, bool reset)
+        {
+            if (seconds <= 0f)
+                return;
+
+            // 롤 방식: 파란 쿨 막대가 한 번에 쭉 당겨지고(아래 SetCooldown 이 보여줌) 아이콘이 하얗게 깜빡임. 글자는 안 띄움
+            float now = Time.unscaledTime;
+            bool stillPulling = now < _pullStart + refundPullTime;
+            _pullSeconds = (stillPulling ? _pullSeconds * (1f - (now - _pullStart) / refundPullTime) : 0f) + seconds;
+            _pullStart = now;
+
+            if (reset)
+            {
+                PlayReady(resetColor);
+                ComboBurst(resetColor);
+            }
+            else
+            {
+                BlinkWhite();
+            }
+
+            RectTransform target = content != null ? content : (RectTransform)transform;
+            _refundPunchTween?.Kill(true);
+            _refundPunchTween = target.DOPunchScale(Vector3.one * (reset ? resetPunch : refundPunch), reset ? 0.4f : 0.22f, 6, 0.6f)
+                .OnKill(() => _refundPunchTween = null)
+                .SetUpdate(true)
+                .SetLink(gameObject);
+        }
+
         // 스킬 교체로 이 칸에 새 스킬 들어왔을 때: 속성 색으로 번쩍 + 아이콘 톡
         public void Punch(Color color)
         {
@@ -284,7 +354,41 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 .SetLink(gameObject);
         }
 
-        private void PlayReady(Color color)
+        private void PlayReady(Color color) => PlayReady(color, flashAlpha, flashDuration, true);
+
+        // 아이콘 위로 하얗게 두 번 깜빡 (쿨이 깎일 때)
+        private void BlinkWhite()
+        {
+            if (readyFlash == null)
+                return;
+
+            _readyTween?.Kill(true);
+            readyFlash.enabled = true;
+            // 롤 영상(녹음 2026-11-25 110109.mp4): 페이드가 아니라 켜졌다 꺼졌다를 몇 번 딱딱 반복
+            Color white = new Color(refundBarColor.r, refundBarColor.g, refundBarColor.b, refundFlashAlpha);
+            float step = Mathf.Max(0.02f, refundPullTime / (refundBlinks * 2f));
+            readyFlash.color = white;
+            _readyTween = DOTween.Sequence();
+            for (int i = 0; i < refundBlinks; i++)
+            {
+                _readyTween.AppendCallback(() => readyFlash.color = white);
+                _readyTween.AppendInterval(step);
+                _readyTween.AppendCallback(() => readyFlash.color = new Color(white.r, white.g, white.b, 0f));
+                _readyTween.AppendInterval(step);
+            }
+            _readyTween
+                .OnKill(() =>
+                {
+                    _readyTween = null;
+                    if (readyFlash != null)
+                        readyFlash.enabled = false;
+                })
+                .SetUpdate(true)
+                .SetLink(gameObject);
+        }
+
+        // withRing=false 는 쿨이 조금 깎일 때의 짧은 번쩍 (링까지 쏘면 너무 요란함)
+        private void PlayReady(Color color, float alpha, float duration, bool withRing)
         {
             _readyTween?.Kill(true);
             _readyTween = DOTween.Sequence();
@@ -292,11 +396,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (readyFlash != null)
             {
                 readyFlash.enabled = true;
-                readyFlash.color = new Color(color.r, color.g, color.b, flashAlpha);
-                _readyTween.Join(readyFlash.DOFade(0f, flashDuration).SetEase(Ease.OutQuad));
+                readyFlash.color = new Color(color.r, color.g, color.b, alpha);
+                _readyTween.Join(readyFlash.DOFade(0f, duration).SetEase(Ease.OutQuad));
             }
 
-            if (readyRing != null)
+            if (withRing && readyRing != null)
             {
                 RectTransform ring = readyRing.rectTransform;
                 readyRing.enabled = true;
@@ -393,10 +497,30 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 ApplyIconTint();
             }
 
-            cooldownOverlay.enabled = blocked;
-            if (blocked)
-                cooldownOverlay.fillAmount = fill;
-            UpdateSweepEdge(blocked, fill);
+            // 방금 쿨이 깎였으면 깎인 만큼을 잠깐 더 얹어서 보여주고, 빠르게 줄여 막대가 "쭉 당겨지는" 모양을 만듦.
+            // 그동안 막대는 밝은 하늘색에서 원래 색으로 돌아옴
+            float pull = 0f;
+            float pullT = 1f;
+            if (_pullSeconds > 0f && duration > 0f)
+            {
+                pullT = Mathf.Clamp01((Time.unscaledTime - _pullStart) / Mathf.Max(0.01f, refundPullTime));
+                if (pullT >= 1f)
+                    _pullSeconds = 0f;
+                else
+                    pull = _pullSeconds / duration * (1f - (1f - (1f - pullT) * (1f - pullT)));   // OutQuad: 처음에 확 당겨짐
+            }
+
+            bool pulling = pull > 0.002f;
+            float shown = Mathf.Clamp01(fill + pull);
+            cooldownOverlay.enabled = blocked || pulling;
+            if (blocked || pulling)
+            {
+                cooldownOverlay.fillAmount = shown;
+                // 당겨지는 동안 막대가 흰 푸른색 <-> 원래 색으로 딱딱 깜빡 (롤 영상 기준)
+                bool lit = pulling && Mathf.FloorToInt(pullT * refundBlinks * 2f) % 2 == 0;
+                cooldownOverlay.color = lit ? refundBarColor : _overlayColor;
+            }
+            UpdateSweepEdge(blocked || pulling, shown);
 
             if (cooldownText == null)
                 return;

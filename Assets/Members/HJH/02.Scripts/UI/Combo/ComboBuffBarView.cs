@@ -50,6 +50,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("설명 상자: 아이콘 위 끝에서 얼마나 띄울지")] private float tipGap = 8f;
 
         private readonly List<Entry> _entries = new();
+        private readonly List<PlayerHudSource.TimedBuff> _timed = new();
         private PlayerHudSource _hud;
         private Canvas _canvas;
 
@@ -100,6 +101,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 foreach (Mod mod in ComboLoadout.ModsOf(recipe.Name))
                     _entries.Add(new Entry { Combo = recipe.Name, Mod = mod, Left = left, Total = total });
             }
+
+            // 스킬이 건 시간제 스탯 버프 (버프 스킬, 원소 스킬의 자기 효과 등)
+            _hud.CollectTimedBuffs(_timed);
+            foreach (PlayerHudSource.TimedBuff buff in _timed)
+                _entries.Add(new Entry { Combo = buff.Name, Mod = new Mod(buff.Stat, buff.Type, buff.Value), Left = buff.Left, Total = buff.Total });
 
             _entries.Sort((a, b) =>
             {

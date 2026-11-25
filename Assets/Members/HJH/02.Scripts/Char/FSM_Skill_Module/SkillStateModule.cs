@@ -72,6 +72,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         public event Action<SkillSlotId> SkillDenied;
         // A skill became castable again: cooldown done (multi-charge: first charge back) or swap lock over.
         public event Action<SkillSlotId> SkillReady;
+        // 쿨이 깎였음 (치명 환류 같은 것): 칸, 실제로 깎인 초, 완전 초기화인가. 롤 나보리처럼 아이콘이 반응하게 함
+        public event Action<SkillSlotId, float, bool> CooldownReduced;
+        // 이 초 이상 깎으라는 요청은 "초기화"로 봄 (CritSystem 이 9999 를 넘김)
+        private const float ResetSeconds = 900f;
 
         private readonly Dictionary<SkillSlotId, bool> _wasReady = new();
 
@@ -381,8 +385,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void ReduceCooldown(SkillSlotId slot, float seconds)
         {
-            if (_slots.TryGetValue(slot, out GenericSkillState state))
-                state.ReduceCooldown(seconds);
+            if (!_slots.TryGetValue(slot, out GenericSkillState state))
+                return;
+
+            float applied = state.ReduceCooldown(seconds);
+            if (applied > 0f)
+                CooldownReduced?.Invoke(slot, applied, seconds >= ResetSeconds);
         }
 
         private void SetPassive(PassiveData data)

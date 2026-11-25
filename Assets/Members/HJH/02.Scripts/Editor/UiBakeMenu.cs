@@ -81,6 +81,48 @@ namespace HJH.EditorTools
             }
         }
 
+        // 픽 화면만 다시 굽기 (스킬 수치 줄처럼 이 화면만 바뀌었을 때). 다른 화면·프리팹은 건드리지 않음
+        [MenuItem("HJH/UI/캐릭터 픽 화면만 굽기")]
+        public static void BakePickOnly()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[UiBake] 플레이 중에는 굽지 않습니다.");
+                return;
+            }
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                if (SceneManager.GetSceneAt(i).isDirty)
+                {
+                    Debug.LogWarning("[UiBake] 저장 안 된 씬이 있어서 멈춤: " + SceneManager.GetSceneAt(i).path);
+                    return;
+                }
+            }
+
+            Log.Clear();
+            string original = SceneManager.GetActiveScene().path;
+            try
+            {
+                Directory.CreateDirectory(BackupFolder);
+                string backup = $"{BackupFolder}/CharacterPick_before_pickbake_{System.DateTime.Now:MMdd_HHmm}.unity.bak";
+                File.Copy(PickScene, backup, true);
+                Write("백업 " + backup);
+                BakeScene<CharacterPickScreen>(PickScene, addTutorialView: true);
+                AssetDatabase.SaveAssets();
+                Write("DONE (픽 화면만)");
+            }
+            catch (System.Exception e)
+            {
+                Write("FAIL " + e);
+                Debug.LogException(e);
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(original) && File.Exists(original))
+                    EditorSceneManager.OpenScene(original, OpenSceneMode.Single);
+            }
+        }
+
         private static void Write(string line)
         {
             Log.AppendLine(line);
