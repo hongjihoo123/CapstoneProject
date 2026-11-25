@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
 {
-    public class EnemyFireBreathSkill : AbstractEnemySkill
+    public class EnemyScreamSkill : AbstractEnemySkill
     {
         [Header("Fire Breath Settings")]
         [SerializeField] private float angle = 45f;
@@ -18,11 +18,19 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             float range = SkillSetting.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Cone(AttackAreaKind.EnemyWarning,
-                center, rotation, range, angle, prepare + expand));
+                center, rotation, range, angle, prepare + expand + SkillSetting.AttackDutation));
 
-            yield return new WaitForSeconds(prepare);
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: prepare);
             yield return ExpandConeWarning(center, rotation, range, angle, expand);
 
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteScream(center, rotation, range, angle));
+
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
+        }
+
+        private IEnumerator ExecuteScream(Vector3 center, Quaternion rotation, float range, float angle)
+        {
             PlaySkillVfx();
             DamageInCone(center, rotation, range, angle);
 
