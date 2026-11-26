@@ -38,6 +38,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [Header("가운데 모델")]
         [SerializeField, Range(0.3f, 0.9f), Tooltip("모델 키가 화면 높이에서 차지하는 비율")] private float modelScreenHeight = 0.62f;
         [SerializeField, Tooltip("모델을 정면에서 이만큼 돌려 세움 (도)")] private float modelTurn = -22f;
+        [SerializeField, Tooltip("끄면 픽 화면에 3D 모델을 안 세우고 플레이스홀더(원형 초상)만 보여줌 (재킷이 총에 뚫려 보여서 임시로 끔)")] private bool showModel;
         [SerializeField, Tooltip("모델이 올라가는 자리")] private Transform stage;
 
         [Serializable]
@@ -209,7 +210,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Destroy(_model);
             _model = null;
 
-            if (data == null || data.Model == null || stage == null)
+            if (!showModel || data == null || data.Model == null || stage == null)
                 return false;
 
             // 모델 프리팹에 붙은 게임용 스크립트는 플레이어가 없는 여기서 돌면 안 됨 -> 꺼진 부모 밑에 만들어서 깨어나기 전에 떼어냄

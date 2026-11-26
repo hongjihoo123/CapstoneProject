@@ -38,6 +38,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         [SerializeField, Range(0f, 70f), Tooltip("두 손이 총에 닿게 상체를 오른쪽으로 비트는 최대 각도 (팔이 짧아서 필요). 머리는 정면 유지")] private float maxTwist = 55f;
 
+        [Header("손목 각도 보정 (손 뼈 자체 축 기준 도 단위, 꺾여 보일 때 조절)")]
+        [SerializeField] private Vector3 rightWristEuler;
+        [SerializeField] private Vector3 leftWristEuler;
+
         [Header("팔꿈치 방향 (각 어깨 기준, 캐릭터 앞 축)")]
         [SerializeField] private Vector3 rightElbowHint = new Vector3(0.12f, -0.12f, -0.08f);
         [SerializeField] private Vector3 leftElbowHint = new Vector3(-0.12f, -0.12f, -0.03f);
@@ -130,9 +134,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Lerp(_cur, wanted, k);
             _aim = Mathf.Lerp(_aim, aiming ? 1f : 0f, k);
 
-            if (_blend <= 0.001f)
-                return;
-            Apply(animator.transform, _blend);
+            if (_blend > 0.001f)
+                Apply(animator.transform, _blend);
         }
 
         private static void Copy(HoldPose from, HoldPose to)
@@ -300,11 +303,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             // (3) 비튼 뒤 어깨 위치로 총 위치·양손 목표 다시 계산
             Targets(_rUpper.position, _lUpper.position, frame, sway, u, s, leftLocal, rReach, lReach, true, out Vector3 grip, out Quaternion rRot, out Vector3 lPos);
-            Quaternion lRot = rRot * _lHandRotInRHand;
+            Quaternion lRot = rRot * _lHandRotInRHand * Quaternion.Euler(leftWristEuler);
             Vector3 rPole = _rUpper.position + frame * (rightElbowHint * u);
             Vector3 lPole = _lUpper.position + frame * (leftElbowHint * u);
 
-            Solve(_rUpper, _rFore, _rHand, grip, rRot, rPole, w);
+            Solve(_rUpper, _rFore, _rHand, grip, rRot * Quaternion.Euler(rightWristEuler), rPole, w);
             Solve(_lUpper, _lFore, _lHand, lPos, lRot, lPole, w);
             ExtendIndex(rRot * _axLocal, w);
         }
