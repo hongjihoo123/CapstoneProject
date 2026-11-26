@@ -102,6 +102,11 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 if (director.Context.Player != null && director.Context.Player != _watched)
                 {
                     _watched = director.Context.Player;
+                    foreach (SkillSlotId slot in SkillSlots.All)
+                    {
+                        SkillData data = _watched.SkillFsm != null ? _watched.SkillFsm.GetSkill(slot) : null;
+                        Log($"  장착 {slot}: {(data != null ? data.name : "비어 있음")}");
+                    }
                     _watched.DamageTaken += (amount, source) =>
                         Log($"  !! 플레이어 피격 {amount:0.#} from {(source != null ? source.name : "null")} (HP 남음 {(_watched.Health != null ? _watched.Health.CurrentHealth : -1f):0})");
                 }
@@ -218,6 +223,12 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
                 case ClearRoomStep:
                     yield return ClearRoom(ctx);
+                    break;
+
+                case TargetWaveStep:
+                    yield return Wait(0.8f);
+                    yield return KillTargets(ctx);
+                    yield return Wait(1.5f);
                     break;
 
                 default:

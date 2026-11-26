@@ -632,8 +632,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
             SkillTreeProgress.Apply(TreeOf(roster[_selected]));   // 이 캐릭터의 스킬 트리 강화를 이번 런에 올림
             RunReset.Begin();
             ComboLoadout.BeginRun();
-            // 튜토리얼은 콤보 바인딩 상점이 있는 상점 맵에서 진행
-            string scene = TutorialSession.Active ? TutorialDefaults.ShopScene : nextScene;
+            // 튜토리얼은 왕국 훈련장에서 진행
+            string scene = TutorialSession.Active ? TutorialDefaults.StageScene : nextScene;
 
             if (fade == null)
             {

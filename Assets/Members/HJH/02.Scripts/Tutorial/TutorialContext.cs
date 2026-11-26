@@ -188,6 +188,30 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         // ---------------------------------------------------------------- 적
 
+        // 정해진 자리에 연습용 적 하나 (제자리, 방 클리어 수에는 안 셈). 마무리 훈련에서 씀
+        public AbstractEnemy SpawnTargetAt(GameObject prefab, Vector3 position)
+        {
+            if (prefab == null)
+            {
+                Debug.LogWarning("[Tutorial] 연습용 적 프리팹이 없어 적 없이 진행합니다.");
+                return null;
+            }
+
+            if (NavMesh.SamplePosition(position, out NavMeshHit hit, 2f, NavMesh.AllAreas))
+                position = hit.position;
+            Vector3 face = Player != null ? Player.transform.position - position : Vector3.back;
+            face.y = 0f;
+            Quaternion rotation = face.sqrMagnitude > 0.01f ? Quaternion.LookRotation(face) : Quaternion.identity;
+
+            GameObject go = Object.Instantiate(prefab, position, rotation);
+            go.name = "TutorialTarget_" + prefab.name;
+            go.AddComponent<RoomClearIgnore>();
+            var enemy = go.GetComponentInChildren<AbstractEnemy>();
+            if (enemy != null)
+                go.AddComponent<TutorialStationary>().Enemy = enemy;
+            return enemy;
+        }
+
         // 플레이어 앞(조준 방향) distance 만큼에 연습용 적 하나. 내비 메시 위로 맞추고, 방 클리어 수에는 안 셈.
         // stationary = 행동 트리를 꺼서 제자리에 서 있게 (때리지도 않음)
         public AbstractEnemy SpawnTarget(GameObject prefab, float distance, bool stationary)
