@@ -9,7 +9,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     {
         [Header("Poison Settings")]
         [SerializeField] private BossPoisonAreaProjectile projectilePrefab;
-        [SerializeField] private BossPoisonArea areaPrefab;
+        [SerializeField] private PoisonArea areaPrefab;
         [SerializeField] private Transform projectileSpawnPoint;
         [SerializeField] private float arcHeight = 4f;
 

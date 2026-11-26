@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 8826976176151415604}
   - component: {fileID: 8013301198913435400}
   m_Layer: 0
-  m_Name: EnemyDashSkill
+  m_Name: EnemyPoisonGasSkill
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -46,3 +46,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.EnemyDashSkill
   <SkillSO>k__BackingField: {fileID: 11400000, guid: dff3eb50ee540424782af623ea3a94d6, type: 2}
   warningTickInterval: 0.05
+  gasPrefab: {fileID: 4072159479654056755, guid: daafebcc1f8d9da4eac9c3dce667ce9a, type: 3}
+  areaDuration: 5
+  damageInterval: 0.5
