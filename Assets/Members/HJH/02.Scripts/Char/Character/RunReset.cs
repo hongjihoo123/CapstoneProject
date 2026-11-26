@@ -1,5 +1,6 @@
 using Members.JJH._02_Scripts.Map;
 using Members.KYR._01.Scripts.Currency;
+using Members.KYR._01.Scripts.SkillUpgrade;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Character
@@ -12,6 +13,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
         {
             Time.timeScale = 1f;
             GameBootstrap.Currency?.ResetRun();
+            SkillUpgradeService.ResetRun();   // 런 골드로 산 스킬 강화도 새 런에서는 처음부터
 
             // 씬을 넘어 살아남는 맵 UI(DontDestroyOnLoad)도 처음 상태로
             MapUI map = Object.FindFirstObjectByType<MapUI>(FindObjectsInactive.Include);
