@@ -6,10 +6,6 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 몇 초 동안 남는 벽/장막. 적 투사체를 막고, 켜면 적 길찾기도 막음 (NavMesh 구멍)
-    //  - Front: 내 앞에 커서 쪽을 보고 섬 (물 장막)
-    //  - Cursor: 커서 자리에 커서 쪽을 보고 섬 (바위 벽)
-    //  - AroundSelf: 내 주변 원, 나를 따라다님 (바람 장막)
     [CreateAssetMenu(menuName = "Skill/Element/Barrier (벽·장막)")]
     public class BarrierSkill : ElementSkillBase
     {
@@ -91,7 +87,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 _center = center;
                 _facing = Quaternion.LookRotation(aim);
                 _left = skill.lifetime;
-                // 벽 프리팹은 폭 5m, 둥근 장막은 반지름 2m 기준
                 _fx = cast.Hold(skill.barrierFx, center, aim,
                     skill.placement == Placement.AroundSelf ? skill.radius / ElementSkillCast.AuthoredRadius : skill.width / 5f);
                 cast.PlayImpact(center, Round ? skill.radius : skill.width * 0.35f);

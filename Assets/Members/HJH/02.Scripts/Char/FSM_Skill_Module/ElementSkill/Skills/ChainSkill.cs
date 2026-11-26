@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 커서에 제일 가까운 적부터 맞고, 거기서 가까운 적으로 차례차례 튐 (같은 적은 한 번)
-    // 예) 연쇄 번개
     [CreateAssetMenu(menuName = "Skill/Element/Chain (튀기)")]
     public class ChainSkill : ElementSkillBase
     {
@@ -28,7 +26,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             IDamageable first = Nearest(cast, cursor, aimAssist, null);
             if (first == null)
             {
-                // 아무도 없으면 커서까지 헛방
                 Vector3 from = cast.Position + Vector3.up * 1.1f;
                 Fx.Beam(from, cursor + Vector3.up * 0.3f, cast.Color, beamWidth * 0.7f, 0.15f);
                 cast.PlayImpact(cast.Ground(cursor), 0.6f);
@@ -72,7 +69,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             stats.Add(new SkillStat("튀는 수", $"최대 {maxTargets}명 · {bounceRange:0.#}m"));
         }
 
-        // 한 칸씩 튐
         private sealed class Bounce : ISkillTimedEffect
         {
             private readonly ChainSkill _skill;

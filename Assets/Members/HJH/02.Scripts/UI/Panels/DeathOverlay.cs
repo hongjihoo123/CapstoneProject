@@ -3,16 +3,12 @@ using DG.Tweening;
 using Members.KYR._01.Scripts.Player;
 using TMPro;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.InputSystem;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 플레이어가 죽으면 (쓰러지는 연출이 끝날 즈음) 화면이 어두워지며 "쓰러졌습니다" + 버튼이 뜸.
-    // 버튼(임시)을 누르면 고른 캐릭터를 지우고 캐릭터 픽 화면으로 돌아감. Enter 키도 같은 동작.
-    // 모양은 HUD_Canvas 아래 하이어라키에 저장된 그대로 (인스펙터에서 수정).
     public class DeathOverlay : MonoBehaviour, IUiBake
     {
         [SerializeField, Tooltip("캐릭터 픽 화면 씬 이름 (빌드 설정에 있어야 함)")]
@@ -68,7 +64,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             var button = buttonBack.gameObject.AddComponent<Button>();
             button.targetGraphic = buttonBack;
             button.transition = Selectable.Transition.None;
-            UnityEditor.Events.UnityEventTools.AddPersistentListener(button.onClick, GoToPick);   // 인스펙터 OnClick 에 보임
+            UnityEditor.Events.UnityEventTools.AddPersistentListener(button.onClick, GoToPick);
 
             TMP_Text hint = HudUiKit.NewText("Hint", transform, "(임시) 버튼 또는 Enter 키", 16f, HudUiKit.Label, TextAlignmentOptions.Center);
             HudUiKit.Place(hint.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -100f), new Vector2(500f, 28f));
@@ -97,7 +93,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 return;
             }
 
-            // 조준 커서/잠금이 마우스를 가두지 않게 계속 풀어 둠
             Cursor.lockState = CursorLockMode.None;
             Cursor.visible = true;
 
@@ -110,7 +105,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _shown = true;
             transform.SetAsLastSibling();
 
-            // 버튼이 눌리려면 이벤트 시스템이 있어야 함
             HudUiKit.EnsureEventSystem();
 
             foreach (AimCursorView aim in FindObjectsByType<AimCursorView>(FindObjectsSortMode.None))
@@ -123,10 +117,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         public bool IsShown => _shown;
 
-        // 테스트 도구용 (버튼을 누른 것과 같음)
         public void DebugGoToPick() => GoToPick();
 
-        // 버튼 OnClick 에 연결됨 (인스펙터)
         public void GoToPick()
         {
             if (_leaving)

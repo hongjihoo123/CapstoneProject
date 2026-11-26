@@ -13,25 +13,16 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 콤보 UI 전부 여기 한 파일임, 여기서 건들면 됨
-    //  - 아래 입력 칸: 스킬 쓸 때마다 속성/키가 왼쪽부터 쌓임 + 다음에 뭐 누르면 콤보인지(NEXT) + 안내 문구
-    //  - 콤보 완성: 가운데 COMBO! 문구, 쓰인 칸들 튕기고 밑에 콤보 이름, 맨 아래 스킬바에서 그 콤보에 쓴 스킬 칸도 튕김
-    //  - 남은 시간 게이지: 이거 다 떨어지면 콤보 끊김
-    //  - 피니시 스톡: 완성한 콤보 모아두는 다이아 (R 누르면 한 번에 터짐)
-    //  - 콤보 리스트: Tab 누르면 열리고 닫힘
-    // 값은 전부 PlayerHudSource 에서 꺼내 씀. 게임 로직 코드는 몰라도 됨
-    // 콤보 순간 화면 멈춤/흔들림은 여기 말고 ElementComboChain 에 있음 (UI 지워도 손맛은 안 없어지게)
     public class ComboUI : MonoBehaviour
     {
-        // 입력 칸 하나에 들어가는 것들
         [Serializable]
         public struct Cell
         {
             public RectTransform root;
             public CanvasGroup group;
             public Image background;
-            public Image ring;      // 테두리. NEXT 칸 깜빡일 때랑 콤보 완성 때 금색으로 번쩍
-            public Image badge;     // 속성 아이콘
+            public Image ring;
+            public Image badge;
             public TMP_Text key;
             public TMP_Text element;
         }
@@ -50,10 +41,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private RectTransform banner;
         [SerializeField] private CanvasGroup bannerGroup;
         [SerializeField] private Image bannerBar;
-        [SerializeField] private TMP_Text bannerHeader;   // COMBO! / FINISH
-        [SerializeField] private TMP_Text bannerTitle;    // 콤보 이름
-        [SerializeField] private TMP_Text bannerDetail;   // 누른 키 순서
-        [SerializeField] private Image screenFlash;       // 피니시 때 화면 번쩍 (없어도 됨)
+        [SerializeField] private TMP_Text bannerHeader;
+        [SerializeField] private TMP_Text bannerTitle;
+        [SerializeField] private TMP_Text bannerDetail;
+        [SerializeField] private Image screenFlash;
 
         [Header("남은 시간 게이지")]
         [SerializeField] private CanvasGroup gaugeGroup;
@@ -73,11 +64,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private TMP_Text listClosedTab;
 
         [Header("맨 아래 스킬바 칸들 (콤보 완성되면 그 콤보에 쓴 스킬 칸이 톡 튐)")]
-        [SerializeField] private RectTransform qIcon;       // Q 칸
-        [SerializeField] private RectTransform eIcon;       // E 칸
-        [SerializeField] private RectTransform rmbIcon;     // 우클릭 칸 (캐릭터 전용 스킬)
-        [SerializeField] private RectTransform rIcon;       // R 칸 (궁극기)
-        [SerializeField] private RectTransform spaceIcon;   // Space 칸 (대쉬)
+        [SerializeField] private RectTransform qIcon;
+        [SerializeField] private RectTransform eIcon;
+        [SerializeField] private RectTransform rmbIcon;
+        [SerializeField] private RectTransform rIcon;
+        [SerializeField] private RectTransform spaceIcon;
 
         [Header("색")]
         [SerializeField] private Color gold = new(1f, 0.83f, 0.3f);
@@ -88,7 +79,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Color pipOff = new(1f, 1f, 1f, 0.18f);
         [SerializeField] private Color listRowColor = new(0.55f, 0.48f, 0.32f, 0.75f);
 
-        // 콤보 리스트 한 줄
         private class ListRow
         {
             public ElementComboBook.Recipe combo;
@@ -130,8 +120,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.FinisherReleased += OnFinisher;
             _hud.FinisherArmed += OnFinisherArmed;
             _hud.FinisherExpired += OnFinisherExpired;
-            _hud.LoadoutChanged += Redraw;   // 스킬 바꾸거나 캐릭터 바꾸면 칸에 적힌 키도 바뀌어야 해서
-            _hud.ComboListChanged += RebuildList;   // 맛보기 선택·바인딩 교체로 들고 있는 콤보가 바뀜
+            _hud.LoadoutChanged += Redraw;
+            _hud.ComboListChanged += RebuildList;
             Redraw();
         }
 
@@ -162,16 +152,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             UpdateGauge();
 
-            // NEXT 칸 테두리는 계속 깜빡이게
             if (nextCell.ring != null && nextCell.ring.enabled)
                 nextCell.ring.color = WithAlpha(nextCell.ring.color, 0.3f + 0.65f * Pulse(6f));
 
-            // 스톡 하나라도 있으면 READY, 꽉 차면 MAX (더 빨리 깜빡)
             if (readyLabel != null)
             {
                 int stock = _hud.ComboStock.Count;
                 bool full = stock >= _hud.MaxComboStock;
-                // 준비 중이면 "다음 스킬 ×1.6  3.2초", 아니면 C 누르면 몇 배인지 (꽉 차면 MAX)
                 if (_hud.FinisherReady)
                 {
                     readyLabel.enabled = true;
@@ -187,9 +174,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // ------------------------------------------------------------ 평소 화면 (칸, NEXT, 스톡, 리스트)
-
-        // 지금 상태 그대로 다시 그림. 콤보 상태가 바뀔 때마다 불림
         private void Redraw()
         {
             if (_breaking)
@@ -277,7 +261,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 cell.element.text = string.Empty;
         }
 
-        // 남은 시간 비율만큼 게이지 채움. 얼마 안 남으면 깜빡깜빡
         private void UpdateGauge()
         {
             if (gaugeGroup == null || gaugeFill == null)
@@ -315,9 +298,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 finisherKey.text = $"[{_hud.FinisherKey}] 피니시";
         }
 
-        // ------------------------------------------------------------ 이벤트 (입력, 완성, 끊김, 피니시)
-
-        // 방금 쓴 스킬 칸이 쾅 하고 들어오는 느낌
         private void OnInputAdded()
         {
             if (_breaking)
@@ -335,8 +315,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             ShowBanner("COMBO!", combo.Name, KeySequence(combo.Sequence), comboBarColor);
 
-            // 콤보는 항상 마지막 입력들로 완성됨
-            // 예) 입력이 4개고 콤보 길이가 2면 -> 2번, 3번 칸이 그 콤보
             IReadOnlyList<ElementComboChain.ComboInput> inputs = _hud.ComboInputs;
             int first = Mathf.Max(0, inputs.Count - combo.Length);
             for (int i = first; i < inputs.Count; i++)
@@ -354,18 +332,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             FlashListRow(combo);
         }
 
-        // 강화된 스킬이 나감: 배율 + 같이 터진 피니시 스킬 이름
-        private void OnFinisher(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        private void OnFinisher(SkillSlotId slot, float scale)
         {
-            var names = new StringBuilder();
-            foreach (FinisherBook.Entry finisher in fired)
-            {
-                if (names.Length > 0)
-                    names.Append("  +  ");
-                names.Append(finisher.name);
-            }
-
-            ShowBanner($"FINISH  ×{scale:0.0#}", "피니시", names.Length > 0 ? names.ToString() : "피해 강화", finisherBarColor);
+            ShowBanner($"FINISH  ×{scale:0.0#}", "피니시", "피해 강화", finisherBarColor);
             Bounce(IconOf(slot), 0.4f);
 
             if (screenFlash != null)
@@ -377,19 +346,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // C 눌러서 준비됨
         private void OnFinisherArmed(int stacks, float scale)
         {
-            int count = _hud.ArmedFinishers.Count;
-            string detail = count > 0 ? $"다음 스킬 ×{scale:0.0#}  +  피니시 스킬 {count}개" : $"다음 스킬 ×{scale:0.0#}";
-            ShowBanner("READY", "피니시 준비", detail, finisherBarColor);
+            ShowBanner("READY", "피니시 준비", $"다음 스킬 ×{scale:0.0#}", finisherBarColor);
             foreach (SkillSlotId slot in new[] { SkillSlotId.Basic1, SkillSlotId.Basic2, SkillSlotId.Weapon, SkillSlotId.Ultimate })
                 Bounce(IconOf(slot), 0.2f);
         }
 
         private void OnFinisherExpired() => ShowBanner("MISS", "피니시 시간 끝", string.Empty, comboBarColor);
 
-        // 시간 다 돼서 콤보 끊기면 칸들이 스르륵 사라졌다가 빈 칸으로 돌아옴
         private void OnComboBroken()
         {
             _breaking = true;
@@ -422,10 +387,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // ------------------------------------------------------------ 연출 도우미
-
-        // 크게 나왔다가 제자리 -> 잠깐 멈췄다가 오른쪽으로 빠지며 사라짐, 수치는 조절 알아서 하시고요잉
-        // SetUpdate(true): 콤보 순간 게임이 잠깐 멈춰도(히트스톱) UI는 계속 움직이게 해주는 거임
         private void ShowBanner(string header, string title, string detail, Color barColor)
         {
             if (banner == null || bannerGroup == null)
@@ -448,7 +409,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             bannerGroup.DOFade(0f, 0.2f).SetDelay(0.87f).SetUpdate(true);
         }
 
-        // 콤보 만든 칸들 밑에 괄호 + 이름. 첫 칸 왼쪽 끝 ~ 마지막 칸 오른쪽 끝에 맞춰서 늘어남
         private void ShowBracket(int first, int last, string comboName)
         {
             if (bracket == null || bracketGroup == null || cells.Length == 0)
@@ -491,7 +451,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             target.DOPunchScale(Vector3.one * amount, 0.3f).SetUpdate(true);
         }
 
-        // Q/E 말고 우클릭, R, 대쉬도 속성이 있어서 다 콤보에 들어감
         private RectTransform IconOf(SkillSlotId slot) => slot switch
         {
             SkillSlotId.Basic1 => qIcon,
@@ -502,9 +461,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _ => null
         };
 
-        // ------------------------------------------------------------ 콤보 리스트 (Tab)
-
-        // 템플릿 한 줄 복사해서 콤보마다 한 줄씩 만듦. 템플릿 안에 "Name" 텍스트, "Steps" 밑에 칸 하나 있어야 함
         private void BuildList()
         {
             if (listRowTemplate == null || listRowParent == null)
@@ -551,7 +507,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Redraw();
         }
 
-        // 콤보 진행 중이면 이어갈 수 있는 것만 (많이 진행한 순서로), 아니면 전부 보여줌
         private void RefreshList()
         {
             if (_rows.Count == 0)
@@ -584,7 +539,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             for (int i = 0; i < order.Count; i++)
             {
                 order[i].background.gameObject.SetActive(!anyOnRoute || order[i].progress > 0);
-                order[i].background.transform.SetSiblingIndex(i + 1); // 0번은 숨겨둔 템플릿
+                order[i].background.transform.SetSiblingIndex(i + 1);
             }
 
             if (listTitle != null)
@@ -615,9 +570,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 listClosedTab.gameObject.SetActive(!open);
         }
 
-        // ------------------------------------------------------------ 글자/색 도우미
-
-        // "Q 불 › E 물" 처럼 키 + 속성 이름을 속성 색으로
         private string KeySequence(IReadOnlyList<ElementType> sequence)
         {
             var text = new StringBuilder();

@@ -5,6 +5,7 @@ namespace Members.JJH._02_Scripts.Agents.Modules
     public interface ISensor
     {
         LayerMask TargetLayer { get; }
+        LayerMask ObstacleLayer { get; }
 
         public bool IsTargetInRange(float range, out Collider hitCollider);
         public bool IsTargetInSight(float range, float sight);

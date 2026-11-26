@@ -5,9 +5,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Character
 {
-    // 픽 → 플레이 → 죽음 → 픽 순환을 입력 없이 확인하는 데모 (에디터 메뉴 HJH/디버그/캐릭터 픽 순환 데모 로 켬, 에디터 전용).
-    //  픽 화면: 2초 뒤 다음 캐릭터를 골라 시작 (1번 → 2번 → 3번 순서)
-    //  플레이 씬: 3초 뒤 플레이어를 죽임 → 죽음 화면이 뜨고 2초 뒤 버튼을 누른 것처럼 픽 화면으로
     public sealed class PickFlowDemo : MonoBehaviour
     {
         public const string SessionKey = "HJH.PickFlowDemo";
@@ -55,7 +52,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
                         Debug.Log($"[PickFlowDemo] {_nextPick + 1}번 캐릭터 선택");
                         screen.DebugPick(_nextPick % 3);
                         _nextPick++;
-                        _sceneStart = float.MaxValue;   // 한 번만
+                        _sceneStart = float.MaxValue;
                     }
                 }
                 return;

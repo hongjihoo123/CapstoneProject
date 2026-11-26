@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 {
-    // Quarter-view follow camera (fixed pitch / yaw, smoothed follow) plus HitFeel shake and kick offsets.
     public class TopDownCameraFollow : MonoBehaviour
     {
         [SerializeField] private Transform target;
@@ -14,6 +13,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
         private Vector3 _velocity;
         private Vector3 _followPosition;
+
+        public Transform Target => target;
 
         private void OnEnable()
         {
@@ -29,16 +30,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             if (target == null)
                 return;
 
-            // Follow is smoothed on its own position so the shake offset never feeds back into it.
             _followPosition = Vector3.SmoothDamp(_followPosition, DesiredPosition(), ref _velocity, smoothTime);
 
-            // 흔들림: 부드러운 노이즈로 위치 + 살짝 기울기(롤). 무작위 지글거림보다 묵직하게 느껴짐
             float amplitude = HitFeel.CurrentShake;
             float t = Time.unscaledTime * shakeFrequency;
             float roll = amplitude > 0f ? Noise(t, 7.3f) * amplitude * shakeRollDegrees : 0f;
 
             transform.rotation = Quaternion.Euler(pitch, yaw, roll);
-            // 줌 펀치: 바라보는 방향으로 거리 × 비율만큼 다가감(+)/물러남(-). 따라가기 보간과 분리
             Vector3 zoom = transform.forward * (distance * HitFeel.CurrentZoom);
             transform.position = _followPosition + ShakeOffset(amplitude, t) + HitFeel.CurrentKick + zoom;
         }
@@ -56,7 +54,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             return transform.right * jitter.x + transform.up * jitter.y;
         }
 
-        // -1 ~ 1 부드러운 노이즈
         private static float Noise(float t, float seed) => (Mathf.PerlinNoise(t, seed) - 0.5f) * 2f;
 
         private Vector3 DesiredPosition() =>

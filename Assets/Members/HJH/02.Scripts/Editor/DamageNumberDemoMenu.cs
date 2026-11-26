@@ -3,7 +3,6 @@ using UnityEditor;
 
 namespace HJH.EditorTools
 {
-    // 데미지 숫자 샘플 데모 켜고 끄기 (다음 플레이부터 적용, 에디터 세션 동안만 기억)
     public static class DamageNumberDemoMenu
     {
         private const string MenuPath = "HJH/디버그/데미지 숫자 샘플 (플레이 시)";

@@ -9,14 +9,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 스킬 아이콘 한 칸. 속성 색 테두리, 왼쪽 아래 속성 뱃지, 오른쪽 아래 키, 롤 같은 쿨타임 표시
-    //   쿨타임 중 - 아이콘 어두워지고 12시부터 어두운 부채꼴이 풀림 + 밝은 선 + 남은 초
-    //   쿨 끝남   - 아이콘 위로 하얗게 번쩍 + 테두리에서 링 퍼짐 (칸 자체는 안 움직임)
-    //   못 쓸 때  - 내용물이 옆으로 흔들리고 부채꼴/숫자가 빨갛게 번쩍
-    // 스킬 교체로 새 스킬 들어오면 속성 색으로 번쩍 + 아이콘 톡 튐
-    //
-    // 부채꼴처럼 계속 바뀌는 건 매 프레임 갱신,
-    // 번쩍/흔들림 같은 한 번짜리는 DOTween 으로 재생
     public class SkillSlotView : MonoBehaviour, IUiBake
     {
         [SerializeField] private Image frame;
@@ -50,6 +42,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         [Header("쿨타임")]
         [SerializeField] private Color cooldownIconTint = new Color(0.42f, 0.42f, 0.46f, 1f);
+        [SerializeField, Tooltip("쿨 도는 부채꼴 색 (롤: 아이콘을 덮는 진한 파랑). 알파 0 이면 프리팹에 구워 둔 색 그대로")]
+        private Color cooldownBlue = new Color(0.04f, 0.3f, 0.7f, 0.82f);
 
         [Header("쿨 끝남")]
         [SerializeField] private Color readyColor = new Color(1f, 0.96f, 0.82f, 1f);
@@ -70,6 +64,15 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField, Tooltip("Icon pop when a swapped-in skill lands in the slot.")]
         private float swapPunch = 0.18f;
 
+        [Header("쿨 줄어듦 (롤 나보리처럼)")]
+        [SerializeField, Tooltip("쿨이 완전히 초기화될 때 색")] private Color resetColor = new Color(1f, 0.82f, 0.3f, 1f);
+        [SerializeField, Range(0f, 1f)] private float refundFlashAlpha = 0.5f;
+        [SerializeField] private float refundPunch = 0.14f;
+        [SerializeField] private float resetPunch = 0.3f;
+        [SerializeField, Tooltip("깎인 만큼의 쿨 막대가 쭉 당겨지고 깜빡이는 시간 (롤 처럼)")] private float refundPullTime = 0.36f;
+        [SerializeField, Tooltip("깜빡일 때의 밝은 회색 (막대와 아이콘 위 번쩍 둘 다). 롤은 연한 회청색")] private Color refundBarColor = new Color(0.8f, 0.84f, 0.9f, 0.92f);
+        [SerializeField, Range(1, 4), Tooltip("딱딱 깜빡이는 횟수")] private int refundBlinks = 2;
+
         private SkillData _bound;
         private bool _hasBound;
         private bool _blocked;
@@ -81,11 +84,18 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private Sequence _deniedTween;
         private Sequence _burstTween;
         private Tween _punchTween;
+        private Tween _refundPunchTween;
+        private float _pullSeconds;
+        private float _pullStart;
 
         private void Awake()
         {
             if (cooldownOverlay != null)
+            {
+                if (cooldownBlue.a > 0f)
+                    cooldownOverlay.color = cooldownBlue;
                 _overlayColor = cooldownOverlay.color;
+            }
             if (cooldownText != null)
                 _textColor = cooldownText.color;
             if (readyFlash != null)
@@ -110,7 +120,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             transform.localScale = Vector3.one * _scaleNow;
         }
 
-        // 콤보로 이어지는 칸을 키우고 링 연출을 세게. 1 = 평소, 2.8 쯤 = "이걸 쓰세요", 0.6 = 눌려 있음
         public void SetComboEmphasis(float intensity, float scale, bool snap = false)
         {
             _scaleTarget = scale;
@@ -120,7 +129,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 transform.localScale = Vector3.one * scale;
             }
 
-            EnsureRing();   // 칸 크기가 레이아웃 뒤에 정해져서 매 프레임 맞춰줌
+            EnsureRing();
             if (ring != null)
                 ring.SetIntensity(intensity, snap);
         }
@@ -149,19 +158,33 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 네모 슬롯을 동그랗게: 프레임/뒷판을 원형 그림으로, 아이콘·쿨타임은 원 모양으로 자름
         [SerializeField, Tooltip("동그란 슬롯 그림 (Resources/HJH/UI 의 slot_circle_frame / slot_circle_bg). 비면 예전 네모 모양")]
         private Sprite circleFrameSprite;
         [SerializeField] private Sprite circleBackSprite;
 
-        // 그림 연결 (에디터 전용, HJH/UI 굽기 메뉴가 부름)
         [ContextMenu("그림 연결")]
         public void BakeLayout()
         {
 #if UNITY_EDITOR
             circleFrameSprite = HudUiKit.Load("slot_circle_frame");
             circleBackSprite = HudUiKit.Load("slot_circle_bg");
+            circleWhiteSprite = HudUiKit.Load("slot_circle_white");
 #endif
+        }
+
+        [SerializeField, Tooltip("번쩍/깜빡임용 흰 원 (Resources/HJH/UI/slot_circle_white). 비면 에디터에서는 자동으로 찾음")]
+        private Sprite circleWhiteSprite;
+
+        private Sprite WhiteCircle
+        {
+            get
+            {
+#if UNITY_EDITOR
+                if (circleWhiteSprite == null)
+                    circleWhiteSprite = HudUiKit.Load("slot_circle_white");
+#endif
+                return circleWhiteSprite;
+            }
         }
 
         private bool _circleApplied;
@@ -177,13 +200,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Sprite circleFrame = circleFrameSprite;
                 Sprite circleBack = circleBackSprite;
                 if (circleFrame == null)
-                    return;     // 에셋을 아직 안 가져옴: 예전 모양 유지
+                    return;
 
                 _circleApplied = true;
                 frame.sprite = circleFrame;
                 frame.type = Image.Type.Simple;
                 frame.preserveAspect = true;
-                foreach (Shadow shadow in GetComponents<Shadow>())   // Outline 포함: 네모 테두리 번짐 끔
+                foreach (Shadow shadow in GetComponents<Shadow>())
                     shadow.enabled = false;
 
                 Transform back = transform.Find("Backing");
@@ -196,10 +219,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     ((RectTransform)back).sizeDelta = Vector2.one * box * circleFraction;
                 }
 
-                if (cooldownOverlay != null && circleBack != null)
-                    cooldownOverlay.sprite = circleBack;
-                if (readyFlash != null && circleBack != null)
-                    readyFlash.sprite = circleBack;
+                if (cooldownOverlay != null && (WhiteCircle != null || circleBack != null))
+                    cooldownOverlay.sprite = WhiteCircle != null ? WhiteCircle : circleBack;
+                if (readyFlash != null && (WhiteCircle != null || circleBack != null))
+                    readyFlash.sprite = WhiteCircle != null ? WhiteCircle : circleBack;
             }
 
             if (Mathf.Approximately(_circleBox, box))
@@ -243,10 +266,8 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 .SetLink(gameObject);
         }
 
-        // 쿨 끝났을 때 (SkillStateModule.SkillReady)
         public void PlayReady() => PlayReady(readyColor);
 
-        // 쿨 중에 키 눌렀을 때 (SkillStateModule.SkillDenied)
         public void Deny()
         {
             _deniedTween?.Kill(true);
@@ -269,7 +290,34 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _deniedTween.OnKill(() => _deniedTween = null).SetUpdate(true).SetLink(gameObject);
         }
 
-        // 스킬 교체로 이 칸에 새 스킬 들어왔을 때: 속성 색으로 번쩍 + 아이콘 톡
+        public void PlayRefund(float seconds, bool reset)
+        {
+            if (seconds <= 0f)
+                return;
+
+            float now = Time.unscaledTime;
+            bool stillPulling = now < _pullStart + refundPullTime;
+            _pullSeconds = (stillPulling ? _pullSeconds * (1f - (now - _pullStart) / refundPullTime) : 0f) + seconds;
+            _pullStart = now;
+
+            if (reset)
+            {
+                PlayReady(resetColor);
+                ComboBurst(resetColor);
+            }
+            else
+            {
+                BlinkWhite();
+            }
+
+            RectTransform target = content != null ? content : (RectTransform)transform;
+            _refundPunchTween?.Kill(true);
+            _refundPunchTween = target.DOPunchScale(Vector3.one * (reset ? resetPunch : refundPunch), reset ? 0.4f : 0.22f, 6, 0.6f)
+                .OnKill(() => _refundPunchTween = null)
+                .SetUpdate(true)
+                .SetLink(gameObject);
+        }
+
         public void Punch(Color color)
         {
             PlayReady(color);
@@ -284,7 +332,38 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 .SetLink(gameObject);
         }
 
-        private void PlayReady(Color color)
+        private void PlayReady(Color color) => PlayReady(color, flashAlpha, flashDuration, true);
+
+        private void BlinkWhite()
+        {
+            if (readyFlash == null)
+                return;
+
+            _readyTween?.Kill(true);
+            readyFlash.enabled = true;
+            Color white = new Color(refundBarColor.r, refundBarColor.g, refundBarColor.b, refundFlashAlpha);
+            float step = Mathf.Max(0.02f, refundPullTime / (refundBlinks * 2f));
+            readyFlash.color = white;
+            _readyTween = DOTween.Sequence();
+            for (int i = 0; i < refundBlinks; i++)
+            {
+                _readyTween.AppendCallback(() => readyFlash.color = white);
+                _readyTween.AppendInterval(step);
+                _readyTween.AppendCallback(() => readyFlash.color = new Color(white.r, white.g, white.b, 0f));
+                _readyTween.AppendInterval(step);
+            }
+            _readyTween
+                .OnKill(() =>
+                {
+                    _readyTween = null;
+                    if (readyFlash != null)
+                        readyFlash.enabled = false;
+                })
+                .SetUpdate(true)
+                .SetLink(gameObject);
+        }
+
+        private void PlayReady(Color color, float alpha, float duration, bool withRing)
         {
             _readyTween?.Kill(true);
             _readyTween = DOTween.Sequence();
@@ -292,11 +371,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (readyFlash != null)
             {
                 readyFlash.enabled = true;
-                readyFlash.color = new Color(color.r, color.g, color.b, flashAlpha);
-                _readyTween.Join(readyFlash.DOFade(0f, flashDuration).SetEase(Ease.OutQuad));
+                readyFlash.color = new Color(color.r, color.g, color.b, alpha);
+                _readyTween.Join(readyFlash.DOFade(0f, duration).SetEase(Ease.OutQuad));
             }
 
-            if (readyRing != null)
+            if (withRing && readyRing != null)
             {
                 RectTransform ring = readyRing.rectTransform;
                 readyRing.enabled = true;
@@ -318,7 +397,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 .SetLink(gameObject);
         }
 
-        // "RMB" 같은 키 글자는 한 줄로 유지, 줄바꿈 대신 글자 크기를 줄임
         public void SetKeyLabel(string label)
         {
             if (keyText == null)
@@ -331,7 +409,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             keyText.text = label;
         }
 
-        // Space 처럼 글자로 넣기 긴 키는 아이콘으로 보여줌
         public void SetKeyIcon(Sprite sprite)
         {
             if (keyText != null)
@@ -378,8 +455,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 충전 여러 개인 스킬은 충전이 남아 있으면 계속 쓸 수 있어서, 다 썼을 때만 부채꼴로 덮고
-        // 숫자도 남은 초 대신 남은 충전 개수 보여줌
         public void SetCooldown(float remaining, float duration, int charges = 0, int maxCharges = 1)
         {
             bool cooling = remaining > 0f && duration > 0f;
@@ -393,10 +468,27 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 ApplyIconTint();
             }
 
-            cooldownOverlay.enabled = blocked;
-            if (blocked)
-                cooldownOverlay.fillAmount = fill;
-            UpdateSweepEdge(blocked, fill);
+            float pull = 0f;
+            float pullT = 1f;
+            if (_pullSeconds > 0f && duration > 0f)
+            {
+                pullT = Mathf.Clamp01((Time.unscaledTime - _pullStart) / Mathf.Max(0.01f, refundPullTime));
+                if (pullT >= 1f)
+                    _pullSeconds = 0f;
+                else
+                    pull = _pullSeconds / duration * (1f - (1f - (1f - pullT) * (1f - pullT)));
+            }
+
+            bool pulling = pull > 0.002f;
+            float shown = Mathf.Clamp01(fill + pull);
+            cooldownOverlay.enabled = blocked || pulling;
+            if (blocked || pulling)
+            {
+                cooldownOverlay.fillAmount = shown;
+                bool lit = pulling && Mathf.FloorToInt(pullT * refundBlinks * 2f) % 2 == 0;
+                cooldownOverlay.color = lit ? refundBarColor : _overlayColor;
+            }
+            UpdateSweepEdge(blocked || pulling, shown);
 
             if (cooldownText == null)
                 return;
@@ -414,8 +506,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 icon.color = _blocked ? _iconColor * cooldownIconTint : _iconColor;
         }
 
-        // 부채꼴 경계에 붙는 밝은 선. 아이콘 가운데 기준으로 같이 돌고,
-        // 모서리 쪽으로 갈수록 길어져서 항상 네모 끝까지 닿게 늘려줌
         private void UpdateSweepEdge(bool blocked, float fill)
         {
             if (cooldownEdge == null)

@@ -2,42 +2,25 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill;
 using Assets.Members.HJH._02.Scripts.Element;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.SkillSwap;
 using Members.JJH._02_Scripts.ElementsSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Hud
 {
-    // The one place HUD code reads from. UI scripts should use only this (and the data types it hands out:
-    // SkillData, PassiveData, CharacterData, ElementComboBook.Recipe, SkillPickup, ElementType),
-    // never SkillStateModule / ElementComboChain / SkillSwapInteractor directly. Then gameplay code can
-    // change freely as long as this class keeps its shape, and UI can be rebuilt without touching gameplay.
-    //
-    // No wiring needed: PlayerHudSource.Instance finds (or adds) it on the player, and every reference
-    // below is found automatically. Features missing from a scene just never raise their events.
-    //
-    //   Skills    GetSlot(slot) -> SlotInfo, Passive, TryGetPassiveGauge(...), Character, KeyLabel(slot)
-    //             LoadoutChanged, SkillUsed, SkillDenied, SkillReady, CharacterChanged
-    //   Combo     HasCombo, ComboInputs, ComboList, ComboStock, MaxComboStock, ComboTimeLeft, ComboWindow,
-    //             FinisherKey, TryGetNextCombo(...), KeyFor(element)
-    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken,
-    //             FinisherArmed / FinisherExpired / FinisherReleased, FinisherReady, FinisherTimeLeft, StoredFinishers
-    //   Swap      SwapPickup (null = closed), InteractKey, SwapChanged, Swapped
-    //   Elements  Palette, ColorOf(element / skill), ElementName(element)
     [DisallowMultipleComponent]
     public class PlayerHudSource : MonoBehaviour
     {
-        // Everything a skill icon needs, already resolved (swap lock, charges, key, element color).
         public readonly struct SlotInfo
         {
             public readonly SkillSlotId Slot;
             public readonly SkillData Skill;
             public readonly string Key;
-            // Time until the skill can be cast again (0 = castable now) and the length it counts down from.
             public readonly float CooldownRemaining;
             public readonly float CooldownDuration;
             public readonly int Charges;
@@ -59,7 +42,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
             public bool IsEmpty => Skill == null;
             public bool IsReady => Skill != null && CooldownRemaining <= 0f;
-            // 1 = just used, 0 = ready (for radial fills).
             public float CooldownFill => CooldownDuration > 0f ? Mathf.Clamp01(CooldownRemaining / CooldownDuration) : 0f;
         }
 
@@ -99,27 +81,23 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action<SkillSlotId> SkillDenied;
         public event Action<SkillSlotId> SkillReady;
         public event Action<CharacterData> CharacterChanged;
+        public event Action<int> UltimateChained;
 
-        // A skill just added an input to the combo trail (ComboChanged follows right after).
         public event Action ComboInputAdded;
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
-        // 들고 있는 콤보가 바뀜 (맛보기 선택, 바인딩 교체) → 콤보 목록을 다시 그려야 함
         public event Action ComboListChanged;
-        // 피니시: 준비됨(스택, 배율) / 시간 끝 / 나감(칸, 배율, 같이 터진 피니시 스킬)
         public event Action<int, float> FinisherArmed;
         public event Action FinisherExpired;
-        public event Action<SkillSlotId, float, IReadOnlyList<FinisherBook.Entry>> FinisherReleased;
+        public event Action<SkillSlotId, float> FinisherReleased;
 
         public event Action<SkillPickup> SwapChanged;
-        // slot, skill that went to the floor, skill that came in
         public event Action<SkillSlotId, SkillData, SkillData> Swapped;
 
         public PassiveData Passive => Skills != null ? Skills.Passive : null;
         public CharacterData Character => characterSwitcher != null ? characterSwitcher.Current : null;
 
-        // Passive with a gauge (e.g. the gunner's charged shot). False when the current passive has none.
         public bool TryGetPassiveGauge(out float fill, out bool full)
         {
             if (Skills != null && Skills.Context?.Passive is IPassiveGauge gauge)
@@ -136,7 +114,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
         public string KeyLabel(SkillSlotId slot) => ComboKeyMap.Key(Player, slot);
 
-        // A combo effect that is on right now: seconds left and the full length (false when it is off).
         public bool TryGetComboEffectTime(string comboName, out float remaining, out float total)
         {
             total = ComboLoadout.DurationOf(comboName);
@@ -144,15 +121,71 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             return comboChain != null && comboChain.TryGetEffectRemaining(comboName, out remaining);
         }
 
-        // How much the active combo effects add to a stat right now (current value minus the value without them).
-        // 0 when no combo buff touches it. Changes the moment a combo effect starts or ends.
         public float ComboStatBonus(PlayerStatId stat)
         {
             var stats = Player != null ? Player.Stats : null;
             if (stats == null || stats.Tree == null)
                 return 0f;
 
-            return stats.Get(stat) - stats.GetExcluding(stat, ComboStatBuff.IsComboSource);
+            return stats.Get(stat) - stats.Tree.GetExcludingModifiers(stat, m => m.IsTimed || ComboStatBuff.IsComboSource(m.Source));
+        }
+
+        public readonly struct UltRule
+        {
+            public readonly int Need;
+            public readonly float Window;
+            public readonly float ChainTime;
+            public readonly int Stage;
+            public readonly int Cap;
+
+            public UltRule(int need, float window, float chainTime, int stage, int cap)
+            {
+                Need = need; Window = window; ChainTime = chainTime; Stage = stage; Cap = cap;
+            }
+        }
+
+        public UltRule UltimateRule => new(CritSystem.UltNeed(), CritSystem.UltWindowSeconds(), CritSystem.ChainSeconds(),
+            CritSystem.UltChainStage, CritSystem.UltChainCap());
+
+        public bool TryGetUltimateProgress(out int crits, out int need, out float timeLeft) =>
+            CritSystem.TryGetUltProgress(out crits, out need, out timeLeft);
+
+        public readonly struct TimedBuff
+        {
+            public readonly string Name;
+            public readonly PlayerStatId Stat;
+            public readonly StatModifierType Type;
+            public readonly float Value;
+            public readonly float Left;
+            public readonly float Total;
+
+            public TimedBuff(string name, PlayerStatId stat, StatModifierType type, float value, float left, float total)
+            {
+                Name = name; Stat = stat; Type = type; Value = value; Left = left; Total = total;
+            }
+        }
+
+        private readonly List<(PlayerStatId Stat, StatModifier Modifier, float Remaining)> _timedScratch = new();
+
+        public void CollectTimedBuffs(List<TimedBuff> into)
+        {
+            into.Clear();
+            var stats = Player != null ? Player.Stats : null;
+            if (stats == null || stats.Tree == null)
+                return;
+
+            _timedScratch.Clear();
+            stats.Tree.CollectTimed(_timedScratch);
+            foreach (var t in _timedScratch)
+            {
+                string name = t.Modifier.Source switch
+                {
+                    SkillData skill => skill.DisplayName,
+                    ElementSkillCast cast => cast.Skill.DisplayName,
+                    _ => "스킬 효과"
+                };
+                into.Add(new TimedBuff(name, t.Stat, t.Modifier.Type, t.Modifier.Value, t.Remaining, t.Modifier.Duration));
+            }
         }
 
         public SlotInfo GetSlot(SkillSlotId slot)
@@ -166,7 +199,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             float cooldown = skills.GetCooldownRemaining(slot);
             float lockLeft = skills.GetLockRemaining(slot);
 
-            // Castable while a charge is left, unless a swap lock is still running.
             float remaining = 0f;
             float duration = skills.GetCooldownDuration(slot);
             if (charges <= 0)
@@ -193,11 +225,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public float FinisherReadyTime => comboChain != null ? comboChain.ReadyTime : 0f;
         public float FinisherScale => comboChain != null ? comboChain.ArmedScale : 1f;
         public float FinisherScaleFor(int stacks) => comboChain != null ? comboChain.ScaleFor(stacks) : 1f;
-        public IReadOnlyList<FinisherBook.Entry> StoredFinishers => comboChain != null ? comboChain.StoredFinishers : Array.Empty<FinisherBook.Entry>();
-        public IReadOnlyList<FinisherBook.Entry> ArmedFinishers => comboChain != null ? comboChain.ArmedFinishers : Array.Empty<FinisherBook.Entry>();
         public bool CanCarryFinisher(SkillSlotId slot) => ElementComboChain.CanCarryFinisher(slot);
 
-        // The element that continues the best combo in progress (false when no combo is under way).
         public bool TryGetNextCombo(out ElementType next, out ElementComboBook.Recipe combo, out int progress)
         {
             if (comboChain != null)
@@ -209,10 +238,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             return false;
         }
 
-        // True when any combo still in reach (not only the best one) wants this element next.
         public bool IsNextElement(ElementType element) => comboChain != null && comboChain.IsNextElement(element);
 
-        // Key(s) that cast this element with the current loadout: "Q", "Q/E", or "-" when none does.
         public string KeyFor(ElementType element) => ComboKeyMap.KeyFor(_elementKeys, element);
 
         public SkillPickup SwapPickup => swapInteractor != null ? swapInteractor.Choosing : null;
@@ -251,8 +278,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
         private void Start() => Bind();
 
-        // Lazy so getters work even when another script's Start runs first. Subscribes once the player's
-        // SkillFsm exists (it is set in PlayerAgent.Awake).
         private void Bind()
         {
             if (_bound)
@@ -280,6 +305,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             _skills.SkillUsed += HandleSkillUsed;
             _skills.SkillDenied += HandleSkillDenied;
             _skills.SkillReady += HandleSkillReady;
+            CritSystem.UltChained += HandleUltChained;
 
             if (comboChain != null)
             {
@@ -314,6 +340,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             _skills.SkillUsed -= HandleSkillUsed;
             _skills.SkillDenied -= HandleSkillDenied;
             _skills.SkillReady -= HandleSkillReady;
+            CritSystem.UltChained -= HandleUltChained;
 
             if (comboChain != null)
             {
@@ -346,6 +373,7 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         private void HandleSkillUsed(SkillUsedInfo info) => SkillUsed?.Invoke(info.Slot, info.Data);
         private void HandleSkillDenied(SkillSlotId slot) => SkillDenied?.Invoke(slot);
         private void HandleSkillReady(SkillSlotId slot) => SkillReady?.Invoke(slot);
+        private void HandleUltChained(int chain) => UltimateChained?.Invoke(chain);
         private void HandleCharacterChanged(CharacterData character) => CharacterChanged?.Invoke(character);
 
         private void HandleComboInput(bool shifted)
@@ -364,9 +392,9 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             ComboChanged?.Invoke();
         }
 
-        private void HandleFinisher(SkillSlotId slot, float scale, IReadOnlyList<FinisherBook.Entry> fired)
+        private void HandleFinisher(SkillSlotId slot, float scale)
         {
-            FinisherReleased?.Invoke(slot, scale, fired);
+            FinisherReleased?.Invoke(slot, scale);
             ComboChanged?.Invoke();
         }
 

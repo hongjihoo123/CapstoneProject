@@ -9,12 +9,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 에디터 전용 시험 도구: 플레이 중 Temp/GunnerShotProbe.run 파일이 있으면 자동으로 돎.
-    // 조준점을 캐릭터 주변 8방향 x 거리 3단계(가까움/중간/멀리)에 놓고 한 발씩 쏴서
-    //  - 조준 방향 vs 실제 총알 방향 (각도 차)
-    //  - 몸이 바라보는 방향
-    //  - 총알 시작점(총구)이 몸에서 얼마나 떨어졌는지
-    // 를 Temp/GunnerShotProbe.txt 에 적음. 각도 차가 크면 "BAD" 표시. 끝나면 .run 파일 지움.
     public class GunnerShotProbe : MonoBehaviour
     {
         private const string RunFile = "Temp/GunnerShotProbe.run";
@@ -33,7 +27,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private IEnumerator Start()
         {
-            yield return new WaitForSeconds(2f);   // 캐릭터·모델 준비
+            yield return new WaitForSeconds(2f);
             PlayerAgent player = FindAnyObjectByType<PlayerAgent>();
             if (player == null) { Write("player 없음"); yield break; }
             _tracker.ShotFired += s => _last = s;
@@ -71,7 +65,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 sb.AppendLine($"{d,4:0.0} {yaw,5:0} | {yaw,6:0} {shotYaw,6:0} {diff,4:0} | {Yaw(player.transform.forward),6:0} | ({off.x:0.00},{off.z:0.00},{off.y:0.00}) | {(isBad ? "BAD" : "ok")}");
                 yield return new WaitForSeconds(0.2f);
             }
-            // 스킬: 오른쪽 아래(화면 기준) 쪽을 조준하고 대시 -> 무기 스킬 -> 궁극기 순으로 직접 발동, 프레임 캡처 + 애니 상태 기록
             var fsm = player.SkillFsm;
             var cast = fsm != null ? fsm.GetType().GetMethod("Cast", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance) : null;
             Animator anim = player.GetComponent<CharacterModel>() is { } model ? model.Animator : null;

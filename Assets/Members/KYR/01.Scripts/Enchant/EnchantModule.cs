@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant.Data;
@@ -241,6 +242,8 @@ namespace Members.KYR._01.Scripts.Enchant
         // 트리 에셋 자체를 모디파이어 출처로 써서, 지울 때 그 트리 것만 정확히 빠진다.
         private void ApplyStats(EnchantTree tree)
         {
+            ApplySkillUpgrades(tree);
+
             PlayerStatsModule stats = player != null ? player.Stats : null;
             if (stats == null || stats.Tree == null)
             {
@@ -271,6 +274,32 @@ namespace Members.KYR._01.Scripts.Enchant
                     stats.AddModifier(effect.stat, new StatModifier(tree, effect.type, effect.ValueAt(pair.Value)));
                 }
             }
+        }
+
+        // 스킬 강화는 플레이어 스탯이 아니라 SkillUpgrades 판에 올린다. 출처 = 이 모듈, 캐릭터가 바뀌면 통째로 교체.
+        private void ApplySkillUpgrades(EnchantTree tree)
+        {
+            if (tree == null || !_ranks.TryGetValue(tree, out Dictionary<string, int> ranks))
+            {
+                SkillUpgrades.Board.Clear(this);
+                return;
+            }
+
+            var entries = new List<SkillUpgradeBoard.Entry>();
+            foreach (KeyValuePair<string, int> pair in ranks)
+            {
+                EnchantTreeNode node = tree.FindNode(pair.Key);
+                if (node == null || pair.Value <= 0)
+                    continue;
+
+                foreach (EnchantSkillEffect effect in node.SkillEffects)
+                {
+                    if (effect != null)
+                        entries.Add(new SkillUpgradeBoard.Entry(effect.kind, effect.scope, effect.ValueAt(pair.Value)));
+                }
+            }
+
+            SkillUpgrades.Board.Set(this, entries);
         }
 
         private Dictionary<string, int> RanksOf(EnchantTree tree)

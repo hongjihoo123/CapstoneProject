@@ -7,14 +7,9 @@ using UnityEngine.Rendering;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 바닥 안개 연출 담당 (씬에 안개 판이 있으면 저절로 생김, 씬 파일 수정 없음)
-    //  1) 더 짙고 높게: 안개 판을 raiseHeight 만큼 올리고, 짙기·두께를 배율로 키움 (플레이 중에만, 머티리얼 에셋은 그대로)
-    //  2) 플레이어 주변은 옅게: 게임 카메라에서만 플레이어 둘레가 걷힘 (씬뷰는 그대로)
-    //  3) 스킬 반응: 스킬이 터진 자리(SkillImpacts)에 구멍이 확 뚫리고, 테두리로 안개가 밀려났다가 몇 초에 걸쳐 다시 참
-    //     바람 스킬은 더 넓게 걷어냄. 스킬 코드는 안개를 모름 → 새 스킬도 자동으로 반응
     public class JungleFogController : MonoBehaviour
     {
-        private const int MaxHoles = 8;   // 셰이더 JW_FOG_HOLES 와 같아야 함
+        private const int MaxHoles = 8;
 
         [Header("짙기·높이")]
         [SerializeField, Tooltip("안개 판을 이만큼 올림 (m)")] private float raiseHeight = 0.8f;
@@ -62,7 +57,6 @@ namespace Assets.Members.HJH.Environment
             new GameObject("[JungleFog]").AddComponent<JungleFogController>();
         }
 
-        // 이름 말고 셰이더로 찾음 (씬마다 오브젝트 이름이 바뀜)
         private static List<Renderer> FindFogRenderers()
         {
             var result = new List<Renderer>();
@@ -79,7 +73,7 @@ namespace Assets.Members.HJH.Environment
         {
             SkillImpacts.ImpactedBy += OnSkillImpact;
             RenderPipelineManager.beginCameraRendering += OnBeginCamera;
-            Shader.SetGlobalVectorArray(HolesId, _holeData);   // 배열 크기는 처음 넣을 때 정해짐 → 항상 8칸
+            Shader.SetGlobalVectorArray(HolesId, _holeData);
             Shader.SetGlobalFloat(HoleCountId, 0f);
         }
 
@@ -117,7 +111,6 @@ namespace Assets.Members.HJH.Environment
             float r = Mathf.Max(minRadius, radius) * (wind ? windHoleScale : holeScale);
             var center = new Vector2(position.x, position.z);
 
-            // 장판·돌진처럼 같은 자리에서 계속 터지면 새로 만들지 않고 기존 구멍을 새로 고침
             for (int i = 0; i < _holes.Count; i++)
             {
                 Hole h = _holes[i];
@@ -131,7 +124,7 @@ namespace Assets.Members.HJH.Environment
             }
 
             if (_holes.Count >= MaxHoles)
-                _holes.RemoveAt(0);   // 제일 오래된 것부터
+                _holes.RemoveAt(0);
             _holes.Add(new Hole { Center = center, Radius = r, Age = 0f });
         }
 
@@ -160,7 +153,6 @@ namespace Assets.Members.HJH.Environment
 
             foreach (Hole h in _holes)
             {
-                // 0.15초 만에 확 걷히며 퍼지고 → 잠깐 유지 → 천천히 다시 참
                 float t = h.Age;
                 float open = Mathf.Clamp01(t / 0.15f);
                 float strength = open * (1f - Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(refillSeconds * 0.3f, refillSeconds, t)));
@@ -174,7 +166,6 @@ namespace Assets.Members.HJH.Environment
             Shader.SetGlobalFloat(HoleCountId, count);
         }
 
-        // 플레이어 주변 걷힘은 게임 카메라에서만 (씬뷰는 안개 그대로 보이게)
         private void OnBeginCamera(ScriptableRenderContext context, Camera cam)
         {
             bool reveal = _player != null && cam.cameraType == CameraType.Game;

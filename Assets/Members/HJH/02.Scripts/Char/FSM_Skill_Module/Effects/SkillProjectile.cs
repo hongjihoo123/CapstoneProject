@@ -6,8 +6,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 {
-    // Code-only projectile for skills: flies along the aim direction hugging the terrain (GroundTrace),
-    // hits damageables (once each), stops on walls.
     public sealed class SkillProjectile : ISkillTimedEffect
     {
         public struct Settings
@@ -18,10 +16,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
             public bool Pierce;
             public float Delay;
             public IDamageable Ignore;
-            // Visual: VisualSize 0 = invisible (only the debug circle). Otherwise an FxLibrary orb of this size rides it.
             public Color Color;
             public float VisualSize;
-            // 오브 대신 이 프리팹이 날아감 (스킬마다 정한 이펙트). TravelColor 흰색이면 원래 색
             public GameObject TravelPrefab;
             public Color TravelColor;
         }
@@ -59,7 +55,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
                 return true;
             }
 
-            // 땅에서 뜬 높이를 유지하면서 지형을 타고 감 (언덕에 박혀 사라지거나 내리막에서 적 위로 지나가지 않게)
             if (!_hoverKnown)
             {
                 _hover = GroundTrace.HoverOf(_context, _position);

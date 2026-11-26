@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // The one place gameplay code asks for effects. Every effect is a prefab in FxLibrary;
-    // this class only decides where it goes, how big, which color, and passes runtime values (FxParams).
-    // An empty library slot just plays nothing.
     public static class Fx
     {
         private static FxLibrary Library => FxLibrary.Loaded;
@@ -17,7 +14,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void Muzzle(Vector3 position, Vector3 direction, Color color, bool big) =>
             Play(Library?.muzzle, position, Facing(direction), big ? 1.6f : 1f, color);
 
-        // power > 1 makes the blast a bit larger than its damage radius reads.
         public static void Explosion(Vector3 center, float radius, Color color, float power = 1f) =>
             Play(Library?.explosion, center, Quaternion.identity, radius * Mathf.Lerp(1f, 1.25f, Mathf.Clamp01(power - 1f)), color);
 
@@ -28,11 +24,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Play(Library?.groundSlam, center, Quaternion.identity, radius, color);
 
         public static void DamageNumber(Vector3 position, float amount, Color color, float scale = 1f,
-            DamageNumberStyle style = DamageNumberStyle.Normal) =>
+            DamageNumberStyle style = DamageNumberStyle.Normal, float maxRise = 0f) =>
             Play(Library?.damageNumber, position, Quaternion.identity, 1f, color,
-                new FxParams { Value = amount, Radius = scale, NumberStyle = style });
+                new FxParams { Value = amount, Radius = scale, NumberStyle = style, MaxRise = maxRise });
 
-        // 짧은 글자 팝업 ("2단!", "격파!"). 데미지 숫자와 같은 움직임
         public static void PopText(Vector3 position, string text, Color color, float scale = 1f) =>
             Play(Library?.damageNumber, position, Quaternion.identity, 1f, color, new FxParams { Text = text, Radius = scale });
 
@@ -42,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void Tracer(Vector3 from, Vector3 to, Color color, float width, float duration = 0.07f) =>
             Play(Library?.tracer, from, Quaternion.identity, 1f, color, new FxParams { Start = from, End = to, Width = width, Duration = duration });
 
-        // Held thin line (aim guides). Re-aim with SetPoints, Kill when done.
         public static FxHandle AimLine(Vector3 from, Vector3 to, Color color, float width) =>
             Hold(Library?.tracer, from, Quaternion.identity, 1f, color, new FxParams { Start = from, End = to, Width = width, Duration = 0f });
 
@@ -50,7 +44,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Play(Library?.swipe, origin.position, Quaternion.identity, 1f, color,
                 new FxParams { Follow = origin, Radius = radius, Shape = shape, Delay = delay, Duration = duration });
 
-        // A blade slash on its own (skills): faces forward, tilt rolls the slash plane, mirror flips the sweep direction.
         public static void Slash(Vector3 position, Vector3 forward, float radius, bool mirror = false, float tilt = 0f, float speed = 1f)
         {
             Quaternion rotation = Facing(new Vector3(forward.x, 0f, forward.z)) * Quaternion.Euler(0f, 0f, tilt);
@@ -64,7 +57,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void ProjectileImpact(Vector3 position, Vector3 direction, Color color, float size, bool hit) =>
             Play(Library?.projectileImpact, position, Facing(-direction), size * (hit ? 1.4f : 0.8f), color);
 
-        // Value 1 = drawing, 0 = paused.
         public static FxHandle DashTrail(Transform target, Color color) =>
             Hold(Library?.dashTrail, target.position, Quaternion.identity, 1f, color,
                 new FxParams { Follow = target, Offset = Vector3.up * 0.9f, Value = 0f });
@@ -77,19 +69,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void BlinkIn(Vector3 position, Vector3 direction, Color color) =>
             Play(Library?.blinkIn, position, Facing(direction), 1f, color);
 
-        // Held charge-up at a point. SetValue(0..1) as it charges, MoveTo to follow the muzzle.
         public static FxHandle Charge(Vector3 position, Color color) =>
             Hold(Library?.charge, position, Quaternion.identity, 1f, color);
 
         public static void Beam(Vector3 from, Vector3 to, Color color, float width, float duration = 0.3f) =>
             Play(Library?.beam, from, Quaternion.identity, 1f, color, new FxParams { Start = from, End = to, Width = width, Duration = duration });
 
-        // Held energy barrel (gunner R). SetPoints to follow, SetValue(0..1) as it charges, Kill when it fires.
         public static FxHandle EnergyCannon(Vector3 start, Vector3 tip, Color color, float width) =>
             Hold(Library?.energyCannon, start, Quaternion.identity, 1f, color, new FxParams { Start = start, End = tip, Width = width, Duration = 0f, Value = 0.35f });
 
-        // 부채꼴 충격포: 총구 섬광 + 부채꼴로 퍼지는 에너지 줄기들 + 끝에 초승달 모양 파동 + 불꽃.
-        // apex 는 바닥 높이, 이펙트는 허리 높이(1m)에 그림. 프리팹 풀 한도(12) 안 넘게 개수 정해둠
         public static void ConeBlast(Vector3 apex, Vector3 direction, float radius, float angle, Color color)
         {
             direction.y = 0f;
@@ -104,7 +92,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             CannonMuzzle(origin + direction * 0.6f, direction, color);
             Shockwave(apex + direction * 0.8f, color, 1.6f);
 
-            // 부채꼴 안을 고르게 훑는 줄기 7개
             const int rays = 7;
             for (int i = 0; i < rays; i++)
             {
@@ -112,7 +99,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Beam(Edge(yaw, 0.8f), Edge(yaw, radius * 0.95f), color, 0.22f, 0.16f);
             }
 
-            // 끝쪽 호를 따라 두꺼운 선 10조각 = 초승달 파동
             const int arc = 10;
             for (int i = 0; i < arc; i++)
             {
@@ -121,7 +107,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Tracer(Edge(a, radius), Edge(b, radius), color, 0.4f, 0.2f);
             }
 
-            // 호 위 몇 군데 불꽃
             for (int i = 0; i < 5; i++)
             {
                 float yaw = -half + angle * (i + 0.5f) / 5f;
@@ -132,7 +117,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void CannonMuzzle(Vector3 position, Vector3 direction, Color color) =>
             Play(Library?.cannonMuzzle, position, Facing(direction), 1f, color);
 
-        // Held circle. SetValue = fill 0..1, SetSpeed = rotation (deg/s).
         public static FxHandle MagicCircle(Vector3 center, float radius, Color color) =>
             Hold(Library?.magicCircle, center + Vector3.up * 0.07f, Quaternion.identity, radius * 2f, color);
 
@@ -153,27 +137,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public static void FrenzyStack(Vector3 center, Color color, int stacks) =>
             Play(Library?.frenzyStack, center, Quaternion.identity, 1f + stacks * 0.25f, color);
 
-        // Held on the player. SetValue(stacks).
         public static FxHandle FrenzyAura(Transform target, Color color, int stacks) =>
             Hold(Library?.frenzyAura, target.position, Quaternion.identity, 1f, color, new FxParams { Follow = target, Value = stacks });
 
-        // move = 실제로 밀리는 거리 배율 (1 = 기존). 찌그러짐(맞은 자세)은 strength 그대로
-        // 맞은 대상이 찌그러지며 밀리는 연출. 보스는 밀리지 않음(move 0, 찌그러짐만) — 어디서 불러도 여기서 막힘
         public static void Punch(Transform target, Vector3 direction, float strength, float move = 1f) =>
             PunchFx.Play(target, direction, strength, RobotWeapons.CrowdControl.IsImmovable(target) ? 0f : move);
 
-        // 라이브러리에 없는 프리팹 아무거나 (스킬마다 따로 정한 이펙트). 풀링은 똑같이 됨. 색 그대로 쓰려면 Color.white
         public static void Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>
             Play(prefab, position, rotation, scale, color);
 
         public static FxHandle HoldPrefab(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color) =>
             Hold(prefab, position, rotation, scale, color);
 
-        // 붙잡아둔 이펙트를 대상 따라 seconds 동안 움직이다가 끔 (CC 걸린 적 머리 위 같은 거)
         public static void FollowFor(FxHandle handle, Transform target, Vector3 offset, float seconds) =>
             FxRunner.Instance.Add(new FollowFx(handle, target, offset, seconds));
 
-        // Runs an action after a delay on scaled time (frozen during hit stop like the effects).
         public static void After(float delay, Action action) => FxRunner.Instance.Add(new DelayFx(delay, action));
 
         private static void Play(GameObject prefab, Vector3 position, Quaternion rotation, float scale, Color color, FxParams parameters = default)

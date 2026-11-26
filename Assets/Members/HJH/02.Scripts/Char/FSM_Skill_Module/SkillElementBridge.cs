@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Forwards every cast skill's element to JJH's element stack system (UseSkillEvent).
-    // The skill system itself stays unaware of elements beyond the field on SkillData.
     public class SkillElementBridge : MonoBehaviour
     {
         [SerializeField] private SkillStateModule skillModule;

@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 커서 방향으로 날아가는 거. 여러 개면 부채꼴로 퍼짐, 터지는 범위 주면 맞은 자리에서 터짐
-    // 예) 화염구, 윈드 커터, 물방울 감옥, 전기 그물
     [CreateAssetMenu(menuName = "Skill/Element/Projectile (투사체)")]
     public class ProjectileSkill : ElementSkillBase
     {
@@ -54,14 +52,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
             cast.Context.Run(new SkillProjectile(cast.Context, origin, direction, settings, OnHit, OnFinish));
 
-            // 적한테 닿았을 때 (터지는 스킬이면 여기선 안 때리고 끝날 때 한 번에)
             void OnHit(RobotWeapons.IDamageable target, Vector3 point)
             {
                 if (explodeRadius <= 0f && cast.Hit(target, PushOf(target, point, direction)))
                     cast.Feel(1);
             }
 
-            // 다 날아갔거나 / 벽 / 적에 막혔을 때
             void OnFinish(Vector3 point)
             {
                 if (explodeRadius > 0f)
@@ -71,7 +67,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             }
         }
 
-        // 옆으로 밀 때: 투사체 진행 방향 기준 적이 있는 쪽으로 (가운데면 오른쪽)
         private Vector3 PushOf(RobotWeapons.IDamageable target, Vector3 point, Vector3 direction)
         {
             if (!pushSideways)

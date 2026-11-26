@@ -4,10 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 화면 위쪽 가운데 안내 한 줄. 모양은 프리팹(05.Data/Prefab/UI/ScreenNotice, PortalNotice)에서 수정.
-    //  - Show: 잠깐 띄우고 사라짐 (상점 "기회를 소진하셨습니다." 등)
-    //  - Hold: 매 프레임 부르는 동안 계속 보임 (포탈 근처 "아직 활성화되지 않았습니다")
-    // 쓰는 쪽은 프리팹을 인스펙터로 받아서 ScreenNotice.Show(prefab, ...) 또는 Instantiate 해서 씀
     public class ScreenNotice : MonoBehaviour, IUiBake
     {
         [SerializeField] private CanvasGroup group;
@@ -18,7 +14,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private static ScreenNotice _shared;
         private float _until;
 
-        // 같은 프리팹으로 씬에 하나만 만들어 재사용
         public static void Show(ScreenNotice prefab, string message, Color? color = null, float seconds = 1.8f)
         {
             if (_shared == null)
@@ -83,15 +78,14 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.ClearChildren(transform);
             var canvas = GetComponent<Canvas>() ? GetComponent<Canvas>() : gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 950;   // HUD 위, 바인딩 창(1000) 아래
+            canvas.sortingOrder = 950;
             var scaler = GetComponent<UnityEngine.UI.CanvasScaler>() ? GetComponent<UnityEngine.UI.CanvasScaler>() : gameObject.AddComponent<UnityEngine.UI.CanvasScaler>();
             scaler.uiScaleMode = UnityEngine.UI.CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
             scaler.matchWidthOrHeight = 0.5f;
 
-            // 상단 시간/스테이지 표시 바로 아래
             RectTransform rect = HudUiKit.NewRect("Notice", transform);
-            HudUiKit.Place(rect, new Vector2(0.5f, 1f), new Vector2(0f, -86f), new Vector2(700f, 72f));
+            HudUiKit.Place(rect, new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(700f, 72f));
             group = rect.gameObject.AddComponent<CanvasGroup>();
             group.alpha = 0f;
             group.blocksRaycasts = false;

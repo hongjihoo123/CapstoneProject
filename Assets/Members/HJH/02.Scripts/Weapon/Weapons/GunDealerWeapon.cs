@@ -68,7 +68,6 @@ namespace RobotWeapons
 
             fireCooldown = (1f / (IsUltimateActive ? data.ultimateFireRate : data.fireRate)) / AttackSpeedMultiplier;
 
-            // 궁극기 중에는 Burst 모드여도 점사 없이 연사로 처리
             if (!IsUltimateActive && data.fireMode == GunDealerData.FireMode.Burst)
             {
                 burstShotsRemaining = data.burstCount;

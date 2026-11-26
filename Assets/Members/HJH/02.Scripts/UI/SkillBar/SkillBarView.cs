@@ -4,15 +4,12 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Members.JJH._02_Scripts.ElementsSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 아래 스킬바임. 패시브 + 슬롯마다 SkillSlotView 하나씩
-    // 매 프레임 스킬 상태 읽어서 그려서, 스킬이나 캐릭터 바뀌어도 알아서 따라감
     public class SkillBarView : MonoBehaviour
     {
         [Serializable]
@@ -70,6 +67,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 _subscribed.SkillDenied += HandleSkillDenied;
                 _subscribed.SkillReady += HandleSkillReady;
+                _subscribed.CooldownReduced += HandleCooldownReduced;
             }
 
             _hud = PlayerHudSource.Instance;
@@ -94,6 +92,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             {
                 _subscribed.SkillDenied -= HandleSkillDenied;
                 _subscribed.SkillReady -= HandleSkillReady;
+                _subscribed.CooldownReduced -= HandleCooldownReduced;
             }
 
             if (_hud != null)
@@ -114,6 +113,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 view.PlayReady();
         }
 
+        private void HandleCooldownReduced(SkillSlotId slot, float seconds, bool reset)
+        {
+            if (TryGetView(slot, out SkillSlotView view))
+                view.PlayRefund(seconds, reset);
+        }
+
         private void LateUpdate()
         {
             SkillStateModule skills = player != null ? player.SkillFsm : null;
@@ -130,7 +135,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 float remaining = skills.GetCooldownRemaining(binding.slot);
                 int charges = skills.GetCharges(binding.slot);
                 float lockLeft = skills.GetLockRemaining(binding.slot);
-                // 교체 직후 잠금이 실제로 막고 있을 땐 그것도 쿨타임처럼 보여줌
                 if (lockLeft > 0f && (charges > 0 || lockLeft >= remaining))
                     binding.view.SetCooldown(lockLeft, skills.GetLockDuration(binding.slot), 0, 1);
                 else
@@ -148,8 +152,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 콤보 진행 상황을 읽어서 슬롯마다 링 세기/크기를 정함
-        //  평소: 모두 기본 / 콤보 중: 방금 쓴 스킬은 번쩍, 이어갈 수 있는 콤보(목록에 보이는 것 전부)의 다음 속성 스킬은 크고 세게, 나머지는 잠잠
         private void UpdateComboEmphasis(SkillStateModule skills)
         {
             PlayerHudSource hud = PlayerHudSource.Instance;
@@ -159,7 +161,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             bool hasNext = false;
             ElementType next = default;
 
-            // 콤보 시간이 끝나 가면 강조도 같이 줄어서, 시간이 다 되는 순간 평소로 돌아와 있게 함
             float fade = 1f;
             if (hud != null)
             {
@@ -202,7 +203,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     scale = Mathf.Lerp(1f, scale, fade);
                 }
 
-                // 콤보가 끊긴 프레임에는 서서히가 아니라 바로 평소 상태로
                 binding.view.SetComboEmphasis(intensity, scale, snap: _snapIdle && !chain);
             }
 
@@ -212,8 +212,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private bool _snapIdle;
         private void HandleComboBroken() => _snapIdle = true;
 
-        // 게이지 있는 패시브(건슬링어 충전 충격포 등)면 패시브 칸이 아래서부터 차오름.
-        // 뒤에 흐린 아이콘 하나 깔고, 앞 아이콘을 게이지만큼만 보여주는 방식. 꽉 차면 금색으로 깜빡임
         private Image _passiveBack;
 
         private void DrawPassiveGauge(Sprite sprite)
@@ -243,7 +241,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 rect.pivot = icon.pivot;
                 rect.anchoredPosition = icon.anchoredPosition;
                 rect.sizeDelta = icon.sizeDelta;
-                rect.SetSiblingIndex(icon.GetSiblingIndex());   // 아이콘 바로 뒤
+                rect.SetSiblingIndex(icon.GetSiblingIndex());
                 _passiveBack = back.GetComponent<Image>();
                 _passiveBack.raycastTarget = false;
                 _passiveBack.preserveAspect = passiveIcon.preserveAspect;

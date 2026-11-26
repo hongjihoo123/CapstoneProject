@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
 {
-    // (a) 발밑 링 (SoD 식): 적 = 빨강, 플레이어 = 초록. 바닥에 납작한 링 한 장을 깔고 매 프레임 발밑 땅 높이에 맞춤.
-    // 링은 캐릭터 자식이 아니라 이 오브젝트 밑에 둠 (캐릭터 회전·크기를 안 따라가게, 적 프리팹을 안 건드리게)
     public sealed class FootRingLayer : HighlightLayer
     {
         private static readonly int BaseColorId = Shader.PropertyToID("_BaseColor");
@@ -94,7 +92,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
             return renderer;
         }
 
-        // 1x1 정사각형 (앞면 -Z). Euler(90,0,0) 으로 눕히면 위에서 보임
         private static Mesh Quad
         {
             get

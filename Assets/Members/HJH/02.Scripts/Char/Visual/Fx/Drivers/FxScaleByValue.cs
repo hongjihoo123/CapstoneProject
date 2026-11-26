@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Scales a child between two sizes by Value 0..1 (charge-up growing).
     public class FxScaleByValue : MonoBehaviour, IFxDriver, IFxValueReceiver
     {
         [SerializeField] private Transform target;

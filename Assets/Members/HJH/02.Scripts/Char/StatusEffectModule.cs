@@ -1,7 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
@@ -65,7 +64,15 @@ namespace Assets.Members.HJH._02.Scripts.Char
                 }
                 if (Time.time >= dot.NextTickTime)
                 {
-                    dot.Source.GetComponent<PlayerAgent>().ApplyDamageTo(dot.Target, dot.DamagePerTick);
+                    CritSystem.Suppressed = true;
+                    try
+                    {
+                        dot.Source.GetComponent<PlayerAgent>().ApplyDamageTo(dot.Target, dot.DamagePerTick);
+                    }
+                    finally
+                    {
+                        CritSystem.Suppressed = false;
+                    }
                     dot.NextTickTime += dot.TickInterval;
                 }
             }

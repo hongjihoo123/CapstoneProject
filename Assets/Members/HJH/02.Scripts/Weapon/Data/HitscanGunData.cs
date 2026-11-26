@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    // Instant-hit gun for the top-down characters: fires along the flat aim direction,
-    // damages the first target in line, auto-reloads when the magazine runs dry.
     [CreateAssetMenu(menuName = "Weapon/Hitscan Gun Data", fileName = "New HitscanGunData")]
     public class HitscanGunData : WeaponData
     {
@@ -15,7 +13,7 @@ namespace RobotWeapons
         public float shotRadius = 0.25f;
         public LayerMask hitMask = ~0;
         [Tooltip("Solid geometry that stops the shot (rocks, walls, props). Added on top of Hit Mask so a mask that lists only enemies still can't shoot through scenery.")]
-        public LayerMask environmentMask = 1;   // Default layer
+        public LayerMask environmentMask = 1;
 
         [Header("Ammo")]
         [Tooltip("Off (design default): no magazine, no reload — holding fire never stops. On: resourceMax shots, then auto reload.")]

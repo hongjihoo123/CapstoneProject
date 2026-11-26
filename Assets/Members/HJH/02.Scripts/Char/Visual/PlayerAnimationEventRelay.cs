@@ -1,12 +1,9 @@
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 애니메이션 이벤트는 Animator 붙은 오브젝트(캐릭터 모델)로만 와서, 여기서 플레이어 쪽으로 넘겨줌.
-    // CharacterModel 이 모델 생성할 때 자동으로 붙임
     public class PlayerAnimationEventRelay : MonoBehaviour
     {
         private PlayerAgent _player;
@@ -17,15 +14,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public void Anim_SkillHitEnd() => _player.Anim_SkillHitEnd();
 
-        // 발사 클립(평타 Attack, 패시브 PassiveShot)에서 총구 불 나가는 프레임에 넣으면 그 순간 총알/충격포가 나감
         public void Anim_Fire()
         {
             if (_player != null && _player.Weapon != null && _player.Weapon.Weapon is IAnimationTimedShots gun)
                 gun.OnFireFrame();
         }
 
-        // 스킬 몸 동작 클립(Cast_*, Dash ...)의 소리 시점. 같은 클립을 여러 스킬이 쓰니까 이벤트 이름만 주고,
-        // 어떤 소리를 낼지는 지금 쓰는 스킬의 SkillSoundData 가 정함
         public void PlaySkillSound(string eventName) =>
             Audio.SkillSoundPlayer.OnAnimationEvent(_player != null ? _player.SkillFsm : null, eventName);
     }

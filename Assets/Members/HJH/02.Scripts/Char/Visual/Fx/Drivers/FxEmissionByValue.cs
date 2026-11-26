@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Emission rate x Value (e.g. aura denser with more stacks).
     public class FxEmissionByValue : MonoBehaviour, IFxDriver, IFxValueReceiver
     {
         [SerializeField] private ParticleSystem[] systems;

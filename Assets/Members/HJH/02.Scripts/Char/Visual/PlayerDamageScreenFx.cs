@@ -1,4 +1,3 @@
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 using UnityEngine.Rendering;
@@ -7,15 +6,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 플레이어가 맞았을 때 / 딸피일 때 화면 효과
-    //  - 빨간 테두리 + 흰색 하이라이트를 화면 "위에 얹어서" 그림 (밝게만 함).
-    //    예전엔 URP Vignette 를 썼는데, Vignette 는 가장자리를 색으로 "곱해서" 어두운 장면에선 검붉게 됨
-    //    + 딸피 채도 빠짐이 회색으로 보임 → 피드백 "빨강+검정 X, 빨강+흰 하이라이트" (2026-11-05)
-    //  - 맞음: 흰 하이라이트가 가장자리에서 번쩍(짧게) → 빨간 테두리가 남았다가 천천히 빠짐. 화면 가운데는 안 건드림 (SoD 측정)
-    //  - 딸피: 빨간 테두리가 천천히 욱신거리듯 차올랐다 빠짐 (이징), 빨강만. 채도는 안 뺌 (회색 X)
-    //  - 딸피일 때 맞으면 평소보다 진하게
-    //  - 죽음: 테두리 꽉 + 이때만 화면 회색
-    // 화면 위 오버레이(캔버스)와 Volume 을 런타임에 직접 만들어서 씀 → 씬에 따로 만들 거 없음. 플레이어에 붙이면 끝
     public class PlayerDamageScreenFx : MonoBehaviour
     {
         [SerializeField] private PlayerAgent player;
@@ -31,8 +21,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Range(0f, 1f), Tooltip("빨간 테두리 진하기 (최대로 맞았을 때)")] private float hitRedAlpha = 0.45f;
         [SerializeField, Range(0f, 1f), Tooltip("맞는 순간 흰 하이라이트 진하기")] private float hitHighlightAlpha = 0.7f;
         [SerializeField, Tooltip("흰 하이라이트가 빠지는 시간 (짧게 번쩍)")] private float hitHighlightTime = 0.15f;
-        [SerializeField, Tooltip("Bloom 번쩍임 세기. 흰빛 쪽으로 (가운데 밝기는 거의 안 바뀌게 약하게)")]
-        private float hitFlashBloom = 1f;
         [SerializeField, Tooltip("빨강이 꽉 찬 채로 유지되는 시간 (SoD ≈ 0.1~0.15초)")] private float hitPeakTime = 0.1f;
         [SerializeField, Tooltip("유지 뒤 빠지는 시간 (SoD ≈ 0.8초)")] private float hitFadeOutTime = 0.8f;
         [SerializeField, Tooltip("Bloom 번쩍임이 빠지는 시간 (짧게)")] private float bloomFadeTime = 0.2f;
@@ -50,7 +38,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private Vector2 throbSeconds = new(2.6f, 1.6f);
 
         [Header("죽음")]
-        // 2026-11-12 피드백: 죽으면 테두리가 너무 세고 색이 회색 화면과 안 어울림 → 빨강에서 회색으로 바뀌며 옅게
         [SerializeField, Range(0f, 1f), Tooltip("죽었을 때 테두리 진하기")] private float deathEdgeAlpha = 0.35f;
         [SerializeField, Tooltip("죽었을 때 테두리 색 (회색 화면에 맞춘 회색). 맞았을 때 빨강에서 이 색으로 서서히 바뀜")]
         private Color deathEdgeColor = new(0.62f, 0.62f, 0.66f);
@@ -62,15 +49,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private Texture2D _highlightTex;
         private GameObject _overlay;
 
-        //private Volume _flashVolume;   // 짧은 흰빛 Bloom
-        private Volume _deathVolume;   // 죽었을 때 회색
-        private float _flash;        // 0..1, Bloom 번쩍임
-        private float _hitStrength;  // 마지막으로 맞은 세기
-        private float _hitFade;      // 1 = 꽉, 0 = 꺼짐
-        private float _hitHold;      // 남은 유지 시간
-        private float _hitHighlight; // 0..1, 맞는 순간 흰 하이라이트
+        private Volume _deathVolume;
+        private float _flash;
+        private float _hitStrength;
+        private float _hitFade;
+        private float _hitHold;
+        private float _hitHighlight;
         private float _hitBoost = 1f;
-        private float _danger;       // 0..1, 위험 정도 (부드럽게 따라감)
+        private float _danger;
         private float _beatPhase;
         private bool _dead;
 
@@ -81,13 +67,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             CreateOverlay();
 
-            //_flashVolume = CreateVolume("PlayerHitFlashVolume", 201f, out VolumeProfile flashProfile);
-            //Bloom bloom = flashProfile.Add<Bloom>(true);
-            //bloom.intensity.value = hitFlashBloom;
-            //bloom.threshold.value = 0.4f;   // 낮춰야 어두운 장면에서도 번쩍임이 보임
-            //bloom.scatter.value = 0.8f;
-            //bloom.tint.value = Color.Lerp(hitColor, highlightColor, 0.6f);   // 빨강보다 흰빛 쪽
-
             _deathVolume = CreateVolume("PlayerDeathVolume", 199f, out VolumeProfile deathProfile);
             ColorAdjustments grey = deathProfile.Add<ColorAdjustments>(false);
             grey.saturation.Override(deathSaturation);
@@ -95,7 +74,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void Start()
         {
-            // 카메라에서 Post Processing 꺼져 있으면 Bloom·회색이 안 보이니까 켜줌
             Camera cam = Camera.main;
             if (cam != null && cam.TryGetComponent(out UniversalAdditionalCameraData data))
                 data.renderPostProcessing = true;
@@ -123,7 +101,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void OnDestroy()
         {
-            //if (_flashVolume != null) Destroy(_flashVolume.sharedProfile);
             if (_deathVolume != null) Destroy(_deathVolume.sharedProfile);
             if (_redTex != null) Destroy(_redTex);
             if (_highlightTex != null) Destroy(_highlightTex);
@@ -139,7 +116,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float strength = Mathf.Clamp01(amount / (maxHp * Mathf.Max(0.01f, fullHitRatio)));
             strength = Mathf.Max(minHitStrength, strength);
 
-            // 연속으로 맞으면 지금 보이는 세기보다 약해지지 않게 하고 유지 시간을 다시 채움
             _hitStrength = Mathf.Max(HitWeight, strength);
             _hitFade = 1f;
             _hitHold = hitPeakTime;
@@ -149,12 +125,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             HitFeel.Shake(hitShake * strength, 0.15f);
         }
 
-        // 즉시 켜짐 → 유지 → 부드럽게(SmoothStep) 꺼짐
         private float HitWeight => _hitStrength * Mathf.SmoothStep(0f, 1f, _hitFade);
 
         private void Update()
         {
-            // 히트스톱(timeScale 0) 중에도 화면 효과는 움직여야 해서 unscaled
             float dt = Time.unscaledDeltaTime;
 
             if (_hitHold > 0f)
@@ -173,7 +147,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             {
                 float ratio = player.Health.CurrentHealth / Mathf.Max(1f, player.Health.MaxHp);
                 if (ratio < lowHpRatio)
-                    target = 1f - ratio / Mathf.Max(0.01f, lowHpRatio);   // 경계에서 0, HP 0 에 가까울수록 1
+                    target = 1f - ratio / Mathf.Max(0.01f, lowHpRatio);
             }
             _danger = Mathf.MoveTowards(_danger, target, dt * (dead ? 1.2f : 2f));
 
@@ -182,31 +156,25 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void Apply(float dt)
         {
-            //if (_flashVolume != null)
-                //_flashVolume.weight = _flash * _flash;   // 제곱 → 확 빠지고 끝만 살짝
             if (_deathVolume != null)
                 _deathVolume.weight = _dead ? _danger : 0f;
 
-            // 맞았을 때
             float red = HitWeight * hitRedAlpha * _hitBoost;
             float white = _hitHighlight * _hitHighlight * hitHighlightAlpha * _hitBoost;
 
-            // 딸피 / 죽음
             Color edgeColor = hitColor;
             if (_dead)
             {
-                // 죽는 순간엔 맞은 빨강 그대로 → 화면이 회색으로 빠지는 만큼(_danger) 테두리도 회색·옅게
                 edgeColor = Color.Lerp(hitColor, deathEdgeColor, _danger);
                 red = Mathf.Lerp(red, deathEdgeAlpha, _danger);
             }
             else if (_danger > 0.001f)
             {
-                // 천천히 욱신: 부드럽게 차올랐다가 부드럽게 빠짐 (심장 "쿵쿵" 대신 숨쉬듯)
                 _beatPhase += dt / Mathf.Max(0.1f, Mathf.Lerp(throbSeconds.x, throbSeconds.y, _danger));
                 float beat = Throb(_beatPhase % 1f);
 
                 float lowRed = _danger * Mathf.Lerp(lowHpRedAlpha.x, lowHpRedAlpha.y, beat);
-                red = Mathf.Max(red, lowRed);   // 딸피는 빨강만 (흰 하이라이트 X, 2026-11-05 피드백)
+                red = Mathf.Max(red, lowRed);
             }
             else
             {
@@ -217,8 +185,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             SetAlpha(_highlight, highlightColor, Mathf.Clamp01(white));
         }
 
-        // 0 → 1 → 0 한 바퀴. 코사인(위아래 끝에서 느려짐)에 SmoothStep 을 한 번 더 걸어서
-        // 진할 때·옅을 때 조금씩 머무르고, 그 사이를 천천히 넘어감
         private static float Throb(float t)
         {
             float wave = 0.5f - 0.5f * Mathf.Cos(t * Mathf.PI * 2f);
@@ -234,8 +200,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             image.enabled = alpha > 0.002f;
         }
 
-        // ------------------------------------------------ 화면 오버레이
-
         private void CreateOverlay()
         {
             _overlay = new GameObject("PlayerDamageOverlay");
@@ -247,7 +211,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _redTex = EdgeTexture(redEdgeWidth, 2f);
             _highlightTex = EdgeTexture(highlightWidth, 1.5f);
             _red = CreateLayer("RedEdge", _redTex);
-            _highlight = CreateLayer("WhiteHighlight", _highlightTex);   // 빨강 위에
+            _highlight = CreateLayer("WhiteHighlight", _highlightTex);
         }
 
         private RawImage CreateLayer(string layerName, Texture texture)
@@ -267,8 +231,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return image;
         }
 
-        // 가장자리에서 1, 안쪽으로 width 만큼 가면 0 이 되는 흰 텍스처 (색은 RawImage.color 로).
-        // 네 변 중 가까운 변까지 거리를 부드럽게 합쳐서 모서리가 둥글게
         private static Texture2D EdgeTexture(float width, float falloff)
         {
             const int size = 128;
@@ -289,7 +251,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 foreach (float d in new[] { u, 1f - u, v, 1f - v })
                 {
                     float near = 1f - Mathf.Clamp01(d / width);
-                    edge = 1f - (1f - edge) * (1f - near);   // 모서리에서 두 변이 겹쳐 진해지게
+                    edge = 1f - (1f - edge) * (1f - near);
                 }
                 byte alpha = (byte)(Mathf.Pow(edge, falloff) * 255f);
                 pixels[y * size + x] = new Color32(255, 255, 255, alpha);
@@ -307,7 +269,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             Volume volume = go.AddComponent<Volume>();
             volume.isGlobal = true;
-            volume.priority = priority;   // 씬 기본 Volume 보다 위에서 덮어씀
+            volume.priority = priority;
             volume.weight = 0f;
 
             profile = ScriptableObject.CreateInstance<VolumeProfile>();

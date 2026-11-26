@@ -25,7 +25,7 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             return hitCollider != null;
         }
 
-        public bool IsTargetInSight(float range, float sight)
+        public virtual bool IsTargetInSight(float range, float sight)
         {
             _debugSightRange = range;
             _debugSightAngle = sight;

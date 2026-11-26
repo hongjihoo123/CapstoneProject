@@ -1,12 +1,8 @@
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 오라 이펙트에 붙이면, 켜져 있는 동안 플레이어 몸이 빛남 (각성·변신 느낌).
-    // 만화풍 캐릭터 셰이더(HJH/Character/Toon)의 테두리 빛(_RimColor/_RimStrength/_RimPower)을 MaterialPropertyBlock 으로 올리고
-    // 맥박처럼 일렁이게 함. 꺼지면 천천히 원래 값으로 돌아감. 다른 셰이더면 아무 일도 안 함.
     public class FxBodyGlow : MonoBehaviour, IFxDriver, IFxTintReceiver
     {
         private static readonly int RimColorId = Shader.PropertyToID("_RimColor");
@@ -44,7 +40,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public void SetTint(Color tint)
         {
-            // 원소 색으로 물들이면 그 색으로 빛남 (흰색이면 기본 불꽃색)
             if (tint != Color.white)
                 glow = new Color(tint.r * 1.6f, tint.g * 1.6f, tint.b * 1.6f);
         }
@@ -82,7 +77,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
 
             if (_weight <= 0.001f && !_on)
-                _targets = null;   // 다 돌아왔으면 손 뗌 (원래 값으로 덮어 둔 상태)
+                _targets = null;
         }
     }
 }

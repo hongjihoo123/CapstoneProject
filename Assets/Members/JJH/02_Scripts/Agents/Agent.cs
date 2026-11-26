@@ -14,7 +14,7 @@ namespace Members.JJH._02_Scripts.Agents
         public IHealth Health { get; private set; }
         public IVfxModule VFXModule { get; private set; }
 
-        public virtual bool IsAlive { get => Health.CurrentHealth > 0; }
+        public virtual bool IsAlive => Health != null && Health.CurrentHealth > 0;
 
         protected override void InitializeModules()
         {

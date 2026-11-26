@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
 {
-    // (c) 적 머리 위에 약한 점광원 → 적 주변 바닥과 적 몸이 살짝 밝아짐. 그림자 없음.
-    // 적이 많으면 라이트 수가 늘어남 (URP 오브젝트당 추가 라이트 제한) → 비용이 가장 큰 방식
     public sealed class GroundLightLayer : HighlightLayer
     {
         [SerializeField] private Color color = new(1f, 0.55f, 0.45f);

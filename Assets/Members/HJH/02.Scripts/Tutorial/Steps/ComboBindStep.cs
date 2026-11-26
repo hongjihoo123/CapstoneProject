@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 콤보 바인딩: 상점(ComboBindStation)에 가서 F → 콤보를 바인딩하고 저장하면 끝.
-    // 씬에 상점이 없으면 건너뜀. 가장자리 화살표로 상점 위치를 알려 줌
     [CreateAssetMenu(menuName = "HJH/Tutorial/Step - Combo Bind", fileName = "Step_ComboBind")]
     public class ComboBindStep : TutorialStep
     {

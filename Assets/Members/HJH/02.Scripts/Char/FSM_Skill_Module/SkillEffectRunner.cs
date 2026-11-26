@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Ticks skill effects that outlive their skill state (projectiles, delayed blasts).
-    // Added to the player on first use by PlayerSkillContext.Run.
     public class SkillEffectRunner : MonoBehaviour
     {
         private readonly List<ISkillTimedEffect> _effects = new();
@@ -14,7 +12,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private void Update()
         {
-            // Effects may spawn other effects while ticking (e.g. a shell splitting into shrapnel).
             _effects.AddRange(_pending);
             _pending.Clear();
 

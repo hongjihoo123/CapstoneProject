@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    // 저격 발사 등 즉발 판정에 짧게 반짝이는 라인(트레이서)을 그려줌.
     [RequireComponent(typeof(LineRenderer))]
     public class TracerVisual : MonoBehaviour
     {

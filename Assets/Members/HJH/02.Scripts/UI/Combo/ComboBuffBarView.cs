@@ -2,19 +2,15 @@ using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Element;
 using Assets.Members.HJH._02.Scripts.Hud;
-using Members.JJH._02_Scripts.ElementsSystem;
+using Members.KYR._01.Scripts.Stats;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.UI;
+using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 지금 켜져 있는 콤보 효과를 작은 아이콘으로 보여줌 (왼쪽 위, 골드 밑).
-    //  - 원 안에 콤보 속성 아이콘, 시계 방향으로 줄어드는 청록 빛, 아래에 남은 초와 이름
-    //  - 값은 PlayerHudSource.TryGetComboEffectTime 에서 매 프레임 읽음
-    // 프리팹(05.Data/Prefab/UI/ComboBuffBar). 칸 6개가 HorizontalLayoutGroup 으로 줄 섬 → 간격·크기는 프리팹에서 수정.
-    // 실행 중에는 칸 켜고 끄기, 글자·아이콘·빛 양만 바꿈
     public class ComboBuffBarView : MonoBehaviour, IUiBake
     {
         [Serializable]
@@ -22,17 +18,30 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             public RectTransform root;
             public Image wipe;
-            public Image[] badges;
+            public Image ring;
+            public Image icon;
+            public TMP_Text amount;
             public TMP_Text time;
-            public TMP_Text label;
+        }
+
+        private struct Entry
+        {
+            public string Combo;
+            public Mod Mod;
+            public float Left;
+            public float Total;
         }
 
         [SerializeField] private List<Slot> slots = new();
-        [SerializeField, Tooltip("아이콘이 3개 이상일 때 / 2개 이하일 때 크기")] private Vector2 badgeSize = new(20f, 26f);
+        [SerializeField] private StatIconSet icons;
+        [SerializeField] private Color lowerColor = new(1f, 0.42f, 0.38f, 1f);
+        [SerializeField, Tooltip("남은 시간이 이 초 이하면 아이콘이 깜빡임")] private float blinkBelow = 3f;
         [SerializeField] private RectTransform tip;
         [SerializeField] private TMP_Text tipText;
-        [SerializeField, Tooltip("효과 설명 상자: 아이콘 위쪽 기준 아래로 얼마나")] private float tipOffsetY = -124f;
+        [SerializeField, Tooltip("설명 상자: 아이콘 위 끝에서 얼마나 띄울지")] private float tipGap = 8f;
 
+        private readonly List<Entry> _entries = new();
+        private readonly List<PlayerHudSource.TimedBuff> _timed = new();
         private PlayerHudSource _hud;
         private Canvas _canvas;
 
@@ -54,49 +63,75 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void Update()
         {
-            int used = 0;
-            Slot hovered = null;
-            string hoveredName = null;
+            Collect();
+
             Vector2 mouse = Mouse.current != null ? Mouse.current.position.ReadValue() : new Vector2(-1f, -1f);
             Camera cam = _canvas.renderMode == RenderMode.ScreenSpaceOverlay ? null : _canvas.worldCamera;
-            foreach (ElementComboBook.Recipe recipe in _hud.ComboList)
+            int hovered = -1;
+            int shown = Mathf.Min(_entries.Count, slots.Count);
+            for (int i = 0; i < shown; i++)
             {
-                if (used >= slots.Count || !_hud.TryGetComboEffectTime(recipe.Name, out float left, out float total))
-                    continue;
-
-                Slot slot = slots[used++];
-                slot.root.gameObject.SetActive(true);
-                slot.wipe.fillAmount = total > 0f ? Mathf.Clamp01(left / total) : 1f;
-                slot.time.text = $"{Mathf.CeilToInt(left)}s";   // 정수 초 (0.x 초 남아도 1s 로)
-                slot.label.text = recipe.Name;
-                if (RectTransformUtility.RectangleContainsScreenPoint(slot.root, mouse, cam))
-                {
-                    hovered = slot;
-                    hoveredName = recipe.Name;
-                }
-
-                float size = recipe.Length > 2 ? badgeSize.x : badgeSize.y;
-                for (int i = 0; i < slot.badges.Length; i++)
-                {
-                    bool has = i < recipe.Length;
-                    slot.badges[i].gameObject.SetActive(has);
-                    if (!has)
-                        continue;
-
-                    slot.badges[i].sprite = _hud.Palette != null ? _hud.Palette.BadgeOf(recipe.Sequence[i]) : null;
-                    slot.badges[i].color = slot.badges[i].sprite != null ? Color.white : _hud.ColorOf(recipe.Sequence[i]);
-                    slot.badges[i].rectTransform.sizeDelta = new Vector2(size, size);   // 줄 세우기는 Badges 의 HorizontalLayoutGroup
-                }
+                Fill(slots[i], _entries[i]);
+                if (RectTransformUtility.RectangleContainsScreenPoint(slots[i].root, mouse, cam))
+                    hovered = i;
             }
-
-            UpdateTip(hovered, hoveredName);
-
-            for (int i = used; i < slots.Count; i++)
+            for (int i = shown; i < slots.Count; i++)
                 slots[i].root.gameObject.SetActive(false);
+
+            UpdateTip(hovered >= 0 ? slots[hovered] : null, hovered >= 0 ? _entries[hovered] : default);
         }
 
-        // 효과 아이콘에 마우스를 올리면 아이콘 아래에 작은 상자로 무슨 효과인지 짧게 보여줌
-        private void UpdateTip(Slot slot, string comboName)
+        private void Collect()
+        {
+            _entries.Clear();
+            foreach (ElementComboBook.Recipe recipe in _hud.ComboList)
+            {
+                if (!_hud.TryGetComboEffectTime(recipe.Name, out float left, out float total))
+                    continue;
+                foreach (Mod mod in ComboLoadout.ModsOf(recipe.Name))
+                    _entries.Add(new Entry { Combo = recipe.Name, Mod = mod, Left = left, Total = total });
+            }
+
+            _hud.CollectTimedBuffs(_timed);
+            foreach (PlayerHudSource.TimedBuff buff in _timed)
+                _entries.Add(new Entry { Combo = buff.Name, Mod = new Mod(buff.Stat, buff.Type, buff.Value), Left = buff.Left, Total = buff.Total });
+
+            _entries.Sort((a, b) =>
+            {
+                int byTime = b.Left.CompareTo(a.Left);
+                if (byTime != 0)
+                    return byTime;
+                int byCombo = string.CompareOrdinal(a.Combo, b.Combo);
+                return byCombo != 0 ? byCombo : a.Mod.stat.CompareTo(b.Mod.stat);
+            });
+        }
+
+        private void Fill(Slot slot, Entry entry)
+        {
+            slot.root.gameObject.SetActive(true);
+            PlayerStatId stat = entry.Mod.stat;
+            Color color = icons != null ? icons.ColorOf(stat) : Color.white;
+            bool lower = entry.Mod.value < 0f;
+
+            slot.icon.sprite = icons != null ? icons.IconOf(stat) : null;
+            slot.icon.enabled = slot.icon.sprite != null;
+            float blink = entry.Left <= blinkBelow ? 0.55f + 0.45f * Mathf.Abs(Mathf.Sin(Time.unscaledTime * 6f)) : 1f;
+            slot.icon.color = new Color(color.r, color.g, color.b, blink);
+            if (slot.ring != null)
+                slot.ring.color = new Color(color.r, color.g, color.b, slot.ring.color.a);
+
+            slot.wipe.fillAmount = entry.Total > 0f ? Mathf.Clamp01(entry.Left / entry.Total) : 1f;
+            slot.wipe.color = new Color(color.r, color.g, color.b, slot.wipe.color.a);
+
+            slot.time.text = $"{Mathf.CeilToInt(entry.Left)}s";
+            if (slot.amount != null)
+            {
+                slot.amount.text = ComboEffect.Amount(entry.Mod);
+                slot.amount.color = lower ? lowerColor : HudUiKit.Value;
+            }
+        }
+
+        private void UpdateTip(Slot slot, Entry entry)
         {
             if (tip == null || tipText == null)
                 return;
@@ -106,95 +141,95 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 return;
             }
 
-            string effect = ComboLoadout.EffectOf(comboName);
-            tipText.text = $"<color=#{ColorUtility.ToHtmlStringRGB(HudUiKit.Cyan)}><size=85%>{comboName}</size></color>\n{(string.IsNullOrEmpty(effect) ? "효과 없음" : effect)}";
+            string color = ColorUtility.ToHtmlStringRGB(icons != null ? icons.ColorOf(entry.Mod.stat) : HudUiKit.Cyan);
+            tipText.text = $"<color=#{color}>{ComboEffect.Describe(entry.Mod)}</color>\n" +
+                           $"<size=80%><color=#{ColorUtility.ToHtmlStringRGB(HudUiKit.Label)}>{entry.Combo} · {Mathf.CeilToInt(entry.Left)}초</color></size>";
             tip.gameObject.SetActive(true);
             tip.SetAsLastSibling();
 
-            // 상자 크기는 ContentSizeFitter 가 글자에 맞춤. 위치만 아이콘 왼쪽 끝 아래로
+            LayoutRebuilder.ForceRebuildLayoutImmediate(tip);
             Vector3 corner = slot.root.TransformPoint(new Vector3(slot.root.rect.xMin, slot.root.rect.yMax, 0f));
             Vector3 local = ((RectTransform)tip.parent).InverseTransformPoint(corner);
-            tip.anchoredPosition = Vector2.zero;
-            tip.localPosition = new Vector3(local.x, local.y + tipOffsetY, 0f);
+            tip.localPosition = new Vector3(local.x + tip.rect.width * tip.pivot.x, local.y + tipGap + tip.rect.height * tip.pivot.y, 0f);
         }
 
         [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
         public void BakeLayout()
         {
 #if UNITY_EDITOR
-            const int count = 6;
-            const float step = 84f;
-            float d = step - 8f;
+            const int columns = 5;
+            const int count = columns * 3;
+            const float d = 52f;
+            var cell = new Vector2(d + 4f, d + 22f);
             HudUiKit.ClearChildren(transform);
-            foreach (Component old in new Component[] { GetComponent<HorizontalLayoutGroup>() })
+            foreach (Component old in new Component[] { GetComponent<HorizontalLayoutGroup>(), GetComponent<GridLayoutGroup>(), GetComponent<ContentSizeFitter>() })
             {
                 if (old != null)
                     DestroyImmediate(old);
             }
 
-            var root = (RectTransform)transform;
-            HudUiKit.Place(root, new Vector2(0f, 1f), new Vector2(48f, -172f), new Vector2(step * count, 100f), new Vector2(0f, 1f));
-            var row = gameObject.AddComponent<HorizontalLayoutGroup>();
-            row.spacing = 8f;
-            row.childAlignment = TextAnchor.UpperLeft;
-            row.childControlWidth = false;
-            row.childControlHeight = false;
-            row.childForceExpandWidth = false;
-            row.childForceExpandHeight = false;
+            icons = UnityEditor.AssetDatabase.LoadAssetAtPath<StatIconSet>(StatIconSetPath);
 
+            var root = (RectTransform)transform;
+            HudUiKit.Place(root, new Vector2(0f, 1f), new Vector2(48f, -172f), new Vector2(cell.x * columns, cell.y), new Vector2(0f, 1f));
+            var grid = gameObject.AddComponent<GridLayoutGroup>();
+            grid.cellSize = cell;
+            grid.spacing = new Vector2(6f, 6f);
+            grid.startCorner = GridLayoutGroup.Corner.UpperLeft;
+            grid.startAxis = GridLayoutGroup.Axis.Horizontal;
+            grid.childAlignment = TextAnchor.UpperLeft;
+            grid.constraint = GridLayoutGroup.Constraint.FixedColumnCount;
+            grid.constraintCount = columns;
+            var fit = gameObject.AddComponent<ContentSizeFitter>();
+            fit.horizontalFit = ContentSizeFitter.FitMode.PreferredSize;
+            fit.verticalFit = ContentSizeFitter.FitMode.PreferredSize;
+
+            Sprite circle = HudUiKit.Load("slot_circle_bg");
+            Sprite ring = HudUiKit.Load("slot_circle_frame");
             slots = new List<Slot>();
             for (int index = 0; index < count; index++)
             {
-                var slot = new Slot { root = HudUiKit.NewRect("Effect" + index, transform) };
-                slot.root.sizeDelta = new Vector2(d, 96f);
+                var slot = new Slot { root = HudUiKit.NewRect("Buff" + index, transform) };
+                var top = new Vector2(0.5f, 1f);
+                var center = new Vector2(0.5f, 0.5f);
+                var circlePos = new Vector2(0f, -d * 0.5f);
 
-                Image back = HudUiKit.NewImage("Back", slot.root, HudUiKit.Load("slot_circle_bg"), new Color(1f, 1f, 1f, 0.9f));
-                HudUiKit.Place(back.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -d * 0.5f), new Vector2(d, d), new Vector2(0.5f, 0.5f));
+                Image back = HudUiKit.NewImage("Back", slot.root, circle, new Color(0.04f, 0.07f, 0.1f, 0.85f));
+                HudUiKit.Place(back.rectTransform, top, circlePos, new Vector2(d, d), center);
 
-                slot.wipe = HudUiKit.NewImage("Wipe", slot.root, HudUiKit.Load("slot_circle_bg"), new Color(0.51f, 0.88f, 1f, 0.38f));
+                slot.wipe = HudUiKit.NewImage("Wipe", slot.root, circle, new Color(1f, 1f, 1f, 0.28f));
                 slot.wipe.type = Image.Type.Filled;
                 slot.wipe.fillMethod = Image.FillMethod.Radial360;
                 slot.wipe.fillOrigin = (int)Image.Origin360.Top;
                 slot.wipe.fillClockwise = false;
-                HudUiKit.Place(slot.wipe.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -d * 0.5f), new Vector2(d, d), new Vector2(0.5f, 0.5f));
+                HudUiKit.Place(slot.wipe.rectTransform, top, circlePos, new Vector2(d, d), center);
 
-                Image frame = HudUiKit.NewImage("Frame", slot.root, HudUiKit.Load("slot_circle_frame"), new Color(1f, 1f, 1f, 0.95f));
-                HudUiKit.Place(frame.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -d * 0.5f), new Vector2(d, d), new Vector2(0.5f, 0.5f));
+                slot.ring = HudUiKit.NewImage("Ring", slot.root, ring, new Color(1f, 1f, 1f, 0.9f));
+                HudUiKit.Place(slot.ring.rectTransform, top, circlePos, new Vector2(d, d), center);
 
-                // 아이콘 줄: 가운데 정렬 가로 줄
-                RectTransform badges = HudUiKit.NewRect("Badges", slot.root);
-                HudUiKit.Place(badges, new Vector2(0.5f, 1f), new Vector2(0f, -d * 0.5f), new Vector2(d, 30f), new Vector2(0.5f, 0.5f));
-                var badgeRow = badges.gameObject.AddComponent<HorizontalLayoutGroup>();
-                badgeRow.spacing = 2f;
-                badgeRow.childAlignment = TextAnchor.MiddleCenter;
-                badgeRow.childControlWidth = false;
-                badgeRow.childControlHeight = false;
-                badgeRow.childForceExpandWidth = false;
-                badgeRow.childForceExpandHeight = false;
-                slot.badges = new Image[3];
-                for (int i = 0; i < 3; i++)
-                {
-                    slot.badges[i] = HudUiKit.NewImage("Badge" + i, badges, null, Color.white);
-                    slot.badges[i].preserveAspect = true;
-                    slot.badges[i].rectTransform.sizeDelta = new Vector2(26f, 26f);
-                }
+                slot.icon = HudUiKit.NewImage("Icon", slot.root, null, Color.white);
+                slot.icon.preserveAspect = true;
+                HudUiKit.Place(slot.icon.rectTransform, top, circlePos + new Vector2(0f, 3f), new Vector2(d * 0.52f, d * 0.52f), center);
 
-                slot.time = HudUiKit.NewText("Time", slot.root, "10s", 18f, HudUiKit.Cyan, TextAlignmentOptions.Center);
-                HudUiKit.Place(slot.time.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -d - 12f), new Vector2(d + 10f, 22f), new Vector2(0.5f, 0.5f));
-                slot.label = HudUiKit.NewText("Label", slot.root, "불 → 물", 13f, new Color(0.69f, 0.75f, 0.82f, 0.85f), TextAlignmentOptions.Center);
-                HudUiKit.Place(slot.label.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -d - 32f), new Vector2(d + 10f, 18f), new Vector2(0.5f, 0.5f));
+                slot.amount = HudUiKit.NewText("Amount", slot.root, "+20%", 13f, HudUiKit.Value, TextAlignmentOptions.Center);
+                slot.amount.fontStyle = FontStyles.Bold;
+                slot.amount.outlineWidth = 0.25f;
+                slot.amount.outlineColor = new Color32(0, 0, 0, 220);
+                HudUiKit.Place(slot.amount.rectTransform, top, new Vector2(0f, -d + 8f), new Vector2(d + 8f, 16f), center);
+
+                slot.time = HudUiKit.NewText("Time", slot.root, "10s", 15f, HudUiKit.Label, TextAlignmentOptions.Center);
+                HudUiKit.Place(slot.time.rectTransform, top, new Vector2(0f, -d - 10f), new Vector2(d + 8f, 18f), center);
                 slots.Add(slot);
             }
 
-            // 효과 설명 상자 (레이아웃 무시, 글자에 맞춰 크기 자동)
             tip = HudUiKit.NewRect("EffectTip", transform);
             tip.gameObject.AddComponent<LayoutElement>().ignoreLayout = true;
-            HudUiKit.Place(tip, new Vector2(0f, 1f), new Vector2(0f, tipOffsetY), new Vector2(200f, 70f), new Vector2(0f, 1f));
+            HudUiKit.Place(tip, new Vector2(0f, 1f), Vector2.zero, new Vector2(200f, 60f), new Vector2(0f, 1f));
             Image tipBack = tip.gameObject.AddComponent<Image>();
             tipBack.color = new Color(0.02f, 0.06f, 0.09f, 0.92f);
             tipBack.raycastTarget = false;
             var tipLayout = tip.gameObject.AddComponent<HorizontalLayoutGroup>();
-            tipLayout.padding = new RectOffset(14, 14, 13, 13);
+            tipLayout.padding = new RectOffset(14, 14, 10, 10);
             tipLayout.childControlWidth = true;
             tipLayout.childControlHeight = true;
             var tipFit = tip.gameObject.AddComponent<ContentSizeFitter>();
@@ -207,11 +242,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
             edge.rectTransform.pivot = new Vector2(0f, 0.5f);
             edge.rectTransform.sizeDelta = new Vector2(2f, 0f);
             edge.rectTransform.anchoredPosition = Vector2.zero;
-            tipText = HudUiKit.NewText("Text", tip, "콤보 이름\n공격력 +10%", 18f, HudUiKit.Value, TextAlignmentOptions.MidlineLeft);
-            tipText.lineSpacing = 8f;
+            tipText = HudUiKit.NewText("Text", tip, "공격 속도 +20%\n불 → 번개 · 7초", 18f, HudUiKit.Value, TextAlignmentOptions.MidlineLeft);
+            tipText.lineSpacing = 6f;
             tipText.richText = true;
             tip.gameObject.SetActive(false);
 #endif
         }
+
+        public const string StatIconSetPath = "Assets/Members/HJH/05.Data/UI/StatIconSet.asset";
     }
 }

@@ -12,15 +12,6 @@ using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 콤보 바인딩 창. 원소를 순서대로 2~4칸 채우고 "저장하기" → ComboLoadout.TryBind (기존 바인딩은 그대로 두고 추가, 최대 ComboLoadout.MaxBound 개).
-    //  - 원소 버튼: 빈 칸 맨 앞에 넣음 / 채운 칸 클릭: 그 칸 빼기 / 전체 초기화: 칸 전부 비우기
-    //  - 넣거나 뺄 때마다 그 원소 효과와 바뀐 능력치를 보여주고, 아래에 효과 목록 + 합계
-    //  - 열려 있는 동안 시간 멈춤. Esc 또는 닫기로 닫음
-    // 모양은 HUD/픽 화면과 같은 말투: 눈 아이콘 머리말, 금색 선, 얇게 빛나는 원형 칸, 파란 그라데이션 버튼.
-    // 프로젝트가 Linear 색 공간이라 반투명 판은 뒤 HUD 가 생각보다 많이 비침 → 창 판은 완전 불투명.
-    // 상점 오브젝트(ComboBindStation)가 프리팹을 넘겨 열고, 나중에 레벨업 같은 곳에서도 Open(prefab) 만 부르면 됨
-    // 모양은 프리팹(05.Data/Prefab/UI/ComboBindPanel)에 저장된 그대로 → 폰트·크기·위치는 프리팹에서 수정.
-    // 실행 중에는 글자/아이콘/색만 바꿈. 버튼은 인스펙터 OnClick 에 연결돼 있음 (AddChoice, RemoveAt, Clear, Close, OnSaveClicked)
     public class ComboBindPanel : MonoBehaviour, IUiBake
     {
         private static readonly ElementType[] Choices =
@@ -52,7 +43,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         public static ComboBindPanel Current { get; private set; }
         public static bool IsOpen => Current != null;
 
-        // 프리팹에 구워 둔 부품 (BakeLayout 이 채움)
         [SerializeField] private ElementPalette palette;
         [SerializeField] private RectTransform window;
         [SerializeField] private CanvasGroup windowGroup;
@@ -111,7 +101,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             FillLegend();
             Refresh(null);
 
-            // 열릴 때 살짝 떠오르게 (시간이 멈춰 있어서 unscaled)
             if (windowGroup != null)
             {
                 windowGroup.alpha = 0f;
@@ -122,7 +111,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             window.DOAnchorPosY(home.y, 0.2f).SetEase(Ease.OutQuad).SetUpdate(true);
         }
 
-        // 표에서 읽는 안내 글자 (원소 효과 줄, 보너스 규칙, 길이 배율). 모양은 프리팹, 내용만 표 기준
         private void FillLegend()
         {
             ComboElementTable table = ComboElementTable.Default;
@@ -140,7 +128,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 lengthScale.text = ScaleText(table);
         }
 
-        // 버튼 OnClick 용 (인스펙터에서 정수 인자 = Choices 순서: 0 불, 1 물, 2 바람, 3 번개, 4 땅)
         public void AddChoice(int index)
         {
             if (index >= 0 && index < Choices.Length)
@@ -148,8 +135,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
         public void OnSaveClicked() => Save();
-
-        // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)
 
         [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
         public void BakeLayout()
@@ -162,7 +147,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             var canvas = GetComponent<Canvas>() ? GetComponent<Canvas>() : gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 1000;   // HUD(3), 튜토리얼 카드(900) 위
+            canvas.sortingOrder = 1000;
             var scaler = GetComponent<CanvasScaler>() ? GetComponent<CanvasScaler>() : gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -174,7 +159,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Stretch(dim.rectTransform);
             dim.raycastTarget = true;
 
-            // 창: 불투명 판 + 9슬라이스 테두리 + 위쪽 금색 선
             Image panel = HudUiKit.NewImage("Window", transform, null, PanelColor);
             HudUiKit.Place(panel.rectTransform, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(Width, Height));
             panel.raycastTarget = true;
@@ -191,7 +175,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             BuildPreview();
             BuildFooter();
             FillLegend();
-            Refresh(null);   // 빈 칸 모양으로 저장
+            Refresh(null);
 #endif
         }
 
@@ -199,7 +183,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private RectTransform _window => window;
         private readonly List<TMP_Text> _bakedRows = new();
 
-        // 머리말: 눈 아이콘 + "콤보 바인딩" + 금색 선 / 오른쪽 비용 / 아래 안내 + 지금 콤보
         private void BuildHeaderRow()
         {
             RectTransform header = HudUiKit.NewRect("Header", _window);
@@ -213,8 +196,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Place(costText.rectTransform, new Vector2(1f, 1f), new Vector2(0f, -4f), new Vector2(180f, 30f));
         }
 
-        // 칸 (최대 길이만큼). 칸 사이는 콤보 UI 처럼 금색 ›
-        //  - 칸 아래: 그 칸 원소 효과 / 칸 사이 아래: 두 원소 보너스 → 어떤 효과가 어디서 왔는지 자리로 보임
         private void BuildSlots()
         {
             ComboElementTable table = ComboElementTable.Default;
@@ -266,7 +247,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Image frame = HudUiKit.NewImage("Frame", root, HudUiKit.Load("slot_circle_frame"), Color.white);
             HudUiKit.Stretch(frame.rectTransform, -6f);
 
-            // 칸 번호 (필수 칸은 금색)
             TMP_Text index = HudUiKit.NewText("Index", root, number.ToString(), 15f, required ? HudUiKit.Gold : HudUiKit.Label * 0.7f, TextAlignmentOptions.Center, 2f);
             HudUiKit.Place(index.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, 30f), new Vector2(60f, 22f), new Vector2(0.5f, 1f));
 
@@ -277,7 +257,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return new SlotView { root = root, glow = glow, frame = frame, badge = badge, plus = plus, label = label };
         }
 
-        // 원소 고르기 줄 + 전체 초기화
         private void BuildChoices()
         {
             Divider(-408f);
@@ -331,7 +310,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return root;
         }
 
-        // 바뀐 효과 한 줄 + 금색 선 + 아래 안내(항상): 왼쪽 상성 오각형 / 가운데 원소 효과 / 오른쪽 합계
         private void BuildPreview()
         {
             changeText = HudUiKit.NewText("Change", _window, "", 18f, HudUiKit.Value, TextAlignmentOptions.Center);
@@ -343,13 +321,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             const float top = -640f;
             ComboElementTable table = ComboElementTable.Default;
 
-            // 왼쪽 위: 상성 오각형 (화살표 = 이김)
             SectionTitle("상성", new Vector2(Pad, top), 80f);
             TMP_Text arrowNote = HudUiKit.NewText("BeatsNote", _window, "화살표 → 이김", 14f, HudUiKit.Label * 0.8f, TextAlignmentOptions.MidlineLeft);
             HudUiKit.Place(arrowNote.rectTransform, new Vector2(0f, 1f), new Vector2(Pad + 52f, top), new Vector2(150f, 24f));
             BuildBeatsWheel(table, new Vector2(Pad + 160f - Width * 0.5f, -770f));
 
-            // 오른쪽 위: 원소마다 효과 (배지 + 이름 + 값)
             const float midX = Pad + 340f;
             SectionTitle("원소 효과", new Vector2(midX, top), 200f);
             _bakedRows.Clear();
@@ -357,7 +333,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 BuildElementRow(table, Choices[i], new Vector2(midX, -680f - i * 37f));
             elementRows = _bakedRows.ToArray();
 
-            // 아래: 보너스 스탯 제목 + 규칙 한 줄씩
             SectionTitle("보너스 스탯", new Vector2(Pad, -858f), 110f);
             TMP_Text bonusNote = HudUiKit.NewText("BonusNote", _window, "% 는 그 원소 효과 기준", 14f, HudUiKit.Label * 0.8f, TextAlignmentOptions.MidlineLeft);
             HudUiKit.Place(bonusNote.rectTransform, new Vector2(0f, 1f), new Vector2(Pad + 112f, -858f), new Vector2(240f, 24f));
@@ -367,7 +342,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Place(bonus.rectTransform, new Vector2(0f, 1f), new Vector2(Pad + 14f, -884f), new Vector2(490f, 90f));
             bonusRules = bonus;
 
-            // 오른쪽: 합계 + 길이 배율
             const float rightX = Pad + 720f;
             float rightWidth = Width - rightX - Pad;
             SectionTitle("합계", new Vector2(rightX, top), 80f);
@@ -397,7 +371,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Place(line.rectTransform, new Vector2(0f, 1f), new Vector2(Pad, y), new Vector2(Width - Pad * 2f, 14f));
         }
 
-        // 원소 한 줄: 배지 + 원소 이름(색) + "공격력 +10%"
         private void BuildElementRow(ComboElementTable table, ElementType element, Vector2 pos)
         {
             Image badge = HudUiKit.NewImage("RowBadge_" + element, _window, Badge(element), Color.white);
@@ -410,10 +383,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _bakedRows.Add(text);
         }
 
-        // 상성 오각형: 이기는 원소 → 지는 원소 화살표. 원소 순서는 "상성" 보너스 줄에서 읽음 (물 맨 위, 시계 방향)
         private void BuildBeatsWheel(ComboElementTable table, Vector2 center)
         {
-            Dictionary<ElementType, ElementType> beats = BeatsOf(table);   // 이기는 쪽 → 지는 쪽
+            Dictionary<ElementType, ElementType> beats = BeatsOf(table);
             var order = new List<ElementType>();
             ElementType at = beats.ContainsKey(ElementType.Water) ? ElementType.Water : Choices[0];
             while (!order.Contains(at))
@@ -436,7 +408,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             var points = new Dictionary<ElementType, Vector2>();
             for (int i = 0; i < order.Count; i++)
             {
-                float angle = Mathf.PI * 0.5f - i * Mathf.PI * 2f / order.Count;   // 맨 위부터 시계 방향
+                float angle = Mathf.PI * 0.5f - i * Mathf.PI * 2f / order.Count;
                 points[order[i]] = new Vector2(Mathf.Cos(angle), Mathf.Sin(angle)) * radius;
             }
 
@@ -461,7 +433,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 선 + 끝에 꺾쇠 두 개
         private static void Arrow(RectTransform parent, Vector2 from, Vector2 to, float inset, Color color)
         {
             Vector2 dir = (to - from).normalized;
@@ -487,7 +458,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 #endif
 
-        // "상성" 보너스 = 뒤 원소가 앞 원소를 이김 → 이기는 쪽(second) → 지는 쪽(first)
         private static Dictionary<ElementType, ElementType> BeatsOf(ComboElementTable table)
         {
             var beats = new Dictionary<ElementType, ElementType>();
@@ -501,8 +471,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return beats;
         }
 
-        // 보너스 규칙 한 줄씩 (이름 | 언제 | 무엇). 예시 원소는 표의 실제 상성 한 쌍에서 고름.
-        // 수치는 ComboBindMenu 임시 규칙(증폭 +100%, 연계 뒤 +50%, 상성 앞 -50%/뒤 +100%, 역상성 앞 +50%/뒤 -50%)과 맞춤
         private static string BonusText(ComboElementTable table)
         {
             ElementType loser = ElementType.Fire, winner = ElementType.Water;
@@ -535,7 +503,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return $"<color=#D6B878>길이 배율</color> <color={GrayHex}>(합계에 곱함)</color>\n{string.Join("   ", scales)}";
         }
 
-        // 원소 효과 한 줄: "불   공격력 +10%"
         private static string ElementRowText(ComboElementTable table, ElementType element)
         {
             ComboElementTable.ElementEffect effect = table != null ? table.EffectOf(element) : null;
@@ -549,7 +516,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
 #if UNITY_EDITOR
-        // 아래: 안내/오류 + 닫기 · 저장하기 (픽 화면 버튼과 같은 그림)
         private void BuildFooter()
         {
             messageText = HudUiKit.NewText("Message", _window, "", 17f, Warn, TextAlignmentOptions.MidlineLeft);
@@ -586,8 +552,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Current = null;
         }
 
-        // ---------------------------------------------------------------- 넣기 / 빼기
-
         public bool Add(ElementType element)
         {
             if (_sequence.Count >= _slots.Count)
@@ -617,7 +581,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         public void RemoveLast() => RemoveAt(_sequence.Count - 1);
 
-        // 칸 전부 비우기
         public void Clear()
         {
             if (_sequence.Count == 0)
@@ -653,8 +616,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Closed?.Invoke();
         }
 
-        // ---------------------------------------------------------------- 화면
-
         private void Refresh(string change)
         {
             for (int i = 0; i < _slots.Count; i++)
@@ -662,7 +623,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 SlotView slot = _slots[i];
                 bool filled = i < _sequence.Count;
                 slot.badge.enabled = filled;
-                slot.plus.enabled = !filled && i == _sequence.Count;   // 다음에 들어갈 칸만 +
+                slot.plus.enabled = !filled && i == _sequence.Count;
                 slot.glow.color = filled ? Tint(_sequence[i], 0.45f) : Color.clear;
                 slot.frame.color = filled ? Tint(_sequence[i], 1f) : Faint;
                 slot.label.text = filled ? ElementComboBook.KoreanName(_sequence[i]) : "비어 있음";
@@ -691,7 +652,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             messageText.text = text;
         }
 
-        // "물 추가 · 원소 효과 마법력 +10%" + 바뀐 능력치 "공격력 +10% → +5%"
         private string Describe(bool added, ElementType element, ComboEffect before)
         {
             ComboEffect after = ComboLoadout.Evaluate(_sequence);
@@ -721,7 +681,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return text.ToString();
         }
 
-        // 칸 아래: 원소 효과 / 칸 사이 아래: 보너스 (+ 초록, - 빨강) / 합계: 스탯마다 한 줄 (길이 배율까지)
         private void FillPreview()
         {
             ComboElementTable table = ComboElementTable.Default;
@@ -762,7 +721,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 : $"{seconds:0}초";
         }
 
-        // "공격력 +10%" 한 줄씩. signColor 면 + 초록 / - 빨강
         private static string ModLines(Mod[] mods, bool signColor)
         {
             var lines = new List<string>();
@@ -779,10 +737,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private static string Colored(ElementType element) =>
             $"<color=#{ColorUtility.ToHtmlStringRGB(Tint(element, 1f))}>{ElementComboBook.KoreanName(element)}</color>";
 
-        // ---------------------------------------------------------------- 도우미
-
 #if UNITY_EDITOR
-        // 버튼을 만들고, 클릭은 인스펙터에 보이는 영구 연결(Persistent listener)로
         private static void AddButton(Image target, Action<UnityEngine.UI.Button> wire)
         {
             var button = target.gameObject.AddComponent<UnityEngine.UI.Button>();
@@ -798,7 +753,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             UnityEditor.Events.UnityEventTools.AddIntPersistentListener(button.onClick, action, argument);
 #endif
 
-        // 원소 색·배지는 프리팹에 연결된 팔레트에서 (안 넣었으면 기본 팔레트)
         private static ElementPalette Palette => _activePalette != null ? _activePalette : ElementPalette.Default;
 
         private static Sprite Badge(ElementType element) =>

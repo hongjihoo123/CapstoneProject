@@ -7,11 +7,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // TutorialSequence 의 단계를 코루틴으로 하나씩 돌림. 단계가 뭘 하는지는 모름 (TutorialStep 이 앎).
-    //  - 카드를 띄울 때 Time.timeScale = 0, 단계가 정한 입력이 오면 1 로. 대기·연출은 전부 unscaled 시간
-    //  - Tab = 지금 단계 건너뛰기, 1초 누르고 있으면 튜토리얼 끝내기
-    //  - 플레이어가 죽거나 씬이 바뀌면 정리 (멈춘 시간·잡아 둔 스포너를 되돌림)
-    // 실행 순서를 늦춰서 PlayerAgent.Update 가 이번 프레임 입력을 채운 뒤에 단계가 읽게 함.
     [DefaultExecutionOrder(1000)]
     public sealed class TutorialDirector : MonoBehaviour
     {
@@ -40,7 +35,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             var director = go.AddComponent<TutorialDirector>();
             director._sequence = sequence;
             director._ctx = new TutorialContext();
-            director._view = TutorialView.Attach(director._ctx);   // 씬에 놓인 화면을 켬
+            director._view = TutorialView.Attach(director._ctx);
             if (director._view == null)
             {
                 Destroy(go);
@@ -90,7 +85,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         private IEnumerator Start()
         {
-            // 씬의 다른 부품(HUD, 플레이어 캐릭터 교체 등)이 먼저 자리를 잡게
             yield return null;
             yield return null;
 
@@ -119,7 +113,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 {
                     SetPaused(true);
                     _view.ShowFull(step);
-                    // 카드가 뜬 그 프레임의 입력으로 바로 넘어가지 않게 한 프레임 쉼
                     yield return null;
                     while (!_skipStep && !step.IsResumeInput(_ctx))
                     {
@@ -142,7 +135,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                     if (PlayerGone())
                         yield break;
                     _view.SetProgress(step.Progress(_ctx));
-                    // 단계 안에서 앵커가 늦게 생기는 경우(HUD 늦게 만들어짐)를 위해 다시 찾아 봄
                     if (anchor == null && _ctx.TryGetAnchor(step.AnchorId, out anchor))
                         _view.SetAnchor(anchor);
                     yield return null;
@@ -166,20 +158,18 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
             string next = _sequence.SceneWhenFinished;
             if (string.IsNullOrEmpty(next))
-                return;   // 다음 씬(픽 → 맵)에서 이어짐
+                return;
 
             Debug.Log("[Tutorial] 튜토리얼 완료 → " + next);
             TutorialSession.Complete();
             Shutdown();
 
-            // 런 정리 후 메인 화면으로
             Time.timeScale = 1f;
             RunLoadout.Clear();
             CharacterSelection.Clear();
             SceneManager.LoadScene(next);
         }
 
-        // 죽으면 튜토리얼을 접고 원래 죽음 화면 흐름(픽 화면으로)에 맡김
         private bool PlayerGone()
         {
             if (_ctx.Player == null || _ctx.Player.IsAlive)
@@ -203,11 +193,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         public TutorialView View => _view;
 
-        // 맵 씬: 실전 단계(ClearRoomStep) 전까지 적 스포너를 멈춤. 씬 오브젝트의 Start 전에 불러야 함
         public void HoldSpawnersNow()
         {
             _ctx.HoldStageSpawners(true);
-            _holdEnemies = true;   // 씬 적은 그들의 Start 가 끝난 뒤(Start 코루틴 첫 단계 전)에 멈춤
+            _holdEnemies = true;
         }
 
         private bool _holdEnemies;

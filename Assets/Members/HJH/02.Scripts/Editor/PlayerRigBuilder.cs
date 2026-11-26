@@ -8,10 +8,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // Start 씬의 플레이어 세트(플레이어 + 카메라 + HUD + 스위처 등)를 PlayerRig 프리팹으로 만들고, 맵 씬들에 적용한다. 메뉴: HJH/맵/플레이어/...
-    //  - Start 씬은 읽기 전용으로 열어 복사만 하고 저장하지 않는다 (JJH 씬은 건드리지 않음).
-    //  - 플레이어는 KYR 의 Player 프리팹 인스턴스라 오버라이드가 유지된다. 세트 안의 서로 참조는 그대로 이어진다.
-    //  - 세트에서 빠진(밖의) 씬 오브젝트를 가리키던 참조는 콘솔에 목록으로 알려 준다.
     public static class PlayerRigBuilder
     {
         private const string StartScene = "Assets/Members/JJH/01_Scene/Map_Test/Start.unity";
@@ -22,10 +18,9 @@ namespace HJH.EditorTools
             "Assets/Members/HJH/01.Scene/Map_Bridge_Normal.unity",
         };
 
-        // 세트에 넣을 Start 씬 루트 오브젝트 이름 (맵 전용인 지형·프랍·스폰·포탈·NavMesh·PP·MapRenderSettings 는 뺀다)
         private static readonly string[] Include =
         {
-            "Player", "Main Camera", "CharacterSwitcher", "EventSystem", "TestHud", "HUD_Canvas",   // HUD_Canvas = 스킬바(Q/E/R/RMB/대시 슬롯)·원소 콤보 HUD (RectTransform 루트라 처음에 빠뜨렸음)
+            "Player", "Main Camera", "CharacterSwitcher", "EventSystem", "TestHud", "HUD_Canvas",
             "Map_Canvas", "MinimapCamera", "Scene_Transition_Canvas",
             "Elements_Stack_Manager", "Elements_Stack_Canvas", "AimCursor", "RunGold", "AttackAreaVisualizer",
         };
@@ -52,7 +47,6 @@ namespace HJH.EditorTools
                 }
                 if (included.Count == 0) { Debug.LogError("[Rig] 넣을 오브젝트를 하나도 못 찾았습니다."); return; }
 
-                // 세트 밖 씬 오브젝트를 가리키는 참조 점검 (프리팹에는 저장되지 않아 끊김)
                 var outside = new List<string>();
                 foreach (var comp in rig.GetComponentsInChildren<Component>(true))
                 {
@@ -67,20 +61,18 @@ namespace HJH.EditorTools
                     }
                 }
 
-                MapLightTools.AddPlayerSpot(rig.transform);   // 플레이어 Spot 라이트 (다시 만들어도 유지)
-                EnsureWaterEmitter(rig.transform);            // 물속을 걸을 때 물결 (예전 Player.prefab 에만 있었음)
+                MapLightTools.AddPlayerSpot(rig.transform);
+                EnsureWaterEmitter(rig.transform);
                 var prefab = PrefabUtility.SaveAsPrefabAsset(rig, RigPath);
                 Debug.Log($"[Rig] PlayerRig 프리팹 생성: {RigPath}\n  포함 {included.Count}개: {string.Join(", ", included)}\n  Start 씬에 없어 빠진 것: {(missing.Count == 0 ? "없음" : string.Join(", ", missing))}\n  세트 밖 참조(끊김) {outside.Count}개{(outside.Count > 0 ? ":\n    " + string.Join("\n    ", outside) : "")}");
                 if (prefab == null) Debug.LogError("[Rig] 프리팹 저장 실패");
             }
             finally
             {
-                EditorSceneManager.CloseScene(start, true);   // 저장하지 않고 닫음 → Start 씬 파일은 그대로
+                EditorSceneManager.CloseScene(start, true);
             }
         }
 
-        // ───────────────────────── 적용 ─────────────────────────
-        // 활성 씬에서 옛 카메라·플레이어·EventSystem·이전 PlayerRig 를 치우고 PlayerRig 를 놓는다. playerPos 는 플레이어가 서야 할 월드 위치.
         internal static bool PlaceRigAt(Vector3 playerPos)
         {
             var rigPrefab = AssetDatabase.LoadAssetAtPath<GameObject>(RigPath);
@@ -89,20 +81,18 @@ namespace HJH.EditorTools
             foreach (var go in scene.GetRootGameObjects())
                 if (go.name == "Main Camera" || go.name == "Player" || go.name == "EventSystem" || go.name == "PlayerRig") Object.DestroyImmediate(go);
             var rig = (GameObject)PrefabUtility.InstantiatePrefab(rigPrefab, scene);
-            // 세트 안 플레이어 위치가 playerPos 가 되도록 세트 전체를 이동 (카메라도 같이 따라옴)
             var player = rig.transform.Find("Player");
             var delta = player != null ? playerPos - player.position : playerPos;
             rig.transform.position += delta;
             return true;
         }
 
-        // 플레이어가 물속(발 높이 <= 수면)을 걸을 때 물결을 만드는 컴포넌트. 옛 Player.prefab 에는 있었는데 Start 씬 플레이어로 만든 PlayerRig 에는 빠져 있었음.
         internal static bool EnsureWaterEmitter(Transform rigRoot)
         {
             Transform player = rigRoot.name == "Player" ? rigRoot : rigRoot.Find("Player");
             if (player == null) return false;
             if (player.GetComponent<Assets.Members.HJH.Environment.WaterRippleEmitter>() == null)
-                player.gameObject.AddComponent<Assets.Members.HJH.Environment.WaterRippleEmitter>();   // 기본값 = 옛 Player 설정 (반지름 0.45, 세기 0.12, 간격 0.7, 허용 0.05)
+                player.gameObject.AddComponent<Assets.Members.HJH.Environment.WaterRippleEmitter>();
             return true;
         }
 
@@ -120,8 +110,6 @@ namespace HJH.EditorTools
             finally { PrefabUtility.UnloadPrefabContents(root); }
         }
 
-        // 지금 열린(활성) 씬에 적용. 저장은 안 함 -> 확인하고 직접 저장하세요. (_HJH_Map 처럼 위 두 맵이 아닌 씬용)
-        // 플레이어가 설 자리: 하이어라키에서 선택한 오브젝트 > 옛 Player > Portal_Start > Portals 첫 자식 > 지금 씬 뷰가 보는 자리 > (0,0,0)
         [MenuItem("HJH/맵/플레이어/3 지금 열린 씬에 플레이어 세트 적용 (선택한 오브젝트 자리 우선)")]
         private static void ApplyToActiveScene()
         {
@@ -131,7 +119,7 @@ namespace HJH.EditorTools
             Vector3 pos = FindStartPos(scene, out string how);
 
             Terrain terrain = Terrain.activeTerrain;
-            if (terrain != null && how != "옛 Player")   // 땅에 닿게 (옛 Player 위치는 그대로 믿음)
+            if (terrain != null && how != "옛 Player")
                 pos.y = terrain.SampleHeight(pos) + terrain.transform.position.y + 0.1f;
 
             bool ok = PlaceRigAt(pos);
@@ -171,7 +159,6 @@ namespace HJH.EditorTools
             {
                 if (!File.Exists(path)) continue;
                 var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-                // 시작 위치: 옛 플레이어 → 시작 포탈 → 옛 카메라 앞
                 Vector3? pos = null;
                 var oldPlayer = scene.GetRootGameObjects().FirstOrDefault(g => g.name == "Player");
                 if (oldPlayer != null) pos = oldPlayer.transform.position;

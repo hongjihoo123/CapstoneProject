@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 장판. 몇 초 동안 남아서 interval 마다 안에 있는 적한테 효과 (맞은 적한테 할 것 = 한 번 판정마다)
-    // 내가 안에 서 있으면 나한테 효과도 (회복 장판 같은 거)
-    // 예) 치유의 비
     [CreateAssetMenu(menuName = "Skill/Element/Zone (장판)")]
     public class ZoneSkill : ElementSkillBase
     {
@@ -56,7 +53,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             stats.Add(new SkillStat("유지", $"{zoneTime:0.#}초 ({interval:0.##}초마다)"));
         }
 
-        // 깔려 있는 동안 매 프레임 도는 거
         private sealed class Zone : ISkillTimedEffect
         {
             private readonly ZoneSkill _skill;
@@ -108,7 +104,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
             private void Pulse()
             {
-                if (_skill.strikesPerPulse <= 0)   // 무작위 낙뢰는 맞는 자리에서 터짐
+                if (_skill.strikesPerPulse <= 0)
                     _cast.PlayImpact(_center, _skill.radius * 0.8f);
                 if (_skill.pulseShake > 0f)
                     _cast.Context.PlayShake(_skill.pulseShake, Mathf.Min(0.3f, _skill.interval));
@@ -133,7 +129,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                     _cast.ApplySelf(_skill.onSelf, _skill.selfFx);
             }
 
-            // 안에 있는 적 중 무작위 N명 머리 위로 번개 (아무도 없으면 빈 자리에 한 번)
             private void Strike(IReadOnlyList<IDamageable> inside)
             {
                 var pool = new List<IDamageable>(inside);

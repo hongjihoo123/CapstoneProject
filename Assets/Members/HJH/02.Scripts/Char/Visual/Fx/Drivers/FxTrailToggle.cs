@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Trail that only draws while Value > 0 (dash trail: on while dashing).
     public class FxTrailToggle : MonoBehaviour, IFxDriver, IFxValueReceiver
     {
         [SerializeField] private TrailRenderer trail;

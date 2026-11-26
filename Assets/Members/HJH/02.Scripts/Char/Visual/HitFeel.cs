@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Global hit-feel: brief time freeze (hit stop) + camera shake / kick / zoom + slow motion.
-    // Stronger requests win over weaker ones that are still running; they never stack up.
-    // timeScale 은 항상 시작 전 값으로 되돌림. 다른 시스템(일시정지 등)이 바꾸면 그쪽을 존중 (OwnsTimeScale)
     public class HitFeel : MonoBehaviour
     {
         private const float StoppedTimeScale = 0.05f;
@@ -33,7 +30,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _slowDuration;
         private float _slowRecover = 0.4f;
 
-        // 마지막으로 이쪽이 넣은 timeScale. 지금 값과 다르면 다른 시스템이 바꾼 것
         private float _written = 1f;
         private bool _pausedByOther;
 
@@ -46,7 +42,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Instance.Stop(hitStop);
         }
 
-        // 전체 흔들림 배율 (피드백: 흔들림이 약함 → 1.8배). 모든 Shake 요청에 곱해짐
         public const float ShakeScale = 1.8f;
 
         public static void Shake(float amplitude, float duration)
@@ -62,8 +57,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _shakeEndTime = Time.unscaledTime + duration;
         }
 
-        // Directional punch: the camera snaps by offset (world units) and eases back over duration.
-        // Used for recoil (offset opposite the shot) and slams (offset down). Stronger wins, like Shake.
         public static void Kick(Vector3 offset, float duration = 0.22f)
         {
             if (duration <= 0f || offset.sqrMagnitude < CurrentKick.sqrMagnitude)
@@ -74,8 +67,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _kickDuration = duration;
         }
 
-        // 줌 펀치: amount 만큼 카메라가 다가갔다(+) / 물러났다(-) 돌아옴. 0.06 = 거리 6%. 센 쪽이 이김
-        // hold(실제 초) 동안은 다가간 채로 있다가 남은 시간 동안 부드럽게 돌아옴 (강한 처치 슬로모션과 맞춤)
         public static void Zoom(float amount, float duration = 0.3f, float hold = 0f)
         {
             if (duration <= 0f || Mathf.Abs(amount) < Mathf.Abs(CurrentZoom))
@@ -97,7 +88,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 if (t >= 1f)
                     return 0f;
 
-                // 15% 동안 다가감 → hold 유지 → 나머지 동안 부드럽게 복귀 (hold 0 이면 예전과 같음)
                 float rise = Mathf.Min(0.15f, 1f - _zoomHold - 0.05f);
                 float back = rise + _zoomHold;
                 float k = t < rise ? t / rise
@@ -107,12 +97,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 슬로모션: scale 배속으로 duration(실제 초) 동안, 끝 recover 비율(기본 40%)에서 부드럽게 원래 속도로.
-        // 더 느린 쪽이 이김. 끝나면 시작 전 timeScale 로 정확히 되돌림
         public static void SlowMo(float scale, float duration, float recover = 0.4f)
         {
             if (Time.timeScale <= 0f)
-                return;   // 일시정지 중엔 무시 (원래 속도를 0 으로 잘못 기억하지 않게)
+                return;
 
             HitFeel i = Instance;
             if (i._slowing && scale >= i._slowScale && Time.unscaledTime < i._slowEnd)
@@ -126,7 +114,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             i._slowRecover = Mathf.Clamp(recover, 0.05f, 1f);
             i._slowEnd = Time.unscaledTime + i._slowDuration;
             if (!i._stopping)
-                i.Write(i.SlowValue());   // 이번 프레임부터 바로 느려지게
+                i.Write(i.SlowValue());
         }
 
         private float SlowValue()
@@ -147,13 +135,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 if (t >= 1f)
                     return Vector3.zero;
 
-                // 15% snap out, then smooth return.
                 float k = t < 0.15f ? t / 0.15f : 1f - Mathf.SmoothStep(0f, 1f, (t - 0.15f) / 0.85f);
                 return _kick * k;
             }
         }
 
-        // Linearly fading amplitude; read by the camera every frame.
         public static float CurrentShake
         {
             get
@@ -176,7 +162,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void Stop(float duration)
         {
             if (Time.timeScale <= 0f)
-                return;   // 일시정지 중
+                return;
 
             if (!_stopping)
             {
@@ -202,7 +188,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (!OwnsTimeScale())
                 return;
 
-            // 히트스톱이 먼저. 끝나면 슬로모션 중이면 슬로 속도로, 아니면 원래 속도로
             if (_stopping)
             {
                 if (Time.unscaledTime < _stopEndRealtime)
@@ -223,10 +208,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 다른 시스템과 timeScale 다툼 방지
-        //  - 누가 0 으로 만들었으면(일시정지) 건드리지 않고 기다림. 기다린 만큼 연출 시간을 뒤로 밀어서 풀린 뒤 이어서 진행
-        //  - 일시정지가 풀리면 다시 이어받음 (그쪽이 되돌린 '느린 값'은 덮어쓰고, 끝나면 원래 속도로 복귀)
-        //  - 일시정지가 아닌데 다른 값으로 바뀌었으면 그쪽 의도를 존중하고 이쪽 연출만 끝냄
         private bool OwnsTimeScale()
         {
             float now = Time.timeScale;
@@ -255,7 +236,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void OnDestroy()
         {
-            // 연출 중이 아니거나, 다른 시스템이 일시정지 중이면 그쪽에 맡김
             if ((!_stopping && !_slowing) || Time.timeScale <= 0f || Mathf.Abs(Time.timeScale - _written) > 0.0001f)
                 return;
 

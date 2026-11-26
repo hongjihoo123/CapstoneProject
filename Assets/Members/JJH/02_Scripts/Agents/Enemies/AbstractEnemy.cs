@@ -5,6 +5,7 @@ using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
+using Members.KYR._01.Scripts.Currency;
 using System.Collections.Generic;
 using Unity.Behavior;
 using Unity.Behavior.GraphFramework;
@@ -68,7 +69,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 
         public override void Dead()
         {
-            moneyChannel.RaiseEvent(MoneyEvents.EnemyKilledEvent.Init(EnemyData.Gold));
+            moneyChannel.RaiseEvent(MoneyEvents.GainCurrencyEvent.Init(CurrencyType.RunGold, EnemyData.Gold));
+            moneyChannel.RaiseEvent(MoneyEvents.GainCurrencyEvent.Init(CurrencyType.MetaSoul, EnemyData.Soul));
             AnyDied?.Invoke(this);
             base.Dead();
         }

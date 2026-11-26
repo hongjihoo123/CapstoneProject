@@ -46,7 +46,7 @@ namespace Members.KYR._01.Scripts.Modules
         private const float DashMinSpeedFactor = 0.35f;
         private PlayerStatsModule _stats;
 
-        private float BaseMoveSpeed => GetStat(PlayerStatId.MoveSpeed, moveSpeed);
+        private float BaseMoveSpeed => GetStat(PlayerStatId.MoveSpeed, moveSpeed) * (1f + Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgrades.Exact(Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeKind.MoveSpeed, Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeScope.Dash));   // (HJH) 스킬 트리 이동속도
         public float WalkSpeed => BaseMoveSpeed;
         public float RunSpeed => BaseMoveSpeed * runMultiplier;
         public float CrouchSpeed => BaseMoveSpeed * crouchMultiplier;

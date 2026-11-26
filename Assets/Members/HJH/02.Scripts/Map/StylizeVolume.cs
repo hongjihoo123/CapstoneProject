@@ -4,9 +4,6 @@ using UnityEngine.Rendering;
 
 namespace Assets.Members.HJH._02.Scripts.Map
 {
-    // 화면 스타일라이즈 설정 (Volume 의 Add Override → HJH/Stylize).
-    // 렌더러의 "HJH Stylize" 전체 화면 패스(StylizeFullscreen.shader)가 이 값을 씀.
-    // Intensity 가 0 인 씬(= 이 항목이 없는 씬)은 화면이 그대로.
     [Serializable, VolumeComponentMenu("HJH/Stylize")]
     public sealed class StylizeVolume : VolumeComponent
     {
@@ -24,7 +21,6 @@ namespace Assets.Members.HJH._02.Scripts.Map
         public MinFloatParameter outlineDistance = new(45f, 1f);
     }
 
-    // 매 프레임 Volume 값을 셰이더 전역값으로 넘김 (씬에 따로 놓을 필요 없음)
     internal static class StylizeDriver
     {
         private static readonly int On = Shader.PropertyToID("_HJH_StylizeOn");
@@ -43,7 +39,6 @@ namespace Assets.Members.HJH._02.Scripts.Map
         }
 
 #if UNITY_EDITOR
-        // 플레이 안 할 때도 씬 뷰·게임 뷰에서 보이게
         [UnityEditor.InitializeOnLoadMethod]
         private static void InitEditor() => Init();
 #endif

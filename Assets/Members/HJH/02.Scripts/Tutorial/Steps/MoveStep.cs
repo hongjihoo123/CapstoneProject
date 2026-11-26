@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 이동: WASD 를 누르면 시간이 흐르고, distance 미터를 걸으면 끝
     [CreateAssetMenu(menuName = "HJH/Tutorial/Step - Move", fileName = "Step_Move")]
     public class MoveStep : TutorialStep
     {

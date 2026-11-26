@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Stats;
@@ -121,8 +122,12 @@ namespace Members.KYR._01.Scripts.Enchant.So
         public int cost = 1;
         [Tooltip("같은 그룹 노드는 하나만 배울 수 있다. 비우면 제한 없음")]
         public string exclusiveGroup;
+        [Tooltip("게임 화면에서 이 노드가 보이는 탭 이름. 비우면 첫 탭. 연결(선행)은 탭 안에서만 쓴다")]
+        public string tab;
         public string description;
         public List<EnchantStatEffect> effects = new List<EnchantStatEffect>();
+        [Tooltip("스킬 강화 효과 (원소별 피해/쿨타임/범위, 콤보, 피니셔). 스탯 효과와 같이 쓸 수 있다")]
+        public List<EnchantSkillEffect> skillEffects = new List<EnchantSkillEffect>();
         public Vector2 position;
 
         public List<EnchantStatEffect> Effects
@@ -134,6 +139,28 @@ namespace Members.KYR._01.Scripts.Enchant.So
                 return effects;
             }
         }
+
+        public List<EnchantSkillEffect> SkillEffects
+        {
+            get
+            {
+                if (skillEffects == null)
+                    skillEffects = new List<EnchantSkillEffect>();
+                return skillEffects;
+            }
+        }
+    }
+
+    // 스킬 트리 노드의 "스킬 강화" 한 줄. 플레이어 스탯이 아니라 SkillUpgrades 판에 올라가서 스킬이 직접 읽는다.
+    [Serializable]
+    public class EnchantSkillEffect
+    {
+        public SkillUpgradeScope scope = SkillUpgradeScope.All;
+        public SkillUpgradeKind kind = SkillUpgradeKind.Damage;
+        [Tooltip("랭크 1개당 값. 0.05 = 5% (쿨타임은 -5%)")]
+        public float valuePerRank = 0.05f;
+
+        public float ValueAt(int rank) => valuePerRank * Mathf.Max(0, rank);
     }
 
     [Serializable]

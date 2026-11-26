@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 {
-    // Shared rune pool between the rune mage's passive (fills it) and skills (spend it).
     public interface IRuneReservoir
     {
         int Runes { get; }
@@ -13,9 +12,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
         int ConsumeAll();
     }
 
-    // Character 3 passive: every weapon hit adds a rune that orbits the player. Each rune hurts
-    // whatever it touches, so more runes = more hits per second, and poking from range charges up the dive.
-    // Runes fade one by one after a while without new hits.
     [CreateAssetMenu(menuName = "Skill/Passive/Rune Resonance")]
     public class RuneResonancePassiveData : PassiveData
     {
@@ -41,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
             private readonly RuneResonancePassiveData _data;
             private IShotHitSource _shots;
             private readonly List<FxHandle> _orbs = new();
-            // (룬 번호, 적) -> 마지막으로 때린 시간. 한 번 지나갈 때 한 번만 맞게
             private readonly Dictionary<(int, IDamageable), float> _lastTouch = new();
             private readonly List<(int, IDamageable)> _expired = new();
             private float _angle;
@@ -87,7 +82,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                 SyncOrbs();
             }
 
-            // 룬을 돌리고, 룬 자리에 닿은 적을 바로 때림 (룬 최대 5개라 판정 5번, 가벼움)
             private void MoveRunes()
             {
                 Vector3 center = Context.Transform.position;
@@ -114,7 +108,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                 _lastTouch[key] = Time.time;
                 Context.DealDamage(target, _data.touchDamage);
 
-                // 룬이 갈아버린 느낌: 맞은 적 몸에서 룬 파편이 튀고, 플레이어 바깥쪽으로 스파크
                 if (target is Component component)
                 {
                     Vector3 body = component.transform.position + Vector3.up * 1.1f;
@@ -125,7 +118,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                 }
             }
 
-            // 오래된 기록은 지움 (죽은 적이 계속 남아있지 않게)
             private void ForgetOldTouches()
             {
                 _expired.Clear();
@@ -139,7 +131,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
                     _lastTouch.Remove(key);
             }
 
-            // One glowing orb per stored rune; extra orbs burst away when runes are spent or fade.
             private void SyncOrbs()
             {
                 Vector3 center = Context.Transform.position + Vector3.up * 1.1f;

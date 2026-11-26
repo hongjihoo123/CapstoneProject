@@ -1,15 +1,9 @@
 using Assets.Members.HJH._02.Scripts.Char.Visual;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Character
 {
-    // 캐릭터 바뀔 때 겉모습(모델)만 바꿔주는 거임.
-    //  - CharacterData 에 모델이 있으면: 플레이어 Visual 밑에 모델 생성 + 캡슐(Body, FacingMarker) 숨김
-    //  - 모델 없으면: 캡슐 그대로 보여줌 (아직 모델 없는 캐릭터용)
-    // 모델 안에 "AimOrigin" 빈 오브젝트(총 뼈 밑)가 있으면 플레이어 AimOrigin 을 거기로 옮겨서 총구가 모션 따라 움직이게 함.
-    // 애니메이션 재생은 같이 붙는 CharacterAnimator 가 함. 씬에 따로 안 붙여도 CharacterSwitcher 가 알아서 붙임
     public class CharacterModel : MonoBehaviour
     {
         private const string VisualName = "Visual";
@@ -20,10 +14,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
 
         public Animator Animator { get; private set; }
 
-        // 지금 보이는 모델 (없으면 null = 캡슐)
         public GameObject Current => _current;
 
-        // 모델·캡슐이 붙어 있는 Visual 오브젝트 (피격 때 몸만 살짝 밀 때 씀)
         public Transform Visual => VisualRoot();
 
         public static CharacterModel For(PlayerAgent player)
@@ -43,7 +35,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
 
         public void Show(CharacterData character)
         {
-            ReturnAimOrigin();   // 모델 지우기 전에 AimOrigin 부터 원래 자리로 (안 그러면 같이 지워짐)
+            ReturnAimOrigin();
             if (_current != null)
                 Destroy(_current);
             _current = null;
@@ -60,7 +52,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
             _current.transform.SetLocalPositionAndRotation(character.ModelOffset, character.ModelRotation);
             _current.transform.localScale = Vector3.one * character.ModelScale;
 
-            // 모델 프리팹에 Animator 없으면 붙여줌. 이동은 코드가 하니까 루트모션은 끔
             Animator = _current.GetComponentInChildren<Animator>();
             if (Animator == null)
                 Animator = _current.AddComponent<Animator>();
@@ -68,16 +59,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Character
             if (character.AnimatorController != null)
                 Animator.runtimeAnimatorController = character.AnimatorController;
 
-            // 애니 이벤트(Anim_Fire 등)는 Animator 오브젝트로 오니까 거기서 플레이어로 넘겨주는 애 붙임
             if (!Animator.TryGetComponent(out PlayerAnimationEventRelay _))
                 Animator.gameObject.AddComponent<PlayerAnimationEventRelay>();
 
             AttachAimOrigin();
         }
 
-        // 모델 안에 "AimOrigin" 이라는 빈 오브젝트가 있으면(총/손 뼈 밑에 넣어두면 됨),
-        // 플레이어 AimOrigin 을 거기로 옮김 -> 총 쏘는 위치가 애니메이션 따라 총이랑 같이 움직임.
-        // 캐릭터 바꾸면 원래 자리(플레이어 밑)로 돌려놓음
         private const string AimOriginMarker = "AimOrigin";
 
         private Transform _aimOrigin;

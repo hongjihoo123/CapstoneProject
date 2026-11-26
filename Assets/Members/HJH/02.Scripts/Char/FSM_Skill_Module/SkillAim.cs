@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Shared aiming helpers: cursor direction + clamped distance, and WASD-or-aim direction for dashes.
     public static class SkillAim
     {
         public static Vector3 Resolve(ISkillContext context, float minRange, float maxRange, out float distance)
@@ -15,7 +14,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             return direction;
         }
 
-        // Dashes: the WASD direction while moving, otherwise where the player aims.
         public static bool TryMoveDirection(ISkillContext context, out Vector3 direction)
         {
             direction = context.MoveInputDirection;

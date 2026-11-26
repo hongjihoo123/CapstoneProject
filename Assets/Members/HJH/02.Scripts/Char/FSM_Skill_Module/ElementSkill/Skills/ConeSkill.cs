@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 앞으로 부채꼴 한 번에. 밀치기 넣으면 부채꼴 바깥쪽으로 퍼지면서 밀림
-    // 예) 돌풍
     [CreateAssetMenu(menuName = "Skill/Element/Cone (부채꼴)")]
     public class ConeSkill : ElementSkillBase
     {
@@ -31,9 +29,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             {
                 Vector3 toTarget = ElementSkillCast.PositionOf(target, apex) - apex;
                 toTarget.y = 0f;
-                bool onTop = toTarget.sqrMagnitude <= 0.01f;   // 내 몸이랑 겹친 적은 그냥 맞음
+                bool onTop = toTarget.sqrMagnitude <= 0.01f;
                 if (!onTop && Vector3.Angle(direction, toTarget) > angle * 0.5f)
-                    continue;   // 부채꼴 밖
+                    continue;
 
                 if (cast.Hit(target, onTop ? direction : toTarget))
                     hits++;

@@ -2,11 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Straight line effect (beam, tracer, streak) between two runtime points.
-    // Width over the effect's life comes from the curve; color = Tint x alpha curve.
-    // Optional points/particles: startPoint/endPoint are moved to the ends (put flashes under them),
-    // alongLine systems get a box shape stretched over the whole line.
-    // Duration <= 0 holds the line until Kill (aim guides), and SetPoints can re-aim it every frame.
     public class FxLine : MonoBehaviour, IFxDriver, IFxPointsReceiver, IFxTintReceiver, IFxValueReceiver
     {
         [SerializeField] private LineRenderer[] lines;
@@ -43,7 +38,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public void Stop()
         {
-            // Held lines fade out quickly once killed.
             if (_duration <= 0f)
             {
                 _duration = 0.1f;
@@ -53,7 +47,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public void SetTint(Color tint) => _tint = tint;
 
-        // Thickness multiplier while the line is held (e.g. a barrel thickening as it charges).
         public void SetValue(float value) => _valueScale = Mathf.Max(0f, value);
 
         public void SetPoints(Vector3 start, Vector3 end)

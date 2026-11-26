@@ -1,6 +1,5 @@
 namespace RobotWeapons
 {
-    // Raised by the attacker after damage is applied (final amount, after stat multipliers).
     public readonly struct DamageDealtInfo
     {
         public readonly IDamageable Target;

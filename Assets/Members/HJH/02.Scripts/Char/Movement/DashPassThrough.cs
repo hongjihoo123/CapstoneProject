@@ -6,9 +6,6 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Movement
 {
-    // 대시 중에는 적을 뚫고 지나감 (적이 옆으로 살짝 밀림). 대시가 끝났을 때 적과 겹쳐 있으면 가까운 빈자리로 빼 줌.
-    //  - 레이어 충돌 매트릭스는 안 건드림: 플레이어 CharacterController 의 excludeLayers 에 적 레이어를 대시 동안만 넣었다 뺌
-    //  - 대시 자체(속도·시간·방향)는 기존 PlayerMover / 스킬 쪽 그대로. 여기는 IsDashing 을 보기만 함
     [DefaultExecutionOrder(50)]
     public sealed class DashPassThrough : MonoBehaviour
     {
@@ -113,15 +110,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
             ResolveOverlap();
         }
 
-        // ------------------------------------------------ 대시 끝: 겹침 풀기
-
         private void ResolveOverlap()
         {
             Vector3 origin = transform.position;
             if (IsFree(origin, passThroughLayers.value))
                 return;
 
-            // 가까운 거리부터 16방향을 훑어서, 적·벽과 안 겹치고 발밑에 땅이 있는 첫 자리
             Vector3 forward = _dashDirection.sqrMagnitude > 0.0001f ? _dashDirection : transform.forward;
             const int Directions = 16;
             for (float distance = resolveStep; distance <= maxResolveDistance + 0.001f; distance += resolveStep)
@@ -136,7 +130,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
                     if (!IsFree(candidate, passThroughLayers.value | _blockingMask) || !HasGround(candidate))
                         continue;
 
-                    float score = -Vector3.Dot(dir, forward) * preferForward;   // 같은 거리면 앞쪽
+                    float score = -Vector3.Dot(dir, forward) * preferForward;
                     if (score < bestScore)
                     {
                         bestScore = score;
@@ -170,13 +164,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
             radius = _body.radius;
             Vector3 center = position + _body.center;
             float half = Mathf.Max(0f, _body.height * 0.5f - radius);
-            bottom = center - Vector3.up * half + Vector3.up * (_body.stepOffset + 0.02f);   // 발밑 땅은 안 걸리게
+            bottom = center - Vector3.up * half + Vector3.up * (_body.stepOffset + 0.02f);
             top = center + Vector3.up * half;
             if (top.y < bottom.y)
                 top = bottom;
         }
 
-        // 플레이어 레이어와 충돌하는 레이어 (충돌 매트릭스 기준) = 대시 끝 자리를 막는 것들
         private static int BlockingMask(int layer)
         {
             int mask = 0;
@@ -185,8 +178,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
                     mask |= 1 << i;
             return mask & ~(1 << layer);
         }
-
-        // ------------------------------------------------ 지나가는 적 밀기
 
         private void FindEnemiesToShove()
         {
@@ -201,7 +192,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
                 if (!_shovedThisDash.Add(root))
                     continue;
 
-                // 대시 방향에 수직으로, 적이 있는 쪽으로 (정면이면 오른쪽)
                 Vector3 offset = root.position - transform.position;
                 offset.y = 0f;
                 Vector3 side = Vector3.Cross(Vector3.up, _dashDirection);
@@ -227,7 +217,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Movement
                 Vector3 delta = shove.Total * (after - before);
 
                 if (shove.Agent != null && shove.Agent.enabled && shove.Agent.isOnNavMesh)
-                    shove.Agent.Move(delta);   // 내비메시 밖으로는 안 나감
+                    shove.Agent.Move(delta);
                 else if (shove.Agent == null)
                     shove.Root.position += delta;
 

@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Test
 {
-    // Test Q/E skill for the swap scene: one blast around the player (or at the cursor when castRange > 0),
-    // so swapped skills feel different and have real numbers to show in the tooltip.
     [CreateAssetMenu(menuName = "Skill/Test/Element Nova")]
     public class ElementNovaSkillData : SkillData
     {

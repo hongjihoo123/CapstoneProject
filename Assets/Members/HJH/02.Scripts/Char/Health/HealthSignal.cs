@@ -24,15 +24,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Health
         public bool IsHeal => Current > Previous + 0.001f;
     }
 
-    // 체력 값이 바뀌었다는 알림. 체력바 같은 보는 쪽은 이것만 알면 됨 (누가 어떻게 체력을 들고 있는지 몰라도 됨)
     public interface IHealthSignal
     {
         event Action<HealthChange> Changed;
         HealthChange Last { get; }
     }
 
-    // 플레이어·적 체력을 지켜보다가 바뀌면 Changed 를 쏨.
-    // KYR/JJH 체력 코드에 이벤트가 없어서 매 프레임 읽어 비교 (값 바뀐 프레임에만 알림)
     [DefaultExecutionOrder(9000)]
     public sealed class HealthSignal : MonoBehaviour, IHealthSignal
     {
@@ -65,7 +62,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Health
                 && Mathf.Abs(shield - Last.Shield) < 0.001f)
                 return;
 
-            // 처음 값은 이전 = 현재 (붙자마자 "깎였다" 연출이 나오지 않게)
             Last = new HealthChange(_hasValue ? Last.Current : current, current, max, shield);
             _hasValue = true;
             Changed?.Invoke(Last);

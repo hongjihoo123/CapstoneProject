@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // A held effect (orb, magic circle, aura, aim line...). Move it, feed it values, Kill it when done;
-    // it fades out and goes back to the pool by itself. Safe to use when the prefab slot is empty (does nothing).
     public sealed class FxHandle
     {
         private readonly FxPrefabInstance _instance;

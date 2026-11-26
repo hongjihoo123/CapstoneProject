@@ -8,19 +8,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     public class BossPoisonSkill : AbstractBossSkill
     {
         [Header("Poison Settings")]
-        [SerializeField] private BossPoisonProjectile projectilePrefab;
-        [SerializeField] private BossPoisonArea areaPrefab;
+        [SerializeField] private BossPoisonAreaProjectile projectilePrefab;
+        [SerializeField] private PoisonArea areaPrefab;
         [SerializeField] private Transform projectileSpawnPoint;
         [SerializeField] private float arcHeight = 4f;
 
         [Header("Phase 1")]
-        [SerializeField] private float phase1ProjectileSpeed = 10f;
         [SerializeField] private float phase1AreaRadius = 2f;
         [SerializeField] private float phase1AreaDuration = 5f;
         [SerializeField] private float phase1DamageInterval = 0.5f;
         [SerializeField] private float phase1FlightTime = 1.5f;
         [Header("Phase 2")]
-        [SerializeField] private float phase2ProjectileSpeed = 10f;
         [SerializeField] private float phase2AreaRadius = 2f;
         [SerializeField] private float phase2AreaDuration = 5f;
         [SerializeField] private float phase2DamageInterval = 0.5f;
@@ -60,7 +58,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 ? projectileSpawnPoint.position
                 : _enemy.transform.position + Vector3.up;
 
-            BossPoisonProjectile projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
+            BossPoisonAreaProjectile projectile = Instantiate(projectilePrefab, origin, Quaternion.identity);
 
             projectile.InitializeArc(targetPosition, flightTime, arcHeight, _enemy.gameObject, areaPrefab,
                 SkillSetting.Damage, areaRadius, areaDuration, damageInterval,

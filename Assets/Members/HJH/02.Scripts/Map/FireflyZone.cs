@@ -2,14 +2,6 @@ using UnityEngine;
 
 namespace HJH.MapFx
 {
-    // 반딧불이 구역: 파티클(반딧불이 + 큰 번짐) + 약한 점광원 1개. 비용을 낮추려고
-    //  - 카메라에서 멀면(cullDistance) 파티클과 라이트를 통째로 멈춘다 (0.5초마다 한 번만 검사)
-    //  - 라이트는 Perlin 노이즈로 은은하게 깜빡인다 (그림자 없음, 범위 작음)
-    //  - lightEnabled 를 끄면 라이트 없이 파티클만 쓴다 (성능이 부족할 때)
-    // v2 (11-13): 반딧불이 한 마리마다 다른 박자로 깜빡인다 (켜짐 0.15~0.45초, 꺼짐 1.5~4초, 시작 박자도 제각각).
-    //  Color over Lifetime 은 모든 입자가 같은 곡선을 쓰므로 박자를 입자마다 어긋나게 할 수 없다 →
-    //  입자의 randomSeed 로 박자·색·밝기를 정하고 여기서 startColor 를 매 프레임 쓴다 (보이는 구역만, 구역당 ~30마리).
-    //  플레이어가 가까이 오면 살짝 흩어진다 (속도를 더하고, 파티클의 Drag 가 다시 느리게 만든다).
     public class FireflyZone : MonoBehaviour
     {
         [SerializeField] private Light glowLight;
@@ -21,18 +13,18 @@ namespace HJH.MapFx
         [SerializeField] private bool lightEnabled = true;
 
         [Header("v2 깜빡임 (입자마다 다른 박자)")]
-        [SerializeField] private ParticleSystem flies;                     // 비우면 깜빡임/흩어짐 없음
+        [SerializeField] private ParticleSystem flies;
         [SerializeField] private Vector2 onSeconds = new Vector2(0.15f, 0.45f);
         [SerializeField] private Vector2 offSeconds = new Vector2(1.5f, 4f);
-        [SerializeField] private Color colorA = new Color(1f, 0.878f, 0.4f);       // #FFE066
-        [SerializeField] private Color colorB = new Color(0.784f, 1f, 0.353f);     // #C8FF5A
-        [SerializeField] private Vector2 brightness = new Vector2(0.45f, 1f);      // 입자마다 밝기 (먼/가까운 느낌)
-        [SerializeField, Range(0f, 1f)] private float idleGlow = 0.04f;            // 꺼져 있을 때 남는 아주 약한 빛
+        [SerializeField] private Color colorA = new Color(1f, 0.878f, 0.4f);
+        [SerializeField] private Color colorB = new Color(0.784f, 1f, 0.353f);
+        [SerializeField] private Vector2 brightness = new Vector2(0.45f, 1f);
+        [SerializeField, Range(0f, 1f)] private float idleGlow = 0.04f;
 
         [Header("v2 날아다니기 (입자마다 다른 방향·속도로 천천히 선회, 구역 밖으로 나가면 돌아옴)")]
-        [SerializeField] private Vector2 wanderSpeed = new Vector2(0.3f, 0.8f);   // m/s
-        [SerializeField] private float wanderTurn = 0.6f;                          // 선회 빠르기
-        [SerializeField] private float leashRadius = 3.2f;                         // 구역 중심에서 이 거리를 넘으면 되돌아옴
+        [SerializeField] private Vector2 wanderSpeed = new Vector2(0.3f, 0.8f);
+        [SerializeField] private float wanderTurn = 0.6f;
+        [SerializeField] private float leashRadius = 3.2f;
 
         [Header("v2 흩어짐 (플레이어 근처)")]
         [SerializeField] private float scatterRadius = 2.2f;
@@ -87,7 +79,6 @@ namespace HJH.MapFx
             int n = flies.GetParticles(_buf);
             if (n == 0) return;
 
-            // 플레이어 (가끔만 찾음)
             if (_player == null && Time.time >= _nextPlayerFind)
             {
                 _nextPlayerFind = Time.time + 2f;
@@ -103,7 +94,7 @@ namespace HJH.MapFx
                 if ((pp - ft.position).sqrMagnitude < (scatterRadius + 4f) * (scatterRadius + 4f))
                 {
                     scatter = true;
-                    playerLocal = ft.InverseTransformPoint(pp);   // simulationSpace = Local
+                    playerLocal = ft.InverseTransformPoint(pp);
                 }
             }
 
@@ -116,12 +107,11 @@ namespace HJH.MapFx
                 float on = Mathf.Lerp(onSeconds.x, onSeconds.y, h0);
                 float off = Mathf.Lerp(offSeconds.x, offSeconds.y, h1);
                 float period = on + off;
-                // 박자를 조금씩 흔들어 같은 간격으로 반복되지 않게
                 float phase = (t + h2 * period + Mathf.Sin(t * 0.37f + h3 * 6.28f) * 0.4f) % period;
                 float a = 0f;
                 if (phase < on)
                 {
-                    float u = phase / on;                          // 빠르게 켜지고 빠르게 꺼짐
+                    float u = phase / on;
                     a = u < 0.3f ? u / 0.3f : 1f - (u - 0.3f) / 0.7f;
                     a = a * a;
                 }
@@ -130,7 +120,6 @@ namespace HJH.MapFx
                 c.a = a;
                 _buf[i].startColor = c;
 
-                // 날아다니기: 입자마다 다른 주기로 방향이 천천히 돈다. 위아래는 작게.
                 float sp = Mathf.Lerp(wanderSpeed.x, wanderSpeed.y, h4);
                 float wt = t * wanderTurn * (0.6f + h1 * 0.8f);
                 var want = new Vector3(Mathf.Sin(wt + h2 * 6.28f), 0.35f * Mathf.Sin(wt * 1.7f + h0 * 6.28f), Mathf.Cos(wt * 0.83f + h3 * 6.28f)) * sp;

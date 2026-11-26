@@ -3,20 +3,18 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 기본 튜토리얼 순서. 에디터 메뉴(HJH/튜토리얼/기본 튜토리얼 에셋 만들기)가 이걸 에셋으로 저장하고,
-    // 실행 중 에셋이 없을 때도 이걸로 돎. 문구·순서를 바꾸려면 저장된 에셋을 고치면 됨.
     public static class TutorialDefaults
     {
         public const string ResourceFolder = "HJH/Tutorial/";
         public const string PickName = "Tutorial_Pick";
         public const string StageName = "Tutorial_Stage";
         public const string MainMenuScene = "MainMenu";
-        public const string ShopScene = "Map_Shop";   // 튜토리얼 스테이지는 상점 맵에서 (콤보 바인딩 상점이 있음)
+        public const string StageScene = "Map_Training";
 
         public const string PickComboTitle = "시작 콤보";
         public const string PickComboBody = "우클릭 스킬과 궁극기 원소로 만든 콤보 두 개 중 하나를 고르세요.\n튜토리얼과 초반에는 이 콤보로 싸우고, 게임 중 상점에서 새 콤보를 바인딩할 수 있습니다.";
         public const string BindTitle = "콤보 바인딩";
-        public const string BindBody = "콤보 상점에 가까이 가서 {F} 를 누르세요.\n원소를 2~4칸 순서대로 넣으면 효과가 바로 보입니다. 저장하면 그 콤보가 추가됩니다 (다시 저장하면 교체).";
+        public const string BindBody = "콤보 상점에 가까이 가서 {F} 를 누르세요.\n원소를 2~4칸 순서대로 넣고 저장하면 콤보가 추가됩니다. 상점 하나당 한 번, 최대 3개까지입니다.";
 
         public static TutorialSequence Load(string name)
         {
@@ -35,7 +33,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 TutorialAnchorIds.PickPortraits, pauseTime: false),
             Step<PickScreenStep>().Set(PickScreenStep.PickTask.Character).Configure(
                 "고정 스킬",
-                "패시브·우클릭·대시·궁극기는 캐릭터마다 정해져 있습니다. 아이콘에 마우스를 올리면 설명이 바뀝니다.\nQ/E 스킬은 비어 있고, 스테이지에서 주워 채웁니다.",
+                "패시브·우클릭·대시·궁극기는 캐릭터마다 정해져 있습니다. 아이콘에 마우스를 올리면 설명이 바뀝니다.\nQ/E 칸은 바꿔 낄 수 있는 교체 스킬 자리입니다.",
                 TutorialAnchorIds.PickSkills, pauseTime: false),
             Step<PickScreenStep>().Set(PickScreenStep.PickTask.Combo).Configure(
                 PickComboTitle,
@@ -43,41 +41,43 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 TutorialAnchorIds.PickCombos, pauseTime: false),
             Step<PickScreenStep>().Set(PickScreenStep.PickTask.Start).Configure(
                 "게임 시작",
-                "준비가 되면 게임 시작을 누르세요.\n스테이지에서 튜토리얼이 이어집니다.",
+                "준비가 되면 게임 시작을 누르세요.\n왕국 훈련장에서 튜토리얼이 이어집니다.",
                 TutorialAnchorIds.PickStart, pauseTime: false));
 
-        // targetPrefab = 데미지 단계에 세울 연습용 적 (없으면 적 없이 진행)
         public static TutorialSequence CreateStage(GameObject targetPrefab)
         {
             ActionStep basic = Step<ActionStep>().Set(ActionStep.ActionKind.BasicAttack, uses: 1);
-            basic.Configure("기본 공격", "조준: 마우스   ·   사격: {Fire}\n앞에 나타난 적을 처치하세요.");
+            basic.Configure("기본 공격", "조준: 마우스   ·   사격: {Fire}\n앞에 세워진 훈련 더미를 부수세요.");
             basic.SetTarget(targetPrefab);
 
             ActionStep weapon = Step<ActionStep>().Set(ActionStep.ActionKind.Skill, SkillSlotId.Weapon);
-            weapon.Configure("무기 스킬", "무기 스킬 {Weapon}  —  캐릭터마다 다른 기술입니다.\n무기 스킬을 써서 적을 처치하세요.");
+            weapon.Configure("무기 스킬", "무기 스킬 {Weapon}  —  캐릭터마다 다른 기술입니다.\n무기 스킬을 써서 더미를 부수세요.");
             weapon.SetTarget(targetPrefab);
 
             ActionStep dash = Step<ActionStep>().Set(ActionStep.ActionKind.Skill, SkillSlotId.Dash);
             dash.Configure("대시", "대시 {Dash}  —  움직이는 방향으로 빠르게 이동합니다.\n적의 공격을 피할 때 씁니다.");
-            dash.SetTarget(null, spawn: false);   // 거너 대시는 데미지가 없음 → 적 없이
+            dash.SetTarget(null, spawn: false);
 
             ComboStep combo = Step<ComboStep>();
-            combo.Configure("원소 콤보", "아래 순서대로 스킬을 이어 써서 콤보를 성공시키고, 적을 처치하세요.", TutorialAnchorIds.HudCombo);
+            combo.Configure("원소 콤보", "아래 순서대로 스킬을 이어 써서 콤보를 성공시키고, 더미를 부수세요.", TutorialAnchorIds.HudCombo);
             combo.SetTarget(targetPrefab);
 
             ComboBindStep bind = Step<ComboBindStep>();
             bind.Configure(BindTitle, BindBody);
 
             ActionStep ultimate = Step<ActionStep>().Set(ActionStep.ActionKind.Skill, SkillSlotId.Ultimate);
-            ultimate.Configure("궁극기", "궁극기 {Ultimate}  —  가장 강한 기술입니다. 쌓아 둔 콤보가 있으면 피니시로 함께 터집니다.\n궁극기로 적을 처치하세요.");
+            ultimate.Configure("궁극기", "궁극기 {Ultimate}  —  가장 강한 기술입니다. 콤보로 쌓은 스택은 {Finisher} 로 준비하면 다음 스킬이 더 강해집니다.\n궁극기로 더미를 부수세요.");
             ultimate.SetTarget(targetPrefab);
+
+            TargetWaveStep wave = Step<TargetWaveStep>();
+            wave.Configure("마무리 훈련", "배운 것을 모두 써서 훈련장에 세워진 더미를 전부 부수세요.\n화면 가장자리 화살표가 더미 쪽을 가리킵니다.");
+            wave.SetTarget(targetPrefab);
 
             return TutorialSequence.Create(MainMenuScene, false,
                 Step<InfoStep>().Configure(
-                    "스테이지 목표",
-                    "이 방의 적을 모두 처치하면 스테이지 클리어입니다.\n먼저 기본 조작을 익혀 봅시다. 안내가 뜨는 동안은 시간이 멈춥니다.",
-                    TutorialAnchorIds.HudQuest),
-                Step<MoveStep>().Configure("이동", "이동 {W A S D}  —  캐릭터는 마우스 쪽을 바라봅니다.\n조금 걸어 보세요."),
+                    "왕국 훈련장",
+                    "침식 수정을 처리하러 떠나기 전, 왕국 훈련장에서 마지막으로 기량을 점검합니다.\n안내가 뜨는 동안은 시간이 멈춥니다."),
+                Step<MoveStep>().Configure("이동", "이동 {W A S D}  —  캐릭터는 마우스 쪽을 바라봅니다.\n훈련장을 걸으며 몸을 풀어 보세요."),
                 basic,
                 weapon,
                 dash,
@@ -88,13 +88,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 combo,
                 bind,
                 ultimate,
-                Step<ClearRoomStep>().Configure(
-                    "실전",
-                    "이제 방의 적을 모두 처치하세요.\n화면 가장자리 화살표가 적이 있는 쪽을 가리킵니다.",
-                    TutorialAnchorIds.HudQuest),
+                wave,
                 Step<InfoStep>().Configure(
-                    "튜토리얼 완료",
-                    "스테이지를 클리어했습니다. 수고하셨습니다!\n메인 화면으로 돌아갑니다. 게임 시작을 누르면 본격적인 런이 시작됩니다.",
+                    "훈련 완료",
+                    "훈련을 마쳤습니다. 수고하셨습니다!\n메인 화면으로 돌아갑니다. 게임 시작을 누르면 침식 수정을 향한 원정이 시작됩니다.",
                     resumeHint: "{Confirm} 메인 화면으로"));
         }
 

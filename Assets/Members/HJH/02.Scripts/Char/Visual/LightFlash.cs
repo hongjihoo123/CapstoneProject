@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 터지는 자리에 잠깐 켜졌다 꺼지는 점광원. 어두운 맵에서 폭발이 주변(땅·나무·적)을 비춰서 훨씬 화려해 보임.
-    // 미리 만든 몇 개를 돌려 쓰고, 다 쓰고 있으면 제일 오래된 걸 다시 씀.
     public class LightFlash : MonoBehaviour
     {
         private const int MaxLights = 12;

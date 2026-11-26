@@ -16,11 +16,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Debugging
 {
-    // 성능·누수 측정용 (팬 소음 조사). 평소엔 아무것도 안 함.
-    // 켜는 법: exe 실행 인자 "-perfprobe <로그파일>" (PERF_PROBE 정의로 만든 측정용 빌드에만 들어감),
-    //          에디터는 Captures/_perfprobe_on.txt 에 같은 인자를 써 두고 플레이.
-    // 옵션: -perftour <바퀴 수> -perfstay <맵당 초> -perfmaps A,B,C -perfskills 0|1 -perfcap <fps> -perfvsync 0|1
-    // 매 초: 프레임 시간, 프로세스 CPU, GC, 메모리. 맵마다 떠나기 직전: 오브젝트·에셋 수, DDOL 루트, static 이벤트·컬렉션 수.
     public sealed class PerfProbe : MonoBehaviour
     {
         private const string EditorFlag = "Captures/_perfprobe_on.txt";
@@ -34,7 +29,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
         private System.Diagnostics.Process _proc;
         private ProfilerRecorder _gcAlloc, _gcUsed, _gfxUsed, _sysUsed, _totalUsed;
 
-        // 초 단위 누적
         private int _frames;
         private float _sumDt, _maxDt;
         private long _allocBytes;
@@ -155,7 +149,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
 
         private IEnumerator Tour()
         {
-            yield return Stay();   // 처음 열린 씬
+            yield return Stay();
             for (int round = 0; round < _rounds; round++)
             {
                 foreach (string map in _maps)
@@ -185,7 +179,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             while (Time.realtimeSinceStartup < end) yield return null;
         }
 
-        // 스킬 계속 쓰기 (가짜 입력 한 프레임) + 안 죽게 회복
         private IEnumerator SkillLoop()
         {
             var input = new FakeInput();
@@ -214,7 +207,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             public bool WasJumpPressed() => false;
         }
 
-        // ── 누수 점검: 맵을 떠나기 직전에 센다
         private void Snapshot()
         {
             var sb = new StringBuilder();
@@ -238,7 +230,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             Line("# statics " + StaticCounts());
         }
 
-        // 우리 코드의 static 이벤트(구독 수)와 static 컬렉션(개수). 맵 돌수록 커지면 해제 누락
         private static string StaticCounts()
         {
             var parts = new List<string>();
@@ -281,7 +272,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
 
         private void Line(string line)
         {
-            try { File.AppendAllText(_out, line + "\n"); } catch { /* 경로 문제면 무시 */ }
+            try { File.AppendAllText(_out, line + "\n"); } catch { }
         }
     }
 }

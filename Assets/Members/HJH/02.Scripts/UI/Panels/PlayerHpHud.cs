@@ -6,8 +6,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 좌상단 플레이어 체력바 (기울어진 얇은 유리 바). 체력은 HealthSignal 이 알려주는 값만 읽음.
-    // 깎이면 연한 잔상이 늦게 따라 내려옴. 모양은 하이어라키에 저장된 자식 그대로 (인스펙터에서 수정)
     public class PlayerHpHud : MonoBehaviour, IUiBake
     {
         [SerializeField, Min(0.01f)] private float trailSpeed = 0.5f;

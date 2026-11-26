@@ -6,12 +6,11 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
 {
-    // 표시 대상 하나 (적 또는 플레이어)
     public sealed class HighlightTarget
     {
         public readonly Transform Root;
         public readonly bool IsEnemy;
-        public readonly float Radius;   // 발밑 크기 (콜라이더 기준)
+        public readonly float Radius;
         private readonly HealthReader _health;
 
         public HighlightTarget(Transform root, bool isEnemy)
@@ -38,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
         }
     }
 
-    // 표시 방식 하나 (발밑 링 / 림라이트 / 바닥 빛 ...). 새 방식 = 이 클래스를 상속해서 같은 오브젝트에 붙이면 끝
     public abstract class HighlightLayer : MonoBehaviour
     {
         [SerializeField] private bool forEnemies = true;
@@ -67,7 +65,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
                 }
             }
 
-            // 목록에서 사라진(파괴된) 대상 정리
             _remove.Clear();
             foreach (HighlightTarget t in _attached.Keys)
                 if (t.Root == null || !Contains(targets, t))
@@ -102,8 +99,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
         protected virtual void Tick(IEnumerable<HighlightTarget> attached) { }
     }
 
-    // 씬에 하나 두면 적(스폰되는 것 포함)과 플레이어를 찾아서, 같은 오브젝트에 붙은 HighlightLayer 들에 넘겨 줌.
-    // 적 프리팹(JJH)은 안 건드림.
     [DefaultExecutionOrder(10050)]
     public sealed class CharacterHighlighter : MonoBehaviour
     {

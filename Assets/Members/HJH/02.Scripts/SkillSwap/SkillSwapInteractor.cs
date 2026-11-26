@@ -1,16 +1,11 @@
 using System;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.SkillSwap
 {
-    // Shape of Dreams style skill swap. Stand next to a SkillPickup and press F, then press Q or E:
-    // that slot's skill and the pickup's skill trade places. F again or walking away cancels.
-    // While choosing, Q/E are borrowed from the skill module so they do not cast.
-    // Cooldowns travel with the skill, and a freshly swapped-in skill is locked for swapLockout seconds.
     public class SkillSwapInteractor : MonoBehaviour, ISkillInputInterceptor
     {
         [SerializeField] private PlayerAgent player;
@@ -28,9 +23,7 @@ namespace Assets.Members.HJH._02.Scripts.SkillSwap
         public SkillPickup Choosing => _choosing;
         public string InteractKeyLabel => interactKey.ToString();
 
-        // Fired with the pickup being chosen for, or null when choosing ends.
         public event Action<SkillPickup> ChoosingChanged;
-        // slot, skill that left the slot (now on the ground), skill that entered the slot
         public event Action<SkillSlotId, SkillData, SkillData> Swapped;
 
         private void Awake()
