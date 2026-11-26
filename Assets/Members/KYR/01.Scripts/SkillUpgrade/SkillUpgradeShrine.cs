@@ -10,7 +10,6 @@ using UnityEngine.InputSystem;
 
 namespace Members.KYR._01.Scripts.SkillUpgrade
 {
-    // 맵 이벤트: 트리거 안에서 상호작용하면 장착한 스킬 목록이 뜨고, 하나 골라 런 골드로 기본 데미지를 올린다.
     [DefaultExecutionOrder(5000)]
     [RequireComponent(typeof(SphereCollider))]
     public class SkillUpgradeShrine : MonoBehaviour
@@ -103,7 +102,6 @@ namespace Members.KYR._01.Scripts.SkillUpgrade
 
         private void Update()
         {
-            // 범위 안에서 죽으면 정리
             if (_inside > 0 && (_player == null || !_player.IsAlive))
             {
                 _inside = 0;
@@ -370,8 +368,7 @@ namespace Members.KYR._01.Scripts.SkillUpgrade
             prompt.SetActive(visible);
             if (!visible)
                 return;
-
-            // 이미지가 있으면 이미지, 없으면 글자
+            
             bool hasIcon = promptIcon != null && promptIcon.sprite != null;
             if (promptIcon != null)
                 promptIcon.enabled = hasIcon;
