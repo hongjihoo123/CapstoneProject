@@ -1,21 +1,11 @@
-using System.Linq;
 using Members.JJH._02_Scripts.Agents.Modules;
-using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Modules
 {
-    public class PlayerSensor : AbstractModule, ISensor
+    public class PlayerSensor : AgentSensor
     {
-        [field: SerializeField] public LayerMask TargetLayer { get; private set; }
-
-        public bool IsTargetInRange(float range, out Collider hitCollider)
-        {
-            hitCollider = Physics.OverlapSphere(transform.position, range, TargetLayer).FirstOrDefault();
-            return hitCollider != null;
-        }
-
-        public bool IsTargetInSight(float range, float sight)
+        public override bool IsTargetInSight(float range, float sight)
         {
             Collider[] colliders = Physics.OverlapSphere(transform.position, range, TargetLayer);
 

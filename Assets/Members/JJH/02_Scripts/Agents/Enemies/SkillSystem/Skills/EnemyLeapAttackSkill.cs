@@ -30,7 +30,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             Vector3 start = _enemy.transform.position;
             Vector3 landing = target.Value.transform.position;
             landing.y = start.y;
-            Vector3 peak = landing + Vector3.up * leapHeight;
 
             float sum = riseRatio + hangRatio + fallRatio;
             float riseTime = duration * riseRatio / sum;
@@ -38,9 +37,20 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
             float fallTime = duration * fallRatio / sum;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                landing, leapDamageRange, prepare + riseTime + hangTime + fallTime));
+                landing, leapDamageRange, prepare + duration + 0.1f));
 
-            yield return new WaitForSeconds(prepare);
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: prepare);
+
+            // _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
+
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteLeapAttack(start, landing, riseTime, hangTime, fallTime));
+        }
+
+        private IEnumerator ExecuteLeapAttack(Vector3 start, Vector3 landing,
+                                                    float riseTime, float hangTime, float fallTime)
+        {
+            Vector3 peak = landing + Vector3.up * leapHeight;
 
             var agent = _skillModule.enemy.NavMeshAgent.NavMeshAgent;
             agent.enabled = false;
@@ -50,17 +60,21 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
                 float eased = 1f - Mathf.Pow(1f - t, 3f);
                 _enemy.transform.position = Vector3.Lerp(start, peak, eased);
             });
+
             _enemy.transform.position = peak;
 
-            Coroutine warning = StartCoroutine(ExpandCircleWarning(landing, leapDamageRange, hangTime + fallTime));
+            StartCoroutine(ExpandCircleWarning(landing, leapDamageRange, hangTime + fallTime));
 
             yield return new WaitForSeconds(hangTime);
-            yield return Tick(fallTime, t =>
-                _enemy.transform.position = Vector3.Lerp(peak, landing, t * t * t));
+
+            yield return Tick(fallTime, t => _enemy.transform.position = Vector3.Lerp(peak, landing, t * t * t));
 
             _enemy.transform.position = landing;
+
             agent.enabled = true;
             agent.Warp(landing);
+
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
 
             PlaySkillVfx();
             DamageInCircle(landing, leapDamageRange, ignoreSelf: true);
