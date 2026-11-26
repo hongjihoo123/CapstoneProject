@@ -15,6 +15,7 @@ namespace HJH.EditorTools
     {
         private const string SpriteDir = "Assets/Members/HJH/05.Data/UI/Title";
         private const int UiLayer = 5;
+        private const string MainMenuPath = "Assets/Members/HJH/01.Scene/MainMenu.unity";
 
         private static readonly Color Teal = new(0.30f, 0.95f, 0.75f, 1f);
         private static readonly Color Gold = new(0.84f, 0.72f, 0.47f, 1f);
@@ -27,21 +28,16 @@ namespace HJH.EditorTools
                 Debug.LogWarning("[TitleDecor] 플레이 중에는 실행하지 않음");
                 return;
             }
-            if (!File.Exists(TitleBackdropMenu.BackdropPath))
-            {
-                Debug.LogWarning("[TitleDecor] TitleBackdrop 씬이 없음 → 'HJH/UI/타이틀 배경 장면 만들기' 를 먼저 실행");
-                return;
-            }
 
             Directory.CreateDirectory(SpriteDir);
             Sprite gradient = MakeSprite("title_gradient", 4, 256, GradientPixel);
             Sprite glow = MakeSprite("title_glow", 128, 128, GlowPixel);
             Sprite vignette = MakeSprite("title_vignette", 256, 256, VignettePixel);
 
-            Scene scene = SceneManager.GetSceneByPath(TitleBackdropMenu.MainMenuPath);
+            Scene scene = SceneManager.GetSceneByPath(MainMenuPath);
             bool opened = !scene.isLoaded;
             if (opened)
-                scene = EditorSceneManager.OpenScene(TitleBackdropMenu.MainMenuPath, OpenSceneMode.Additive);
+                scene = EditorSceneManager.OpenScene(MainMenuPath, OpenSceneMode.Additive);
             try
             {
                 MainMenuScreen menu = null;
@@ -117,7 +113,7 @@ namespace HJH.EditorTools
             if (oldGlow != null && oldGlow.TryGetComponent(out Image og))
                 og.color = new Color(Teal.r, Teal.g, Teal.b, 0.10f);
 
-            WireBackdrop(menu);
+            WireCamera(menu);
             AddTitleShadows(canvas);
             TitleMood.AddSettingsButton(menu, canvas);
             TitleMood.Apply(menu, canvas);
@@ -126,7 +122,7 @@ namespace HJH.EditorTools
                 t.gameObject.layer = UiLayer;
         }
 
-        private static void WireBackdrop(MainMenuScreen menu)
+        private static void WireCamera(MainMenuScreen menu)
         {
             Camera cam = null;
             foreach (Camera c in Object.FindObjectsByType<Camera>(FindObjectsSortMode.None))
@@ -135,8 +131,8 @@ namespace HJH.EditorTools
             if (cam == null)
                 return;
 
-            var loader = menu.GetComponent<TitleBackdropLoader>() ?? menu.gameObject.AddComponent<TitleBackdropLoader>();
-            var so = new SerializedObject(loader);
+            var drift = menu.GetComponent<TitleCameraDrift>() ?? menu.gameObject.AddComponent<TitleCameraDrift>();
+            var so = new SerializedObject(drift);
             so.FindProperty("menuCamera").objectReferenceValue = cam;
             so.ApplyModifiedPropertiesWithoutUndo();
 
