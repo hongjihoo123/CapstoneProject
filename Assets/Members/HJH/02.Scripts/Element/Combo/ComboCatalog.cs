@@ -6,10 +6,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 게임에 있는 콤보 전부 (속성 순서 + 효과). 픽 화면에서 이 중 몇 개를 골라 들고 감.
-    //  - alwaysOn: 고르는 대상이 아니고 항상 켜져 있음 (속성 하나짜리 기본 콤보)
-    //  - 나머지: 픽 화면 "콤보 커스터마이징"에서 골라야 게임에 들어감 (ComboLoadout)
-    // 에셋은 Resources/HJH/ComboCatalog. 메뉴 HJH > 콤보 > 임시 콤보 목록 만들기 로 채움
     [CreateAssetMenu(menuName = "Combo/Combo Catalog")]
     public class ComboCatalog : ScriptableObject
     {

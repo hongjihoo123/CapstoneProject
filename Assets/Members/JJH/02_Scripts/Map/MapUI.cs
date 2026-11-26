@@ -24,7 +24,8 @@ namespace Members.JJH._02_Scripts.Map
         public struct RoomOption
         {
             public RoomType type;
-            public string displayName;
+            public string displayName;      // 분류 줄 (일반 전투 / 강한 적 / 강화 / 상점 / 보스)
+            public string mapName;          // 카드 제목 (맵 이름). 비우면 displayName 을 제목으로 쓴다
             public Sprite backgroundSprite;
             public string sceneName;
             [Min(1)] public int weight;

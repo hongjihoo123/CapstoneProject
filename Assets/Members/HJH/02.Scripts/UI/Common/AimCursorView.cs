@@ -2,7 +2,6 @@ using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Char.TopDown;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using DG.Tweening;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
@@ -12,14 +11,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 마우스 조준 커서임 (프리팹 Data/UI/AimCursor, 씬에 놓여 있고 플레이어랑 연결돼 있음)
-    //  - 평소: 얇은 링 + 눈금 4개, 총 쏘거나 휘두르거나 스킬 쓰면 눈금이 탁 벌어짐
-    //  - 스킬 조준 중: 금색으로 넓어짐, 최대 사거리 넘어가면 빨갛게 흐려짐 (스킬은 사거리 끝에 떨어짐)
-    //  - 맞추면 X 표시, 죽이면 더 크고 빨간 X
-    // 교체 카드나 툴팁 같은 UI 위로 가면 원래 마우스 커서가 다시 보임 (그건 CursorService 가 관리함)
-    //
-    // 색이랑 눈금 벌어짐은 매 프레임 목표값 쪽으로 천천히 따라가고,
-    // 반동이랑 X 표시는 DOTween 으로 한 번씩 재생하는 거임
     public class AimCursorView : MonoBehaviour
     {
         [SerializeField] private PlayerAgent player;
@@ -93,7 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void Start()
         {
-            // SkillFsm 은 PlayerAgent.Awake 에서 만들어져서 Start 때는 이미 있음
             _skills = player != null ? player.SkillFsm : null;
             if (_skills != null)
                 _skills.SkillUsed += HandleSkillUsed;
@@ -119,7 +109,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void HandleSwing(SwingVisual swing) => Kick(swingKick);
         private void HandleSkillUsed(SkillUsedInfo info) => Kick(skillKick);
 
-        // 반동은 겹쳐서 계속 커지진 않음, 새로 쏘면 회복만 처음부터 다시 시작
         private void Kick(float amount)
         {
             _kickTween?.Kill();
@@ -134,7 +123,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         {
             if (hitMarker == null)
                 return;
-            // 죽였을 때 X 는 같은 순간 들어온 일반 타격 X 로 안 덮어씀
             if (_hitTween != null && _hitIsKill && !info.Killed)
                 return;
 
@@ -208,7 +196,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             CursorService.SetHidden(this, shown);
         }
 
-        // 조준 미리보기가 스킬 최대 사거리를 알려줌, 그 밖이면 스킬은 사거리 끝에 떨어짐
         private bool IsPastRange()
         {
             _probe.Reset();
@@ -229,7 +216,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _ => Vector2.left,
         };
 
-        // 사거리 원만 기록하고 나머지 미리보기 호출은 무시함
         private sealed class RangeProbe : ISkillPreview
         {
             public bool HasRange { get; private set; }

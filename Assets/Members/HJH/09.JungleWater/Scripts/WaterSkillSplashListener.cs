@@ -4,12 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 스킬 충격(SkillImpacts)을 듣고, 물 위면 물을 튀긴다.
-    // 스킬 코드는 물을 모른다 → 새 스킬을 만들어도 자동으로 물이 튄다.
-    //
-    // 2026-11-02 피드백: "한 번에 팍 튀고, 그 뒤엔 걸을 때 정도의 잔잔한 파동만 남게"
-    //  - 처음 맞은 자리: 물보라(파티클) + 큰 물결 고리 한 번 (확!) — 0.9초면 가라앉음
-    //  - 같은 자리를 잠시 동안 또 맞으면(장판·연속 판정): 물보라 없이 걷기만 한 작은 물결
     public class WaterSkillSplashListener : MonoBehaviour
     {
         [SerializeField] private float minRadius = 1.2f;
@@ -53,7 +47,6 @@ namespace Assets.Members.HJH.Environment
                 if (Vector2.Distance(s.Position, flat) >= s.Radius * 1.5f)
                     continue;
 
-                // 이미 크게 튄 자리 → 걷기 정도의 물결만, 너무 자주는 말고
                 if (now - s.LastAftershock >= aftershockInterval && JungleWater.HasWater)
                 {
                     JungleWater.Ripple(new Vector3(position.x, JungleWater.SurfaceHeight, position.z), aftershockRadius, aftershockStrength);

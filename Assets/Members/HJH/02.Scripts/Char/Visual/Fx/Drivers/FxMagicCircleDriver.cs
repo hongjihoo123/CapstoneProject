@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Drives the SG_FX_MagicCircle material on the circle quad: _Fill (Value 0..1), _RotateSpeed (Speed, deg/s),
-    // and a pop-in / fade-out through the _Tint alpha.
     public class FxMagicCircleDriver : MonoBehaviour, IFxDriver, IFxValueReceiver, IFxSpeedReceiver, IFxTintReceiver
     {
         private static readonly int FillId = Shader.PropertyToID("_Fill");

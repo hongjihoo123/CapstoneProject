@@ -59,6 +59,20 @@ namespace Members.KYR._01.Scripts.Stats
             return GetNode(id).ComputeFinal(excludeSource);
         }
 
+        // (HJH) Final value without modifiers matching `exclude` (UI shows what temporary buffs add).
+        public float GetExcludingModifiers(PlayerStatId id, Predicate<StatModifier> exclude)
+        {
+            return GetNode(id).ComputeFinalWithout(exclude);
+        }
+
+        // (HJH) Every timed modifier right now with its time left (HUD buff bar).
+        public void CollectTimed(List<(PlayerStatId Stat, StatModifier Modifier, float Remaining)> into)
+        {
+            Root.CollectTimed(into);
+            foreach (StatNode node in _nodes.Values)
+                node.CollectTimed(into);
+        }
+
         public void AddModifier(PlayerStatId id, StatModifier modifier)
         {
             GetNode(id).AddModifier(modifier);

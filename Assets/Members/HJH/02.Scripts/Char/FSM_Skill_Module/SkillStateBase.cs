@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Cooldowns are charge based: a cast spends one charge, and charges come back one at a time,
-    // each taking the cooldown. The first recharge starts when the skill ends (MaxCharges 1 = classic cooldown).
     public abstract class SkillStateBase : ISkillState
     {
         protected readonly ISkillHost Host;
@@ -12,6 +10,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         private bool _recharging;
         private float _rechargeEndTime;
         private float _lockedUntil;
+        private float _pendingReduce;
 
         protected SkillStateBase(ISkillHost host) => Host = host;
 
@@ -36,7 +35,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public bool IsReady => Charges > 0 && Time.time >= _lockedUntil;
 
-        // Short block on top of the cooldown (e.g. right after the skill was swapped in).
         public float LockRemaining => Mathf.Max(0f, _lockedUntil - Time.time);
         public float LockDuration { get; private set; }
 
@@ -63,7 +61,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Refresh();
         }
 
-        // Time until the next charge comes back (0 when every charge is available).
         public float CooldownRemaining
         {
             get
@@ -73,22 +70,35 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
+        protected virtual float CooldownReduction => Host.CooldownReduction;
+
         protected float EffectiveCooldown
         {
             get
             {
                 float cooldown = Cooldown;
-                return cooldown <= 0f ? 0f : cooldown * (1f - Host.CooldownReduction);
+                return cooldown <= 0f ? 0f : cooldown * (1f - CooldownReduction);
             }
         }
 
-        public void ReduceCooldown(float seconds)
+        public float ReduceCooldown(float seconds)
         {
-            if (!_recharging || seconds <= 0f)
-                return;
+            if (seconds <= 0f)
+                return 0f;
+            if (!_recharging)
+            {
+                if (_spentCharges > 0)
+                {
+                    _pendingReduce += seconds;
+                    return seconds;
+                }
+                return 0f;
+            }
 
+            float remaining = Mathf.Max(0f, _rechargeEndTime - Time.time);
             _rechargeEndTime -= seconds;
             Refresh();
+            return Mathf.Min(seconds, remaining);
         }
 
         public virtual void Enter()
@@ -104,7 +114,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (_spentCharges > 0 && !_recharging)
             {
                 _recharging = true;
-                _rechargeEndTime = Time.time + EffectiveCooldown;
+                _rechargeEndTime = Time.time + Mathf.Max(0f, EffectiveCooldown - _pendingReduce);
+                _pendingReduce = 0f;
             }
         }
 

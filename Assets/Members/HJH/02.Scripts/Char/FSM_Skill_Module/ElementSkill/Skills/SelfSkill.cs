@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 나한테 버프. 버프 도는 동안 몸에 이펙트 붙어 있고, explodeRadius 주면 explodeDelay 뒤에 내 자리에서 터짐
-    // 반사 시간 주면 그동안 나를 때린 적한테 "맞은 적한테" 효과가 감 (전기 장막)
-    // 예) 바위 방패 (3초 피해 감소 → 끝날 때 주변 폭발 + 밀치기), 폭주, 순풍, 과충전, 전기 장막
     [CreateAssetMenu(menuName = "Skill/Element/Self (버프)")]
     public class SelfSkill : ElementSkillBase
     {
@@ -66,7 +63,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 stats.Add(new SkillStat("반사", $"{retaliateTime:0.#}초 동안 때린 적에게"));
         }
 
-        // 반사 도는 동안: 맞을 때마다 때린 적한테 번개 줄 + 효과 (같은 적은 0.4초에 한 번)
         private sealed class Retaliate : ISkillTimedEffect
         {
             private const float PerTargetGap = 0.4f;

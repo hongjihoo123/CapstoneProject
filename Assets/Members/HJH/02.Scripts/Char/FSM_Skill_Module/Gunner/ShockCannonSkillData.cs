@@ -1,13 +1,11 @@
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 {
-    // 건슬링어 궁극기(R) 화염포: 총구 앞에 포신이 충전됐다가 일직선으로 큰 탄을 쏨.
-    // 첫 적한테 맞으면 큰 피해 + 사방으로 파편이 퍼지고, 파편이 주변 적한테 맞으면 그 자리에서 또 터짐(추가 폭발).
-    // 쏘면 반동으로 플레이어가 살짝 뒤로 밀림. 스킬 Duration 은 chargeTime 보다 길어야 함
     [CreateAssetMenu(menuName = "Skill/Gunner/Shock Cannon")]
     public class ShockCannonSkillData : SkillData
     {
@@ -50,7 +48,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
         public override ISkillExecution Begin(ISkillContext context) => new Execution(this, context);
 
-        // Charge: the barrel grows and follows the player (direction locked at cast). Fire: shell from the tip.
         private sealed class Execution : ISkillExecution
         {
             private readonly ShockCannonSkillData _data;
@@ -90,12 +87,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             public void OnAnimationEvent(SkillAnimationEvent animationEvent) { }
 
-            // Cancelled before firing: the barrel just fades.
             public void End() => _barrel?.Kill();
 
             private (Vector3 start, Vector3 tip) Barrel()
             {
-                // 포신도 경사를 따라 눕힘: 오르막에서 수평으로 뻗으면 포신 끝(탄 나가는 곳)이 땅속에 들어가서 탄이 바로 사라짐
                 Vector3 origin = _context.Transform.position + Vector3.up;
                 GroundTrace.Trace(_context, origin, _direction, _data.barrelOffset, _path);
                 Vector3 start = _path[_path.Count - 1];
@@ -134,7 +129,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
                 GunnerFx.CannonFire(tip, context.Transform.position, direction, color);
 
-                context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration, 0f, faceDirection: false);   // 반동이라 조준 방향 유지
+                context.Dash(-direction, data.recoilDistance / data.recoilDuration, data.recoilDuration, 0f, faceDirection: false);
                 context.PlayHitFeel(0.04f, 0f);
                 context.PlayShake(data.fireShake, data.fireShakeDuration);
                 context.PlayCameraKick(-direction * data.cameraKick, 0.3f);
@@ -150,7 +145,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
         private void OnShellHit(ISkillContext context, IDamageable target, Vector3 point)
         {
             Color color = FxColor;
-            context.DealDamage(target, shellDamage);
+            context.DealDamage(target, shellDamage, this);
             context.PlayHitFeel(hitStop, shake);
             context.PlayCameraKick(Vector3.down * 0.5f, 0.25f);
 
@@ -168,13 +163,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 VisualSize = 0.25f
             };
 
-            for (int i = 0; i < shrapnelCount; i++)
+            int count = shrapnelCount + Mathf.RoundToInt(SkillUpgrades.Exact(SkillUpgradeKind.ShrapnelCount, SkillUpgradeScope.Ultimate));
+            bool dense = SkillUpgrades.Exact(SkillUpgradeKind.ShrapnelDense, SkillUpgradeScope.Ultimate) > 0f;
+            float shrapnelHit = dense ? shrapnelDamage * 0.65f : shrapnelDamage;
+            if (dense)
+                count *= 2;
+            for (int i = 0; i < count; i++)
             {
-                Vector3 direction = Quaternion.Euler(0f, 360f * i / shrapnelCount, 0f) * Vector3.forward;
+                Vector3 direction = Quaternion.Euler(0f, 360f * i / count, 0f) * Vector3.forward;
                 context.Run(new SkillProjectile(context, point, direction, settings,
                     (hit, hitPoint) =>
                     {
-                        context.DealDamage(hit, shrapnelDamage);
+                        context.DealDamage(hit, shrapnelHit, this);
                         SkillBlast.Explode(context, hitPoint, shrapnelBlastRadius, shrapnelBlastDamage, color, 0.02f, 0.15f, 0.8f);
                     }));
             }

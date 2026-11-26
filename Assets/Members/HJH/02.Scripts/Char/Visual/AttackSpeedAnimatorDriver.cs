@@ -1,14 +1,10 @@
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Feeds the AttackSpeed stat into an Animator float, so attack clips play at the same speed
-    // the weapon uses for its timings. Animator setup: add a float "AttackSpeed" (default 1) and
-    // tick "Multiplier -> AttackSpeed" on every attack state. Skipped silently while the parameter is missing.
     public class AttackSpeedAnimatorDriver : MonoBehaviour
     {
         [SerializeField] private PlayerAgent player;

@@ -26,18 +26,12 @@ namespace RobotWeapons
         int ComboCount { get; }
     }
 
-    // Lets something else (e.g. a passive) take over a trigger pull. The gun still spends ammo and cooldown;
-    // if the interceptor returns true the gun fires nothing itself. Arguments: muzzle position, aim direction.
     public interface IShotInterceptable
     {
         System.Func<UnityEngine.Vector3, UnityEngine.Vector3, bool> ShotInterceptor { get; set; }
         event System.Action ShotIntercepted;
     }
 
-    // Guns whose bullet leaves on an animation event instead of on the trigger pull.
-    // The pull spends ammo/cooldown and raises ShotQueued (play the fire clip now); the clip's Anim_Fire
-    // event calls OnFireFrame(). If no event comes in time (no model, full-body skill clip) the gun fires by itself.
-    // FireFrame lets a shot that replaced the bullet (e.g. the gunner's charged shot) fire on the same frame.
     public interface IAnimationTimedShots
     {
         bool WaitsForAnimation { get; }
@@ -46,43 +40,36 @@ namespace RobotWeapons
         void OnFireFrame();
     }
 
-    // Where the next shot would leave the gun right now (follows the model while it moves and turns).
     public interface IMuzzleSource
     {
         UnityEngine.Vector3 CurrentMuzzle { get; }
     }
 
-    // Next N shots deal extra damage (granted by passives/skills, e.g. after a dash).
     public interface IEmpowerableShots
     {
         int EmpoweredShots { get; }
         void Empower(int shots, float damageMultiplier);
     }
 
-    // Raised for every target a shot damages; empowered = the shot was an empowered one.
     public interface IShotHitSource
     {
         event System.Action<IDamageable, bool> ShotHit;
     }
 
-    // Presentation hooks: weapons describe what happened, the player's feedback layer draws it.
     public struct ShotVisual
     {
         public UnityEngine.Vector3 Start;
         public UnityEngine.Vector3 End;
         public bool Hit;
-        // True when the shot stopped on solid geometry (rock, wall) instead of a target or max range: End is the contact point.
         public bool Blocked;
         public bool Empowered;
         public UnityEngine.Color Color;
-        // True for travelling shots: only the muzzle is drawn here, the projectile comes from ProjectileLaunched.
         public bool Projectile;
     }
 
     public interface IShotVisualSource
     {
         event System.Action<ShotVisual> ShotFired;
-        // Travelling shots: the weapon moves Position every tick and clears Alive when it lands.
         event System.Action<ShotProjectile> ProjectileLaunched;
     }
 
@@ -110,8 +97,6 @@ namespace RobotWeapons
         public SwingShape Shape;
     }
 
-    // How a melee swing's slash effect is drawn, per combo step. Tune it to match each attack animation.
-    // Angles are relative to the aim direction, so the slash still turns with the character.
     [System.Serializable]
     public class SwingShape
     {
@@ -140,13 +125,12 @@ namespace RobotWeapons
         public UnityEngine.Quaternion PlaneRotation => UnityEngine.Quaternion.Euler(pitch, yaw, roll);
     }
 
-    // 휘두른 게 실제로 맞았을 때 (한 번 휘두를 때 한 번만). 히트스톱/화면 흔들림은 이걸로 검
     public struct SwingHitVisual
     {
         public int Step;
         public int StepCount;
         public int Targets;
-        public float ShakeForce;   // 무기 데이터의 attackShakeForce
+        public float ShakeForce;
     }
 
     public interface ISwingVisualSource

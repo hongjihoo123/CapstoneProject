@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 텍스처를 계속 흘려보냄 (폭포 물줄기용). 머티리얼 복사본을 만들지 않으려고 MaterialPropertyBlock 으로 UV 만 바꿈.
-    // 에디터(씬 뷰)에서도 움직임 (ExecuteAlways). 방향이 반대로 보이면 speed 부호를 뒤집으세요.
-    //   Cube 옆면 UV 는 v 가 위쪽이라, 물이 아래로 흐르려면 speed.y 가 + 입니다.
     [ExecuteAlways]
     [DisallowMultipleComponent]
     public class ScrollUV : MonoBehaviour
@@ -37,7 +34,7 @@ namespace Assets.Members.HJH.Environment
             if (_renderer == null)
                 return;
             _block ??= new MaterialPropertyBlock();
-            float t = Time.realtimeSinceStartup;   // 절대 시간 기준이라 에디터·플레이 어디서나 같게 흐름
+            float t = Time.realtimeSinceStartup;
             var offset = new Vector2(Mathf.Repeat(speed.x * t, 1f), Mathf.Repeat(speed.y * t, 1f));
             _renderer.GetPropertyBlock(_block);
             var st = new Vector4(tiling.x, tiling.y, offset.x, offset.y);
@@ -46,7 +43,6 @@ namespace Assets.Members.HJH.Environment
             _renderer.SetPropertyBlock(_block);
 
 #if UNITY_EDITOR
-            // 플레이 중이 아니면 씬 뷰가 알아서 안 갱신하니 20fps 로 다시 그리게 함
             if (!Application.isPlaying && Time.realtimeSinceStartup > _nextRepaint)
             {
                 _nextRepaint = Time.realtimeSinceStartup + 0.05f;

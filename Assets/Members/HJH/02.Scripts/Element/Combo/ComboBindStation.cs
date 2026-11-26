@@ -7,10 +7,6 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 맵에 놓는 콤보 바인딩 상점. 가까이 가서 F → 바인딩 창 (ComboBindPanel).
-    // 비용·조건은 ComboLoadout.Gate 가 정함 (지금은 무료). 창이 열려 있는 동안 스킬 입력은 막음
-    // 상점 하나당 기회 한 번: 저장하기로 바인딩하면 잠기고, 다시 F 를 누르면 "기회를 소진하셨습니다." 안내만 뜸
-    // (닫기/ESC 로 그냥 나가면 기회는 그대로)
     public class ComboBindStation : MonoBehaviour, ISkillInputInterceptor, IUiBake
     {
         [SerializeField] private float interactRadius = 2.5f;
@@ -60,7 +56,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 Open();
         }
 
-        // 열었으면 true. 이미 저장해서 기회를 쓴 상점이면 안내만 띄우고 false
         public bool Open()
         {
             if (_used)
@@ -118,7 +113,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
             prompt.text = $"<color=#FFD36B>{interactKey}</color>  콤보 바인딩";
             prompt.fontSize = 5f;
             prompt.alignment = TextAlignmentOptions.Center;
-            prompt.textWrappingMode = TextWrappingModes.NoWrap;   // 글자가 잘리지 않게
+            prompt.textWrappingMode = TextWrappingModes.NoWrap;
             prompt.overflowMode = TextOverflowModes.Overflow;
             prompt.rectTransform.sizeDelta = new Vector2(12f, 1.5f);
             go.SetActive(false);

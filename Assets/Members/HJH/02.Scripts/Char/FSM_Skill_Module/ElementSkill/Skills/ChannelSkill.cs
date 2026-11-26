@@ -1,13 +1,9 @@
 using System.Collections.Generic;
-using Assets.Members.HJH._02.Scripts.Char.Visual;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 누르고 있는 동안(= 스킬 Duration 동안) 커서 쪽으로 부채꼴을 계속 뿜음. tick 마다 안에 있는 적 다시 맞음
-    // 예) 화염 방사
-    // 스킬 Duration = 뿜는 시간. 걸으면서 쏘려면 allowsMove + moveSpeedMultiplier 로 느리게
     [CreateAssetMenu(menuName = "Skill/Element/Channel (계속 뿜기)")]
     public class ChannelSkill : ElementSkillBase
     {

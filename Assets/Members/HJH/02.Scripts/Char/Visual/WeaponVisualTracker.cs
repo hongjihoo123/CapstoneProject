@@ -1,13 +1,9 @@
 using System;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Follows whatever weapon the player holds (it changes with the character) and re-raises its
-    // presentation events, so listeners subscribe once instead of re-binding on every weapon swap.
-    // Call Track() every frame (cheap reference compare) and Clear() when the listener is disabled.
     public sealed class WeaponVisualTracker
     {
         private IShotVisualSource _shots;
@@ -18,10 +14,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public event Action<ShotProjectile> ProjectileLaunched;
         public event Action<SwingVisual> Swung;
         public event Action<SwingHitVisual> SwingHit;
-        // Animation-timed guns: the trigger was pulled, play the fire clip now (the bullet comes on its Anim_Fire event).
         public event Action ShotQueued;
 
-        // True when the held gun fires on an animation event, so ShotFired is not the moment to start the fire clip.
         public bool WaitsForAnimation => _timed != null && _timed.WaitsForAnimation;
 
         public void Track(PlayerAgent player)

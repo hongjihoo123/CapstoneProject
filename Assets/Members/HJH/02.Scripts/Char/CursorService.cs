@@ -1,9 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
 
-// The only place that writes Cursor.visible. Anything that draws its own cursor (the top-down crosshair)
-// asks to hide the system one; UI focus always wins and shows it again.
-// Lock mode stays with UiFocusService.
 public static class CursorService
 {
     private static readonly HashSet<Object> Hiders = new HashSet<Object>();

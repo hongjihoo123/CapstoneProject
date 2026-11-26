@@ -4,10 +4,6 @@ using UnityEngine.Rendering.Universal;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 큰 타격 때 화면이 잠깐 살짝 밝아짐 (블룸·색수차·비네트·색 필터는 안 씀).
-    // 피드백: 화면 가장자리가 원소 색(불 = 빨강)으로 물드는 게 과함 → 밝기만 짧게 튐
-    // 씬의 Global Volume 위에 우선순위 높은 Volume 을 하나 얹고, 그 weight 만 0 → 1 → 0 으로 움직인다.
-    // (씬 Volume 설정은 건드리지 않음. 카메라의 Post Processing 이 켜져 있어야 보임)
     public class ScreenPulse : MonoBehaviour
     {
         private static ScreenPulse _instance;
@@ -18,7 +14,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _start;
         private float _duration;
 
-        // strength 0~1. 더 센 요청만 덮어씀 (작은 게 큰 걸 끊지 않게)
         public static void Play(Color tint, float strength, float duration = 0.28f)
         {
             ScreenPulse p = Instance;
@@ -30,7 +25,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             p._duration = Mathf.Max(0.05f, duration);
         }
 
-        // 임팩트 프레임 (젠존제 풍): 큰 타격 순간 2~3프레임 동안 화면이 흑백 고대비로 번쩍. 색은 안 입힘
         public static void ImpactFrame(float duration = 0.07f)
         {
             ScreenPulse p = Instance;
@@ -41,9 +35,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _impactUntil;
         private Volume _impactVolume;
 
-        // ------------------------------------------------ 처치 펀치 (강한 처치 줌인과 같이)
-        // 색수차 + 렌즈 왜곡(가운데가 부풀어 줌인을 더 세 보이게) + 검은 비네트(시선 집중) + 채도↓·대비↑ + 카메라 모션 블러.
-        // 값은 부를 때마다 덮어씀. weight 는 빠르게 올라가 hold 동안 유지 → 나머지 시간 동안 부드럽게 0. 실제 시간 기준
         public static void KillPunch(KillPostFx settings)
         {
             if (settings == null || !settings.enabled)
@@ -113,7 +104,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             _killVolume = gameObject.AddComponent<Volume>();
             _killVolume.isGlobal = true;
-            _killVolume.priority = 102f;   // 씬 Volume·밝기 펄스·임팩트 프레임보다 위
+            _killVolume.priority = 102f;
             _killVolume.weight = 0f;
             _killVolume.sharedProfile = profile;
         }
@@ -141,7 +132,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             var profile = ScriptableObject.CreateInstance<VolumeProfile>();
 
-            // 블룸은 건드리지 않음 (씬 블룸 위에 더하면 화면이 하얗게 뜸 — 피드백 반영)
             _color = profile.Add<ColorAdjustments>(true);
             _color.postExposure.Override(0.15f);
 
@@ -174,7 +164,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private void Update()
         {
-            // 처음 15% 에 확 올라가고 나머지 동안 빠짐
             float t = _duration > 0f ? (Time.unscaledTime - _start) / _duration : 1f;
             float w = t >= 1f ? 0f : t < 0.15f ? t / 0.15f : 1f - (t - 0.15f) / 0.85f;
             _volume.weight = _strength * Mathf.Clamp01(w);
@@ -188,7 +177,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static void ResetStatics() => _instance = null;
     }
 
-    // 강한 처치 포스트 프로세싱 값 (CombatFeedback 인스펙터에서 조절). 모두 "최대일 때" 값
     [System.Serializable]
     public class KillPostFx
     {

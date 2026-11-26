@@ -1,11 +1,11 @@
+using Members.KYR._01.Scripts.Player;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 {
-    // 건슬링어 기본스킬(우클릭): 마우스 방향으로 대쉬한 다음, 그 방향 앞으로 부채꼴 충격포를 쏴서 적들을 뒤로 밀어냄.
-    // 대쉬 끝나는 순간(벽에 막혀도) 충격포가 나감.
     [CreateAssetMenu(menuName = "Skill/Gunner/Dash Blast")]
     public class DashBlastSkillData : SkillData
     {
@@ -34,7 +34,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             Vector3 start = context.Transform.position;
             Vector3 landing = start + direction * (dashSpeed * dashTime);
 
-            // 대쉬 경로 + 도착 지점에서 나갈 부채꼴 범위
             preview.Path(start, landing, 1f);
             preview.Cone(landing, direction, blastRange, blastAngle);
         }
@@ -59,13 +58,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 _data = data;
                 _context = context;
                 _direction = SkillAim.Resolve(context, 0f, 1f, out _);
-                context.Dash(_direction, data.dashSpeed, data.dashTime);   // 대쉬 잔상은 CombatFeedback 이 알아서 그림
+                context.Dash(_direction, data.dashSpeed, data.dashTime);
                 GunnerFx.DashStart(context.Transform, _direction, data.FxColor, data.dashTime);
             }
 
             public void Tick(float elapsed)
             {
-                // 대쉬 끝나면(시간 다 됐거나 벽에 막혀서 멈췄으면) 바로 쏨
                 if (!_fired && (elapsed >= _data.dashTime || (elapsed > 0.02f && !_context.IsDashing)))
                     Fire();
             }
@@ -82,34 +80,91 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             {
                 _fired = true;
                 Vector3 origin = _context.Transform.position;
-                Color color = _data.FxColor;
+                float blastRange = _data.blastRange * SkillUpgrades.Multiplier(SkillUpgradeKind.Range, _data);
 
-                GunnerFx.DashBlast(origin, _direction, _data.blastRange, _data.blastAngle, color);
-                AttackAreaBus.Raise(AttackArea.Cone(AttackAreaKind.Skill, origin, Quaternion.LookRotation(_direction), _data.blastRange, _data.blastAngle, 0.2f));
+                int crits = 0;
+                void OnLanded(SkillUpgradeScope slot)
+                {
+                    if (slot == SkillUpgradeScope.Shock)
+                        crits++;
+                }
+                CritSystem.Landed += OnLanded;
+                int hits;
+                try
+                {
+                    hits = Blast(origin, _direction, blastRange, ref crits);
+                    if (SkillUpgrades.Exact(SkillUpgradeKind.DoubleBlast, SkillUpgradeScope.Shock) > 0f)
+                        hits += Blast(origin, -_direction, blastRange, ref crits);
+                }
+                finally
+                {
+                    CritSystem.Landed -= OnLanded;
+                }
+
+                float refund = SkillUpgrades.Exact(SkillUpgradeKind.HitRefundSelf, SkillUpgradeScope.Shock) * hits;
+                if (refund > 0f)
+                    _context.ReduceCooldown(SkillSlotId.Weapon, refund);
+                if (crits >= 3 && _context is PlayerSkillContext)
+                    CritSystem.TryChainReset(_player(), crits);
+
+                _context.PlayHitFeel(hits > 0 ? _data.hitStop : 0f, _data.shake);
+                _context.PlayCameraKick(-_direction * _data.cameraKick);
+            }
+
+            private PlayerAgent _player() =>
+                (_context.Transform != null) ? _context.Transform.GetComponentInParent<PlayerAgent>() : null;
+
+            private int Blast(Vector3 origin, Vector3 direction, float blastRange, ref int crits)
+            {
+                Color color = _data.FxColor;
+                GunnerFx.DashBlast(origin, direction, blastRange, _data.blastAngle, color);
+                AttackAreaBus.Raise(AttackArea.Cone(AttackAreaKind.Skill, origin, Quaternion.LookRotation(direction), blastRange, _data.blastAngle, 0.2f));
 
                 float halfAngle = _data.blastAngle * 0.5f;
+                float chain = SkillUpgrades.Exact(SkillUpgradeKind.ChainShock, SkillUpgradeScope.Shock);
                 int hits = 0;
-                foreach (IDamageable target in _context.OverlapSphere(origin + Vector3.up, _data.blastRange))
+                foreach (IDamageable target in _context.OverlapSphere(origin + Vector3.up, blastRange))
                 {
                     if (target is not Component component)
                         continue;
 
                     Vector3 toTarget = component.transform.position - origin;
                     toTarget.y = 0f;
-                    if (toTarget.sqrMagnitude > 0.01f && Vector3.Angle(_direction, toTarget) > halfAngle)
-                        continue;   // 부채꼴 밖
+                    if (toTarget.sqrMagnitude > 0.01f && Vector3.Angle(direction, toTarget) > halfAngle)
+                        continue;
+                    if (!_struck.Add(target))
+                        continue;
 
+                    CritSystem.Mark(target);
+                    int before = crits;
                     _context.DealDamage(target, _data.damage);
-                    GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : _direction, color);
-                    // 정면 방향 + 옆으로 벌어지는 방향 섞어서 밀어냄 (부채꼴 모양으로 퍼지게)
-                    Vector3 push = toTarget.sqrMagnitude > 0.01f ? (_direction + toTarget.normalized).normalized : _direction;
+                    if (chain > 0f && crits > before)
+                        Chain(component.transform.position, target, _data.damage * chain);
+
+                    GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : direction, color);
+                    Vector3 push = toTarget.sqrMagnitude > 0.01f ? (direction + toTarget.normalized).normalized : direction;
                     _context.Knockback(target, push, _data.knockback);
                     hits++;
                 }
 
-                _context.PlayHitFeel(hits > 0 ? _data.hitStop : 0f, _data.shake);
-                _context.PlayCameraKick(-_direction * _data.cameraKick);
+                return hits;
             }
+
+            private readonly System.Collections.Generic.HashSet<IDamageable> _struck = new();
+
+            private void Chain(Vector3 center, IDamageable source, float damage)
+            {
+                foreach (IDamageable other in _context.OverlapSphere(center + Vector3.up, ChainRadius))
+                {
+                    if (other == source || other is not Component part || !_struck.Add(other))
+                        continue;
+
+                    GunnerFx.BlastHit(part.transform.position + Vector3.up, (part.transform.position - center).normalized, _data.FxColor);
+                    _context.DealDamage(other, damage);
+                }
+            }
+
+            private const float ChainRadius = 5f;
         }
     }
 }

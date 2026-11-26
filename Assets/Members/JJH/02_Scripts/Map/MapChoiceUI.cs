@@ -14,7 +14,13 @@ namespace Members.JJH._02_Scripts.Map
         [Header("UI")]
         [SerializeField] private Button button;
         [SerializeField] private Image background;
-        [SerializeField] private TextMeshProUGUI roomName;
+        [SerializeField] private TextMeshProUGUI roomName;          // 맵 이름
+        [SerializeField] private TextMeshProUGUI categoryText;      // 분류 (일반 전투 / 상점 ...)
+        [SerializeField] private TextMeshProUGUI difficultyText;    // 오른쪽 위 태그 (NORMAL ...)
+
+        [Header("Type Style (RoomType 순서: Normal, Elite, Upgrade, Shop, Boss)")]
+        [SerializeField] private string[] typeTags;
+        [SerializeField] private Color[] typeColors;
 
         [Header("Outline")]
         [SerializeField] private Outline outline;
@@ -30,8 +36,19 @@ namespace Members.JJH._02_Scripts.Map
         {
             _roomOption = roomOption;
 
-            roomName.text = roomOption.displayName;
+            roomName.text = string.IsNullOrWhiteSpace(roomOption.mapName) ? roomOption.displayName : roomOption.mapName;
             background.sprite = roomOption.backgroundSprite;
+
+            int typeIndex = (int)roomOption.type;
+            if (categoryText != null)
+                categoryText.text = roomOption.displayName;
+            if (difficultyText != null)
+            {
+                if (typeTags != null && typeIndex < typeTags.Length)
+                    difficultyText.text = typeTags[typeIndex];
+                if (typeColors != null && typeIndex < typeColors.Length)
+                    difficultyText.color = typeColors[typeIndex];
+            }
 
             if (outline == null)
                 outline = background.GetComponent<Outline>();

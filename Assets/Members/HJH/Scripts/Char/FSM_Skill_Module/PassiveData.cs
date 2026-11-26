@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Asset = tuning only. Each equip creates a fresh PassiveRuntime that owns the mutable state
-    // (counters, stacks, gauges), so nothing leaks between play sessions or characters.
     public abstract class PassiveData : ScriptableObject
     {
         [SerializeField] private Sprite icon;
@@ -33,7 +31,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         void Dispose();
     }
 
-    // Override only the hooks a passive cares about.
     public abstract class PassiveRuntime : IPassive
     {
         protected readonly IPassiveHost Host;

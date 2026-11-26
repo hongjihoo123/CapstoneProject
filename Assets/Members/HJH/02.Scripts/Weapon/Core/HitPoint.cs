@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    // Where the last hit actually landed. A weapon marks it right before applying damage, and the
-    // presentation layer reads it in the same frame to put the impact effect on the exact spot.
     public static class HitPoint
     {
         private static IDamageable _target;
@@ -30,7 +28,6 @@ namespace RobotWeapons
         }
     }
 
-    // Lets weapons aim at the cursor point instead of straight along the character's facing.
     public interface IAimPointProvider
     {
         Vector3 AimPoint { get; }

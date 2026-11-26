@@ -8,11 +8,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.CaptureTool
 {
-    // 캡처 진행 담당. EditorApplication.update 로 한 장씩 처리한다.
-    //  - 씬을 저장하거나 수정하지 않는다 (열기만 함). 저장 안 된 씬이 있으면 씬을 바꾸지 않고 멈춘다.
-    //  - 플레이 모드 진입 때 도메인이 다시 로드되므로 진행 상태는 SessionState 에 둔다.
-    //  - 실행 중인 에디터에 신호 주기: Captures/_request.txt 에 설정 파일 경로를 쓰면 1초 안에 집어서 실행한다.
-    //  - 결과는 콘솔과 Captures/_result.txt 에 "OK <경로>" / "ERR <이유>" 로 남긴다.
     [InitializeOnLoad]
     internal static class CaptureRunner
     {
@@ -24,7 +19,6 @@ namespace HJH.CaptureTool
         private const string KPhase = "HJH.Capture.Phase", KConfig = "HJH.Capture.Config", KResults = "HJH.Capture.Results",
             KOrig = "HJH.Capture.OrigScenes", KDeadline = "HJH.Capture.Deadline", KOwnPlay = "HJH.Capture.OwnPlay", KStart = "HJH.Capture.Start";
 
-        // 한 번의 도메인 안에서만 쓰는 값
         private static CaptureConfig _cfg;
         private static bool _shooting, _timedOut, _prevAsync;
         private static int _idx, _stage, _frames;
@@ -36,7 +30,6 @@ namespace HJH.CaptureTool
 
         static CaptureRunner() { EditorApplication.update += Tick; }
 
-        // ───────────────────────── 시작 ─────────────────────────
         public static void Start(string configPath, bool interactive)
         {
             if (Phase != "") { Debug.LogWarning("[Capture] 이미 캡처 중입니다."); return; }
@@ -49,7 +42,6 @@ namespace HJH.CaptureTool
 
             if (EditorApplication.isPlayingOrWillChangePlaymode)
             {
-                // 플레이 중에는 보기만 하는 play 설정만 허용 (씬을 열거나 바꾸지 않음)
                 if (!EditorApplication.isPlaying || !_cfg.play) { Add("ERR 플레이 중에는 \"play\": true 설정만 찍을 수 있습니다."); Finish(); return; }
                 BeginShots();
                 return;
@@ -81,7 +73,7 @@ namespace HJH.CaptureTool
         {
             cfg = null; err = null; full = configPath;
             if (string.IsNullOrEmpty(configPath)) { err = "설정 파일 경로가 비어 있음"; return false; }
-            full = Path.GetFullPath(configPath).Replace('\\', '/');   // 상대 경로는 프로젝트 루트 기준
+            full = Path.GetFullPath(configPath).Replace('\\', '/');
             if (!File.Exists(full)) { err = "설정 파일 없음: " + full; return false; }
             try { cfg = JsonUtility.FromJson<CaptureConfig>(File.ReadAllText(full)); }
             catch (Exception e) { err = "설정 파일 JSON 오류: " + e.Message; return false; }
@@ -95,7 +87,6 @@ namespace HJH.CaptureTool
             return false;
         }
 
-        // ───────────────────────── 매 프레임 ─────────────────────────
         private static void Tick()
         {
             string phase = Phase;
@@ -135,14 +126,13 @@ namespace HJH.CaptureTool
             _nextPoll = Now + 1.0;
             if (EditorApplication.isCompiling || !File.Exists(RequestFile)) return;
             string config;
-            try { config = File.ReadAllText(RequestFile).Trim(); File.Delete(RequestFile); }   // 신호 파일은 도구가 만든 임시 파일
-            catch (IOException) { return; }   // 아직 쓰는 중이면 다음에
-            if (config == "refresh") { WriteResult("OK refresh\n"); AssetDatabase.Refresh(); return; }   // 에디터가 뒤에 있어도 새 스크립트를 컴파일하게
+            try { config = File.ReadAllText(RequestFile).Trim(); File.Delete(RequestFile); }
+            catch (IOException) { return; }
+            if (config == "refresh") { WriteResult("OK refresh\n"); AssetDatabase.Refresh(); return; }
             if (config.StartsWith("menu:")) { RunMenu(config.Substring(5).Trim()); return; }
             Start(config, false);
         }
 
-        // HJH/ 메뉴 하나를 대신 눌러 준다 (플레이 중·컴파일 오류 중에는 안 함). 캡처→수정→캡처를 사람 손 없이 돌리기 위한 최소 기능.
         private static void RunMenu(string menu)
         {
             string line;
@@ -164,13 +154,12 @@ namespace HJH.CaptureTool
             catch (IOException e) { Debug.LogWarning("[Capture] 결과 파일을 못 씀: " + e.Message); }
         }
 
-        // ───────────────────────── 촬영 ─────────────────────────
         private static void BeginShots()
         {
             _idx = 0; _stage = 0; _shooting = true;
             _prevAsync = ShaderUtil.allowAsyncCompilation;
-            ShaderUtil.allowAsyncCompilation = false;   // 컴파일 덜 된 셰이더가 하늘색으로 찍히지 않게
-            if (EditorApplication.isPlaying) Application.runInBackground = true;   // 에디터가 뒤에 있어도 멈추지 않게 (플레이 끝나면 원래대로)
+            ShaderUtil.allowAsyncCompilation = false;
+            if (EditorApplication.isPlaying) Application.runInBackground = true;
             Phase = "shooting";
         }
 
@@ -186,13 +175,13 @@ namespace HJH.CaptureTool
             bool playing = EditorApplication.isPlaying;
             switch (_stage)
             {
-                case 0:   // 시간 조건
+                case 0:
                     if (playing && Time.time < s.delay) return;
                     if (playing && !string.IsNullOrEmpty(s.forceState) && !CaptureRenderer.ForceState(s.target, s.forceState))
                         Add($"WARN {s.name}: forceState '{s.forceState}' 를 가진 Animator 를 못 찾음");
                     _stageStart = Now; _timedOut = false; _stage = 1;
                     return;
-                case 1:   // 상태 조건
+                case 1:
                     if (playing && !string.IsNullOrEmpty(s.waitState) && !CaptureRenderer.InState(s.target, s.waitState))
                     {
                         if (Now - _stageStart < (s.timeout > 0f ? s.timeout : 10f)) return;
@@ -205,17 +194,16 @@ namespace HJH.CaptureTool
                     }
                     _frames = 3; _stage = 2;
                     return;
-                case 2:   // 몇 프레임 기다린 뒤 찍기
+                case 2:
                     if (Mode(s) == "scene" && SceneView.lastActiveSceneView != null) SceneView.lastActiveSceneView.Repaint();
                     if (--_frames > 0) return;
                     Shoot(s, playing);
                     return;
-                case 3:   // ScreenCapture 는 프레임 끝에 파일을 쓰므로 생길 때까지 기다림
+                case 3:
                     if (File.Exists(_pendingPath) && File.GetLastWriteTimeUtc(_pendingPath) > _pendingStamp && new FileInfo(_pendingPath).Length > 0)
                     { Add("OK " + _pendingPath); Next(); }
                     else if (Now - _stageStart > 5.0)
                     {
-                        // Game 뷰 탭이 가려져 있으면 파일이 안 생긴다 → 메인 카메라를 직접 찍는다 (오버레이 UI 는 빠짐)
                         try
                         {
                             Camera main = CaptureRenderer.MainCamera();
@@ -245,7 +233,6 @@ namespace HJH.CaptureTool
                     case "game":
                         if (playing && !Application.isBatchMode)
                         {
-                            // 실제 Game 뷰 (UI 포함, 크기는 Game 뷰 해상도)
                             _pendingPath = path; _pendingStamp = File.Exists(path) ? File.GetLastWriteTimeUtc(path) : DateTime.MinValue;
                             ScreenCapture.CaptureScreenshot(path);
                             _stageStart = Now; _stage = 3;
@@ -273,7 +260,6 @@ namespace HJH.CaptureTool
             Next();
         }
 
-        // Scene 뷰를 지정 시점으로 옮긴다 (시점이 없으면 지금 보이는 그대로). 오류면 메시지를 돌려준다.
         private static string AlignSceneView(CaptureShot s)
         {
             SceneView sv = SceneView.lastActiveSceneView;
@@ -283,12 +269,11 @@ namespace HJH.CaptureTool
             if (pose == CaptureRenderer.Pose.Ok)
             {
                 sv.LookAt(pos, rot, 5f, false, true);
-                sv.pivot = pos + rot * Vector3.forward * sv.cameraDistance;   // 카메라가 정확히 pos 에 오도록
+                sv.pivot = pos + rot * Vector3.forward * sv.cameraDistance;
             }
             return null;
         }
 
-        // ───────────────────────── 끝 ─────────────────────────
         private static void EndShots()
         {
             _shooting = false;
@@ -316,7 +301,6 @@ namespace HJH.CaptureTool
         private static void Finish()
         {
             Phase = "";
-            // 원래 열려 있던 씬으로 복귀 (플레이 중이거나 저장 안 된 변경이 있으면 건드리지 않음)
             string orig = SessionState.GetString(KOrig, "");
             if (orig != "" && !EditorApplication.isPlayingOrWillChangePlaymode && !AnyDirty())
             {

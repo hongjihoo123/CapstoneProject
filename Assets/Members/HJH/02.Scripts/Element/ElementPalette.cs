@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // Color + badge icon per element, shared by every UI and world visual that shows an element.
-    // The project's palette lives at Data/Resources/HJH/ElementPalette.asset, so Default needs no wiring.
     [CreateAssetMenu(menuName = "UI/Element Palette")]
     public class ElementPalette : ScriptableObject
     {

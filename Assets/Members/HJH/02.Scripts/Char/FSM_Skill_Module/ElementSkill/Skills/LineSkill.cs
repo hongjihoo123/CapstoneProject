@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 앞으로 즉시 쭉 뻗는 직선 (벽에서 끊김)
-    //  - 기본: 빔처럼 한 줄
-    //  - groundBurst 켜면: 땅이 앞쪽으로 차례차례 솟구치는 느낌
-    // 예) 물대포, 대지 가르기
     [CreateAssetMenu(menuName = "Skill/Element/Line (직선)")]
     public class LineSkill : ElementSkillBase
     {
@@ -53,7 +49,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             cast.Play(ImpactFx, cast.Ground(to), direction);
         }
 
-        // 앞쪽으로 갈수록 조금씩 늦게 터짐
         private void PlayGroundBurst(ElementSkillCast cast, Vector3 from, Vector3 to, Vector3 direction)
         {
             int pieces = Mathf.Max(2, Mathf.RoundToInt(Vector3.Distance(from, to) / 1.5f));

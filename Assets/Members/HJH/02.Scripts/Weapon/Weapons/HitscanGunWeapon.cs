@@ -20,12 +20,10 @@ namespace RobotWeapons
         private readonly List<ShotProjectile> inFlight = new();
         private IAimPointProvider aimSource;
 
-        // A shot that already spent its ammo and waits for the fire clip's Anim_Fire event.
         private bool shotQueued;
         private bool queuedEmpowered;
         private float queuedTimer;
 
-        // A passive replaced the bullet and waits for its own clip's Anim_Fire: no new shots until then.
         private bool interceptHeld;
         private float interceptTimer;
 
@@ -44,7 +42,6 @@ namespace RobotWeapons
 
         public Func<Vector3, Vector3, bool> ShotInterceptor { get; set; }
 
-        // The muzzle the next shot will use, at this moment.
         public Vector3 CurrentMuzzle
         {
             get
@@ -87,18 +84,16 @@ namespace RobotWeapons
             if (owner == null || IsReloading || fireCooldown > 0f || interceptHeld)
                 return;
 
-            // 기획상 재장전 없음: useAmmo 꺼져 있으면 탄 안 씀 (탄창 비어서 1초 동안 멈추던 것)
             if (data.useAmmo && CurrentResource <= 0f)
             {
                 Reload();
                 return;
             }
 
-            fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier));
+            fireCooldown = 1f / (Mathf.Max(0.01f, data.fireRate) * Mathf.Max(0.01f, AttackSpeedMultiplier) * TreeAttackSpeed());
             if (data.useAmmo)
                 CurrentResource -= 1f;
 
-            // A shot still waiting for its animation goes out before the next one is queued.
             ReleaseShot();
 
             bool empowered = EmpoweredShots > 0;
@@ -110,12 +105,10 @@ namespace RobotWeapons
             else
                 Fire(empowered, canIntercept: true);
 
-            // No reload key in the top-down build: an empty magazine reloads by itself.
             if (data.useAmmo && CurrentResource <= 0f)
                 Reload();
         }
 
-        // Called by the fire clip's Anim_Fire event (normal fire clip or the passive's clip).
         public void OnFireFrame()
         {
             interceptHeld = false;
@@ -123,7 +116,6 @@ namespace RobotWeapons
             ReleaseShot();
         }
 
-        // Sends out the queued bullet: on the fire frame, or as a fallback on timeout / the next trigger pull.
         private void ReleaseShot()
         {
             if (!shotQueued)
@@ -136,7 +128,6 @@ namespace RobotWeapons
 
         private void QueueShot(bool empowered)
         {
-            // The passive decides right at the trigger, so its own clip (PassiveShot) plays instead of the normal fire clip.
             Aim(muzzleIndex % MuzzleCount, out Vector3 start, out Vector3 direction);
             if (TryIntercept(start, direction))
             {
@@ -154,7 +145,6 @@ namespace RobotWeapons
 
         private void TickQueuedShot(float dt)
         {
-            // The passive's clip never reached Anim_Fire (interrupted, missing event): send the frame ourselves.
             if (interceptHeld)
             {
                 interceptTimer -= dt;
@@ -172,7 +162,6 @@ namespace RobotWeapons
 
         private bool TryIntercept(Vector3 start, Vector3 direction)
         {
-            // A passive can replace this shot with its own (e.g. the gunner's charged piercing shot).
             if (ShotInterceptor == null || !ShotInterceptor(start, direction))
                 return false;
 
@@ -182,7 +171,6 @@ namespace RobotWeapons
 
         private int MuzzleCount => Mathf.Max(1, Mathf.Max(data.muzzleIds.Length, data.muzzleSideOffsets.Length));
 
-        // 캐릭터가 바라보는 방향 (AimOrigin 이 손·총 뼈에 붙어 있으면 그 뼈 방향은 모션 따라 제멋대로라 몸 기준으로 씀)
         private Vector3 Facing(Transform origin)
         {
             Vector3 facing = owner is Component body ? body.transform.forward : origin.forward;
@@ -190,7 +178,6 @@ namespace RobotWeapons
             return facing.sqrMagnitude > 0.0001f ? facing.normalized : Vector3.forward;
         }
 
-        // Muzzle position and flat aim direction for the given muzzle, read from the model right now.
         private void Aim(int muzzle, out Vector3 start, out Vector3 direction)
         {
             Transform origin = owner.AimOrigin;
@@ -199,7 +186,6 @@ namespace RobotWeapons
             direction = AimDirection(start, facing);
         }
 
-        // canIntercept is false for a queued shot: the passive already had its say when the trigger was pulled.
         private void Fire(bool empowered, bool canIntercept)
         {
             int muzzle = muzzleIndex % MuzzleCount;
@@ -209,7 +195,6 @@ namespace RobotWeapons
             if (canIntercept && TryIntercept(start, direction))
                 return;
 
-            // 평타만 보정: 앞쪽 가장 가까운 적의 몸 콜라이더 중심으로 (패시브는 위에서 평평한 방향 그대로 가져감)
             direction = ApplyAimAssist(start, direction);
 
             Color color = empowered ? data.empoweredFxColor : data.fxColor;
@@ -228,6 +213,8 @@ namespace RobotWeapons
             {
                 end = point;
                 ApplyHit(target, weakpoint, empowered, point, direction);
+                if (RollDoubleShot())
+                    ApplyHit(target, weakpoint, empowered, point, direction);
             }
             else if (blocked)
             {
@@ -246,8 +233,6 @@ namespace RobotWeapons
             });
         }
 
-        // From the muzzle toward the cursor point. Flat, so shots stay at muzzle height.
-        // Falls back to the facing when the cursor is on top of the character.
         private Vector3 AimDirection(Vector3 start, Vector3 facing)
         {
             if (aimSource == null && owner is Component component)
@@ -256,8 +241,6 @@ namespace RobotWeapons
             if (aimSource == null)
                 return facing;
 
-            // 몸 중심 -> 조준점 방향이 기본. 조준점이 충분히 멀고 거의 같은 쪽이면 총구 -> 조준점으로 (멀리 찍은 곳에 정확히 맞게).
-            // 가까이 찍으면 총구가 몸 옆에 있어서 총구 기준 방향이 크게 틀어지거나 뒤로 갈 수 있음 -> 몸 기준
             Vector3 aim = aimSource.AimPoint;
             Vector3 center = owner is Component body ? body.transform.position : start;
             Vector3 fromBody = aim - center; fromBody.y = 0f;
@@ -270,8 +253,6 @@ namespace RobotWeapons
             return fromBody;
         }
 
-        // Points the shot at the body collider center of the nearest living enemy in front,
-        // as long as its center is not too far above/below the muzzle. Otherwise the flat shot is kept.
         private Vector3 ApplyAimAssist(Vector3 start, Vector3 direction)
         {
             if (!data.heightAssist || data.heightAssistMaxDelta <= 0f)
@@ -303,7 +284,6 @@ namespace RobotWeapons
                     continue;
                 if (Vector3.Dot(toTarget / horizontal, flatDir) < minDot)
                     continue;
-                // 멀리 있는 적일수록 언덕 때문에 높이 차가 커짐 -> 거리에 비례해서 더 봐줌
                 if (Mathf.Abs(center.y - start.y) > data.heightAssistMaxDelta + horizontal * Mathf.Max(0f, data.heightAssistSlope))
                     continue;
 
@@ -315,8 +295,6 @@ namespace RobotWeapons
             return bestTarget != null ? (bestCenter - start).normalized : direction;
         }
 
-        // Center of the enemy's main body collider: the biggest solid (non-trigger, non-weakpoint) collider under it.
-        // Triggers like sensor/aggro ranges are skipped so their center doesn't pull the shot off.
         private static Vector3 BodyCenter(IDamageable target, Collider fallback)
         {
             if (!(target is Component root))
@@ -340,7 +318,6 @@ namespace RobotWeapons
             return (best != null ? best : fallback).bounds.center;
         }
 
-        // The shot leaves the gun on the model and travels along the aim direction at the muzzle's height.
         private Vector3 MuzzlePosition(Transform origin, Vector3 direction, int muzzle)
         {
             if (muzzle < data.muzzleIds.Length && MuzzleSocket.TryFind(owner, data.muzzleIds[muzzle], out Transform socket))
@@ -350,10 +327,21 @@ namespace RobotWeapons
             return origin.position + Vector3.Cross(Vector3.up, direction) * side;
         }
 
+        private bool IsPlayerGun => owner is Members.KYR._01.Scripts.Player.PlayerAgent;
+
+        private float TreeAttackSpeed() => IsPlayerGun ? Assets.Members.HJH._02.Scripts.Element.Upgrade.CritSystem.AttackSpeedMultiplier() : 1f;
+
+        private float TreeDamage() => IsPlayerGun
+            ? Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgrades.Multiplier(Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeKind.Damage, Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeScope.Attack)
+            : 1f;
+
+        private bool RollDoubleShot() => IsPlayerGun
+            && UnityEngine.Random.value < Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgrades.Bonus(Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeKind.DoubleShot, Assets.Members.HJH._02.Scripts.Element.Upgrade.SkillUpgradeScope.Attack);
+
         private void ApplyHit(IDamageable target, bool weakpoint, bool empowered, Vector3 point, Vector3 direction)
         {
             HitPoint.Mark(target, point, direction);
-            float damage = (data.damagePerShot + bonusDamage) * DamageMultiplier * (empowered ? empoweredMultiplier : 1f);
+            float damage = (data.damagePerShot + bonusDamage) * DamageMultiplier * (empowered ? empoweredMultiplier : 1f) * TreeDamage();
             owner.ApplyDamageTo(target, damage, weakpoint);
             RaiseDamage(damage);
             ShotHit?.Invoke(target, empowered);
@@ -428,7 +416,6 @@ namespace RobotWeapons
             base.Unequip();
         }
 
-        // Nearest thing along the shot that is either a living target or solid geometry.
         private bool TryFindTarget(Vector3 start, Vector3 direction, float distance, out IDamageable target, out Vector3 point,
             out bool weakpoint, out bool blocked)
         {
@@ -440,8 +427,6 @@ namespace RobotWeapons
             if (distance <= 0f)
                 return false;
 
-            // 총알은 Obstacle / Ground / Enemy(Weakpoint) 에만 닿음 -> Default 레이어의 보이지 않는 경계 벽은 통과
-            // (데이터의 hitMask 는 Enemy/Weakpoint 만이라 환경 레이어는 항상 더해 줌. 안 그러면 Obstacle/Ground 에 안 맞음)
             int mask = (data.hitMask.value | data.environmentMask.value | BulletLayers.Environment) & BulletLayers.All & ~AimUtility.IgnoreLayerMask.value;
             int count = Physics.SphereCastNonAlloc(start, data.shotRadius, direction, HitBuffer, distance, mask, QueryTriggerInteraction.Collide);
             Array.Sort(HitBuffer, 0, count, DistanceComparer);
@@ -457,7 +442,6 @@ namespace RobotWeapons
                         continue;
 
                     target = candidate;
-                    // distance 0 = already overlapping at the muzzle; hit.point is not valid then.
                     point = hit.distance > 0f ? hit.point : hit.collider.ClosestPoint(start);
                     weakpoint = hit.collider.gameObject.layer == WeakpointLayer;
                     return true;

@@ -1,23 +1,20 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Audio;
 using Assets.Members.HJH._02.Scripts.Char.Character;
-using Members.KYR._01_Scripts;
+using Members.JJH._02_Scripts.Systems.ModuleSystem;
+using Members.KYR._01.Scripts.UI;
 using Members.KYR._01.Scripts.Player;
 using RobotWeapons;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Player-side presentation layer. Listens to what the player does and draws it:
-    // every damage dealt (numbers, sparks, knockback, kill burst, shake), weapon shots/swings,
-    // dash trails and teleport streaks. Gameplay code never needs to know this exists.
     public class CombatFeedback : MonoBehaviour
     {
         [SerializeField] private PlayerAgent player;
         [SerializeField] private Color themeColor = new(1f, 0.7f, 0.3f);
-        private Color _hitColor = new(1f, 0.7f, 0.3f);   // 맞았을 때 색 (캐릭터별, 없으면 테마색)
+        private Color _hitColor = new(1f, 0.7f, 0.3f);
 
-        // SoD 기준 (StudyNotes/SoD_타격감_분석.md): 일반 = 작은 주황, 크리(큰 타격·약점·처치) = 큰 빨강 + 흰 외곽선
         [Header("Damage numbers")]
         [SerializeField] private float bigHitThreshold = 30f;
         [Header("데미지 숫자 종류 (SoD 영상 기준)")]
@@ -27,6 +24,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private Color critNumberColor = new(1f, 0.22f, 0.16f);
         [SerializeField, Tooltip("맞은 번쩍임 다음 프레임에 숫자가 뜨게 (SoD: 번쩍 → 숫자 순서)")]
         private float numberDelay = 0.033f;
+        [SerializeField, Tooltip("데미지 숫자 시작 높이: 몸통 중심에서 얼마나 아래(m). 클수록 배/다리 쪽")] private float numberBelowBody = 0.25f;
+        [SerializeField, Tooltip("숫자가 올라가다 멈추는 높이: 체력바 밑면에서 얼마나 떨어뜨릴지(m). 글자 크기까지 고려해서 넉넉히")] private float numberBarGap = 0.45f;
 
         [Header("Hit flash / knockback")]
         [SerializeField, Tooltip("적 몸 번쩍 시간: 일반 / 크리 (1~2프레임)")]
@@ -76,7 +75,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             if (player == null)
                 player = GetComponent<PlayerAgent>();
-            _hitColor = themeColor;   // 캐릭터 교체기가 없는 씬에서도 테마색으로 시작
+            _hitColor = themeColor;
 
             _lastPosition = transform.position;
         }
@@ -123,6 +122,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             UpdateMovementTrails();
         }
 
+        private void NumberSpot(Component target, Vector3 body, out Vector3 start, out float riseCap)
+        {
+            start = body - Vector3.up * numberBelowBody;
+            riseCap = 0.5f;
+
+            ModuleOwner owner = target.GetComponentInParent<ModuleOwner>();
+            Transform scope = owner != null ? owner.transform : target.transform;
+            HeadHealthBar bar = scope.GetComponentInChildren<HeadHealthBar>(true);
+            if (bar == null)
+                return;
+
+            float half = 0f;
+            if (bar.transform is RectTransform rect)
+                half = rect.rect.height * Mathf.Abs(rect.lossyScale.y) * 0.5f;
+            float barBottom = bar.transform.position.y - half;
+            riseCap = Mathf.Clamp(barBottom - start.y - numberBarGap, 0.1f, 0.9f);
+        }
+
         private void HandleDamageDealt(DamageDealtInfo info)
         {
             if (info.Target is not Component component)
@@ -133,7 +150,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Vector3 direction = target.position - transform.position;
             direction.y = 0f;
 
-            // Weapons that know the exact impact (bullets) mark it; otherwise use the target's body.
             Vector3 impact = body;
             if (HitPoint.TryTake(info.Target, out Vector3 markedPoint, out Vector3 markedDirection))
             {
@@ -141,7 +157,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 direction = markedDirection;
             }
 
-            // 원소 스킬로 맞았으면 불꽃·숫자를 그 원소 색으로 (아니면 캐릭터 색)
             Color sparkColor = _hitColor;
             bool skillHit = HitTint.TryGet(info.Target, out Color elementColor);
             if (skillHit)
@@ -149,17 +164,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             bool crit = info.Amount >= bigHitThreshold || info.IsWeakpoint || info.Killed;
 
-            // 1) 맞은 적이 1~2프레임 번쩍. 원소 스킬이면 원소 색 위주 (SoD: 불꽃탄 → 노랑/주황 전신 플래시)
             Color flashColor = Color.Lerp(Color.white, sparkColor, skillHit ? elementFlashTint : 0.35f);
             HitFlash.Flash(component, flashColor, crit ? enemyFlashTime.y : enemyFlashTime.x);
 
-            // 2) 다음 프레임에 숫자. 크리는 고정 빨강(크리라는 게 바로 보이게), 일반은 주황에 원소 색을 조금
             Color numberColor = crit ? critNumberColor
                 : skillHit ? Color.Lerp(normalNumberColor, elementColor, 0.35f) : normalNumberColor;
-            Vector3 numberAt = body + Vector3.up * 0.7f;
+            NumberSpot(component, body, out Vector3 numberAt, out float numberRise);
             float amount = info.Amount;
-            // 크리 > 약한 피해(흰색) > 원소 스킬 = 마법(파랑) > 그 외 = 물리(주황)
-            // (위의 crit 는 연출용이라 기준이 낮음(30). 숫자 모양은 따로: 약점/처치/아주 큰 한 방만 크리 숫자)
             bool numberCrit = info.IsWeakpoint || info.Killed || info.Amount >= critNumberThreshold;
             bool weakHit = !numberCrit && info.Amount < weakNumberThreshold;
             DamageNumberStyle style = numberCrit ? DamageNumberStyle.Crit
@@ -168,18 +179,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 : DamageNumberStyle.Normal;
             float numberScale = numberCrit ? 1.3f : weakHit ? 0.8f : 0.9f;
             if (numberDelay > 0f)
-                Fx.After(numberDelay, () => Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style));
+                Fx.After(numberDelay, () => Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style, numberRise));
             else
-                Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style);
+                Fx.DamageNumber(numberAt, amount, numberColor, numberScale, style, numberRise);
 
             bool big = crit;
-            // 원소 스킬 피격은 스킬 에셋의 PBR 피격 이펙트가 맡음 → 납작한 불꽃은 일반 공격에만
             if (_hitParticles && !skillHit)
                 Fx.Hit(impact, direction, sparkColor, big);
-            // 움찔(찌그러짐)은 그대로, 실제로 밀리는 거리만 줄임
-            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);   // 보스 보호는 Fx.Punch 안에서
+            Fx.Punch(target, direction, Mathf.Clamp(info.Amount / 80f, 0.08f, 0.45f), knockbackMove);
 
-            // 맞은 지점 섬광 (빛줄기 + 플레어). 큰 타격·원소 스킬일 때만 → 연사 무기로 도배되지 않게
             if (big || skillHit || info.Killed)
                 SpawnFlare(impact, direction, sparkColor, big || info.Killed ? 1.3f : 0.9f);
 
@@ -189,7 +197,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (source == HitSourceKind.Passive && Time.unscaledTime - _lastPassiveShakeTime >= passiveHitInterval)
             {
                 _lastPassiveShakeTime = Time.unscaledTime;
-                // 패시브는 자주 안 나가는 한 방이라 확실히 세게 (센 쪽이 이기니 여러 명 맞혀도 쌓이진 않음)
                 HitFeel.Shake(Mathf.Max(passiveHitShake, hitShake * 1.5f), passiveHitShakeTime);
                 if (direction.sqrMagnitude > 0.0001f)
                     HitFeel.Kick(direction.normalized * passiveHitKick, 0.2f);
@@ -202,12 +209,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             bool strong = IsStrongKill(info, source);
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
             {
-                Sfx.Play(info.IsWeakpoint ? sounds.weakpointHit : sounds.hit, impact, big ? 1f : 0.8f);
+                SoundManager.Play(info.IsWeakpoint ? sounds.weakpointHit : sounds.hit, impact, big ? 1f : 0.8f);
                 if (info.Killed && !strong)
-                    Sfx.Play(sounds.kill, impact);
+                    SoundManager.Play(sounds.kill, impact);
             }
 
             if (info.Killed)
@@ -222,11 +229,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
             else if (strong)
             {
-                PlayStrongKill(target.position, impact, sparkColor);   // requireKill 을 끈 경우: 안 죽어도 크게 깎이면
+                PlayStrongKill(target.position, impact, sparkColor);
             }
         }
-
-        // ------------------------------------------------ 강한 처치
 
         [System.Serializable]
         private class StrongKillSettings
@@ -275,7 +280,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _lastStrongKillTime = -999f;
         private float _lastPassiveShakeTime = -999f;
 
-        // 시전 번호별로 대상마다 준 피해 합계. 최근 몇 번의 시전만 기억 (지연 폭발 등이 조금 뒤에 들어와도 합쳐지게)
         private const int RememberedCasts = 8;
         private readonly List<(int castId, Dictionary<IDamageable, float> damage)> _castDamage = new();
         private readonly HashSet<(int, IDamageable)> _strongFired = new();
@@ -311,7 +315,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (s == null || !s.enabled)
                 return false;
 
-            // 이번 피해까지 합친 "이번 시전 누적". 패시브는 시전이 없으니 이번 한 방
             float dealt;
             int castId = HitSource.CurrentCastId;
             if (source == HitSourceKind.Skill && castId != 0)
@@ -319,7 +322,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             else if (source == HitSourceKind.Passive && s.includePassive)
                 dealt = info.Amount;
             else
-                return false;   // 평타 무기는 대상 아님
+                return false;
 
             if (s.requireKill && !info.Killed)
                 return false;
@@ -330,12 +333,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (dealt < maxHp * s.minCastDamageRatio)
                 return false;
 
-            // 안 죽어도 발동하는 설정이면 같은 시전·같은 대상에 한 번만
             return castId == 0 || _strongFired.Add((castId, info.Target));
         }
 
-        // 멈칫 → 슬로모션 + 줌인(유지) → 부드럽게 원래대로. 소리는 확 커졌다 돌아옴.
-        // 시간·줌·볼륨 모두 HitFeel / Sfx 가 실제 시간 기준으로 되돌림 (timeScale 은 시작 전 값으로 복구)
         private void PlayStrongKill(Vector3 position, Vector3 impact, Color color)
         {
             StrongKillSettings s = strongKill;
@@ -349,18 +349,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 ScreenPulse.ImpactFrame(s.impactFrameTime);
             Fx.Shockwave(position + Vector3.up * 0.1f, color, 1.6f);
 
-            Sfx.Punch(s.volumeGain, s.volumeHold, s.volumeRelease);
-            SfxBank sounds = Sfx.Bank;
+            SoundManager.Punch(s.volumeGain, s.volumeHold, s.volumeRelease);
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds == null)
                 return;
-            Sfx.Play(sounds.kill, impact, s.killVolume, s.killPitch);
+            SoundManager.Play(sounds.kill, impact, s.killVolume, s.killPitch);
             if (s.layerHeavyImpact)
-                Sfx.Play(sounds.heavyImpact, impact, 1f, 0.8f);
+                SoundManager.Play(sounds.heavyImpact, impact, 1f, 0.8f);
         }
 
-        // ------------------------------------------------ 섬광
-
-        private const string FlarePath = "HJH/StylizedFx/FX_HitFlare";   // HJH > Element FX > 스타일 이펙트 만들기
+        private const string FlarePath = "HJH/StylizedFx/FX_HitFlare";
         private static GameObject _flarePrefab;
         private static bool _flareLoaded;
 
@@ -381,19 +379,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void HandleShot(ShotVisual shot)
         {
             Vector3 direction = shot.End - shot.Start;
-            GunnerFx.Shot(shot.Start, direction, shot.Color, shot.Empowered);   // 총구 섬광 + 하얀 심 + 순간 조명 (강화탄은 파동·화면 펄스)
-            if (Sfx.Bank != null)
-                Sfx.Play(shot.Empowered ? Sfx.Bank.empoweredShot : Sfx.Bank.shot, shot.Start);
+            GunnerFx.Shot(shot.Start, direction, shot.Color, shot.Empowered);
+            if (SoundManager.Library != null)
+                SoundManager.Play(shot.Empowered ? SoundManager.Library.empoweredShot : SoundManager.Library.shot, shot.Start);
 
-            // Travelling shots get their orb from HandleProjectileLaunched; instant shots get a tracer.
             if (!shot.Projectile)
             {
                 Fx.Tracer(shot.Start, shot.End, shot.Color, shot.Empowered ? 0.24f : 0.11f, shot.Empowered ? 0.12f : 0.07f);
-                Fx.Tracer(shot.Start, shot.End, GunnerFx.Hot(shot.Color, 0.8f), shot.Empowered ? 0.1f : 0.04f, shot.Empowered ? 0.08f : 0.045f);   // 하얀 심
+                Fx.Tracer(shot.Start, shot.End, GunnerFx.Hot(shot.Color, 0.8f), shot.Empowered ? 0.1f : 0.04f, shot.Empowered ? 0.08f : 0.045f);
                 if (!shot.Hit)
                 {
                     Fx.ProjectileImpact(shot.End, direction, shot.Color, 0.4f, false);
-                    // 바위·벽에 막힌 탄: 맞은 자리에서 쏜 방향 반대로 튀는 불꽃 + 짧은 조명
                     if (shot.Blocked && direction.sqrMagnitude > 0.0001f)
                     {
                         Vector3 back = -direction.normalized;
@@ -405,7 +401,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             if (shot.Empowered)
             {
-                // 파동은 GunnerFx.Shot 이 그림
                 HitFeel.Shake(0.08f, 0.1f);
             }
             else
@@ -417,7 +412,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static void HandleProjectileLaunched(ShotProjectile projectile) =>
             FxRunner.Instance.Add(new ProjectileFollowFx(projectile));
 
-        // Orb prefab that rides a weapon projectile, then an impact where it lands.
         private sealed class ProjectileFollowFx : FxInstance
         {
             private readonly ShotProjectile _projectile;
@@ -446,8 +440,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             SwingShape shape = swing.Shape ?? new SwingShape();
             Fx.Swipe(swing.Origin, swing.Reach, shape, swing.Color, swing.Delay, swing.Duration);
 
-            // 휘두르는 소리는 칼날이 실제로 지나갈 때 (Delay 뒤). 마지막 타는 낮고 크게
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds == null || swing.Origin == null)
                 return;
             bool finisher = swing.Step == swing.StepCount - 1;
@@ -455,18 +448,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Fx.After(swing.Delay, () =>
             {
                 if (origin != null)
-                    Sfx.Play(sounds.swing, origin.position, finisher ? 1f : 0.8f, finisher ? 0.85f : 1f + 0.05f * swing.Step);
+                    SoundManager.Play(sounds.swing, origin.position, finisher ? 1f : 0.8f, finisher ? 0.85f : 1f + 0.05f * swing.Step);
             });
         }
 
-        // 허공에 휘두르면 아무것도 없고, 맞았을 때만 멈칫 + 흔들림 + 때린 방향으로 카메라 툭. 마지막 타는 더 세게
         private void HandleSwingHit(SwingHitVisual hit)
         {
             bool finisher = hit.Step == hit.StepCount - 1;
             float shake = hit.ShakeForce * (finisher ? 0.7f : 0.4f);
             HitFeel.Play(finisher ? finisherFreeze : swingHitStop, shake);
 
-            // 여러 명을 한 번에 맞히면 조금 더 세게 (최대 1.5배)
             float more = 1f + 0.1f * (Mathf.Min(hit.Targets, 6) - 1);
             Vector3 forward = transform.forward;
             forward.y = 0f;
@@ -475,9 +466,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (finisher)
                 HitFeel.Zoom(finisherZoom, 0.26f);
 
-            SfxBank sounds = Sfx.Bank;
+            SoundLibrary sounds = SoundManager.Library;
             if (sounds != null)
-                Sfx.Play(finisher ? sounds.finisherHit : sounds.swingHit, transform.position + forward, Mathf.Min(more, 1.2f));
+                SoundManager.Play(finisher ? sounds.finisherHit : sounds.swingHit, transform.position + forward, Mathf.Min(more, 1.2f));
         }
 
         private void UpdateMovementTrails()
@@ -485,11 +476,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _dashTrail ??= Fx.DashTrail(transform, themeColor);
             bool dashing = player != null && player.Mover != null && player.Mover.IsDashing;
             _dashTrail.SetValue(dashing ? 1f : 0f);
-            if (dashing && !_wasDashing && Sfx.Bank != null)
-                Sfx.Play(Sfx.Bank.dash, transform.position);
+            if (dashing && !_wasDashing && SoundManager.Library != null)
+                SoundManager.Play(SoundManager.Library.dash, transform.position);
             _wasDashing = dashing;
 
-            // 스킬 돌진이면 잔상을 원소 색으로 (아니면 캐릭터 테마색)
             Color trailColor = DashTint.TryGet(out Color skillColor) ? skillColor : themeColor;
             if (trailColor != _dashTrailColor)
             {

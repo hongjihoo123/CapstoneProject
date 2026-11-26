@@ -7,19 +7,17 @@ namespace RobotWeapons
     {
         Box,
         Circle,
-        Cone    // Center = apex, Rotation = facing, Size.x = radius, Size.y = full angle (degrees)
+        Cone
     }
 
-    // 색은 종류별로 AttackAreaVisualizer 인스펙터에서 정함
     public enum AttackAreaKind
     {
-        WeaponWindup,   // 디버그(F1)
-        WeaponHit,      // 디버그(F1)
-        Skill,          // 디버그(F1)
-        EnemyWarning    // 적 공격 예고. F1 과 상관없이 항상 보임
+        WeaponWindup,
+        WeaponHit,
+        Skill,
+        EnemyWarning
     }
 
-    // 적에서 쓰는 법: AttackAreaBus.Raise(AttackArea.Circle(AttackAreaKind.EnemyWarning, 위치, 반지름, 경고시간));
     public struct AttackArea
     {
         public AttackAreaShape Shape;
@@ -28,10 +26,9 @@ namespace RobotWeapons
         public Quaternion Rotation;
         public Vector3 Size;
         public float Duration;
-        public bool HasColor;   // true 면 종류별 색 대신 Color 로 그림 (WithColor 로 설정)
+        public bool HasColor;
         public Color Color;
 
-        // 종류별 색 말고 특정 색으로 그리고 싶을 때만 (예: 속성 색)
         public AttackArea WithColor(Color color)
         {
             AttackArea area = this;

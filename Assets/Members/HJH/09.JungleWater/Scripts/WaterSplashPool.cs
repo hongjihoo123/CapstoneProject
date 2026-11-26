@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 물보라 파티클을 미리 만들어 두고 돌려 쓴다.
     public class WaterSplashPool : MonoBehaviour
     {
         [SerializeField] private ParticleSystem splashPrefab;
@@ -30,7 +29,6 @@ namespace Assets.Members.HJH.Environment
             }
         }
 
-        // 프리팹이 '재생 끝나면 삭제'(Stop Action = Destroy)로 되어 있으면 한 번 쓰고 사라져서 재사용할 수 없다.
         private static void KeepAfterPlay(ParticleSystem root)
         {
             foreach (ParticleSystem system in root.GetComponentsInChildren<ParticleSystem>(true))
@@ -49,7 +47,7 @@ namespace Assets.Members.HJH.Environment
                 return;
 
             ParticleSystem splash = _pool[_next];
-            if (splash == null)   // 다른 코드가 지웠으면 새로 채운다
+            if (splash == null)
             {
                 splash = _pool[_next] = Instantiate(splashPrefab, transform);
                 KeepAfterPlay(splash);

@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 {
-    // Character 3 R: draws a magic circle at the cursor, blinks into it, then pulls enemies to the
-    // center before each of several explosions (the last one hits harder).
     [CreateAssetMenu(menuName = "Skill/Rune Mage/Arcane Collapse")]
     public class ArcaneCollapseSkillData : SkillData
     {
@@ -71,7 +69,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 
             public void Tick(float elapsed)
             {
-                // The circle spins faster as the collapse builds up.
                 float fill = Mathf.Clamp01(elapsed / LastBlastTime);
                 _circle.SetValue(fill);
                 _circle.SetSpeed(Mathf.Lerp(60f, 420f, fill));

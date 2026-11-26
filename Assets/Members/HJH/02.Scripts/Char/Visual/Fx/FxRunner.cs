@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Parent object for pooled effect instances, and a small ticker for timed helpers
-    // (Fx.After delays, hit-reaction punches). Created on first use. Runs on scaled time.
     public class FxRunner : MonoBehaviour
     {
         private static FxRunner _instance;
@@ -53,7 +51,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
     public abstract class FxInstance
     {
-        // Return false when finished.
         public abstract bool Tick(float deltaTime);
         public virtual void Release() { }
     }

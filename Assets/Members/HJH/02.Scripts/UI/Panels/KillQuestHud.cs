@@ -6,10 +6,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 우상단 목표 패널: "숲의 적 처치  잡은 수 / 전체 적의 수".
-    // 값은 RoomClearTracker(적이 죽을 때 AbstractEnemy.Dead 가 알림) 에서 받고, 다 잡으면 "목표 완료!" 로 바뀌며
-    // 같은 오브젝트의 RoomPortalGate 가 숨겨 둔 포탈을 열어 줌. 방에 적이 하나도 없으면(상점 등) 패널을 숨김.
-    // 모양·부품(CanvasGroup, RoomClearTracker, RoomPortalGate)은 하이어라키에 저장된 그대로
     public class KillQuestHud : MonoBehaviour, IUiBake
     {
         [SerializeField] private string clearedTitle = "목표 완료!";
@@ -58,12 +54,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (tracker == null || count == null)
                 return;
 
-            group.alpha = tracker.Total > 0 ? 1f : 0f;   // 적 없는 방이면 숨김
+            group.alpha = tracker.Total > 0 ? 1f : 0f;
 
             int total = Mathf.Max(0, tracker.Total);
             int kills = Mathf.Min(tracker.Kills, total);
             count.text = $"{kills} / {total}";
-            // 스프라이트 없는 Image 는 Filled 가 안 먹어서 가로 앵커로 길이를 조절
             bar.rectTransform.anchorMax = new Vector2(total > 0 ? (float)kills / total : 0f, 1f);
 
             if (tracker.IsCleared)
@@ -73,7 +68,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void OnCleared()
         {
             Refresh();
-            // 완료 순간 패널이 톡 튐
             ((RectTransform)transform).DOKill(true);
             ((RectTransform)transform).DOPunchScale(Vector3.one * 0.12f, 0.35f, 6, 0.6f).SetUpdate(true).SetLink(gameObject);
         }

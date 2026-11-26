@@ -3,10 +3,9 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
 {
-    // (b) 적 몸에 약한 림라이트. 적 렌더러에 가산 머티리얼(HJH/EnemyRim)을 하나 덧붙임 → 적 셰이더가 뭐든 동작
     public sealed class RimHighlightLayer : HighlightLayer
     {
-        private const string ShaderPath = "HJH/EnemyRim";   // Resources/HJH/EnemyRim.shader
+        private const string ShaderPath = "HJH/EnemyRim";
         private static readonly int ColorId = Shader.PropertyToID("_RimColor");
         private static readonly int PowerId = Shader.PropertyToID("_RimPower");
         private static readonly int FillId = Shader.PropertyToID("_Fill");

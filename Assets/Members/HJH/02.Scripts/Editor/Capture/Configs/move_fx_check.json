@@ -1,0 +1,14 @@
+{
+  "scene": "Assets/Members/HJH/01.Scene/Map_Shop.unity",
+  "outDir": "Captures/move_fx_check",
+  "width": 1280,
+  "height": 720,
+  "play": true,
+  "maxSeconds": 70,
+  "shots": [
+    { "name": "game", "mode": "game", "delay": 9 },
+    { "name": "close", "target": "PlayerRig/Player", "delay": 0, "space": "world", "offset": { "x": 0, "y": 5.5, "z": -4 }, "lookAt": { "x": 0, "y": 0, "z": 0 }, "fov": 45 },
+    { "name": "top", "target": "PlayerRig/Player", "delay": 2, "space": "world", "offset": { "x": 0, "y": 8, "z": -1.5 }, "lookAt": { "x": 0, "y": 0, "z": 0 }, "fov": 50 },
+    { "name": "low", "target": "PlayerRig/Player", "delay": 1, "space": "world", "offset": { "x": 2.5, "y": 1.2, "z": -2.5 }, "lookAt": { "x": 0, "y": 0.3, "z": 0 }, "fov": 45 }
+  ]
+}

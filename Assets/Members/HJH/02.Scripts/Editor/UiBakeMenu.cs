@@ -11,14 +11,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 예전에 실행 중 코드로 만들던 UI 를 한 번 "구워서" 프리팹/씬/PlayerRig 하이어라키에 저장.
-    // 구운 뒤에는 폰트·크기·위치를 인스펙터에서 직접 고치면 되고, 이 메뉴를 다시 돌리면 고친 것이 지워지니 주의.
-    //   프리팹 6개 (05.Data/Prefab/UI): ComboBindPanel, ComboBindStation, ScreenNotice, PortalNotice, ComboBuffBar, PickComboRow
-    //   PlayerRig.prefab : 체력·골드·시간·STATS·목표·사망 화면·콤보 배너 + 효과 바(프리팹) + 튜토리얼 화면(꺼짐)
-    //   CharacterPick    : 픽 화면 전체 + 튜토리얼 화면(꺼짐)
-    //   MainMenu         : 메인 화면
-    //   Map_Shop         : 바인딩 상점을 프리팹으로 바꿈
-    // 굽기 전에 씬·프리팹을 Backups 폴더에 복사해 둠
     public static class UiBakeMenu
     {
         private const string PrefabFolder = "Assets/Members/HJH/05.Data/Prefab/UI";
@@ -59,6 +51,7 @@ namespace HJH.EditorTools
                 BakePrefab<ScreenNotice>("PortalNotice");
                 BakePrefab<PickComboRowView>("PickComboRow");
                 BakePrefab<ComboBindPanel>("ComboBindPanel");
+                ComboBuffBarBakeMenu.EnsureStatIconSet();
                 BakePrefab<ComboBuffBarView>("ComboBuffBar");
 
                 BakeShop();
@@ -67,6 +60,47 @@ namespace HJH.EditorTools
                 BakeScene<MainMenuScreen>(MenuScene, addTutorialView: false);
                 AssetDatabase.SaveAssets();
                 Write("DONE");
+            }
+            catch (System.Exception e)
+            {
+                Write("FAIL " + e);
+                Debug.LogException(e);
+            }
+            finally
+            {
+                if (!string.IsNullOrEmpty(original) && File.Exists(original))
+                    EditorSceneManager.OpenScene(original, OpenSceneMode.Single);
+            }
+        }
+
+        [MenuItem("HJH/UI/캐릭터 픽 화면만 굽기")]
+        public static void BakePickOnly()
+        {
+            if (EditorApplication.isPlayingOrWillChangePlaymode)
+            {
+                Debug.LogWarning("[UiBake] 플레이 중에는 굽지 않습니다.");
+                return;
+            }
+            for (int i = 0; i < SceneManager.sceneCount; i++)
+            {
+                if (SceneManager.GetSceneAt(i).isDirty)
+                {
+                    Debug.LogWarning("[UiBake] 저장 안 된 씬이 있어서 멈춤: " + SceneManager.GetSceneAt(i).path);
+                    return;
+                }
+            }
+
+            Log.Clear();
+            string original = SceneManager.GetActiveScene().path;
+            try
+            {
+                Directory.CreateDirectory(BackupFolder);
+                string backup = $"{BackupFolder}/CharacterPick_before_pickbake_{System.DateTime.Now:MMdd_HHmm}.unity.bak";
+                File.Copy(PickScene, backup, true);
+                Write("백업 " + backup);
+                BakeScene<CharacterPickScreen>(PickScene, addTutorialView: true);
+                AssetDatabase.SaveAssets();
+                Write("DONE (픽 화면만)");
             }
             catch (System.Exception e)
             {
@@ -102,7 +136,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // 빈 오브젝트에 컴포넌트를 붙이고 BakeLayout → 프리팹으로 저장
         private static T BakePrefab<T>(string name) where T : MonoBehaviour, IUiBake
         {
             string path = $"{PrefabFolder}/{name}.prefab";
@@ -122,7 +155,6 @@ namespace HJH.EditorTools
             return AssetDatabase.LoadAssetAtPath<T>(path);
         }
 
-        // 씬을 열면 쓰지 않는 에셋이 내려가서 예전 참조가 죽음 → 쓸 때마다 경로로 다시 읽음
         private static T Load<T>(string name) where T : Object =>
             AssetDatabase.LoadAssetAtPath<T>($"{PrefabFolder}/{name}.prefab");
 
@@ -139,7 +171,6 @@ namespace HJH.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        // Map_Shop 의 상점 오브젝트 → 안내 글자 굽고, 창/안내 프리팹 연결, 상점 자체를 프리팹으로
         private static void BakeShop()
         {
             Scene scene = EditorSceneManager.OpenScene(ShopScene, OpenSceneMode.Single);
@@ -163,7 +194,6 @@ namespace HJH.EditorTools
             Write("프리팹 " + path + " (Map_Shop 상점이 이 프리팹으로 바뀜)");
         }
 
-        // PlayerRig: HUD 부품 굽기 + 배너 / 효과 바(프리팹) / 튜토리얼 화면 놓기
         private static void BakePlayerRig()
         {
             var buffBarPrefab = Load<ComboBuffBarView>("ComboBuffBar");
@@ -174,7 +204,9 @@ namespace HJH.EditorTools
                 foreach (IUiBake bake in root.GetComponentsInChildren<IUiBake>(true))
                 {
                     if (bake is ComboBuffBarView || bake is TutorialView || bake is ComboBannerView)
-                        continue;   // 아래에서 따로
+                        continue;
+                    if (bake is SettingsMenu)
+                        continue;
                     bake.BakeLayout();
                     Write("PlayerRig 굽기 " + ((Component)bake).name + " (" + bake.GetType().Name + ")");
                 }
@@ -220,7 +252,7 @@ namespace HJH.EditorTools
                 view = go.AddComponent<TutorialView>();
             }
             view.gameObject.SetActive(true);
-            view.BakeLayout();   // 끝에 꺼짐
+            view.BakeLayout();
             Write("튜토리얼 화면 " + view.name + " (꺼진 채로)");
         }
 

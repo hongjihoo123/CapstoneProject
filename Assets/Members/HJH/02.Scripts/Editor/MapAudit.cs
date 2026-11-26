@@ -8,9 +8,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 읽기 전용 진단: 활성 씬의 프랍 배치를 숫자로 점검해 Captures/_audit.txt 에 적는다 (씬은 바꾸지 않음).
-    //   FLOAT 떠 있음 / BURIED 묻힘 / TILT 기울어짐 / ROUTE 길 막음 / PORTAL 포탈 앞 / WATER 물속 / OVERLAP 서로 박힘 / TALL 플레이 구역의 큰 가림물
-    // 메뉴: HJH/맵/진단/배치 점검
     public static class MapAudit
     {
         private const string OutPath = "Captures/_audit.txt";
@@ -35,7 +32,6 @@ namespace HJH.EditorTools
             return "other";
         }
 
-        // 활성 씬의 프랍(가장 바깥 프리팹 인스턴스, PlayerRig 제외)을 모아 측정한다. 다른 맵 도구도 쓴다.
         internal static List<Item> Collect(bool bridge)
         {
             Terrain terrain = Terrain.activeTerrain;
@@ -110,7 +106,6 @@ namespace HJH.EditorTools
                     if (p.HasValue && it.cat != "fx" && it.cat != "light" && Vector2.Distance(it.xz, new Vector2(p.Value.x, p.Value.z)) < it.ext + 1.6f && it.name.IndexOf("Lantern") < 0)
                         it.flags.Add("PORTAL");
             }
-            // 서로 박힘: 플레이 구역 근처에서만, 종류가 다른 것끼리 또는 거의 같은 자리의 같은 종류
             var near = items.Where(i => i.play < 3f && i.cat != "fx" && i.cat != "light" && i.cat != "other").ToList();
             for (int a = 0; a < near.Count; a++)
                 for (int c = a + 1; c < near.Count; c++)
@@ -118,7 +113,7 @@ namespace HJH.EditorTools
                     Item A = near[a], B = near[c];
                     float d = Vector2.Distance(A.xz, B.xz);
                     bool same = A.cat == B.cat;
-                    if (same && A.cat == "rock") continue;   // 돌끼리 뭉친 건 의도
+                    if (same && A.cat == "rock") continue;
                     float lim = same ? 0.25f * Mathf.Min(A.ext, B.ext) : 0.6f * Mathf.Max(A.ext, B.ext);
                     if (A.cat == "flower" || B.cat == "flower") lim = Mathf.Min(lim, 0.6f * (A.cat == "flower" ? B.ext : A.ext));
                     if (d < lim && A.b.Intersects(B.b)) { A.flags.Add($"OVERLAP {B.name}@{d:0.0}"); B.flags.Add($"OVERLAP {A.name}@{d:0.0}"); }

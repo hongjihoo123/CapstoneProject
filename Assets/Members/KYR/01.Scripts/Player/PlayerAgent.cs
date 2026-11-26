@@ -1,5 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.Agents;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.AnimatorSystem;
@@ -260,6 +261,7 @@ namespace Members.KYR._01.Scripts.Player
             if (target == null)
                 return;
 
+            amount = CritSystem.Apply(this, target, amount, out bool crit);   // (HJH) 스킬 트리 치명: 모든 플레이어 피해가 지나는 한 곳
             var info = new DamageInfo(amount, gameObject, CombatStats, attackCoeff, element, elementCoeff);
             bool wasAlive = target.IsAlive;
             float dealt;
@@ -281,7 +283,7 @@ namespace Members.KYR._01.Scripts.Player
             }
 
             if (wasAlive)
-                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, false, !target.IsAlive));
+                DamageDealt?.Invoke(new DamageDealtInfo(target, dealt, crit, !target.IsAlive));
         }
         
         public event System.Action<DamageDealtInfo> DamageDealt;

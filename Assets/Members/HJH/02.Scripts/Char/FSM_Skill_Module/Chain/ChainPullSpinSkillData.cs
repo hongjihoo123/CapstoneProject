@@ -38,10 +38,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             preview.Circle(destination, spinRadius);
         }
 
-        // Flight: Rise -> Dive -> (Drop if ground/wall blocks the path) -> Landed -> Spin.
-        // Flight moves ignore collisions, so enemies and props are passed through;
-        // only the environment layers (ground/walls) are checked with a sweep.
-        // Landing always happens at riseDuration + diveDuration, so cancel and spin timing stay fixed.
         private sealed class Execution : ISkillExecution
         {
             private enum Phase { Rise, Dive, Drop, Landed }
@@ -65,7 +61,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 _context = context;
                 _origin = context.Transform.position;
 
-                // Lock the landing point to the cursor at cast time; moving the mouse or camera mid-air must not change it.
                 Vector3 direction = SkillAim.Resolve(context, data.minRange, data.maxRange, out float distance);
                 Vector3 flat = _origin + direction * distance;
                 _destination = context.TryFindGround(flat + Vector3.up * data.riseHeight, out Vector3 ground) ? ground : flat;
@@ -110,7 +105,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                     ? RisePoint(elapsed / _data.riseDuration)
                     : DivePoint((elapsed - _data.riseDuration) / _data.diveDuration);
 
-                // Hit ground or a wall: stop where we are and fall straight down for the rest of the flight.
                 if (_context.SweepEnvironment(current, target))
                 {
                     BeginDrop(current, elapsed);
@@ -159,7 +153,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 _context.CancelDash();
                 _context.PushAway(landing, _data.landingPushRadius);
 
-                // Landing: a big blade X cutting through the landing point.
                 Vector3 forward = _destination - _origin;
                 Vector3 chest = landing + Vector3.up * 0.9f;
                 Fx.Slash(chest, forward, _data.spinRadius * 1.3f, false, 30f, 1.8f);
@@ -200,7 +193,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
 
             private void SpinTick()
             {
-                // A blade flurry on top of the spinning blades: each tick cuts at a new angle.
                 float yaw = _slashes * 137.5f;
                 Vector3 direction = Quaternion.Euler(0f, yaw, 0f) * Vector3.forward;
                 Fx.Slash(_context.Transform.position + Vector3.up * 0.9f, direction, _data.spinRadius, _slashes++ % 2 == 1, (_slashes % 3 - 1) * 20f, 3f);

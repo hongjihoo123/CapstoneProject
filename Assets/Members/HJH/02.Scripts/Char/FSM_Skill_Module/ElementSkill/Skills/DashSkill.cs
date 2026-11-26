@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 커서 쪽으로 돌진 or 순간이동
-    //  - pathRadius 주면 지나가는 길에 있는 적 때림 (돌진만)
-    //  - landRadius 주면 도착한 자리에서 터짐 (순간이동은 출발한 자리도)
-    // 예) 화염 돌진, 도약, 섬광
-    // 돌진은 여러 프레임 걸려서 스킬 Duration 을 dashTime 보다 조금 길게 줘야 함
     [CreateAssetMenu(menuName = "Skill/Element/Dash (돌진)")]
     public class DashSkill : ElementSkillBase
     {
@@ -21,7 +16,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("0 = 도착해도 안 터짐")] private float landRadius;
         [SerializeField, Tooltip("돌진하는 동안 몸에 붙어 따라오는 이펙트 (앞에서 공기가 갈라지는 막 등). 앞 = +Z")] private FxSlot dashFx = new();
 
-        protected override CastMotion DefaultMotion => CastMotion.None;   // 돌진은 대시 동작 그대로
+        protected override CastMotion DefaultMotion => CastMotion.None;
 
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {
@@ -54,7 +49,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
             }
         }
 
-        // 벽에 박히지 않게, 몸이 들어가는 제일 먼 자리까지만
         private static Vector3 FarthestFree(ElementSkillCast cast, Vector3 origin, Vector3 direction, float reach)
         {
             const int steps = 8;
@@ -85,7 +79,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 stats.Add(new SkillStat("폭발 범위", $"{landRadius:0.#}m"));
         }
 
-        // 돌진하는 동안 매 프레임
         private sealed class DashRun : ISkillExecution
         {
             private readonly DashSkill _skill;
@@ -101,7 +94,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 float time = Mathf.Max(0.05f, skill.dashTime);
                 cast.Context.Dash(direction, Mathf.Max(0.1f, reach) / time, time);
 
-                // 잔상은 원소 색으로, 몸 앞에는 공기 가르는 막
                 DashTint.Set(cast.Color, time + 0.3f);
                 _fx = cast.Hold(skill.dashFx, cast.Position, direction);
                 if (_fx != null)
@@ -115,7 +107,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
                 if (_landed)
                     return;
 
-                // 지나가는 길: 플레이어 따라다니는 원 안에 들어온 적
                 if (_skill.pathRadius > 0f)
                 {
                     foreach (IDamageable target in _cast.Context.OverlapSphere(_cast.Position + Vector3.up, _skill.pathRadius))
@@ -131,7 +122,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 
             public void OnAnimationEvent(SkillAnimationEvent animationEvent) { }
 
-            // 스킬이 끝나거나 끊겨도 착지는 꼭 함
             public void End() => Land();
 
             private void Land()

@@ -3,9 +3,6 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 적 테두리: 평소 빨강(머티리얼 값), 마우스를 올리면 흰색.
-    //  - 만화풍 적 변형 프리팹(HJH/Enemy/만화풍 적 만들기)에 붙어 있음. 셰이더 HJH/Character/Toon 의 단색 외곽선(_OutlineSolid) 을 씀
-    //  - 마우스 광선은 프레임마다 한 번만 쏨 (적이 많아도 같음), 색은 바뀔 때만 MaterialPropertyBlock 으로
     [DisallowMultipleComponent]
     public class EnemyOutline : MonoBehaviour
     {

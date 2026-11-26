@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
 {
-    // 머리 위 월드 캔버스를 캐릭터 위 고정 높이에 두고 카메라를 보게 함 (위치만 담당).
-    // KYR HeadHealthBar 의 위치 부분을 그대로 옮김 → 필드 이름이 같아서 프리팹별 높이 설정(fixedHeight 3 등)이 그대로 이어짐
     [DefaultExecutionOrder(10000)]
     public sealed class WorldBarFollow : MonoBehaviour
     {

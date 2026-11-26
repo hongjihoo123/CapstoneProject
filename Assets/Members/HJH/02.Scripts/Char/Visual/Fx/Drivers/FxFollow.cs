@@ -2,7 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Keeps the effect on a moving target (auras, dash trail). Not "playing" by itself: lifetime is up to the handle.
     public class FxFollow : MonoBehaviour, IFxDriver
     {
         private Transform _target;

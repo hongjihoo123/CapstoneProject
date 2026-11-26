@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    // 판정 없는 순수 시각용 총알. 데미지는 이미 레이캐스트로 확정된 상태고,
-    // 이건 그 결과를 눈에 보이게 날아가는 척만 함.
     public class DumbBulletVisual : MonoBehaviour
     {
         private Vector3 direction;

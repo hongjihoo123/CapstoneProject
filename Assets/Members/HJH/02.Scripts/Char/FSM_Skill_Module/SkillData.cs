@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // One "label: value" row for tooltips (see SkillData.DescribeStats).
     public readonly struct SkillStat
     {
         public readonly string Label;
@@ -17,8 +16,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
     }
 
-    // Base ScriptableObject of every skill: timing, charges, element, icon, text. A concrete skill overrides
-    // Begin (returns an ISkillExecution for multi-frame skills) or Execute (one-shot), plus DescribePreview / DescribeStats.
     public abstract class SkillData : ScriptableObject
     {
         [SerializeField] private float cooldown;
@@ -38,12 +35,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         [SerializeField, Tooltip("0 = no elemental damage. 1.5 = 1.5 * FireDamage when Element is Fire.")]
         private float elementCoefficient;
         [SerializeField] private Sprite icon;
+        [SerializeField, Tooltip("캐릭터 선택 화면에서 이 스킬을 고르면 반복 재생되는 미리보기 영상 (소리 없음). 비면 안내 글자. HJH/스킬/미리보기 영상 연결 로 파일 이름으로 자동 연결")]
+        private UnityEngine.Video.VideoClip previewClip;
         [SerializeField] private string displayName;
         [SerializeField, TextArea] private string description;
         [SerializeField, Tooltip("Effect color. Leave transparent to use the skill type default.")]
         private Color fxColor = Color.clear;
 
         public Sprite Icon => icon;
+        public UnityEngine.Video.VideoClip PreviewClip => previewClip;
         public string DisplayName => string.IsNullOrEmpty(displayName) ? name : displayName;
         public string Description => description;
         public Color FxColor => fxColor.a > 0f ? fxColor : DefaultFxColor;
@@ -87,7 +87,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public virtual void DescribePreview(ISkillContext context, ISkillPreview preview) { }
 
-        // Numbers shown in tooltips. Override to add skill specific ones (damage, range, ...) after base.
         public virtual void DescribeStats(List<SkillStat> stats)
         {
             if (cooldown > 0f)

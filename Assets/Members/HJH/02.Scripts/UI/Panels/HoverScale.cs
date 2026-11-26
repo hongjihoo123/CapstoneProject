@@ -3,7 +3,6 @@ using UnityEngine.EventSystems;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 마우스를 올리면 살짝 커짐 (시간이 멈춰 있어도 되게 unscaled). 버튼에 붙여서 인스펙터에서 배율 조절
     public class HoverScale : MonoBehaviour, IPointerEnterHandler, IPointerExitHandler
     {
         [SerializeField, Min(1f)] private float hoverScale = 1.06f;

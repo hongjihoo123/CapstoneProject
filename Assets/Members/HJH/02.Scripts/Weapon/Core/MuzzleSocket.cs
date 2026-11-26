@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace RobotWeapons
 {
-    // Marks where a weapon's shots leave the model (gun barrel tip, staff head...).
-    // Put it on an empty child of the hand/weapon bone so it follows the animation;
-    // weapons look it up by id under their owner, e.g. HitscanGunData.muzzleIds.
     public class MuzzleSocket : MonoBehaviour
     {
         private static readonly List<MuzzleSocket> Active = new();
@@ -18,7 +15,6 @@ namespace RobotWeapons
         private void OnEnable() => Active.Add(this);
         private void OnDisable() => Active.Remove(this);
 
-        // Active socket with this id somewhere under the owner (inactive character models are skipped).
         public static bool TryFind(IWeaponOwner owner, string id, out Transform socket)
         {
             socket = null;

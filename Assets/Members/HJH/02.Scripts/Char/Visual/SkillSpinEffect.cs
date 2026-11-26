@@ -26,8 +26,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (!_playing)
                 return;
 
-            // Set from an angle instead of Rotate(): Rotate() multiplies every frame and the quaternion
-            // drifts off unit length ("QuaternionToEuler: Input quaternion was not normalized").
             _angle = Mathf.Repeat(_angle + rotationSpeed * Time.deltaTime, 360f);
             _orbit.localRotation = Quaternion.Euler(0f, _angle, 0f);
         }
@@ -52,7 +50,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _playing = true;
         }
 
-        // Cut at once when the skill ends; blades lingering after the spin read as the skill still going.
         public void Stop()
         {
             _playing = false;
@@ -103,7 +100,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             {
                 system.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
 
-                // Batslash's root has Stop Action = Destroy, which would delete the reused blades after one play.
                 ParticleSystem.MainModule stopSettings = system.main;
                 stopSettings.stopAction = ParticleSystemStopAction.None;
 
@@ -136,7 +132,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 instance.transform.localScale *= radius / baseRadius;
         }
 
-        // slash_alp/slash_add are children of "fx" and the prefab root, so those parents must stay active.
         private static void DisableUnusedSystem(ParticleSystem system)
         {
             bool isContainer = system.transform.childCount > 0;

@@ -6,13 +6,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // FxWorkbench 에서 플레이어 대신 스킬을 쓰는 "가짜 시전자".
-    // 스킬 에셋의 진짜 코드(Begin → Tick → End)가 그대로 돌아가고, 세상에 묻는 것만 여기서 대답함:
-    //   - 조준: 항상 작업대 앞쪽(파란 화살표)으로 Aim Distance 만큼
-    //   - 바닥: 작업대 높이의 평평한 바닥, 벽 없음
-    //   - 적: 허수아비(WorkbenchDummy)만. 판정 위치는 스킬 파트 쪽, 이펙트는 적 파트 쪽 몸에 뜸
-    //   - 돌진/순간이동: 시전자 캡슐이 진짜로 움직임 (다음 시전 때 제자리로)
-    //   - 스탯·회복·무기·패시브: 없음 (이펙트 확인용이라 무시)
     public sealed class WorkbenchSkillContext : ISkillContext
     {
         private const float BodyRadius = 0.45f;
@@ -43,7 +36,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public IWeapon Weapon => null;
         public bool HasRunningEffects => _effects.Count > 0 || _pending.Count > 0;
 
-        // 작업대가 매 프레임 불러줌: 돌진 이동 + 스킬이 남긴 것(투사체, 지연 폭발) 진행
         public void Tick(float deltaTime)
         {
             if (_dashLeft > 0f)
@@ -66,7 +58,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // ---------- ISkillMover ----------
         public Vector3 MoveInputDirection => _forward;
         public Vector3 AimDirection => _forward;
         public Vector3 AimPoint => Transform.position + _forward * _aimDistance;
@@ -87,7 +78,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return IsDashing;
         }
 
-        // 워크벤치엔 마우스 조준이 없어서 잠금은 기억만 함
         private bool _aimLocked;
         private Vector3 _aimLockDirection;
         public void LockAim(Vector3 direction, bool lockMove) { _aimLocked = true; _aimLockDirection = direction; }
@@ -117,7 +107,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return false;
         }
 
-        // ---------- ISkillEffects ----------
         public void SetSpinEffect(GameObject prefab, bool active, float radius) { }
 
         public void FlashRange(float radius, float duration) =>
@@ -133,7 +122,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public void PlayShake(float amplitude, float duration) => HitFeel.Shake(amplitude, duration);
         public void PlayCameraKick(Vector3 offset, float duration = 0.22f) => HitFeel.Kick(offset, duration);
 
-        // ---------- ISkillCombatant: 허수아비만 맞음 ----------
         public bool TryRegisterHit(IDamageable target) => true;
 
         public IReadOnlyList<IDamageable> OverlapMelee() => OverlapSphere(Transform.position + _forward, 1.5f);
@@ -189,7 +177,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public void ApplyDamageOverTime(IDamageable target, float damagePerTick, float tickInterval, float duration) =>
             (target as WorkbenchDummy)?.ApplyBurn(damagePerTick, tickInterval, duration);
 
-        // ---------- 스탯 / 회복: 이펙트 확인용이라 무시 ----------
         public bool StatsReady => false;
         public void AddStatModifier(PlayerStatId id, StatModifier modifier) { }
         public void RemoveStatModifiers(object source) { }
@@ -198,7 +185,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public void BoostSkillDamage(SkillData skill, float scale, float seconds) { }
         public event System.Action<float, GameObject> DamageTaken { add { } remove { } }
 
-        // ---------- 쿨타임: 작업대엔 다른 칸이 없음 ----------
         public void ReduceCooldown(SkillSlotId slot, float seconds) { }
         public float GetCooldownRemaining(SkillSlotId slot) => 0f;
 

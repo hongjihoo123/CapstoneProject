@@ -4,10 +4,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // UI 레이아웃을 "구울" 때 쓰는 도우미. 실행 중에는 UI 를 만들지 않음:
-    //  - 각 UI 컴포넌트의 BakeLayout (에디터 전용) 이 이걸로 자식을 만들어 씬/프리팹에 저장
-    //  - 저장된 뒤에는 폰트·크기·위치를 인스펙터에서 직접 고치면 됨 (다시 굽지 않는 한 그대로)
-    // 폰트·스프라이트는 에디터에서만 AssetDatabase 로 읽음 (Resources.Load 안 씀). 빌드에서는 null
     internal static class HudUiKit
     {
         public const string SpriteFolder = "Assets/Members/HJH/05.Data/Resources/HJH/UI/";
@@ -28,14 +24,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
 #endif
         }
 
-        // 다시 구울 때 예전 자식 지우기
         public static void ClearChildren(Transform parent)
         {
             for (int i = parent.childCount - 1; i >= 0; i--)
                 Object.DestroyImmediate(parent.GetChild(i).gameObject);
         }
 
-        // 버튼이 눌리려면 씬에 이벤트 시스템이 있어야 함. 없으면 새 입력 시스템용으로 만들고 기본 입력 설정을 연결
         public static void EnsureEventSystem()
         {
             if (UnityEngine.EventSystems.EventSystem.current != null || Object.FindFirstObjectByType<UnityEngine.EventSystems.EventSystem>() != null)
@@ -46,7 +40,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             module.AssignDefaultActions();
         }
 
-        // TMP 기본 폰트엔 한글이 없어서 프로젝트 폰트(Pretendard)를 직접 지정
         private static TMP_FontAsset _font;
         public static TMP_FontAsset Font
         {
@@ -112,7 +105,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return tmp;
         }
 
-        // 눈 아이콘 + 큰 제목 + 끝으로 갈수록 옅어지는 선 (스탯/콤보 머리말)
         public static void BuildHeader(Transform parent, string title, float width)
         {
             Image eye = NewImage("Eye", parent, Load("eye_icon"), Color.white);

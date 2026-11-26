@@ -8,8 +8,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 픽 화면 오른쪽 "시작 콤보" 한 줄. 프리팹(05.Data/Prefab/UI/PickComboRow) → 모양은 프리팹에서 수정.
-    // CharacterPickScreen 이 캐릭터마다 이 프리팹을 복제해서 Setup 으로 내용만 채움
     public class PickComboRowView : MonoBehaviour, IUiBake
     {
         [SerializeField] private Image back;
@@ -55,7 +53,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             nameText.color = selected ? selectedName : normalName;
         }
 
-        // 이웃 보너스만 모아서 한 줄로 ("보너스  불→물 상성: 불 -5% · 물 +10%")
         private static string BonusLine(ComboEffect effect)
         {
             var parts = new List<string>();

@@ -5,7 +5,6 @@ using UnityEngine;
 
 namespace HJH.CaptureTool
 {
-    // 메뉴 HJH/캡처/... 와 명령줄 진입점. 실제 일은 CaptureRunner 가 한다.
     public static class CaptureMenu
     {
         private const string ConfigDir = "Assets/Members/HJH/02.Scripts/Editor/Capture/Configs";
@@ -38,8 +37,6 @@ namespace HJH.CaptureTool
             EditorUtility.RevealInFinder(Path.GetFullPath(CaptureRunner.ResultFile));
         }
 
-        // 에디터가 꺼져 있을 때: Unity.exe -batchmode -projectPath . -executeMethod HJH.CaptureTool.CaptureMenu.RunFromCommandLine -captureConfig <json>
-        // (-nographics 와 -quit 은 붙이지 않는다. 끝나면 도구가 직접 종료한다.)
         public static void RunFromCommandLine()
         {
             string[] args = Environment.GetCommandLineArgs();

@@ -14,9 +14,6 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Debugging
 {
-    // 에디터 전용 자동 점검. Captures/_selftest_on.txt 가 있을 때 플레이를 시작하면 한 번만 돈다 (파일은 바로 지움).
-    // 입력 없이 체력바(피격·회복) / 대시 통과 / 강한 처치 조건을 실제 게임 코드로 돌려 보고 Captures/_selftest.txt 에 기록.
-    // 캡처 도구(capture.ps1)와 같이 써서 체력바 화면도 찍는다. 게임 빌드에는 안 들어감.
     public sealed class PlaySelfTest : MonoBehaviour
     {
         private const string Flag = "Captures/_selftest_on.txt";
@@ -33,7 +30,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             new GameObject("PlaySelfTest").AddComponent<PlaySelfTest>()._mode = mode;
         }
 
-        // "highlight:none|ring|rim|light" = 적 가시성 비교 캡처용 (적 멈추고 그 방식만 켬, 다른 점검은 안 함)
         private string _mode = "";
 
         private IEnumerator HighlightOnly(string which)
@@ -102,22 +98,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             foreach (AbstractEnemy e in enemies)
                 Freeze(e);
 
-            // ── 1. 체력바: 피격 35% → 회복 25%
             AbstractEnemy a = enemies[0];
             a.name = "SELFTEST_A";
             HealthReader ra = HealthReader.For(a);
             Log($"A max {ra.Max} cur {ra.Current}");
-            yield return new WaitForSeconds(0.5f);   // 3.5
+            yield return new WaitForSeconds(0.5f);
             a.TakeDamage(ra.Max * 0.35f, null);
-            player.TakeDamage(player.Health.MaxHealth * 0.3f, null);   // 실제 적 공격처럼 DamageTaken 이벤트까지 (피격 화면 효과)
+            player.TakeDamage(player.Health.MaxHealth * 0.3f, null);
             Log($"A damaged -> {ra.Current}, player -> {player.Health.CurrentHealth}/{player.Health.MaxHealth}");
-            yield return new WaitForSeconds(2f);     // 5.5
+            yield return new WaitForSeconds(2f);
             ((AgentHealth)a.Health).CurrentHealth += ra.Max * 0.25f;
             player.Heal(player.Health.MaxHealth * 0.2f);
             Log($"A healed -> {ra.Current}, player -> {player.Health.CurrentHealth}");
-            yield return new WaitForSeconds(2.5f);   // 8.0
+            yield return new WaitForSeconds(2.5f);
 
-            // ── 2. 대시 통과
             AbstractEnemy d = enemies[1];
             d.name = "SELFTEST_D";
             yield return DashTest(player, d, 2.5f, false, "pass-disabled");
@@ -128,14 +122,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             yield return DashTest(player, d, dashLen, true, "end-inside");
             yield return new WaitForSeconds(0.8f);
 
-            // ── 3. 강한 처치 조건 (마지막: 슬로모션이 시간을 늦추므로)
             yield return StrongTest(player, enemies[2], 9001, new[] { 0f, 0.3f, 0.3f, 0.3f, 0.3f }, "skill 4x30% (cast total >=70%)", true);
             yield return new WaitForSecondsRealtime(1.5f);
             yield return StrongTest(player, enemies[3], 9002, new[] { 0.85f, 0.3f }, "85% by raw dmg then skill 30% kill (cast total <70%)", false);
             Log("selftest done");
         }
 
-        // CC 캔슬: 스킬 쓰는 중인 적(있으면)을 기절 → 스킬 캔슬·AI 정지·기절 애니 / 풀리면 AI 재시작. 밀려남·끌려감(Interrupt)도
         private IEnumerator CcTest()
         {
             yield return new WaitForSeconds(2f);
@@ -143,7 +135,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             Log($"enemies {enemies.Length}");
             if (enemies.Length < 2) { Log("ERR need 2 enemies"); yield break; }
 
-            // 스킬 쓰는 적이 나올 때까지 최대 8초 기다림 (없으면 아무나)
             AbstractEnemy target = null;
             float until = Time.time + 8f;
             while (target == null && Time.time < until)
@@ -169,7 +160,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             yield return new WaitForSeconds(1.6f);
             Log($"after stun: btEnabled={bt != null && bt.enabled} -> {(bt != null && bt.enabled ? "OK" : "FAIL")}");
 
-            // 스킬 밀치기 경로 (PlayerSkillContext.Knockback → Interrupt)
             AbstractEnemy other = enemies[0] == target ? enemies[1] : enemies[0];
             var bt2 = other.GetComponent<BehaviorGraphAgent>();
             if (CrowdControl.Of(other) is CrowdControlReceiver receiver)
@@ -185,8 +175,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             Log("cc test done");
         }
 
-        // 적이 플레이어를 미는지: 플레이어는 가만히 (무적: 매 프레임 회복) 8초 동안 적이 몰려옴 → 플레이어가 밀린 거리.
-        // 그다음 가장 가까운 적을 죽이고 시체가 플레이어 쪽으로 미끄러지는지 + 몸 콜라이더가 꺼지는지
         private Vector3 _lastPushPos;
         private int _pushLogs;
 
@@ -202,11 +190,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             while (Time.time < until)
             {
                 player.Heal(9999f);
-                if (_mode == "push-off")   // 비교용: 수정 전 상태 (간격 유지 끔)
+                if (_mode == "push-off")
                     foreach (var s in FindObjectsByType<Assets.Members.HJH._02.Scripts.Weapon.Runtime.EnemyBodySpacing>(FindObjectsSortMode.None)) s.enabled = false;
                 Vector3 d = player.transform.position - start; d.y = 0f;
                 maxDrift = Mathf.Max(maxDrift, d.magnitude);
-                // 이번 프레임에 밀렸으면 누가 닿아 있는지 기록 (원인 찾기)
                 Vector3 step = player.transform.position - _lastPushPos; step.y = 0f;
                 if (step.magnitude > 0.01f && _pushLogs < 12)
                 {
@@ -236,7 +223,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             AbstractEnemy victim = null;
             foreach (AbstractEnemy e in enemies) if (e.IsAlive) { victim = e; break; }
             if (victim == null) { Log("ERR no enemy"); yield break; }
-            CrowdControl.Of(victim);   // 경직 끝나며 isStopped 를 푸는 원래 버그 경로까지
+            CrowdControl.Of(victim);
             if (CrowdControl.Of(victim) is CrowdControlReceiver r) r.ApplyFlinch(0.1f);
             float before = Dist(victim.transform, player.transform);
             victim.TakeDamage(99999f, player.gameObject);
@@ -308,7 +295,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
         {
             HealthReader r = HealthReader.For(enemy);
             float max = r.Max;
-            // 첫 값 = 시전 밖 원시 피해 비율 (0 이면 없음)
             if (hits[0] > 0f) enemy.TakeDamage(max * hits[0], null);
             float slowTime = 0f; float minScale = Time.timeScale;
             for (int i = 1; i < hits.Length && enemy.IsAlive; i++)
@@ -327,7 +313,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
                 if (Time.timeScale > 0.1f && Time.timeScale < 0.6f) slowTime += Time.unscaledDeltaTime;
                 yield return null;
             }
-            bool strong = slowTime > 0.2f;   // 강한 처치 = 0.2배 슬로모션 0.6초. 일반 처치는 히트스톱(0배)만 잠깐
+            bool strong = slowTime > 0.2f;
             Log($"strong[{label}] alive={enemy.IsAlive} minTimeScale={minScale:F2} slowmo={slowTime:F2}s -> strong={strong} (expected {expectStrong}) {(strong == expectStrong ? "OK" : "FAIL")}");
         }
     }

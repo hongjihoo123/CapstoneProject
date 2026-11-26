@@ -1,7 +1,6 @@
 using Assets.Members.HJH.WeaponSystem.WeaponSystem.Scripts.Data.Enemy;
 using RobotWeapons;
 using System.Collections.Generic;
-using static UnityEngine.UI.GridLayoutGroup;
 
 public class EnemyMeleeWeapon : WeaponBase
 {

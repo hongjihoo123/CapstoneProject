@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Runtime values an effect prefab can't know by itself (where a beam ends, how big a blast is...).
-    // Fx fills only what the effect needs; each driver component reads the fields it cares about.
     public struct FxParams
     {
         public Color Tint;
@@ -12,39 +10,33 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         public Vector3 End;
         public float Radius;
         public float Width;
-        // <= 0: the effect holds until its handle is killed.
         public float Duration;
         public float Delay;
         public float Value;
         public Transform Follow;
         public Vector3 Offset;
         public SwingShape Shape;
-        // 데미지 숫자 대신 글자를 띄울 때 ("2단!" 등). 비어 있으면 Value 숫자
         public string Text;
-        // 데미지 숫자 모양 (일반 / 크리 / 내가 받은 피해)
         public DamageNumberStyle NumberStyle;
+        public float MaxRise;
     }
 
     public enum DamageNumberStyle
     {
-        Normal,   // 작은 주황
-        Crit,     // 큰 빨강 + 흰 외곽선 (큰 타격, 약점, 처치)
-        Taken,    // 플레이어가 받은 피해 (흰색)
-        Magic,    // 마법(원소 스킬) 피해: 파랑
-        Weak      // 약한 피해: 흰색 + 두꺼운 어두운 외곽선
-        // Normal = 물리 피해(주황). 값 순서는 저장된 데이터가 있어서 뒤에만 추가함
+        Normal,
+        Crit,
+        Taken,
+        Magic,
+        Weak
     }
 
-    // A component on an effect prefab that needs runtime values. Play is called right after spawning.
     public interface IFxDriver
     {
         void Play(in FxParams parameters);
-        // The prefab returns to the pool once no driver is playing and every particle has died.
         bool IsPlaying { get; }
         void Stop();
     }
 
-    // Optional: drivers that react to a value changing while the effect runs (fill, stacks, charge...).
     public interface IFxValueReceiver
     {
         void SetValue(float value);
@@ -55,7 +47,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         void SetSpeed(float value);
     }
 
-    // Optional: line drivers that can be re-aimed every frame (aim guides).
     public interface IFxPointsReceiver
     {
         void SetPoints(Vector3 start, Vector3 end);

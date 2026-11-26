@@ -11,11 +11,11 @@ namespace RobotWeapons
         public float damagePerBullet = 8f;
         public GameObject projectilePrefab;
         public float projectileSpeed = 40f;
-        public float aimRange = 15f; // AI의 공격 사거리인데 너가 정해둔 사거리랑 똑같아야함
+        public float aimRange = 15f;
 
         [Header("발사 방식")]
         public FireMode fireMode = FireMode.Auto;
-        public float fireRate = 3f; // 발사속도임. 초당 nf 발 만큼 나간다는 뜻이에야
+        public float fireRate = 3f;
 
         [Header("탄 퍼짐 (= 명중률)")]
         public float baseSpreadAngle = 4f;
@@ -24,7 +24,7 @@ namespace RobotWeapons
         public float spreadRecoverPerSecond = 6f;
 
         [Header("점사 (Fire Mode = Burst 일 때만 사용)")]
-        public int burstCount = 3; // 한번에 몇발 쏠 지
-        public float burstSafetyDuration = 1f; // 그냥 이건 한번에 여러발 쏠 수 있는 걸 방지차원에 써둔거여
+        public int burstCount = 3;
+        public float burstSafetyDuration = 1f;
     }
 }

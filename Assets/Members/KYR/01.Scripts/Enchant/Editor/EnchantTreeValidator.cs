@@ -62,10 +62,20 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                         issues.Add(new EnchantTreeIssue(false, node.id, label + ": " + EnchantText.StatLabel(effect.stat) + " 효과 값이 0입니다."));
                 }
 
+                foreach (EnchantSkillEffect skillEffect in node.SkillEffects)
+                {
+                    if (skillEffect == null)
+                        continue;
+
+                    hasEffect = true;
+                    if (skillEffect.valuePerRank == 0f)
+                        issues.Add(new EnchantTreeIssue(false, node.id, label + ": 스킬 강화 효과 값이 0입니다."));
+                }
+
                 if (!hasEffect && node.kind == EnchantNodeKind.Stat)
                     issues.Add(new EnchantTreeIssue(false, node.id, label + ": 스탯 노드인데 효과가 없습니다."));
                 if (!hasEffect && node.kind != EnchantNodeKind.Stat && node.kind != EnchantNodeKind.Entry)
-                    issues.Add(new EnchantTreeIssue(false, node.id, label + ": " + node.kind + " 노드 효과는 아직 런타임에 연결되지 않았습니다."));
+                    issues.Add(new EnchantTreeIssue(false, node.id, label + ": " + node.kind + " 노드에 효과가 없습니다."));
             }
 
             foreach (EnchantTreeLink link in tree.Links)

@@ -6,9 +6,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 미니맵에 뜨는 아이콘(MinimapIcon)의 모양을 새 디자인으로 바꿈. 다른 사람 프리팹은 건드리지 않고 실행 중에 입힌다.
-    //  플레이어: 바라보는 방향을 가리키는 청록 화살표 / 적: 붉은 점(보스는 크게) / 포탈: 금색 고리
-    // 0.5초마다 새로 생긴 아이콘을 찾아서 한 번만 바꿈. 플레이어 방향은 매 프레임 따라감.
     [DefaultExecutionOrder(100)]
     public class MinimapIconSkin : MonoBehaviour, IUiBake
     {
@@ -24,7 +21,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Sprite portalSprite;
         private float _next;
 
-        // 그림 연결 (에디터 전용, HJH/UI 굽기 메뉴가 부름)
         [ContextMenu("그림 연결")]
         public void BakeLayout()
         {
@@ -48,7 +44,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 플레이어 화살표가 바라보는 쪽으로 (MinimapIcon 이 먼저 돌려놓은 걸 덮어씀)
         private void LateUpdate()
         {
             for (int i = _players.Count - 1; i >= 0; i--)
@@ -103,7 +98,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             sr.color = Color.white;
             sr.sortingOrder = order;
 
-            // 부모 크기에 끌려가지 않게 월드 기준 크기로 맞춤
             float parentScale = owner != null ? Mathf.Max(0.01f, owner.lossyScale.x) : 1f;
             float spriteWorld = sprite.bounds.size.x;
             float scale = size / Mathf.Max(0.01f, spriteWorld) / parentScale;

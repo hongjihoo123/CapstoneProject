@@ -5,7 +5,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 픽 화면 가운데 캐릭터를 마우스로 잡고 끌면 좌우로 돌아감 (버튼 위에서 시작한 드래그는 무시)
     public class PickModelSpin : MonoBehaviour
     {
         [SerializeField] private float degreesPerPixel = 0.45f;

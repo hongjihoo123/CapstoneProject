@@ -1,15 +1,9 @@
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Rendering;
 using UnityEngine.Rendering.Universal;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
 {
-    // 캐릭터(적·플레이어)만 비추는 조명. 바닥·바위는 그대로 어둡고 캐릭터 몸만 배경보다 밝게 → SoD 식 "본체가 배경보다 밝음".
-    //  - URP 렌더링 레이어 사용: 캐릭터 렌더러에 레이어 비트(기본 1 = "Light Layer 1")를 더하고, 이 조명은 그 비트만 비춤.
-    //    맵의 다른 조명(태양·발광 라이트)은 Default 비트만 비추므로 영향 없음.
-    //  - 방향광 1개라 적이 많아도 비용이 같음 (점광원을 적마다 다는 방식은 바닥에서 라이트 수 제한에 걸려 효과가 없었음)
-    //  - 적 프리팹·머티리얼(JJH)은 안 건드림. 실행 중에 렌더러의 renderingLayerMask 만 바꿨다가 떼어낼 때 되돌림
     public sealed class CharacterLightLayer : HighlightLayer
     {
         [SerializeField, Range(1, 31), Tooltip("캐릭터용 렌더링 레이어 번호 (Tags and Layers > Rendering Layers). 1 = Light Layer 1")]
@@ -59,7 +53,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
             if (_light == null)
                 return;
 
-            // 캐릭터 모델은 나중에 생기기도 함 (플레이어 모델은 실행 중에 스폰, 캐릭터 교체) → 가끔 다시 훑어서 새 렌더러에도 비트
             if (Time.unscaledTime >= _nextRescan)
             {
                 _nextRescan = Time.unscaledTime + 0.5f;
@@ -97,7 +90,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual.Highlight
             _light.shadows = LightShadows.None;
             _light.renderMode = LightRenderMode.ForcePixel;
 #if UNITY_EDITOR
-            _light.lightmapBakeType = LightmapBakeType.Realtime;   // 에디터 전용 속성 (빌드엔 없음 → 감싸지 않으면 빌드 실패). 런타임에 만든 라이트는 원래 Realtime
+            _light.lightmapBakeType = LightmapBakeType.Realtime;
 #endif
 
             var data = go.GetComponent<UniversalAdditionalLightData>();

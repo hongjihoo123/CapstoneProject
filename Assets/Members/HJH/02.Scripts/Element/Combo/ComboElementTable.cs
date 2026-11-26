@@ -1,16 +1,12 @@
 using System;
 using System.Collections.Generic;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.JJH._02_Scripts.ElementsSystem;
 using UnityEngine;
 using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 콤보 효과를 정하는 표. 콤보 효과 = 원소마다의 기본 효과 + 이웃한 두 원소의 보너스, 전체에 길이 배율.
-    //  - elements: 원소 하나가 들어갈 때마다 붙는 효과 (불 = 공격력, 물 = 마법력 ...). 같은 원소를 여러 번 넣으면 그만큼 쌓임
-    //  - pairs: 앞 원소 → 뒤 원소 순서로 붙어 있을 때 추가 효과 (불→불 증폭, 불→물 상성 ...). 없으면 보너스 없음
-    //  - 효과는 스탯 묶음(mods)이라 공격속도 같은 다른 스탯을 넣어도 됨
-    // 에셋은 Resources/HJH/ComboElementTable. 메뉴 HJH > 콤보 > 원소 효과 표 만들기 로 임시값을 채움
     [CreateAssetMenu(menuName = "Combo/Element Table")]
     public class ComboElementTable : ScriptableObject
     {
@@ -45,7 +41,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
         public int MinLength => minLength;
         public int MaxLength => maxLength;
-        public float Duration => duration;
+        public float Duration => duration * SkillUpgrades.Multiplier(SkillUpgradeKind.ComboDuration);
         public IReadOnlyList<ElementEffect> Elements => elements;
         public IReadOnlyList<PairBonus> Pairs => pairs;
 

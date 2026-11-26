@@ -4,8 +4,6 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Hit reaction: knocked back a little and squashed, then springs back. Offsets are applied as
-    // deltas, so other movement during the punch (pulls, AI) is kept. NavMesh agents get a real push instead.
     internal sealed class PunchFx : FxInstance
     {
         private const float Duration = 0.18f;

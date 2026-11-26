@@ -5,9 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
 {
-    // Character 2 (chain bruiser): heals for a share of all damage dealt (weapon and skills),
-    // and every kill adds an attack speed stack (refreshes the timer, capped).
-    // Attack speed goes through the AttackSpeed stat, so weapon timings and the animator follow it.
     [CreateAssetMenu(menuName = "Skill/Passive/Blood Frenzy")]
     public class BloodFrenzyPassiveData : PassiveData
     {
@@ -35,7 +32,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             {
                 Context.Heal(info.Amount * _data.lifesteal);
 
-                // Blood drawn from the target toward the player.
                 if (info.Target is Component target)
                 {
                     Vector3 from = target.transform.position + Vector3.up;
@@ -85,7 +81,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                         new StatModifier(this, StatModifierType.PercentAdd, _data.attackSpeedPerStack * _stacks));
             }
 
-            // Red embers around the player while frenzied; denser with more stacks.
             private void UpdateAura()
             {
                 if (_stacks <= 0 || !_data.showEffects)

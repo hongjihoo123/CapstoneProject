@@ -3,12 +3,9 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 맞은 적이 순간 하얗게(또는 원소 색으로) 번쩍. 적의 셰이더가 무엇이든 동작하도록
-    // 렌더러에 가산 머티리얼(HJH/HitFlash)을 잠깐 덧붙였다가 빠르게 지운다.
-    // 대상에 처음 맞을 때 이 컴포넌트가 자동으로 붙는다. HitFlash.Flash(대상, 색) 만 부르면 됨.
     public class HitFlash : MonoBehaviour
     {
-        private const string ShaderPath = "HJH/HitFlash";   // Resources/HJH/HitFlash.shader
+        private const string ShaderPath = "HJH/HitFlash";
         private static readonly int ColorId = Shader.PropertyToID("_FlashColor");
         private static Material _material;
         private static bool _loadFailed;

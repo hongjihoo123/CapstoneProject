@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 데미지 숫자 (Shape of Dreams 식, StudyNotes/SoD_타격감_분석.md):
-    //   크게 팝 → 잠깐(~0.1초) 그 크기로 멈춤 → 약 60% 로 줄면서 위로 살짝 → 작게 떠 있다가 → 사라짐
-    // 크기 변화 자체가 "쾅" 하는 느낌을 만듦. 크리는 더 크게 튀고 흰 외곽선.
-    // Value = 숫자, Radius = 크기 배율, Tint = 색, NumberStyle = 일반/크리/받은 피해. 항상 카메라를 봄
     public class FxDamageNumber : MonoBehaviour, IFxDriver
     {
         [SerializeField] private TextMeshPro text;
@@ -17,6 +13,22 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private float shrinkTime = 0.08f;
         [SerializeField, Tooltip("줄어든 뒤 떠 있는 시간")] private float floatTime = 0.5f;
         [SerializeField] private float fadeOutTime = 0.2f;
+
+        public enum Motion { Classic, Arc, Bounce, Elastic, Swing }
+
+        [Header("움직임 종류 (이징)")]
+        [SerializeField, Tooltip("켜면 숫자마다 아래 종류 중 하나를 무작위로 씀")] private bool randomMotion = true;
+        [SerializeField, Tooltip("랜덤이 꺼져 있을 때 쓰는 종류")] private Motion fixedMotion = Motion.Classic;
+        [SerializeField, Tooltip("랜덤으로 뽑을 종류 (비면 전부)")] private Motion[] motionPool = { Motion.Classic, Motion.Arc, Motion.Bounce, Motion.Elastic, Motion.Swing };
+
+        [SerializeField, Tooltip("시작 위치(체력바 윗면)에서 올라가는 최대 높이(m). 곡선은 이 값에 맞춰 늘고 줄어듦")] private float maxRise = 0.9f;
+        [SerializeField, Tooltip("그리는 순서. 체력바(월드 캔버스)보다 크게 해서 항상 앞에 보이게")] private int sortingOrder = 500;
+
+        private void Awake()
+        {
+            if (text != null && text.TryGetComponent(out Renderer meshRenderer))
+                meshRenderer.sortingOrder = sortingOrder;
+        }
 
         [Header("크기 (줄어든 뒤 = 1)")]
         [SerializeField, Tooltip("가장 클 때 크기: x 일반 / y 크리 / z 받은 피해")]
@@ -32,7 +44,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private Color normalOutline = new(0.12f, 0.04f, 0.02f, 1f);
         [SerializeField, Range(0f, 1f)] private float normalOutlineWidth = 0.18f;
 
-        // SoD 영상 기준: 종류마다 채움색 / 외곽선 색 / 외곽선 굵기. 인스펙터에서 바로 고쳐 볼 수 있음
         [System.Serializable]
         public struct Look
         {
@@ -64,12 +75,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private float _peak;
         private float _time;
         private bool _playing;
+        private Motion _motion;
+        private float _side;
+        private float _riseCap;
         private TMP_FontAsset _defaultFont;
 
         private static TMP_FontAsset _koreanFont;
         private static bool _koreanLoaded;
 
-        // TextMesh Pro 기본 Resources 폴더의 한글 글꼴
         private static TMP_FontAsset KoreanFont
         {
             get
@@ -100,6 +113,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _position = transform.position + new Vector3(Random.Range(-0.3f, 0.3f), 0f, Random.Range(-0.3f, 0.3f));
             _time = 0f;
             _playing = true;
+            _side = Random.value < 0.5f ? -1f : 1f;
+            _riseCap = parameters.MaxRise > 0f ? parameters.MaxRise : maxRise;
+            _motion = string.IsNullOrEmpty(parameters.Text) ? PickMotion() : Motion.Classic;
 
             DamageNumberStyle style = parameters.NumberStyle;
             _peak = style switch
@@ -109,7 +125,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _ => peakScale.x
             };
 
-            // 글자(한글)는 숫자 글꼴에 없어서 한글 글꼴로 바꿔 씀. 숫자로 돌아오면 숫자 글꼴
             _defaultFont ??= text.font;
             bool isText = !string.IsNullOrEmpty(parameters.Text);
             TMP_FontAsset korean = isText ? KoreanFont : null;
@@ -117,6 +132,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (isText)
             {
                 text.font = korean != null ? korean : _defaultFont;
+                DrawOnTop();
                 text.text = parameters.Text;
                 bool textCrit = style == DamageNumberStyle.Crit;
                 text.outlineColor = textCrit ? critOutline : normalOutline;
@@ -128,6 +144,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             bool isCrit = style == DamageNumberStyle.Crit;
             TMP_FontAsset chosen = isCrit ? CritFont : NumberFont;
             text.font = chosen != null ? chosen : _defaultFont;
+            DrawOnTop();
             text.text = Mathf.RoundToInt(parameters.Value).ToString();
 
             Look look = style switch
@@ -146,6 +163,45 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 
         public void Stop() => _playing = false;
+
+        private void DrawOnTop()
+        {
+            Material material = text.fontMaterial;
+            material.SetInt("unity_GUIZTestMode", (int)UnityEngine.Rendering.CompareFunction.Always);
+            material.renderQueue = 4000;
+        }
+
+        private Motion PickMotion()
+        {
+            if (!randomMotion)
+                return fixedMotion;
+            return motionPool != null && motionPool.Length > 0
+                ? motionPool[Random.Range(0, motionPool.Length)]
+                : (Motion)Random.Range(0, 5);
+        }
+
+        private static float OutBounce(float t)
+        {
+            const float n = 7.5625f, d = 2.75f;
+            if (t < 1f / d) return n * t * t;
+            if (t < 2f / d) { t -= 1.5f / d; return n * t * t + 0.75f; }
+            if (t < 2.5f / d) { t -= 2.25f / d; return n * t * t + 0.9375f; }
+            t -= 2.625f / d; return n * t * t + 0.984375f;
+        }
+
+        private static float OutElastic(float t)
+        {
+            if (t <= 0f) return 0f;
+            if (t >= 1f) return 1f;
+            return Mathf.Pow(2f, -10f * t) * Mathf.Sin((t * 10f - 0.75f) * (2f * Mathf.PI / 3f)) + 1f;
+        }
+
+        private static float OutBack(float t)
+        {
+            const float c1 = 1.70158f, c3 = c1 + 1f;
+            float u = t - 1f;
+            return 1f + c3 * u * u * u + c1 * u * u;
+        }
 
         private void Update()
         {
@@ -168,35 +224,73 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float holdEnd = popInTime + popHoldTime;
             float shrinkEnd = ShrinkEnd;
 
+            float lateral = 0f;
             float size;
             float rise;
-            if (_time < popInTime)
+            if (_motion == Motion.Classic)
             {
-                float t = _time / Mathf.Max(0.001f, popInTime);
-                size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));   // 빨리 커졌다가 끝에서 멈춤
-                rise = 0f;
-            }
-            else if (_time < holdEnd)
-            {
-                size = _peak;
-                rise = 0f;
-            }
-            else if (_time < shrinkEnd)
-            {
-                float t = Mathf.SmoothStep(0f, 1f, (_time - holdEnd) / Mathf.Max(0.001f, shrinkTime));
-                size = Mathf.Lerp(_peak, 1f, t);
-                rise = shrinkRise * t;
+                if (_time < popInTime)
+                {
+                    float t = _time / Mathf.Max(0.001f, popInTime);
+                    size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));
+                    rise = 0f;
+                }
+                else if (_time < holdEnd)
+                {
+                    size = _peak;
+                    rise = 0f;
+                }
+                else if (_time < shrinkEnd)
+                {
+                    float t = Mathf.SmoothStep(0f, 1f, (_time - holdEnd) / Mathf.Max(0.001f, shrinkTime));
+                    size = Mathf.Lerp(_peak, 1f, t);
+                    rise = shrinkRise * t;
+                }
+                else
+                {
+                    size = 1f;
+                    rise = shrinkRise + floatSpeed * (_time - shrinkEnd);
+                }
             }
             else
             {
-                size = 1f;
-                rise = shrinkRise + floatSpeed * (_time - shrinkEnd);
+                float q = Mathf.Clamp01(_time / Life);
+                float popTarget = Mathf.Lerp(1f, _peak, 0.7f);
+                float popP = Mathf.Clamp01(_time / (popInTime + popHoldTime + 0.12f));
+                float settle = Mathf.SmoothStep(0f, 1f, (_time - shrinkEnd) / Mathf.Max(0.001f, shrinkTime * 2f));
+                switch (_motion)
+                {
+                    case Motion.Arc:
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, 1f - (1f - popP) * (1f - popP)), 1f, settle);
+                        rise = 4f * q * (1f - q) + 0.15f * q;
+                        lateral = _side * 0.9f * (1f - (1f - q) * (1f - q));
+                        break;
+                    case Motion.Bounce:
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.3f, popTarget, OutBounce(popP)), 1f, settle);
+                        rise = 0.55f * OutBounce(Mathf.Clamp01(_time / (Life * 0.55f))) + floatSpeed * 0.5f * q;
+                        break;
+                    case Motion.Elastic:
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.25f, popTarget, OutElastic(popP)), 1f, settle);
+                        rise = 0.75f * OutElastic(Mathf.Clamp01(_time / (Life * 0.7f)));
+                        break;
+                    default:
+                        size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, OutBack(popP)), 1f, settle);
+                        rise = 0.95f * OutBack(q);
+                        lateral = _side * 0.3f * Mathf.Sin(q * Mathf.PI * 3f) * (1f - q);
+                        break;
+                }
             }
+
+            if (_motion != Motion.Classic)
+                rise *= _riseCap / 0.95f;
+            rise = Mathf.Min(rise, _riseCap * 1.15f);
 
             float alpha = 1f - Mathf.Clamp01((_time - (Life - fadeOutTime)) / Mathf.Max(0.001f, fadeOutTime));
 
-            transform.position = _position + Vector3.up * rise;
-            transform.localScale = Vector3.one * size * _scale;
+            Camera sideView = Camera.main;
+            Vector3 right = sideView != null ? sideView.transform.right : Vector3.right;
+            transform.position = _position + Vector3.up * rise + right * lateral;
+            transform.localScale = Vector3.one * Mathf.Max(0.01f, size) * _scale;
 
             Camera view = Camera.main;
             if (view != null)

@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Char.Character;
+using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Enchant.So;
@@ -303,6 +304,7 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
             _inspector.Add(desc);
 
             ShowEffects(view);
+            ShowSkillEffects(view);
         }
 
         // 효과 목록. SerializedObject로 고치면 노드 객체가 새로 만들어져 그래프가 들고 있는 참조가 끊기므로 직접 고친다.
@@ -379,6 +381,76 @@ namespace Members.KYR._01.Scripts.Enchant.Editor
                 ShowInspector();
             })
             { text = "효과 추가" });
+        }
+
+        // 스킬 강화 효과 목록 (원소 범위 / 종류 / 랭크당 값). 위 스탯 효과와 같은 방식으로 직접 고친다.
+        private void ShowSkillEffects(EnchantTreeNodeView view)
+        {
+            Label header = new Label("스킬 강화 (랭크당 값, 0.1 = 10%)");
+            header.style.unityFontStyleAndWeight = FontStyle.Bold;
+            header.style.marginTop = 10;
+            _inspector.Add(header);
+
+            List<EnchantSkillEffect> effects = view.Data.SkillEffects;
+            for (int i = 0; i < effects.Count; i++)
+            {
+                EnchantSkillEffect effect = effects[i];
+                if (effect == null)
+                    continue;
+
+                VisualElement box = new VisualElement();
+                box.style.marginTop = 4;
+                box.style.paddingLeft = 4;
+                box.style.paddingRight = 4;
+                box.style.paddingTop = 4;
+                box.style.paddingBottom = 4;
+                box.style.backgroundColor = new Color(0f, 0f, 0f, 0.15f);
+
+                EnumField scope = new EnumField("원소", effect.scope);
+                EnumField kind = new EnumField("종류", effect.kind);
+                FloatField value = new FloatField("랭크당 값") { value = effect.valuePerRank, isDelayed = true };
+                Label preview = new Label();
+                preview.style.opacity = 0.7f;
+                void UpdatePreview() => preview.text = "1랭크 " + EnchantText.SkillEffect(effect, 1) + "   최대 " + EnchantText.SkillEffect(effect, view.Data.maxRank);
+                UpdatePreview();
+
+                scope.RegisterValueChangedCallback(evt =>
+                {
+                    Edit(view, "스킬 강화 원소", () => effect.scope = (SkillUpgradeScope)evt.newValue);
+                    UpdatePreview();
+                });
+                kind.RegisterValueChangedCallback(evt =>
+                {
+                    Edit(view, "스킬 강화 종류", () => effect.kind = (SkillUpgradeKind)evt.newValue);
+                    UpdatePreview();
+                });
+                value.RegisterValueChangedCallback(evt =>
+                {
+                    Edit(view, "스킬 강화 값", () => effect.valuePerRank = evt.newValue);
+                    UpdatePreview();
+                });
+                box.Add(scope);
+                box.Add(kind);
+                box.Add(value);
+                box.Add(preview);
+
+                int index = i;
+                box.Add(new Button(() =>
+                {
+                    Edit(view, "스킬 강화 삭제", () => view.Data.SkillEffects.RemoveAt(index));
+                    ShowInspector();
+                })
+                { text = "스킬 강화 삭제" });
+
+                _inspector.Add(box);
+            }
+
+            _inspector.Add(new Button(() =>
+            {
+                Edit(view, "스킬 강화 추가", () => view.Data.SkillEffects.Add(new EnchantSkillEffect()));
+                ShowInspector();
+            })
+            { text = "스킬 강화 추가" });
         }
 
         private void RunValidation()

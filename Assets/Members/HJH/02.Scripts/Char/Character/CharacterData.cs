@@ -5,8 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Character
 {
-    // One playable character: identity text for the character windows, the weapon kit
-    // (weapon + dash/RMB/R + passive), and stat differences applied while it is selected.
     [CreateAssetMenu(menuName = "Character/Character Data")]
     public class CharacterData : ScriptableObject
     {
