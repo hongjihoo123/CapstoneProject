@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Currency
 {
-    // Money_EventChannel 의 재화 이벤트를 받아 CurrencyService 에 더한다.
-    //  - EnemyKilledEvent / GainGoldEvent : 런 골드
-    //  - GainCurrencyEvent                : 지정한 재화 (런 골드, 메타 소울 등)
     public class RunGoldGrant : MonoBehaviour
     {
         [SerializeField] private EventChannelSO systemChannel;
