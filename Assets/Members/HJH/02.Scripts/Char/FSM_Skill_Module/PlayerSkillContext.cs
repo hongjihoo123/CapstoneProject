@@ -3,6 +3,7 @@ using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
+using Members.KYR._01.Scripts.SkillUpgrade;
 using Members.KYR._01.Scripts.Stats;
 using RobotWeapons;
 using UnityEngine;
@@ -402,6 +403,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             // 맞은 적의 발밑 (투사체·빔·근접처럼 범위 판정이 없는 스킬도 여기서 잡힌다)
             if (target is Component hitTarget)
                 SkillImpacts.Raise(hitTarget.transform.position, HitImpactRadius, skill);
+
+            // 런 골드로 산 스킬 기본 데미지 강화 (계수 공식보다 먼저)
+            if (skill != null)
+                amount = SkillUpgradeService.ModifyDamage(skill, amount);
 
             if (skill != null && _boosts.TryGetValue(skill, out (float scale, float until) boost))
             {

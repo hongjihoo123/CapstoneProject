@@ -1,5 +1,6 @@
 using Members.JJH._02_Scripts.Agents.Enemies.SkillSystem;
 using Members.JJH._02_Scripts.Agents.Modules;
+using Members.JJH._02_Scripts.Systems.AnimatorSystem;
 using System;
 using Unity.Behavior;
 using Unity.Properties;
@@ -16,8 +17,11 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         [SerializeReference] public BlackboardVariable<GameObject> Target;
 
         [Header("Chase Setting")]
-        [SerializeReference] private BlackboardVariable<float> DestinationUpdateDistance = new(0.2f);
+        [SerializeReference] public BlackboardVariable<float> DestinationUpdateDistance = new(0.2f);
+        [SerializeReference] public BlackboardVariable<AnimParamSO> IdleParam;
+        [SerializeReference] public BlackboardVariable<AnimParamSO> MoveParam;
 
+        private IRenderer _renderer;
         private ISensor _sensor;
         private INavMesh _navMeshAgent;
         private IEnemySkillModule _skillModule;
@@ -25,13 +29,16 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
         private Vector3 _targetPos;
         private Vector3 _lastTargetPos;
 
+        private bool _isStopped;
+
         protected override Status OnStart()
         {
-            if (Enemy.Value == null || Enemy.Value.Sensor == null ||
+            if (Enemy.Value == null || Enemy.Value.Sensor == null || Enemy.Value.Renderer == null ||
                 Enemy.Value.NavMeshAgent == null || Enemy.Value.SkillModule == null ||
                 Target.Value == null)
                 return Status.Failure;
 
+            _renderer = Enemy.Value.Renderer;
             _sensor = Enemy.Value.Sensor;
             _navMeshAgent = Enemy.Value.NavMeshAgent;
             _skillModule = Enemy.Value.SkillModule;
@@ -39,6 +46,8 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             _targetPos = Target.Value.transform.position;
             _lastTargetPos = _targetPos;
 
+            _isStopped = false;
+            _renderer.PlayClip(MoveParam.Value.HashValue, 0, 0.2f);
             _navMeshAgent.MoveTo(_targetPos);
 
             return Status.Running;
@@ -56,7 +65,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
             _targetPos = Target.Value.transform.position;
 
-            // 시야에 없으면 계속 따라가기
             if (!_sensor.IsTargetInSight(enemyData.DetectRange, enemyData.AttackSight))
                 return Chase();
 
@@ -69,18 +77,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             bool normalAttackInRange = enemyData.CanNormalAttack && distance <= enemyData.AttackRange;
             bool skillInRange = _skillModule.HasSkillInRange(distance);
 
-            // 일반 공격/스킬 가능하면 멈추고 바라본 후 Success
             if (canNormalAttack || skillAvailable)
             {
-                _navMeshAgent.KeepChase(false);
+                StopChase();
+
                 bool aligned = _navMeshAgent.RotateToTarget(_targetPos, 1f);
                 return aligned ? Status.Success : Status.Running;
             }
 
-            // 사거리 되지만 쿨타임 중이면 기다리기
-            if (skillInRange && !enemyData.CanNormalAttack || normalAttackInRange)
+            if ((skillInRange && !enemyData.CanNormalAttack) || normalAttackInRange)
             {
-                _navMeshAgent.KeepChase(false);
+                StopChase();
                 _navMeshAgent.RotateToTarget(_targetPos, 1f);
                 return Status.Running;
             }
@@ -90,6 +97,12 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
 
         private Status Chase()
         {
+            if (_isStopped)
+            {
+                _isStopped = false;
+                _renderer.PlayClip(MoveParam.Value.HashValue, 0, 0.2f);
+            }
+
             _navMeshAgent.KeepChase(true);
 
             if (Vector3.Distance(_lastTargetPos, _targetPos) >= DestinationUpdateDistance)
@@ -99,6 +112,17 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.BT.Actions
             }
 
             return Status.Running;
+        }
+
+        private void StopChase()
+        {
+            _navMeshAgent.KeepChase(false);
+
+            if (_isStopped) return;
+
+            _isStopped = true;
+            _renderer.PlayClip(IdleParam.Value.HashValue, 0, 0.2f);
+
         }
     }
 }

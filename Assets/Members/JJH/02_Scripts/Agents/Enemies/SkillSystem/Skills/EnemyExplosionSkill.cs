@@ -10,17 +10,24 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills
         {
             Vector3 center = _enemy.transform.position;
             float prepare = SkillSetting.PrepareTime;
-            float expand = SkillSetting.ExpandTime;
             float range = SkillSetting.Range;
 
             _skillModule.AreaVisualizer.Show(AttackArea.Circle(AttackAreaKind.EnemyWarning,
-                center, range, prepare + expand));
+                                                                                                center, range, prepare));
 
-            yield return new WaitForSeconds(prepare);
-            yield return ExpandCircleWarning(center, range, expand);
+            yield return PlayAnimationAndWait(SkillSetting.PrepareAnimParam, timeout: prepare);
 
+            yield return PlayAnimationAndWait(SkillSetting.AttackAnimParam,
+                () => ExecuteExplosion(center, range));
+
+            _skillModule.AreaVisualizer.Hide(AttackAreaKind.EnemyWarning);
+        }
+
+        private IEnumerator ExecuteExplosion(Vector3 center, float range)
+        {
             PlaySkillVfx();
             DamageInCircle(center, range);
+            yield break;
         }
 
 #if UNITY_EDITOR

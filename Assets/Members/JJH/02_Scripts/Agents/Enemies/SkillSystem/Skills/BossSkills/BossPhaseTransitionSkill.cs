@@ -8,7 +8,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
     public class BossPhaseTransitionSkill : AbstractBossSkill, ITransitionSkill
     {
         [Header("Root Settings")]
-        [SerializeField] private MovingRootProjectile rootPrefab;
+        [SerializeField] private BossMovingRootProjectile rootPrefab;
         [SerializeField] private Transform rootSpawnPoint;
 
         [SerializeField, Min(2)] private int rootCount = 5;
@@ -16,7 +16,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
         [SerializeField] private float rootSpeed = 2f;
         [SerializeField] private float rootMaxSpeed = 18f;
         [SerializeField] private float rootAcceleration = 8f;
-        [SerializeField] private float rootHeight = 0.3f;
         [SerializeField, Min(1)] private int rootRepeatCount = 3;
         [SerializeField] private float rootRepeatDelay = 1.5f;
 
@@ -96,7 +95,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.BossSkills
                 float offset = (i - (rootCount - 1) * 0.5f) * rootWidth;
                 Vector3 position = rootSpawnPoint.position + right * offset;
 
-                MovingRootProjectile root = Instantiate(rootPrefab, position, rotation);
+                BossMovingRootProjectile root = Instantiate(rootPrefab, position, rotation);
                 root.Initialize(forward, rootSpeed, rootMaxSpeed, rootAcceleration,
                     SkillSetting.Damage, _enemy.gameObject);
             }
