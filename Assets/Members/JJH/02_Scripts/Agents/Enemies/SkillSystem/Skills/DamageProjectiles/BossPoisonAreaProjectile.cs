@@ -9,7 +9,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
         [SerializeField] private float lifeTime = 5f;
 
         private Rigidbody _rigidbody;
-        private BossPoisonArea _areaPrefab;
+        private PoisonArea _areaPrefab;
 
         private GameObject _owner;
 
@@ -37,7 +37,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
         }
 
         public void InitializeArc(Vector3 target, float flightTime, float arcHeight, GameObject owner,
-                                                BossPoisonArea areaPrefab, float damage, float areaRadius, float areaDuration,
+                                                PoisonArea areaPrefab, float damage, float areaRadius, float areaDuration,
                                                 float damageInterval, int splashCount, float splashSpeed)
         {
             SetCommon(owner, areaPrefab, damage, areaRadius, areaDuration,
@@ -56,7 +56,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
         }
 
 
-        public void Initialize(Vector3 direction, float speed, GameObject owner, BossPoisonArea areaPrefab,
+        public void Initialize(Vector3 direction, float speed, GameObject owner, PoisonArea areaPrefab,
             float damage, float areaRadius, float areaDuration, float damageInterval, int splashCount, float splashSpeed)
         {
             SetCommon(owner, areaPrefab, damage, areaRadius, areaDuration,
@@ -66,7 +66,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
             _rigidbody.linearVelocity = direction.normalized * speed;
         }
 
-        private void SetCommon(GameObject owner, BossPoisonArea areaPrefab, float damage,
+        private void SetCommon(GameObject owner, PoisonArea areaPrefab, float damage,
             float areaRadius, float areaDuration, float damageInterval, int splashCount, float splashSpeed)
         {
             _owner = owner;
@@ -130,7 +130,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjec
             if (_areaPrefab == null)
                 return;
 
-            BossPoisonArea area = Instantiate(_areaPrefab, position, Quaternion.identity);
+            PoisonArea area = Instantiate(_areaPrefab, position, Quaternion.identity);
             area.Initialize(_owner, radius, _damage, _areaDuration, _damageInterval);
         }
 

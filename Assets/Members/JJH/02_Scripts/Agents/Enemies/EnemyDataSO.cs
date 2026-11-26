@@ -11,6 +11,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         [field: SerializeField] public string EnemyName { get; private set; }
         [field: SerializeField] public float Health { get; private set; }
         [field: SerializeField] public int Gold { get; private set; }
+        [field: SerializeField] public int Soul { get; private set; }
 
         [Header("NavMesh")]
         [field: SerializeField] public float Speed { get; private set; }

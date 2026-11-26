@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace Members.JJH._02_Scripts.Agents.Enemies.SkillSystem.Skills.DamageProjectiles
 {
-    public class BossPoisonArea : MonoBehaviour
+    public class PoisonArea : MonoBehaviour
     {
         [Header("Poison Settings")]
         [SerializeField] private Vector3 boxSize = new Vector3(4f, 1f, 4f);
