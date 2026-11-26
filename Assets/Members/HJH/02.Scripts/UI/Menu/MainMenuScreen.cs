@@ -157,8 +157,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Go(pickScene);
         }
 
-        // 설정 화면은 아직 없음 → 나중에 만들면 인스펙터 onSettings 에 연결 (설정 버튼/톱니 버튼이 호출)
+        // 설정 버튼/톱니 버튼이 호출. onSettings 는 SettingsMenu.Open 에 연결 (HJH/UI/설정 창 만들기)
         public void OpenSettings() => onSettings?.Invoke();
+
+        public UnityEngine.Events.UnityEvent OnSettings => onSettings;
 
         public void Quit()
         {
@@ -191,7 +193,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private void Update()
         {
             Keyboard k = Keyboard.current;
-            if (_busy || k == null || _buttons.Length == 0)
+            if (_busy || k == null || _buttons.Length == 0 || UiFocusService.IsUiFocused)   // 설정 창이 열려 있으면 뒤 메뉴는 안 움직임
                 return;
 
             if (k.leftArrowKey.wasPressedThisFrame || k.upArrowKey.wasPressedThisFrame)

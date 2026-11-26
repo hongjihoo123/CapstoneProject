@@ -218,6 +218,8 @@ namespace HJH.EditorTools
                 {
                     if (bake is ComboBuffBarView || bake is TutorialView || bake is ComboBannerView)
                         continue;   // 아래에서 따로
+                    if (bake is SettingsMenu)
+                        continue;   // 프리팹 인스턴스 → HJH/UI/설정 창 만들기 에서 굽는다
                     bake.BakeLayout();
                     Write("PlayerRig 굽기 " + ((Component)bake).name + " (" + bake.GetType().Name + ")");
                 }

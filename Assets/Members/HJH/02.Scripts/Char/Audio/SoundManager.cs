@@ -92,7 +92,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             source.clip = clip;
             source.loop = cue.loop;
             source.outputAudioMixerGroup = GroupOf(cue.bus);
-            source.volume = Mathf.Clamp01(voice.BaseVolume * (voice.Punchable ? PunchGain : 1f));
+            source.volume = Mathf.Clamp01(voice.BaseVolume * (voice.Punchable ? PunchGain : 1f)) * BusGain(cue.bus);
             source.pitch = UnityEngine.Random.Range(cue.pitch.x, cue.pitch.y) * pitchScale;
             if (is3D)
             {
@@ -165,19 +165,32 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             return manager == null ? null : manager._groups[(int)bus];
         }
 
-        // 0~1 슬라이더 값 (옵션 메뉴용). 믹서의 Vol_<이름> 파라미터에 dB 로 넣고 저장함
+        // 0~1 슬라이더 값 (설정 창). 저장하고 바로 반영
+        //  - 전체: AudioListener.volume (SoundManager 를 안 거치는 소리까지 전부)
+        //  - 종류별: 믹서가 있으면 Vol_<이름> 파라미터에 dB 로, 없으면 소리 통 음량에 곱함
         public static void SetBusVolume(SoundBus bus, float linear) => SetVolume(bus.ToString(), linear);
-        public static void SetMasterBusVolume(float linear) => SetVolume("Master", linear);
+        public static void SetMasterBusVolume(float linear)
+        {
+            linear = Mathf.Clamp01(linear);
+            PlayerPrefs.SetFloat(VolumeKeyPrefix + "Master", linear);
+            AudioListener.volume = linear;
+        }
+
         public static float GetBusVolume(SoundBus bus) => PlayerPrefs.GetFloat(VolumeKeyPrefix + bus, 1f);
         public static float GetMasterBusVolume() => PlayerPrefs.GetFloat(VolumeKeyPrefix + "Master", 1f);
+
+        // 소리에 직접 곱할 종류별 음량. 믹서 그룹이 있으면 믹서가 줄이므로 1
+        public static float BusGain(SoundBus bus) => GroupOf(bus) != null ? 1f : GetBusVolume(bus);
 
         private static void SetVolume(string name, float linear)
         {
             linear = Mathf.Clamp01(linear);
             PlayerPrefs.SetFloat(VolumeKeyPrefix + name, linear);
             SoundManager manager = Instance;
-            if (manager != null)
-                manager.ApplyVolume(name, linear);
+            if (manager == null)
+                return;
+            manager.ApplyVolume(name, linear);
+            manager.RefreshVolumes(false);
         }
 
         private void ApplyVolume(string name, float linear)
@@ -209,7 +222,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             _punchHold = Mathf.Max(0f, hold);
             _punchRelease = Mathf.Max(0.01f, release);
             if (_instance != null)
-                _instance.ApplyPunch();
+                _instance.RefreshVolumes(true);
         }
 
         public static float PunchGain
@@ -225,12 +238,16 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             }
         }
 
-        private void ApplyPunch()
+        // 울리고 있는 소리의 음량 다시 계산 (punchOnly = 펀치가 먹는 소리만)
+        private void RefreshVolumes(bool punchOnly)
         {
             float gain = PunchGain;
             foreach (SoundVoice v in _voices)
-                if (v.Punchable && v.IsActive)
-                    v.Source.volume = Mathf.Clamp01(v.BaseVolume * gain);
+            {
+                if (!v.IsActive || v.Cue == null || (punchOnly && !v.Punchable))
+                    continue;
+                v.Source.volume = Mathf.Clamp01(v.BaseVolume * (v.Punchable ? gain : 1f)) * BusGain(v.Cue.bus);
+            }
         }
 
         // ------------------------------------------------ 인스턴스
@@ -288,8 +305,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
                     _groups[i] = found.Length > 0 ? found[0] : null;
                     ApplyVolume(BusNames[i], GetBusVolume((SoundBus)i));
                 }
-                ApplyVolume("Master", GetMasterBusVolume());
             }
+            AudioListener.volume = GetMasterBusVolume();
 
             for (int i = 0; i < Voices; i++)
             {
@@ -305,7 +322,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         {
             bool punching = PunchGain > 1f;
             if (punching || _wasPunching)
-                ApplyPunch();   // 끝난 뒤 한 번 더 → 정확히 원래 볼륨으로
+                RefreshVolumes(true);   // 끝난 뒤 한 번 더 → 정확히 원래 볼륨으로
             _wasPunching = punching;
 
             float now = Time.unscaledTime;

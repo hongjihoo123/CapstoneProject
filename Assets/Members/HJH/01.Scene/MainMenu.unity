@@ -2207,7 +2207,20 @@ MonoBehaviour:
   normalSprite: {fileID: 0}
   onSettings:
     m_PersistentCalls:
-      m_Calls: []
+      m_Calls:
+      - m_Target: {fileID: 1311138460}
+        m_TargetAssemblyTypeName: Assets.Members.HJH._02.Scripts.UI.SettingsMenu,
+          Assembly-CSharp
+        m_MethodName: Open
+        m_Mode: 0
+        m_Arguments:
+          m_ObjectArgument: {fileID: 0}
+          m_ObjectArgumentAssemblyTypeName: 
+          m_IntArgument: 0
+          m_FloatArgument: 0
+          m_StringArgument: 
+          m_BoolArgument: 0
+        m_CallState: 2
   focusedTint: {r: 1, g: 1, b: 1, a: 0}
   normalTint: {r: 1, g: 1, b: 1, a: 0}
   focusedLabel: {r: 1, g: 0.92, b: 0.68, a: 1}
@@ -3993,6 +4006,74 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1305934188}
   m_CullTransparentMesh: 1
+--- !u!1001 &1311138459
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 5707623878645568968, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_Name
+      value: SettingsMenu
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6087010088483441195, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+--- !u!114 &1311138460 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 4034642438921905225, guid: 436eb0e1d79e07c47a30346877a51147, type: 3}
+  m_PrefabInstance: {fileID: 1311138459}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0e9126e89a0cd6e40a54dcbd96cb6ee8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Assets.Members.HJH._02.Scripts.UI.SettingsMenu
 --- !u!1 &1397344840
 GameObject:
   m_ObjectHideFlags: 0
@@ -6146,3 +6227,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 295211661}
   - {fileID: 844006144}
+  - {fileID: 1311138459}

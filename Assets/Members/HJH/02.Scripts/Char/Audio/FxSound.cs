@@ -15,13 +15,19 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         [SerializeField, Tooltip("어느 믹서 그룹으로 나갈지 (적 이펙트는 Enemy)")] private SoundBus bus = SoundBus.Sfx;
 
         private AudioSource _source;
+        private float _baseVolume;
 
         private void OnEnable()
         {
-            _source ??= GetComponent<AudioSource>();
+            if (_source == null)
+            {
+                _source = GetComponent<AudioSource>();
+                _baseVolume = _source.volume;
+            }
             _source.Stop();
             SoundManager.Spatial.Apply(_source);
             AudioMixerGroupHelper.Assign(_source, bus);
+            _source.volume = _baseVolume * SoundManager.BusGain(bus);   // 설정 창의 종류별 음량
             if (delay <= 0f)
                 _source.Play();
             else
