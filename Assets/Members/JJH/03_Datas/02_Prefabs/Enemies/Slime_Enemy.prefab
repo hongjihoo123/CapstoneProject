@@ -107,6 +107,7 @@ MonoBehaviour:
   icon: {fileID: 9089571320216236477}
   rotateWithTarget: 0
   height: 3
+  angleOffset: 0
 --- !u!1 &7483468146085026323
 GameObject:
   m_ObjectHideFlags: 0
@@ -167,10 +168,6 @@ MonoBehaviour:
   <EnemyData>k__BackingField: {fileID: 11400000, guid: 6a1042ebdb28c144a8ef0f7633b4a753, type: 2}
   moneyChannel: {fileID: 11400000, guid: f65619d0208632b40942efc110710fb4, type: 2}
   btTableSO: {fileID: 11400000, guid: 92be94d0523eb2d4ca64aad3feff300d, type: 2}
-  attackDamage: 10
-  targetLayer:
-    serializedVersion: 2
-    m_Bits: 256
   attackBoxSize: {x: 2, y: 2, z: 2}
 --- !u!195 &736281680238184815
 NavMeshAgent:
@@ -943,11 +940,39 @@ PrefabInstance:
       value: HandleOnDead
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.size
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_Mode
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
       value: Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy, Assembly-CSharp
       objectReference: {fileID: 0}
     - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_Target
+      value: 
+      objectReference: {fileID: 8895819959603567008}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_CallState
+      value: 2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
+      value: HandleOnDead
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_TargetAssemblyTypeName
+      value: Members.JJH._02_Scripts.Agents.Enemies.MeleeEnemy, Assembly-CSharp
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
       propertyPath: OnDeathEvent.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
+      value: UnityEngine.Object, UnityEngine
+      objectReference: {fileID: 0}
+    - target: {fileID: 4385663477294473489, guid: 4d580931c4b8f5d4e9b77419d569265d, type: 3}
+      propertyPath: <OnDeathEvent>k__BackingField.m_PersistentCalls.m_Calls.Array.data[0].m_Arguments.m_ObjectArgumentAssemblyTypeName
       value: UnityEngine.Object, UnityEngine
       objectReference: {fileID: 0}
     m_RemovedComponents: []

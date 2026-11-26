@@ -1,10 +1,14 @@
-﻿namespace Members.JJH._02_Scripts.Agents.Modules
+﻿using UnityEngine.Events;
+
+namespace Members.JJH._02_Scripts.Agents.Modules
 {
     public interface IHealth
     {
-        public float CurrentHealth { get; }
+        UnityEvent OnDeathEvent { get; }
 
-        public void InitHealth(float maxHealth);
-        public void TakeDamage(float damage);
+        float CurrentHealth { get; }
+
+        void InitHealth(float maxHealth);
+        void TakeDamage(float damage);
     }
 }

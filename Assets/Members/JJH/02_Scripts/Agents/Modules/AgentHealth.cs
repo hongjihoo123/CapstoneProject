@@ -1,13 +1,15 @@
-﻿using Members.JJH._02_Scripts.Systems.ModuleSystem;
+﻿
+using Members.JJH._02_Scripts.Systems.ModuleSystem;
 using UnityEngine;
 using UnityEngine.Events;
+
 namespace Members.JJH._02_Scripts.Agents.Modules
 {
     public class AgentHealth : AbstractModule, IHealth
     {
-        public UnityEvent OnDeathEvent;
+        [field: SerializeField] public UnityEvent OnDeathEvent { get; private set; }
 
-        public float CurrentHealth
+        public virtual float CurrentHealth
         {
             get => _health;
             set
@@ -22,16 +24,19 @@ namespace Members.JJH._02_Scripts.Agents.Modules
             }
         }
 
-        private float _health;
-        private float _maxHealth;
+        public virtual float MaxHealth => _maxHealth;
+        public virtual bool IsDead => _health <= 0f;
 
-        public void InitHealth(float maxHealth)
+        protected float _health;
+        protected float _maxHealth;
+
+        public virtual void InitHealth(float maxHealth)
         {
             _maxHealth = maxHealth;
             CurrentHealth = _maxHealth;
         }
 
-        public void TakeDamage(float damage)
+        public virtual void TakeDamage(float damage)
             => CurrentHealth -= damage;
     }
 }

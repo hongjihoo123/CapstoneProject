@@ -1,3 +1,4 @@
+
 using Members.JJH._02_Scripts.Agents.Modules;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
@@ -7,43 +8,46 @@ using UnityEngine;
 
 namespace Members.KYR._01.Scripts.Modules
 {
-    public class PlayerHealth : AbstractModule, IHealth, IAfterInitModule
+    public class PlayerHealth : AgentHealth, IAfterInitModule
     {
         [SerializeField] private float stunOnHitDuration;
+
         [Header("스탯 풀백 모듈 없을 때")]
         [SerializeField] private float maxHp = 100f;
 
         private PlayerStatsModule _stats;
-        private float _hp;
         private float _shield;
         private float _stunRemaining;
 
-        public float CurrentHealth => _hp;
         public float CurrentShield => _shield;
-        public float MaxHealth => MaxHp;
-        public float MaxHp => _stats != null && _stats.Tree != null ? _stats.Get(PlayerStatId.MaxHp) : maxHp;
-        public bool IsDead => _hp <= 0f;
+        public override float MaxHealth => MaxHp;
+
+        public float MaxHp => _stats != null && _stats.Tree != null
+            ? _stats.Get(PlayerStatId.MaxHp)
+            : maxHp;
+
+        public override bool IsDead => CurrentHealth <= 0f;
         public bool IsStunned => _stunRemaining > 0f;
 
         public override void Initialize(ModuleOwner owner)
         {
             base.Initialize(owner);
+
             _stats = owner.GetModule<PlayerStatsModule>();
-            _hp = maxHp;
             _shield = 0f;
             _stunRemaining = 0f;
         }
 
         public void AfterInitalize()
         {
-            _hp = MaxHp;
+            base.InitHealth(MaxHp);
             _shield = 0f;
         }
 
-        public void InitHealth(float maxHealth)
+        public override void InitHealth(float maxHealth)
         {
             maxHp = maxHealth;
-            _hp = MaxHp;
+            base.InitHealth(MaxHp);
             _shield = 0f;
         }
 
@@ -64,7 +68,7 @@ namespace Members.KYR._01.Scripts.Modules
                 _stunRemaining = 0f;
         }
 
-        public void TakeDamage(float amount)
+        public override void TakeDamage(float amount)
         {
             TakeDamage(amount, null, null);
         }
@@ -88,11 +92,13 @@ namespace Members.KYR._01.Scripts.Modules
         public DamageResult ApplyDamage(float damage)
         {
             ClampHpToMax();
+
             if (IsDead || damage <= 0f)
                 return default;
 
             float absorbed = 0f;
             float remaining = damage;
+
             if (_shield > 0f)
             {
                 absorbed = Mathf.Min(_shield, remaining);
@@ -100,16 +106,17 @@ namespace Members.KYR._01.Scripts.Modules
                 remaining -= absorbed;
             }
 
-            float before = _hp;
+            float before = CurrentHealth;
+
             if (remaining > 0f)
-                _hp = Mathf.Max(0f, _hp - remaining);
+                CurrentHealth = Mathf.Max(0f, CurrentHealth - remaining);
 
             if (IsDead)
                 _shield = 0f;
             else if (remaining > 0f && stunOnHitDuration > 0f)
                 ApplyStun(stunOnHitDuration);
 
-            return new DamageResult(damage, absorbed, before - _hp, IsDead);
+            return new DamageResult(damage, absorbed, before - CurrentHealth, IsDead);
         }
 
         public void AddShield(float amount)
@@ -128,13 +135,15 @@ namespace Members.KYR._01.Scripts.Modules
         public void Heal(float amount)
         {
             ClampHpToMax();
+
             if (IsDead || amount <= 0f)
                 return;
 
             float received = _stats != null && _stats.Tree != null
                 ? _stats.Get(PlayerStatId.HealReceived)
                 : 1f;
-            _hp = Mathf.Min(MaxHp, _hp + amount * received);
+
+            CurrentHealth = Mathf.Min(MaxHp, CurrentHealth + amount * received);
         }
 
         public void ApplyStun(float duration)
@@ -148,8 +157,9 @@ namespace Members.KYR._01.Scripts.Modules
         private void ClampHpToMax()
         {
             float max = Mathf.Max(0f, MaxHp);
-            if (_hp > max)
-                _hp = max;
+
+            if (CurrentHealth > max)
+                CurrentHealth = max;
         }
     }
 }
