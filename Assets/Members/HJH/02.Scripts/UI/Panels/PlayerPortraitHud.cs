@@ -4,8 +4,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 왼쪽 아래 "플레이어 상태" 묶음의 캐릭터 얼굴 칸. 지금 캐릭터의 CharacterData.Portrait 와 테마 색을 보여줌.
-    // 모양(크기·테두리·배경)은 하이어라키에서 수정. 스크립트는 그림·색만 바꿈
     public class PlayerPortraitHud : MonoBehaviour
     {
         [SerializeField] private Image portrait;

@@ -6,17 +6,11 @@ using DG.Tweening;
 using Members.JJH._02_Scripts.Map;
 using Members.KYR._01.Scripts;
 using Members.KYR._01.Scripts.Player;
-using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Quest
 {
-    // 적이 있는 방의 포탈은 처음부터 "꺼진 상태"로 서 있음:
-    //   - 모양: 중앙의 에너지 소용돌이(Quad)가 꺼지고 미니맵 아이콘도 어둡게
-    //   - 동작: 포탈 트리거(F 로 맵 열기)가 멈춤. 가까이 가거나 F 를 누르면 "포탈이 아직 활성화되지 않았습니다" 안내
-    // 방을 다 클리어하면(RoomClearTracker.Cleared) 에너지가 솟아오르며 켜지고 트리거가 다시 작동함.
-    // 적이 하나도 없는 방(상점·업그레이드 등)은 포탈을 건드리지 않음.
     public class RoomPortalGate : MonoBehaviour
     {
         private const string EnergyName = "Quad";
@@ -61,7 +55,6 @@ namespace Assets.Members.HJH._02.Scripts.Quest
                 _tracker.Cleared -= OnCleared;
         }
 
-        // 한 프레임 + 잠깐 기다려서 적 수가 잡힌 뒤에 판단
         private IEnumerator LockWhenEnemiesExist()
         {
             yield return null;
@@ -91,7 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.Quest
 
             _locked = _portals.Count > 0;
 
-            // 미니맵 아이콘 모양 입히는 부품이 먼저 돈 뒤에 어둡게
             yield return new WaitForSeconds(1f);
             foreach (Portal portal in _portals)
             {
@@ -112,7 +104,6 @@ namespace Assets.Members.HJH._02.Scripts.Quest
             int left = _tracker != null ? Mathf.Max(0, _tracker.Total - _tracker.Kills) : 0;
             _notice.Hold(left > 0 ? $"{lockedMessage}\n<size=20><color=#9FB4C8>남은 적 {left}마리</color></size>" : lockedMessage, HudUiKit.Title);
 
-            // F 를 누르면 안내가 한 번 튐
             if (Keyboard.current != null && Keyboard.current.fKey.wasPressedThisFrame)
                 _notice.Punch();
         }
@@ -171,7 +162,6 @@ namespace Assets.Members.HJH._02.Scripts.Quest
                 Fx.Shockwave(portal.trigger.transform.position, burstColor, 3.5f);
             }
 
-            // "활성화되었습니다" 안내를 잠깐 금색으로
             if (_notice != null)
                 _notice.ShowText(openedMessage, HudUiKit.Gold, 2.2f);
 

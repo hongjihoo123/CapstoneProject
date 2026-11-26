@@ -11,10 +11,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 콤보 완성 / 피니시 때 가운데 위쪽에 뜨는 배너 (얇은 유리 스타일).
-    //  - 번지는 어둠 위에 위아래 얇은 선(끝에 작은 금색 다이아) + 작은 머리말 / 큰 이름 / 효과 설명 / 키 순서
-    //  - 값은 전부 PlayerHudSource 이벤트에서 받음. HUD 캔버스(PlayerRig) 하이어라키에 저장된 오브젝트, 모양은 인스펙터에서 수정
-    //  - JJH ElementStackView 의 예전 금색 배너는 SuppressBanner 로 꺼서 두 번 안 뜨게 함
     public class ComboBannerView : MonoBehaviour, IUiBake
     {
         private static readonly Color FinisherAccent = new(1f, 0.5f, 0.42f);
@@ -30,7 +26,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void Start()
         {
-            // JJH ElementStackView 의 예전 금색 배너는 꺼서 두 번 안 뜨게
             foreach (ElementStackView view in FindObjectsByType<ElementStackView>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                 view.SuppressBanner = true;
 
@@ -61,7 +56,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _hud.UltimateChained -= OnUltimateChained;
         }
 
-        // 치명 연쇄로 궁극기가 초기화됨: 같은 배너를 금색으로 띄움 (HitFeel 은 CritSystem 쪽에서 이미 재생)
         private void OnUltimateChained(int chain) =>
             Show($"CHAIN  ×{chain}", "궁극기 초기화", "바로 다시 쓸 수 있어요", string.Empty, HudUiKit.Gold);
 
@@ -79,7 +73,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Show($"FINISH  ×{scale:0.0#}", "피니시", "피해 강화", string.Empty, FinisherAccent);
         }
 
-        // SetUpdate(true): 콤보 순간 게임이 잠깐 멈춰도(히트스톱) 배너는 계속 움직임
         private void Show(string header, string title, string detail, string keys, Color accent)
         {
             if (_root == null || group == null)
@@ -151,7 +144,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 #endif
         }
 
-        // "Q 불 › E 번개" 를 속성 색으로
         private string KeySequence(IReadOnlyList<ElementType> sequence)
         {
             var text = new StringBuilder();

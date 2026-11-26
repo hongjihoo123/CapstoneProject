@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 폭포가 떨어지는 수면에 물결을 계속 만들어 줌 (프로젝트의 물결 시뮬레이션 JungleWater.Ripple 사용).
-    // 이 오브젝트의 위치 = 폭포 바닥 중앙, right 축 = 폭포 폭 방향. 플레이 중에만 동작.
     public class WaterfallRipples : MonoBehaviour
     {
         [SerializeField, Tooltip("폭포 폭의 절반 (m)")] private float halfWidth = 2f;

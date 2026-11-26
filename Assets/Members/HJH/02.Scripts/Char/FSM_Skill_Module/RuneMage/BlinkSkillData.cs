@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 {
-    // Character 3 dash: instant teleport toward the cursor (stops short of walls) and leaves a rune
-    // trap at the starting point that explodes after a delay.
     [CreateAssetMenu(menuName = "Skill/Rune Mage/Blink")]
     public class BlinkSkillData : SkillData
     {
@@ -45,7 +43,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
             context.Run(new DelayedBlast(context, origin, trapDelay, trapRadius, trapDamage, color, 0.04f, 0.2f));
         }
 
-        // Walks the distance back until the body fits, so blinking into a wall lands in front of it.
         private static Vector3 FindReachable(ISkillContext context, Vector3 origin, Vector3 direction, float distance)
         {
             const int steps = 8;

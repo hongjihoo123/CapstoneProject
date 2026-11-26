@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 캐릭터(발 위치 = 이 Transform)에 붙이면 물속을 걸을 때 물결이 생긴다.
-    // 가만히 서 있으면 물결을 만들지 않음 → 금방 잔잔해짐 (피드백: 물결이 너무 많고 오래 남음)
     public class WaterRippleEmitter : MonoBehaviour
     {
         [SerializeField] private float radius = 0.45f;

@@ -7,14 +7,9 @@ using UnityEngine.UI;
 
 namespace HJH.EditorTools
 {
-    // 타이틀 배치 (Shape of Dreams 식): 왼쪽 위 로고 + 그 아래 글자만 있는 세로 메뉴, 오른쪽은 맵 장면을 그대로.
-    // TitleDecorMenu 가 실제 맵 배경(TitleBackdrop)을 쓸 때 호출. 버튼 그림은 없애고 글자 + 선택 표시(◇) 만 남김.
-    // 몇 번 실행해도 같은 결과. 위치/크기는 이후 인스펙터에서 자유롭게 수정 가능
     internal static class TitleMood
     {
-        private const float Left = 150f;   // 왼쪽 여백 (1920 기준)
-
-        // ---------------------------------------------------------------- 설정 버튼 추가 (StyleButtons 보다 먼저)
+        private const float Left = 150f;
 
         public static void AddSettingsButton(MainMenuScreen menu, Transform canvas)
         {
@@ -55,8 +50,6 @@ namespace HJH.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        // ---------------------------------------------------------------- 배치 (StyleButtons 뒤)
-
         public static void Apply(MainMenuScreen menu, Transform canvas)
         {
             Sprite hGrad = TitleDecorMenu.MakeSprite("title_hgrad", 256, 4, (x, y, w, h) =>
@@ -74,7 +67,6 @@ namespace HJH.EditorTools
             AddGear(menu, canvas, round, gear);
         }
 
-        // 가운데 어두운 덮개는 빼고, 글자가 있는 왼쪽만 어둡게
         private static void DressBackdrop(Transform back, Sprite hGrad)
         {
             foreach (string n in new[] { "LeftShade" })
@@ -94,7 +86,6 @@ namespace HJH.EditorTools
                 g.color = new Color(0f, 0.01f, 0.05f, 0.15f);
         }
 
-        // 제목: 왼쪽 위, 부제는 그 아래. 눈 아이콘/가운데 선은 없앰
         private static void LayoutTexts(Transform canvas)
         {
             foreach (string page in new[] { "Question", "Menu" })
@@ -140,7 +131,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // 버튼: 그림 없이 글자만. 고르면 ◇ 표시 + 글자색 변화 (색/표시는 MainMenuScreen 의 SetFocus 가 처리)
         private static void LayoutButtons(MainMenuScreen menu, Transform canvas)
         {
             var so = new SerializedObject(menu);
@@ -194,7 +184,6 @@ namespace HJH.EditorTools
             so.ApplyModifiedPropertiesWithoutUndo();
         }
 
-        // 오른쪽 위 톱니 (설정)
         private static void AddGear(MainMenuScreen menu, Transform canvas, Sprite round, Sprite gear)
         {
             Transform page = canvas.Find("Menu");
@@ -216,8 +205,6 @@ namespace HJH.EditorTools
             btn.colors = colors;
             UnityEventTools.AddPersistentListener(btn.onClick, menu.OpenSettings);
         }
-
-        // ---------------------------------------------------------------- 그림 만들기
 
         private static Sprite Pill(string name, Color fill, Color outline, float outlineWidth, int w, int h) =>
             TitleDecorMenu.MakeSprite(name, w, h, (x, y, pw, ph) =>
@@ -253,8 +240,6 @@ namespace HJH.EditorTools
             float a = Mathf.Clamp01((outer - r) * 40f) * Mathf.Clamp01((r - 0.30f) * 40f);
             return new Color(1f, 1f, 1f, a);
         }
-
-        // ---------------------------------------------------------------- 도우미
 
         private static void ClearListeners(UnityEngine.Events.UnityEventBase evt)
         {

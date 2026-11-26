@@ -1,4 +1,3 @@
-using System;
 using System.Reflection;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.UI;
@@ -12,9 +11,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.Editor
 {
-    // 스킬 트리 창 프리팹을 굽고, 캐릭터 선택 씬의 "아웃 업그레이드" 버튼에 연결.
-    //  - 연결만 (이미 구워진 프리팹은 그대로 둠): 프리팹이 없으면 한 번 굽고, 씬의 필드/버튼 연결을 채움. 몇 번 눌러도 같은 결과.
-    //  - 창 다시 굽기: 프리팹 안의 손본 모양이 지워지니 일부러 누를 때만.
     public static class SkillTreeScreenMenu
     {
         private const string PrefabPath = "Assets/Members/HJH/05.Data/Prefab/UI/SkillTreeScreen.prefab";
@@ -55,9 +51,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             Debug.Log("[SkillTree] 스킬 트리 저장을 지우고 처음 상태로 돌렸습니다.");
         }
 
-        // ------------------------------------------------------------ 미리보기 (캡처용)
-        // 메뉴로 장면을 정해 두고, 플레이를 시작하면 CharacterPick 에서 창을 열어 줌.
-        // 쓰는 법: 메뉴 "미리보기 준비" -> capture.ps1 으로 CharacterPick 을 play 로 캡처 (pick_screen 설정 참고)
         private const string DemoKey = "HJH.SkillTreeDemo";
 
         [MenuItem("HJH/스킬 트리/미리보기 준비 (평타 탭, 일부 배움)")]
@@ -96,7 +89,7 @@ namespace Assets.Members.HJH._02.Scripts.Editor
 
         private static void RunDemo(string spec)
         {
-            var pick = UnityEngine.Object.FindFirstObjectByType<CharacterPickScreen>();   // 없으면(다른 씬에서 플레이) 창을 바로 엶
+            var pick = UnityEngine.Object.FindFirstObjectByType<CharacterPickScreen>();
             var tree = AssetDatabase.LoadAssetAtPath<EnchantTree>(AssetDatabase.GUIDToAssetPath(AssetDatabase.FindAssets("t:EnchantTree", new[] { TreeFolder })[0]));
             string tab = null, select = null;
             foreach (string part in spec.Split(';'))

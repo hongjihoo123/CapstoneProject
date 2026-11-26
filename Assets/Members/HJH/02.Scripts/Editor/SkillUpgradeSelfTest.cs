@@ -1,8 +1,6 @@
-﻿using System.Collections.Generic;
-using System.Text;
+﻿using System.Text;
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
-using Members.JJH._02_Scripts.ElementsSystem;
 using Members.KYR._01.Scripts.Enchant;
 using Members.KYR._01.Scripts.Enchant.Editor;
 using Members.KYR._01.Scripts.Enchant.So;
@@ -11,8 +9,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Editor
 {
-    // 스킬 트리(강화 노드) 검증: 트리 에셋 -> EnchantModule 이 노드를 배움 -> SkillUpgrades 판에 올라감 -> 스킬 쪽 읽는 곳이 달라짐.
-    // 플레이 중이 아닐 때만 돈다 (씬을 안 건드리고, 만든 오브젝트는 전부 지움).
     public static class SkillUpgradeSelfTest
     {
         private const string TreePath = "Assets/Members/HJH/05.Data/Enchant/EnchantTree_Gunner.asset";
@@ -69,7 +65,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 so.FindProperty("trees").GetArrayElementAtIndex(0).objectReferenceValue = tree;
                 so.FindProperty("ignoreCost").boolValue = true;
                 so.ApplyModifiedPropertiesWithoutUndo();
-                // 에디트 모드에서는 OnEnable/Start 가 안 돌아서, 캐릭터가 골라졌을 때와 같은 적용 경로를 직접 부른다
                 void Reapply() => typeof(EnchantModule)
                     .GetMethod("ApplyStats", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)
                     .Invoke(module, new object[] { tree });
@@ -79,13 +74,10 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 const SkillUpgradeScope Atk = SkillUpgradeScope.Attack;
                 const SkillUpgradeScope Chg = SkillUpgradeScope.Charged;
 
-                // 0) 아무것도 안 배움 = 보너스 없음
                 Check("시작: 평타 치명 확률", SkillUpgrades.Bonus(SkillUpgradeKind.CritChance, Atk), 0f);
 
-                // 1) 선행이 안 열린 노드(능력)는 못 배움
                 Check("선행 없이 정조준", module.TryLearn(tree, tree.FindNode("atk1_a1")) ? 1f : 0f, 0f);
 
-                // 2) 전부 최대 랭크까지 배움 (택일 노드는 먼저 나온 쪽만)
                 var guard = 0;
                 bool learned = true;
                 while (learned && guard++ < 1000)
@@ -114,13 +106,11 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 Check("대쉬 시 충전탄 게이지 (0.2x5 + 잔류 충전 2)", SkillUpgrades.Exact(SkillUpgradeKind.DashGauge, Chg), 3f);
                 Check("백스텝 장전 (대쉬 직후 확정 치명 발수)", SkillUpgrades.Exact(SkillUpgradeKind.GuaranteedCrits, SkillUpgradeScope.Dash), 3f);
 
-                // 3) 실제 읽는 곳이 바뀌었나
                 var dashState = new GenericSkillState(new Host(), SkillSlotId.Dash, dash);
                 float baseCooldown = dash.Cooldown;
                 Check("대쉬 쿨 (3s x (1-0.45))", dashState.CooldownDuration, baseCooldown * 0.55f);
                 Check("대쉬 충전 (기본 + 연속 대쉬 1)", dashState.MaxCharges, dash.Charges + 1f);
 
-                // 치명 굴림: 충전탄 슬롯으로 100 -> 100 x 2.1 (확률 100%)
                 CritSystem.Reset();
                 CritSystem.CurrentSlot = Chg;
                 float rolled = CritSystem.Apply(null, null, 100f, out bool crit);
@@ -128,7 +118,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 Check("충전탄 치명 굴림 (100 -> 210)", rolled, 210f);
                 Check("치명 판정 true", crit ? 1f : 0f, 1f);
 
-                // 지속 피해는 치명 안 남
                 CritSystem.Suppressed = true;
                 CritSystem.CurrentSlot = Chg;
                 Check("지속 피해는 치명 제외", CritSystem.Apply(null, null, 100f, out bool dotCrit), 100f);
@@ -136,18 +125,17 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 CritSystem.CurrentSlot = SkillUpgradeScope.All;
                 Check("지속 피해 치명 false", dotCrit ? 1f : 0f, 0f);
 
-                // 4) 리셋하면 전부 사라짐
                 module.ResetTree(tree);
                 Check("리셋 후 평타 치명", SkillUpgrades.Bonus(SkillUpgradeKind.CritChance, Atk), 0f);
             }
             finally
             {
                 Object.DestroyImmediate(go);
-                SkillUpgrades.Board.Clear(module);   // 에디트 모드는 OnDisable 이 안 돌아서 직접 지움
+                SkillUpgrades.Board.Clear(module);
             }
 
             log.AppendLine(fails == 0 ? "ALL PASS" : $"FAILS = {fails}");
-            System.IO.File.WriteAllText("Captures/_skilltree_selftest.txt", log.ToString(), new UTF8Encoding(true));   // 열린 에디터 로그가 다른 프로젝트 것일 때도 결과를 볼 수 있게
+            System.IO.File.WriteAllText("Captures/_skilltree_selftest.txt", log.ToString(), new UTF8Encoding(true));
             if (fails == 0)
                 Debug.Log(log.ToString());
             else

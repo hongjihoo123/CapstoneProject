@@ -3,7 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
 {
-    // 머리 위 체력바를 언제 보일지 (죽으면 숨김, 적은 풀피면 숨김). 그리기와 따로 둠
     [RequireComponent(typeof(Canvas))]
     public sealed class HealthBarAutoHide : MonoBehaviour
     {
@@ -21,7 +20,7 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
             _canvas = GetComponent<Canvas>();
             _signal = GetComponentInParent<IHealthSignal>();
             _isPlayer = HealthReader.For(this).IsPlayer;
-            _canvas.enabled = false;   // 첫 값을 받기 전엔 숨김
+            _canvas.enabled = false;
         }
 
         private void OnEnable()

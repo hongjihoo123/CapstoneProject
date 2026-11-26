@@ -8,9 +8,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 설정 창 프리팹을 굽고 MainMenu 씬(설정 버튼 연결)과 PlayerRig(게임 중 ESC)에 놓음.
-    // 여러 번 실행해도 하나만 놓임. 다시 실행하면 프리팹 안에서 손본 모양은 처음 상태로 돌아감.
-    // 바꾸기 전에 PlayerRig·MainMenu 를 Backups 폴더에 복사해 둠
     public static class SettingsMenuBake
     {
         private const string PrefabPath = "Assets/Members/HJH/05.Data/Prefab/UI/SettingsMenu.prefab";
@@ -60,7 +57,6 @@ namespace HJH.EditorTools
                 File.Copy(path, $"{BackupFolder}/{Path.GetFileNameWithoutExtension(path)}_before_settings_{stamp}{Path.GetExtension(path)}.bak", true);
         }
 
-        // 있으면 열어서 다시 굽기 (루트가 유지돼서 놓아 둔 인스턴스 연결이 안 끊김)
         private static void BakePrefab()
         {
             bool exists = AssetDatabase.LoadAssetAtPath<GameObject>(PrefabPath) != null;

@@ -4,9 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 시전 몸 동작마다 "손을 뻗는 순간(release)" 시각. 굽기 도구가 손 속도가 가장 빠른 프레임으로 자동 기록
-    // (HJH/애니/원소 스킬 시전 모션 굽기). Resources/HJH/CastMotions.asset 하나.
-    // 스킬은 누르는 즉시 나가므로, 캐릭터 애니메이터가 이 시각 직전부터 클립을 틀어서 동작과 이펙트가 맞게 함.
     [CreateAssetMenu(menuName = "HJH/Cast Motion Set", fileName = "CastMotions")]
     public class CastMotionSet : ScriptableObject
     {

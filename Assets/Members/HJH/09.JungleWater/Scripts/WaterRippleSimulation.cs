@@ -1,14 +1,11 @@
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 맵 전체를 덮는 텍스처 한 장에서 물결 파동을 돌린다 (Custom Render Texture + JungleRippleSim.shader).
-    // 물 셰이더는 전역 값 _JungleRippleTex / _JungleRippleArea 로 결과를 읽는다.
     [DefaultExecutionOrder(-50)]
     public class WaterRippleSimulation : MonoBehaviour
     {
-        private const int MaxDrops = 32;   // 셰이더의 MAX_DROPS 와 같아야 함
+        private const int MaxDrops = 32;
         private const int MaxStepsPerFrame = 4;
 
         [SerializeField] private Shader simShader;
@@ -47,7 +44,6 @@ namespace Assets.Members.HJH.Environment
 
         private void OnValidate() => SyncFromSurface();
 
-        // 물 판의 위치·크기 → 물 높이, 시뮬레이션 영역
         private void SyncFromSurface()
         {
             if (waterSurface == null)
@@ -59,7 +55,6 @@ namespace Assets.Members.HJH.Environment
             areaSize = Mathf.Max(b.size.x, b.size.z);
         }
 
-        // 물 판이 연결 안 돼 있으면 물 셰이더(ShallowWater)를 쓰는 가장 큰 판을 찾는다 (씬에서 이름을 바꿔도 동작)
         private void FindSurfaceIfMissing()
         {
             if (waterSurface != null)
@@ -88,10 +83,8 @@ namespace Assets.Members.HJH.Environment
             FindSurfaceIfMissing();
             SyncFromSurface();
 
-            // 넓은 맵에서도 물결이 뭉개지지 않게 약 10cm 당 1칸 (512~2048)
             resolution = Mathf.Clamp(Mathf.NextPowerOfTwo(Mathf.CeilToInt(areaSize / 0.1f)), resolution, 2048);
 
-            // 스킬 물튀김은 리스너가 있어야 동작 → 없으면 붙인다
             if (GetComponent<WaterSkillSplashListener>() == null)
                 gameObject.AddComponent<WaterSkillSplashListener>();
 
@@ -141,21 +134,18 @@ namespace Assets.Members.HJH.Environment
 
         private void Update()
         {
-            // 프레임레이트와 상관없이 일정한 속도로 퍼지도록 고정 간격으로 계산
             _stepAccumulator += Time.deltaTime * stepsPerSecond;
             int steps = Mathf.Min((int)_stepAccumulator, MaxStepsPerFrame);
             if (steps == 0)
-                return;   // 이번 프레임은 계산 없음 → 물방울은 다음 프레임에 들어간다
+                return;
 
             _stepAccumulator = Mathf.Min(_stepAccumulator - steps, 1f);
 
-            // 같은 물방울이 계산 횟수만큼 반복해서 들어가므로 나눠 준다
             for (int i = 0; i < _dropCount; i++)
                 _drops[i].w /= steps;
 
             _material.SetVectorArray(DropsId, _drops);
             _material.SetFloat(DropCountId, _dropCount);
-            // settleSeconds 동안 세기가 5% 로 줄도록 한 걸음마다 곱할 값
             float damping = Mathf.Pow(0.05f, 1f / (Mathf.Max(0.1f, settleSeconds) * stepsPerSecond));
             _material.SetFloat(DampingId, damping);
             _texture.Update(steps);
@@ -169,13 +159,11 @@ namespace Assets.Members.HJH.Environment
             return uv.x >= 0f && uv.x <= 1f && uv.y >= 0f && uv.y <= 1f;
         }
 
-        // 아래쪽 바닥이 수면보다 낮으면 물 위
         public bool IsOverWater(Vector3 position)
         {
             if (!Contains(position))
                 return false;
 
-            // 적·나무 줄기에 먼저 맞을 수 있으니 가장 낮은 지점(= 바닥)을 쓴다
             Vector3 origin = new(position.x, Mathf.Max(position.y, waterHeight) + 2f, position.z);
             int count = Physics.RaycastNonAlloc(origin, Vector3.down, GroundHits, 50f, groundMask, QueryTriggerInteraction.Ignore);
             if (count == 0)

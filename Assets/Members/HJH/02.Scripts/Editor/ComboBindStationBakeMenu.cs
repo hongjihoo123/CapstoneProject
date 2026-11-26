@@ -5,17 +5,14 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Editor
 {
-    // ComboBindStation 프리팹 연출 굽기: 코어/링 피벗 정리 + 루프 애니메이션 + 라이트 위치.
-    // 속도·밝기 같은 값은 만들어진 Idle.anim / 라이트에서 직접 수정 (다시 굽기 해도 이미 정리된 구조는 재사용)
     public static class ComboBindStationBakeMenu
     {
         private const string PrefabPath = "Assets/Members/HJH/05.Data/Prefab/UI/ComboBindStation.prefab";
         private const string AnimDir = "Assets/Members/HJH/05.Data/Combo/BindStation";
         private const string ClipPath = AnimDir + "/ComboBindStation_Idle.anim";
         private const string ControllerPath = AnimDir + "/ComboBindStation.controller";
-        private const float LoopSeconds = 12f;   // 클립 한 바퀴 길이. 속도는 Animator Speed 나 키로 조절
+        private const float LoopSeconds = 12f;
 
-        // FBX 폴더 이름 앞부분으로 파츠 구분 (Tripo 생성 순서)
         private static readonly Dictionary<string, string> PartByGuidPrefix = new()
         {
             { "4ae70083", "RingA" },
@@ -46,7 +43,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                     return;
                 }
 
-                // 구조 정리 전에 월드 기준 중심을 먼저 잡는다
                 Bounds coreB = WorldBounds(parts["Core"]);
                 Bounds baseB = WorldBounds(parts["Base"]);
                 Vector3 center = coreB.center;
@@ -55,10 +51,8 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 floating.position = center;
                 floating.rotation = Quaternion.identity;
 
-                // 코어: Core 피벗(Y 회전) 아래에 모델
                 Transform corePivot = Rewrap(floating, "Core", parts["Core"], center, Quaternion.identity);
 
-                // 링: Tilt(고정, 링 축을 위로 맞춤) → Spin(Y 회전 애니) → 모델
                 Transform ringA = RewrapRing(floating, "RingA", parts["RingA"], center);
                 Transform ringB = RewrapRing(floating, "RingB", parts["RingB"], center);
 
@@ -84,7 +78,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             }
         }
 
-        // ── 파츠 찾기 (이미 Floating 안으로 옮겼어도 찾음) ─────────────
         private static Dictionary<string, Transform> FindParts(Transform visual)
         {
             var result = new Dictionary<string, Transform>();
@@ -115,7 +108,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             return go.transform;
         }
 
-        // 피벗(center, rot) 만들고 모델을 월드 위치 유지한 채 그 아래로. 피벗 Transform 반환
         private static Transform Rewrap(Transform floating, string name, Transform model, Vector3 center, Quaternion rot)
         {
             Transform pivot = GetOrCreate(floating, name);
@@ -141,7 +133,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             return spin;
         }
 
-        // 링의 법선: 메시 로컬 바운드에서 가장 얇은 축 → 월드 방향
         private static Vector3 RingNormal(Transform model)
         {
             var mf = model.GetComponentInChildren<MeshFilter>(true);
@@ -153,7 +144,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             return n;
         }
 
-        // ── 애니메이션 ───────────────────────────────────────────
         private static AnimationClip BuildClip(float baseY)
         {
             EnsureFolder(AnimDir);
@@ -165,7 +155,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             }
             clip.ClearCurves();
 
-            // 둥실: 위아래 (12초에 3번)
             const float bob = 0.08f;
             var bobCurve = new AnimationCurve(
                 new Keyframe(0f, 0f), new Keyframe(1f, bob), new Keyframe(3f, -bob), new Keyframe(4f, 0f),
@@ -177,7 +166,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             for (int i = 0; i < bobAbs.length; i++) { AnimationUtility.SetKeyLeftTangentMode(bobAbs, i, AnimationUtility.TangentMode.Auto); AnimationUtility.SetKeyRightTangentMode(bobAbs, i, AnimationUtility.TangentMode.Auto); }
             clip.SetCurve("Floating", typeof(Transform), "localPosition.y", bobAbs);
 
-            // 회전: 코어 느리게 1바퀴, 링A 2바퀴, 링B 반대로 3바퀴 (12초 기준)
             clip.SetCurve("Floating/Core", typeof(Transform), "localEulerAnglesRaw.y", Linear(0f, 360f));
             clip.SetCurve("Floating/RingA_Tilt/Spin", typeof(Transform), "localEulerAnglesRaw.y", Linear(0f, 720f));
             clip.SetCurve("Floating/RingB_Tilt/Spin", typeof(Transform), "localEulerAnglesRaw.y", Linear(0f, -1080f));
@@ -215,7 +203,6 @@ namespace Assets.Members.HJH._02.Scripts.Editor
             return controller;
         }
 
-        // ── 라이트: 위치만 (색·세기·각도는 그대로) ────────────────
         private static void PlaceLights(Transform root, Bounds baseB, Bounds coreB)
         {
             Vector3 c = coreB.center;
@@ -228,17 +215,14 @@ namespace Assets.Members.HJH._02.Scripts.Editor
                 else if (l.name == "GroundGlow") ground = l;
             }
 
-            // 코어 글로우: 코어 한가운데 (위아래 둥실은 작아서 고정)
             if (core != null) core.transform.position = c;
 
-            // 위에서 내리쬐는 스포트: 코어 위쪽에서 받침대 윗면을 향해 수직으로
             if (spot != null)
             {
                 spot.transform.position = new Vector3(c.x, coreB.max.y + 1.2f, c.z);
                 spot.transform.rotation = Quaternion.Euler(90f, 0f, 0f);
             }
 
-            // 바닥 글로우: 받침대 윗면 바로 위, 주변 바닥·이끼에 푸른 빛 번짐
             if (ground == null && core != null)
             {
                 var go = new GameObject("GroundGlow");

@@ -10,16 +10,12 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 훈련장 새벽 분위기: 낮게 비치는 해(긴 그림자) · 푸른 보랏빛 그늘 · 옅은 안개 · 후처리 · 화로 불빛, 그리고 가림 투명화 끄기.
-    //  - 맵을 다시 만들지 않고 조명·머티리얼·Volume 만 바꿈 → 손으로 옮긴 배치는 그대로
-    //  - 값을 바꾸고 싶으면 아래 숫자를 고치고 메뉴를 다시 실행 (맵 만들기 메뉴도 마지막에 이걸 부름)
     public static class TrainingGroundDawn
     {
         private const string ScenePath = "Assets/Members/HJH/01.Scene/Map_Training.unity";
         private const string DataDir = "Assets/Members/HJH/05.Data/Training";
         private const string ProfilePath = DataDir + "/VP_Training_Dawn.asset";
 
-        // 해: 고도(낮을수록 그림자가 길어짐), 방위(화면 기준. 음수 = 화면 오른쪽 아래에서 왼쪽 위로 비춤)
         private const float SunElevation = 27f;
         private const float SunScreenYaw = -55f;
         private const float CameraYaw = 45f;
@@ -92,7 +88,6 @@ namespace HJH.EditorTools
             RenderSettings.fogEndDistance = 80f;
         }
 
-        // 훈련장 전용 머티리얼만 손댐: 그늘은 푸른 보라, 그림자는 또렷하게
         private static void Materials()
         {
             foreach (string guid in AssetDatabase.FindAssets("t:Material", new[] { DataDir }))
@@ -114,7 +109,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // 미니맵 카메라는 높이 있어서 안개를 그대로 받음 → 안개를 안 받는 셰이더로
         private static void Unfogged(Material m, Color color)
         {
             m.shader = Shader.Find("Sprites/Default");
@@ -184,7 +178,6 @@ namespace HJH.EditorTools
             return part;
         }
 
-        // 화로 불빛: 점광원(캐릭터·더미가 받음) + 바닥에 번지는 빛 (맵 셰이더는 점광원을 안 받아서 그림으로)
         private static void Braziers(Transform lights)
         {
             Material glow = GlowMaterial();
@@ -249,7 +242,7 @@ namespace HJH.EditorTools
             m.SetTexture("_BaseMap", AssetDatabase.LoadAssetAtPath<Texture2D>(texturePath));
             m.SetColor("_BaseColor", new Color(1f, 0.4f, 0.08f, 0.7f));
             m.SetFloat("_Surface", 1f);
-            m.SetFloat("_Blend", 2f);   // Additive
+            m.SetFloat("_Blend", 2f);
             m.SetFloat("_SrcBlend", (float)BlendMode.SrcAlpha);
             m.SetFloat("_DstBlend", (float)BlendMode.One);
             m.SetFloat("_ZWrite", 0f);
@@ -260,8 +253,6 @@ namespace HJH.EditorTools
             return m;
         }
 
-        // 이 맵은 시야를 가리는 것이 없어서 가까이 가면 투명해지는 처리를 끔.
-        // 컴포넌트를 지우지 않고 꺼 둠 (없으면 플레이할 때 자동으로 다시 붙음)
         private static void DisableOcclusionFade(Scene scene)
         {
             foreach (GameObject go in scene.GetRootGameObjects())

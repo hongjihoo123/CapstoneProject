@@ -4,16 +4,12 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Root of every effect prefab (added automatically if missing). Handles pooling, tint, and lifetime:
-    // one-shots return to the pool by themselves once all particles died and no driver is playing;
-    // held effects (handles) do the same after Kill.
     public class FxPrefabInstance : MonoBehaviour
     {
         private static readonly int TintId = Shader.PropertyToID("_Tint");
         private const int DefaultMaxInstances = 12;
         private const float MaxLingerSeconds = 8f;
 
-        // Per prefab: idle instances ready to reuse, and every instance ever made (for the cap).
         private sealed class Pool
         {
             public readonly Stack<FxPrefabInstance> Idle = new();
@@ -41,21 +37,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private bool _ringReleased;
         private Color _tint = Color.white;
         private bool _released;
-        private bool _disposable; // edited copy from SourceOverride: destroyed instead of pooled
+        private bool _disposable;
         private bool _stopping;
         private float _stopTime;
         private float _playTime;
 
-        // 타임라인 연출 프리팹 (이펙트·소리를 프레임 단위로 배치한 것). 있으면 파티클 재생·끝 판단을 타임라인이 맡음
         private UnityEngine.Playables.PlayableDirector _director;
         private AudioSource[] _audio;
 
         public bool Held { get; private set; }
 
-        // Test tools (FxWorkbench) can hand back an edited copy to play instead of the prefab file.
-        // Such copies are made fresh every time and destroyed when done (never pooled), so edits show at once.
         public static Func<GameObject, GameObject> SourceOverride;
-        // Called right after such a copy is made (source copy, new instance), before it plays. Used to hide layers for preview.
         public static Action<GameObject, GameObject> OverrideSpawned;
 
         public static FxPrefabInstance Spawn(GameObject prefab, Vector3 position, Quaternion rotation, float scale, in FxParams parameters,
@@ -83,7 +75,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             while (pool.Idle.Count > 0 && instance == null)
                 instance = Usable(pool, pool.Idle.Pop());
 
-            // Cap reached: take over the oldest copy still on screen instead of making a new one.
             if (instance == null && pool.All.Count >= MaxInstancesOf(prefab))
                 instance = Usable(pool, OldestActive(pool));
 
@@ -165,7 +156,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 (driver as IFxPointsReceiver)?.SetPoints(start, end);
         }
 
-        // A copy that lost parts (something destroyed a child) is thrown away instead of reused.
         private static FxPrefabInstance Usable(Pool pool, FxPrefabInstance candidate)
         {
             if (candidate == null || !candidate.IsBroken)
@@ -193,7 +183,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static int MaxInstancesOf(GameObject prefab) =>
             prefab.TryGetComponent(out FxPrefabInstance settings) ? settings.maxInstances : DefaultMaxInstances;
 
-        // Oldest one-shot still playing. Held effects (orbs, circles, auras) are never taken over.
         private static FxPrefabInstance OldestActive(Pool pool)
         {
             FxPrefabInstance oldest = null;
@@ -209,7 +198,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return oldest;
         }
 
-        // Cut whatever is still showing so the copy can start over cleanly.
         private void ResetForReuse()
         {
             if (_director != null)
@@ -220,7 +208,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 trail.Clear();
         }
 
-        // Stops emitting; the effect finishes what is already on screen, then returns to the pool.
         public void Kill()
         {
             if (_released || _stopping)
@@ -237,7 +224,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 trail.emitting = false;
             foreach (IFxDriver driver in _drivers)
                 driver.Stop();
-            // 유지형 타임라인(반복)은 여기서 멈춤. 한 번짜리는 끝까지 틀게 둠
             if (_director != null && _director.extrapolationMode == UnityEngine.Playables.DirectorWrapMode.Loop)
                 _director.Stop();
         }
@@ -253,14 +239,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             foreach (IFxDriver driver in _drivers)
                 driver.Play(parameters);
 
-            // 이펙트에 붙은 소리: 공통 효과음 음소거(muted)와 따로 켜고 끔 (muteFxSounds)
             bool muted = Audio.SoundManager.Library != null && Audio.SoundManager.Library.muteFxSounds;
             foreach (AudioSource source in _audio)
                 source.mute = muted;
 
             if (_director != null)
             {
-                // 파티클 켜고 끄기·소리는 타임라인 트랙이 프레임에 맞춰 함
                 _director.time = 0;
                 _director.Play();
                 return;
@@ -286,14 +270,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (Held || Time.time - _playTime < 0.05f)
                 return;
 
-            // Recompiling during Play keeps the arrays above but drops this one (interfaces don't survive the reload).
             _drivers ??= GetComponentsInChildren<IFxDriver>(true);
 
-            // One-shots never get Kill, so let ring-buffer particles die once the emitters are done.
             if (!_ringReleased && Time.time - _playTime >= _longestDuration)
                 LetParticlesDie();
 
-            // Safety net: nothing should linger this long after it was told to stop.
             if (_stopping && Time.time - _stopTime > MaxLingerSeconds)
             {
                 Release();
@@ -323,7 +304,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                     return false;
             }
 
-            // Trails stay visible for their time after they stop emitting.
             foreach (TrailRenderer trail in _trails)
             {
                 if (trail.emitting || _stopping && Time.time - _stopTime < trail.time)
@@ -386,19 +366,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 ParticleSystem.MainModule main = _systems[i].main;
                 _baseColors[i] = main.startColor;
 
-                // Pooled copies are reused, so they must never destroy or disable themselves when they finish
-                // (imported effects such as Batslash ship with Stop Action = Destroy).
                 main.stopAction = ParticleSystemStopAction.None;
 
-                // Ring Buffer (Loop/Pause Until Replaced) keeps particles alive until new ones replace them.
-                // Keep it while playing for the look, but switch it off at the end or they never die.
                 _ringModes[i] = main.ringBufferMode;
                 if (!main.loop)
                     _longestDuration = Mathf.Max(_longestDuration, main.duration);
             }
 
-            // Effects are visuals only. Imported projectile prefabs ship with colliders and rigidbodies
-            // that would push characters around or block raycasts.
             foreach (Collider body in GetComponentsInChildren<Collider>(true))
                 body.enabled = false;
             foreach (Rigidbody body in GetComponentsInChildren<Rigidbody>(true))
@@ -421,7 +395,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (_director != null)
             {
                 _director.playOnAwake = false;
-                _director.timeUpdateMode = UnityEngine.Playables.DirectorUpdateMode.GameTime;   // 히트스톱·슬로모션 따라감
+                _director.timeUpdateMode = UnityEngine.Playables.DirectorUpdateMode.GameTime;
             }
         }
 

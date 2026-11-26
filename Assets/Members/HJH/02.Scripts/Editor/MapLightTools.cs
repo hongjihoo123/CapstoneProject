@@ -2,22 +2,16 @@ using System.Collections.Generic;
 using UnityEditor;
 using UnityEditor.SceneManagement;
 using UnityEngine;
-using UnityEngine.Rendering;
 
 namespace HJH.EditorTools
 {
-    // 조명 도구 둘:
-    //  1) 발광 꽃·버섯 무리마다 점광원을 달아서 주변 바위·땅이 그 색 빛을 받게 함 (씬에 이미 놓인 것 기준, 다시 돌리면 새로 만듦)
-    //  2) 플레이어 프리팹(PlayerRig)에 위에서 내려다보는 Spot 라이트를 달아 줌 (프리팹이라 모든 맵에 적용)
     public static class MapLightTools
     {
-        private const string RigPath = "Assets/Members/HJH/05.Data/Prefab/PlayerRig.prefab";
         private const string GlowGroup = "GlowLights";
         private const string SpotName = "PlayerSpot";
         private const float Cell = 3.2f;
         private const int MaxLights = 60;
 
-        // ───────────────────────── 1. 발광 오브젝트에 빛 ─────────────────────────
         [MenuItem("HJH/맵/조명/발광 꽃·버섯에 빛 달기 (주변 돌·땅이 빛 받게)")]
         private static void AddGlowLights()
         {
@@ -26,7 +20,6 @@ namespace HJH.EditorTools
             var old = GameObject.Find(GlowGroup);
             if (old != null) Undo.DestroyObjectImmediate(old);
 
-            // 칸(Cell)별로 묶어서 무리마다 빛 하나
             var cells = new Dictionary<Vector2Int, (Vector3 sum, int n, Color color)>();
             foreach (var r in Object.FindObjectsByType<MeshRenderer>(FindObjectsSortMode.None))
             {
@@ -41,7 +34,7 @@ namespace HJH.EditorTools
             if (cells.Count == 0) { Debug.LogWarning("[Glow] 씬에서 GlowFlowers / Mushroom_ 를 찾지 못했습니다."); return; }
 
             var list = new List<KeyValuePair<Vector2Int, (Vector3 sum, int n, Color color)>>(cells);
-            list.Sort((a, b) => b.Value.n.CompareTo(a.Value.n));   // 큰 무리부터, 너무 많으면 자름
+            list.Sort((a, b) => b.Value.n.CompareTo(a.Value.n));
 
             var group = new GameObject(GlowGroup);
             Undo.RegisterCreatedObjectUndo(group, "Glow lights");
@@ -86,11 +79,9 @@ namespace HJH.EditorTools
                 }
                 return new Color(0.3f, 1f, 0.9f);
             }
-            return new Color(0.3f, 0.62f, 1f);   // 파란 꽃
+            return new Color(0.3f, 0.62f, 1f);
         }
 
-        // ───────────────────────── 2. 플레이어 Spot 라이트 ─────────────────────────
-        // PlayerRigBuilder 가 프리팹을 새로 만들 때도 부름 (다시 만들어도 Spot 이 유지되게)
         internal static bool AddPlayerSpot(Transform rigRoot)
         {
             Transform player = rigRoot.name == "Player" ? rigRoot : rigRoot.Find("Player");
@@ -113,7 +104,6 @@ namespace HJH.EditorTools
                 l.shadowStrength = 0.8f;
                 l.lightmapBakeType = LightmapBakeType.Realtime;
             }
-            // 위에서 수직으로 내려다봄 (플레이어가 돌아도 빛 방향은 그대로 아래)
             spot.localPosition = new Vector3(0f, 7f, 0f);
             spot.rotation = Quaternion.Euler(90f, 0f, 0f);
             return true;

@@ -4,10 +4,8 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
 {
-    // One-shot circular blast: damage everything in the radius once, play the explosion and the hit feel.
     public static class SkillBlast
     {
-        // Damages everything in the circle once and plays the explosion. Returns the number of targets hit.
         public static int Explode(ISkillContext context, Vector3 center, float radius, float damage, Color color,
             float hitStop = 0f, float shake = 0f, float power = 1f, SkillData skill = null)
         {
@@ -22,7 +20,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
                 hits++;
             }
 
-            // A blast always shakes a little; landing hits adds the freeze.
             context.PlayHitFeel(hits > 0 ? hitStop : 0f, hits > 0 ? shake : shake * 0.4f);
             return hits;
         }
@@ -31,7 +28,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Effects
             context.TryFindGround(point + Vector3.up, out Vector3 ground) ? ground : point;
     }
 
-    // Telegraphed magic circle that fills up and explodes after a delay (traps, delayed strikes).
     public sealed class DelayedBlast : ISkillTimedEffect
     {
         private readonly ISkillContext _context;

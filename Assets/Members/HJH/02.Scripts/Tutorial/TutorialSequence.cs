@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 튜토리얼 단계 목록 (순서대로 실행). 픽 화면용 / 스테이지용 두 개를 씀.
-    // 단계 끼워 넣기 = 단계 에셋을 만들어 이 목록의 원하는 자리에 넣기 (코드 수정 없음).
     [CreateAssetMenu(menuName = "HJH/Tutorial/Sequence", fileName = "Tutorial_Sequence")]
     public class TutorialSequence : ScriptableObject
     {

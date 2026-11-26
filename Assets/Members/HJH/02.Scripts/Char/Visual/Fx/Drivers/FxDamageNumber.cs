@@ -3,10 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 데미지 숫자 (Shape of Dreams 식, StudyNotes/SoD_타격감_분석.md):
-    //   크게 팝 → 잠깐(~0.1초) 그 크기로 멈춤 → 약 60% 로 줄면서 위로 살짝 → 작게 떠 있다가 → 사라짐
-    // 크기 변화 자체가 "쾅" 하는 느낌을 만듦. 크리는 더 크게 튀고 흰 외곽선.
-    // Value = 숫자, Radius = 크기 배율, Tint = 색, NumberStyle = 일반/크리/받은 피해. 항상 카메라를 봄
     public class FxDamageNumber : MonoBehaviour, IFxDriver
     {
         [SerializeField] private TextMeshPro text;
@@ -48,7 +44,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField] private Color normalOutline = new(0.12f, 0.04f, 0.02f, 1f);
         [SerializeField, Range(0f, 1f)] private float normalOutlineWidth = 0.18f;
 
-        // SoD 영상 기준: 종류마다 채움색 / 외곽선 색 / 외곽선 굵기. 인스펙터에서 바로 고쳐 볼 수 있음
         [System.Serializable]
         public struct Look
         {
@@ -88,7 +83,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static TMP_FontAsset _koreanFont;
         private static bool _koreanLoaded;
 
-        // TextMesh Pro 기본 Resources 폴더의 한글 글꼴
         private static TMP_FontAsset KoreanFont
         {
             get
@@ -131,7 +125,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _ => peakScale.x
             };
 
-            // 글자(한글)는 숫자 글꼴에 없어서 한글 글꼴로 바꿔 씀. 숫자로 돌아오면 숫자 글꼴
             _defaultFont ??= text.font;
             bool isText = !string.IsNullOrEmpty(parameters.Text);
             TMP_FontAsset korean = isText ? KoreanFont : null;
@@ -171,7 +164,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         public void Stop() => _playing = false;
 
-        // 적 몸/벽 뒤로 가려지지 않게: 깊이 검사를 끄고 가장 마지막에 그림 (글꼴을 바꾼 뒤마다 다시 적용)
         private void DrawOnTop()
         {
             Material material = text.fontMaterial;
@@ -240,7 +232,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 if (_time < popInTime)
                 {
                     float t = _time / Mathf.Max(0.001f, popInTime);
-                    size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));   // 빨리 커졌다가 끝에서 멈춤
+                    size = Mathf.Lerp(0.4f, _peak, 1f - (1f - t) * (1f - t));
                     rise = 0f;
                 }
                 else if (_time < holdEnd)
@@ -262,27 +254,26 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
             else
             {
-                // 크기: 이징으로 튀어나왔다가 1 로 정착. 위치: 종류마다 다른 곡선 (전체 수명 q 0~1)
                 float q = Mathf.Clamp01(_time / Life);
                 float popTarget = Mathf.Lerp(1f, _peak, 0.7f);
                 float popP = Mathf.Clamp01(_time / (popInTime + popHoldTime + 0.12f));
                 float settle = Mathf.SmoothStep(0f, 1f, (_time - shrinkEnd) / Mathf.Max(0.001f, shrinkTime * 2f));
                 switch (_motion)
                 {
-                    case Motion.Arc:      // 옆으로 포물선을 그리며 튀어 올랐다 떨어짐
+                    case Motion.Arc:
                         size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, 1f - (1f - popP) * (1f - popP)), 1f, settle);
                         rise = 4f * q * (1f - q) + 0.15f * q;
                         lateral = _side * 0.9f * (1f - (1f - q) * (1f - q));
                         break;
-                    case Motion.Bounce:   // 통통 튀며 자리 잡고 천천히 뜸
+                    case Motion.Bounce:
                         size = Mathf.Lerp(Mathf.LerpUnclamped(0.3f, popTarget, OutBounce(popP)), 1f, settle);
                         rise = 0.55f * OutBounce(Mathf.Clamp01(_time / (Life * 0.55f))) + floatSpeed * 0.5f * q;
                         break;
-                    case Motion.Elastic:  // 고무줄처럼 늘었다 줄었다 하며 위로
+                    case Motion.Elastic:
                         size = Mathf.Lerp(Mathf.LerpUnclamped(0.25f, popTarget, OutElastic(popP)), 1f, settle);
                         rise = 0.75f * OutElastic(Mathf.Clamp01(_time / (Life * 0.7f)));
                         break;
-                    default:              // Swing: 살짝 넘쳤다 돌아오며 좌우로 흔들림
+                    default:
                         size = Mathf.Lerp(Mathf.LerpUnclamped(0.4f, popTarget, OutBack(popP)), 1f, settle);
                         rise = 0.95f * OutBack(q);
                         lateral = _side * 0.3f * Mathf.Sin(q * Mathf.PI * 3f) * (1f - q);
@@ -290,9 +281,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 }
             }
 
-            // 머리 위 체력바를 가리지 않게 올라가는 높이 제한 (Classic 포함)
             if (_motion != Motion.Classic)
-                rise *= _riseCap / 0.95f;   // 곡선은 최대 약 0.95 기준으로 짜여 있어서 비율로 줄여 모양을 지킴
+                rise *= _riseCap / 0.95f;
             rise = Mathf.Min(rise, _riseCap * 1.15f);
 
             float alpha = 1f - Mathf.Clamp01((_time - (Life - fadeOutTime)) / Mathf.Max(0.001f, fadeOutTime));

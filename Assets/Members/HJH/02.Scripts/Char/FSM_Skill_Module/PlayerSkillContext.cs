@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.SkillUpgrade;
 using Members.KYR._01.Scripts.Stats;
@@ -11,12 +10,11 @@ using UnityEngine.AI;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // ISkillContext for the player: adapts PlayerAgent / PlayerMover / weapon / stats / HitFeel to the skill API.
     public sealed class PlayerSkillContext : ISkillContext
     {
         private static readonly IReadOnlyList<IDamageable> NoTargets = new List<IDamageable>();
         private static readonly Collider[] OverlapBuffer = new Collider[64];
-        private const float HitImpactRadius = 0.8f;   // 적 하나를 맞혔을 때 알리는 충격 반지름
+        private const float HitImpactRadius = 0.8f;
 
         private readonly PlayerAgent _player;
         private readonly LayerMask _targetMask;
@@ -28,7 +26,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         {
             _player = player;
             _targetMask = targetMask;
-            // 대시·바닥 찾기용 환경 마스크에 Obstacle/Ground 를 항상 포함 (지형이 Ground, 장애물이 Obstacle 레이어라서)
             _environmentMask = environmentMask.value | BulletLayers.Environment;
         }
 
@@ -62,8 +59,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IPassive Passive { get; set; }
 
-        // 스킬이 시작될 때마다(ActiveSkill 이 새로 들어올 때) 그 스킬의 시전 번호를 새로 매김.
-        // 시전이 끝난 뒤 터지는 지연 효과(파편·폭발)도 같은 스킬이면 같은 번호 → 연출이 "이번 시전 누적 피해"를 셀 수 있음
         private readonly Dictionary<SkillData, int> _castIds = new();
         private int _castSerial;
         private SkillData _activeSkill;
@@ -99,7 +94,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             return _faceDash && _player.Mover.IsDashing;
         }
 
-        // 조준 잠금. 거는 쪽이 중간에 사라져서 ReleaseAim 을 못 불러도 안 굳게 일정 시간 지나면 저절로 풀림
         private const float AimLockTimeout = 3f;
         private bool _aimLocked;
         private bool _moveLocked;
@@ -121,7 +115,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             {
                 _speedBeforeLock = _player.Mover.OwnerSpeedMultiplier;
                 _player.Mover.SetOwnerSpeedMultiplier(0f);
-                _player.Mover.StopPlanarImmediately();   // 배율만 0이면 달리던 속도가 서서히 줄면서 미끄러짐
+                _player.Mover.StopPlanarImmediately();
                 _moveLocked = true;
             }
         }
@@ -193,7 +187,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void CancelDash() => _player.Mover.CancelDash();
 
-        // Capsule sweep against ground/walls only, so enemies and anything on other layers are ignored.
         public bool SweepEnvironment(Vector3 from, Vector3 to)
         {
             Vector3 delta = to - from;
@@ -222,7 +215,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Vector3 delta = to - from;
             float distance = delta.magnitude;
             if (distance > 0.0001f
-                && Physics.Raycast(from, delta / distance, out RaycastHit hit, distance, BulletLayers.Environment, QueryTriggerInteraction.Ignore))   // 투사체·관통탄은 Obstacle/Ground 에만 막힘 (보이지 않는 벽은 통과)
+                && Physics.Raycast(from, delta / distance, out RaycastHit hit, distance, BulletLayers.Environment, QueryTriggerInteraction.Ignore))
             {
                 hitPoint = hit.point;
                 return true;
@@ -240,7 +233,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     continue;
 
                 if (CrowdControl.IsImmovable(component))
-                    continue;   // 보스는 안 밀림
+                    continue;
 
                 Transform root = component.transform;
                 Vector3 offset = root.position - center;
@@ -255,7 +248,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
-        // Drags enemies toward the center by up to maxDistance, stopping just short of it.
         public void PullToward(Vector3 center, float radius, float maxDistance)
         {
             const float stopDistance = 0.8f;
@@ -266,7 +258,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     continue;
 
                 if (CrowdControl.IsImmovable(component))
-                    continue;   // 보스는 안 끌려옴
+                    continue;
 
                 Transform root = component.transform;
                 Vector3 offset = center - root.position;
@@ -286,7 +278,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 return;
 
             if (CrowdControl.IsImmovable(component))
-                return;   // 보스는 안 밀림
+                return;
 
             direction.y = 0f;
             if (direction.sqrMagnitude < 0.0001f)
@@ -296,7 +288,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             InterruptTarget(target);
         }
 
-        // 스킬로 날리거나 끌어당긴 적은 하던 공격·스킬이 끊김 (실제로 끊는 건 적 쪽 EnemyCcInterrupt)
         private const float DisplaceInterruptTime = 0.35f;
 
         private static void InterruptTarget(IDamageable target)
@@ -307,7 +298,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         private static void MoveTarget(Transform root, Vector3 delta)
         {
-            // 마지막 방어선: 어느 스킬이 불러도 보스는 안 움직임 (밀치기·밀어내기·끌어당기기 전부 여기를 지남)
             if (CrowdControl.IsImmovable(root))
                 return;
 
@@ -328,7 +318,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Vector3 center = position + body.center;
             float half = Mathf.Max(0f, body.height * 0.5f - body.radius);
 
-            // Lifted slightly so standing on the ground at the destination does not count as a hit.
             bottom = center - Vector3.up * half + Vector3.up * 0.05f;
             top = center + Vector3.up * half;
         }
@@ -349,7 +338,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public IReadOnlyList<IDamageable> OverlapSphere(Vector3 center, float radius)
         {
-            SkillImpacts.Raise(center, radius, ActiveSkill);   // 범위 공격이 닿은 곳 (물 튀김, 연출 등)
+            SkillImpacts.Raise(center, radius, ActiveSkill);
 
             var results = new List<IDamageable>();
             int count = Physics.OverlapSphereNonAlloc(center, radius, OverlapBuffer, _targetMask, QueryTriggerInteraction.Collide);
@@ -400,11 +389,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public void DealDamage(IDamageable target, float amount, SkillData skill)
         {
-            // 맞은 적의 발밑 (투사체·빔·근접처럼 범위 판정이 없는 스킬도 여기서 잡힌다)
             if (target is Component hitTarget)
                 SkillImpacts.Raise(hitTarget.transform.position, HitImpactRadius, skill);
 
-            // 런 골드로 산 스킬 기본 데미지 강화 (계수 공식보다 먼저)
             if (skill != null)
                 amount = SkillUpgradeService.ModifyDamage(skill, amount);
 
@@ -416,13 +403,10 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                     _boosts.Remove(skill);
             }
 
-            // 아웃게임 스킬 트리 강화: 이 스킬의 원소(또는 모든 원소)에 걸린 피해 보너스
             if (skill != null)
                 amount *= SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, skill);
             else
-                amount *= SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, SkillUpgradeScope.Charged);   // 패시브 충전탄
-            // 연출(CombatFeedback)이 "스킬로 맞았나 / 패시브로 맞았나"를 알 수 있게 출처를 표시.
-            // 스킬 상태 밖에서 이 통로로 들어오는 피해 = 패시브 (충전 관통탄, 룬 공명 등)
+                amount *= SkillUpgrades.Multiplier(SkillUpgradeKind.Damage, SkillUpgradeScope.Charged);
             int castId = skill != null && _castIds.TryGetValue(skill, out int id) ? id : 0;
             SkillUpgradeScope prevSlot = CritSystem.CurrentSlot;
             CritSystem.CurrentSlot = prevSlot == SkillUpgradeScope.All ? SkillUpgrades.SlotScopeOf(skill) : prevSlot;

@@ -7,9 +7,6 @@ using Mod = Assets.Members.HJH._02.Scripts.Element.ComboStatBuff.Mod;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 원소 순서 하나의 콤보 효과 계산 결과 (ComboElementTable 기준).
-    //  - Parts: 어디서 온 효과인지 한 줄씩 (불 / 물 / 불→물 상성 ...) → 바인딩 창 미리보기
-    //  - Total: 같은 스탯끼리 합치고 길이 배율까지 곱한 최종 효과 → 실제 버프
     public sealed class ComboEffect
     {
         public readonly struct Part
@@ -56,7 +53,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 }
             }
 
-            effect.Scale = table.ScaleFor(sequence.Count) * SkillUpgrades.Multiplier(SkillUpgradeKind.ComboPower);   // 스킬 트리 강화 포함
+            effect.Scale = table.ScaleFor(sequence.Count) * SkillUpgrades.Multiplier(SkillUpgradeKind.ComboPower);
             effect.Sum();
             return effect;
         }
@@ -90,7 +87,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             }
         }
 
-        // "공격력 +25% · 마법력 +20%"
         public string Summary(string separator = " · ")
         {
             if (_total.Count == 0)
@@ -112,7 +108,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
         {
             string sign = mod.value >= 0f ? "+" : "-";
             float abs = UnityEngine.Mathf.Abs(mod.value);
-            // 1 미만의 고정값은 비율 스탯(피해 감소 등)이라 % 로 보여줌
             bool whole = mod.type == StatModifierType.Flat && (abs >= 1f || abs == 0f);
             return whole ? $"{sign}{abs:0}" : $"{sign}{abs * 100f:0}%";
         }

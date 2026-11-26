@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Weapon slash: a ribbon whose head sweeps around the follow target with a fading tail.
-    // The slash plane / arc / width come from SwingShape (set per combo step on the weapon data).
-    // tip = an optional child (e.g. glow particles) that rides the head while it sweeps.
     public class FxSwipe : MonoBehaviour, IFxDriver, IFxTintReceiver
     {
         private static readonly Quaternion Flat = Quaternion.LookRotation(Vector3.up, Vector3.forward);
@@ -85,7 +82,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Quaternion facing = Quaternion.LookRotation(forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.forward) * _shape.PlaneRotation;
             Vector3 center = _origin.position + Vector3.up * _shape.height;
 
-            // Ribbon lies in the slash plane (ignored when the line faces the camera).
             line.transform.rotation = Quaternion.Normalize(facing * Flat);
             line.positionCount = points;
             for (int i = 0; i < points; i++)

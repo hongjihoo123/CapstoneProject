@@ -11,11 +11,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 왕국 훈련장 (튜토리얼 맵): 낡은 벽돌 + 덩굴 성벽으로 둘러싸인 모래 연무장. 가운데 연무 원, 둘레에 더미·과녁·무기대·화로.
-    //  - 메뉴 한 번으로 텍스처·머티리얼·메시·훈련 더미 프리팹·씬(Map_Training)까지 만들고 빌드 설정에 넣음
-    //  - 다시 실행하면 덮어씀 (기존 씬은 _RemovedBackup 에 복사). 손으로 다듬은 뒤에는 다시 돌리지 말 것
-    //  - 배치 좌표는 "화면 기준": +z = 화면 위, +x = 화면 오른쪽. 카메라 yaw 45 에 맞춰 Root 를 45도 돌려 놓음
-    //  - 카메라 쪽(아래) 벽은 낮게, 먼 쪽(위) 벽은 높게
     public static class TrainingGroundBuilder
     {
         private const string SceneDir = "Assets/Members/HJH/01.Scene/";
@@ -55,7 +50,6 @@ namespace HJH.EditorTools
             Debug.Log("[Training] 완료: " + ScenePath);
         }
 
-        // ───────────────────────── 씬 ─────────────────────────
         private static void BuildScene()
         {
             if (File.Exists(ScenePath))
@@ -81,7 +75,6 @@ namespace HJH.EditorTools
             kit.Emit(visual, Mats, MeshPath);
             BuildMiniMap(root);
 
-            // 마무리 훈련에서 더미가 설 자리
             Transform spots = Child(root, "DummySpots");
             Vector2[] spotXz = { new(-5.5f, 2f), new(5.5f, 2f), new(0f, 5.5f), new(-3.2f, -2f), new(3.2f, -2f) };
             for (int i = 0; i < spotXz.Length; i++)
@@ -113,7 +106,7 @@ namespace HJH.EditorTools
             if (!PlayerRigBuilder.PlaceRigAt(root.TransformPoint(new Vector3(0f, 0.1f, -8f))))
                 Debug.LogError("[Training] PlayerRig 프리팹을 못 놓았습니다.");
 
-            TrainingGroundDawn.Apply(scene);   // 새벽 조명·후처리, 가림 투명화 끄기
+            TrainingGroundDawn.Apply(scene);
 
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene, ScenePath);
@@ -138,18 +131,15 @@ namespace HJH.EditorTools
 
         private static void BuildGround(Kit kit, Transform colliders)
         {
-            // 성 바닥(바깥) → 모래 연무장(안)
             kit.Floor("OuterStone", new[] { new Vector2(-60, -60), new Vector2(-60, 60), new Vector2(60, 60), new Vector2(60, -60) }, -0.04f, 5f);
             Vector2[] sand = Outline(0.4f);
             kit.Floor("Sand", sand, 0f, 6f);
 
             BoxCol(colliders, "Floor", new Vector3(0f, -0.5f, 0f), Quaternion.identity, new Vector3(37f, 1f, 31f), "Ground");
 
-            // 가운데 연무 원: 낡은 돌 테두리 (바닥에 박힌 모양이라 걸리지 않음)
             Ring(kit, 8.2f, 24, 0.55f);
             Ring(kit, 2.1f, 12, 0.35f);
 
-            // 잔돌
             for (int i = 0; i < 170; i++)
             {
                 var p = new Vector3(L(-16f, 16f), 0f, L(-13f, 13f));
@@ -170,7 +160,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // 연무장 윤곽 (모서리를 깎은 팔각형), grow 만큼 바깥으로
         private static Vector2[] Outline(float grow)
         {
             float w = 17f + grow, d = 14f + grow, c = 5f;
@@ -181,11 +170,9 @@ namespace HJH.EditorTools
             };
         }
 
-        // ───────────────────────── 성벽 ─────────────────────────
         private static void BuildWalls(Kit kit, Transform colliders)
         {
             Vector2[] v = Outline(0f);
-            // v 순서: 남서 모서리부터 서 → 북서 → 북 → 북동 → 동 → 남동 → 남
             float[] heights = { 1.5f, 4.6f, 6.2f, 7f, 6.2f, 4.6f, 1.5f, 1f };
             for (int i = 0; i < v.Length; i++)
             {
@@ -199,7 +186,6 @@ namespace HJH.EditorTools
 
                 WallSegment(kit, m, length, heights[i], gate: i == 3);
 
-                // 보이는 벽(총알 막힘) + 낮은 벽 위로도 못 넘게 보이지 않는 벽
                 Quaternion rot = Quaternion.LookRotation(inward);
                 float h = heights[i];
                 BoxCol(colliders, "Wall_" + i, mid + rot * new Vector3(0f, h * 0.5f, -WallThick * 0.5f + 0.1f), rot,
@@ -209,13 +195,11 @@ namespace HJH.EditorTools
             }
         }
 
-        // 벽 좌표: x = 벽을 따라, y = 높이, z = 0 이 안쪽 면 (+z 가 마당 쪽)
         private static void WallSegment(Kit kit, Matrix4x4 m, float length, float h, bool gate)
         {
             kit.Box("Brick", m, new Vector3(0f, h * 0.5f, -WallThick * 0.5f), new Vector3(length + 0.5f, h, WallThick));
             kit.Box("Stone", m, new Vector3(0f, 0.25f, 0.08f), new Vector3(length, 0.5f, 0.18f));
 
-            // 위 갓돌: 조각조각 (낡아서 들쭉날쭉)
             for (float x = -length * 0.5f; x < length * 0.5f - 0.05f;)
             {
                 float w = Mathf.Min(L(0.9f, 1.7f), length * 0.5f - x);
@@ -225,7 +209,6 @@ namespace HJH.EditorTools
 
             if (h >= 4f)
             {
-                // 성가퀴 (몇 개는 깨지거나 빠짐)
                 for (float x = -length * 0.5f + 0.6f; x < length * 0.5f - 0.4f; x += 1.5f)
                 {
                     if (R() < 0.12f) continue;
@@ -234,12 +217,10 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 벽돌이 튀어나온 자국
             int bumps = Mathf.RoundToInt(length * h * 0.12f);
             for (int i = 0; i < bumps; i++)
                 kit.Box("Brick", m, new Vector3(L(-0.47f, 0.47f) * length, L(0.6f, Mathf.Max(0.7f, h - 0.3f)), 0.02f), new Vector3(L(0.35f, 0.75f), 0.18f, L(0.05f, 0.11f)));
 
-            // 기둥
             int bays = Mathf.Max(1, Mathf.RoundToInt(length / (gate ? 5.5f : 4.6f)));
             float bay = length / bays;
             for (int i = 0; i <= bays; i++)
@@ -312,7 +293,6 @@ namespace HJH.EditorTools
                 kit.Box("Stone", m, new Vector3(s * 2.35f, 1.7f, 0.2f), new Vector3(0.7f, 3.4f, 0.5f));
             }
             Arch(kit, m, new Vector3(0f, 3.4f, 0.2f), 2.35f, 11, 0.7f, 0.5f);
-            // 문 앞 돌계단 (낮아서 올라설 수 있어 보이지만 벽 앞 장식)
             for (int i = 0; i < 3; i++)
                 kit.Box("Stone", m, new Vector3(0f, 0.04f + (2 - i) * 0.05f, 0.35f + i * 0.45f), new Vector3(5.2f + i * 0.6f, 0.08f + (2 - i) * 0.1f, 0.5f));
         }
@@ -328,7 +308,6 @@ namespace HJH.EditorTools
             kit.Box("Gold", m, new Vector3(x, top - 0.16f, 0.37f), new Vector3(width, 0.08f, 0.02f));
         }
 
-        // 덩굴: 벽 위에서 아래로 늘어지는 줄기 + 잎 뭉치, 바닥에서 타고 오르는 것 조금
         private static void Vines(Kit kit, Matrix4x4 m, float length, float h, bool gate)
         {
             int strands = Mathf.RoundToInt(length * (h >= 4f ? 1.05f : 0.6f));
@@ -364,7 +343,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 갓돌 위에 덮인 잎
             int tops = Mathf.RoundToInt(length * 1.4f);
             for (int i = 0; i < tops; i++)
             {
@@ -375,10 +353,8 @@ namespace HJH.EditorTools
             }
         }
 
-        // ───────────────────────── 바깥 성 건물 ─────────────────────────
         private static void BuildCastle(Kit kit)
         {
-            // 북쪽 본관
             Matrix4x4 keep = Matrix4x4.TRS(new Vector3(0f, 0f, 20.5f), Quaternion.Euler(0f, 180f, 0f), Vector3.one);
             kit.Box("Brick", keep, new Vector3(0f, 5f, -2.5f), new Vector3(26f, 10f, 5f));
             kit.Box("Stone", keep, new Vector3(0f, 10.2f, -2.5f), new Vector3(27f, 0.4f, 6f));
@@ -394,7 +370,6 @@ namespace HJH.EditorTools
                 Tower(kit, new Vector3(s * 21.5f, 0f, -6f), 2.1f, 6f);
                 Tower(kit, new Vector3(s * 20.5f, 0f, -16f), 2f, 2.4f, roof: false);
 
-                // 옆 회랑 지붕
                 var side = Matrix4x4.TRS(new Vector3(s * 21f, 0f, 1.5f), Quaternion.Euler(0f, -s * 90f, 0f), Vector3.one);
                 kit.Box("Brick", side, new Vector3(0f, 1.8f, 0f), new Vector3(13f, 3.6f, 3f));
                 kit.Box("Roof", side * Matrix4x4.TRS(new Vector3(0f, 4.05f, 0.7f), Quaternion.Euler(26f, 0f, 0f), Vector3.one), Vector3.zero, new Vector3(13.4f, 0.22f, 2.3f));
@@ -415,7 +390,6 @@ namespace HJH.EditorTools
                     Matrix4x4 merlon = m * Matrix4x4.Rotate(Quaternion.Euler(0f, i * 45f, 0f));
                     kit.Box("Brick", merlon, new Vector3(0f, height + 0.65f, radius * 0.9f), new Vector3(0.8f, 0.55f, 0.45f));
                 }
-            // 벽을 타고 오른 덩굴
             for (int i = 0; i < Mathf.RoundToInt(radius * height * 3f); i++)
             {
                 float a = L(0f, 360f), y = Mathf.Pow(R(), 1.6f) * height * 0.8f;
@@ -426,10 +400,8 @@ namespace HJH.EditorTools
             }
         }
 
-        // ───────────────────────── 소품 ─────────────────────────
         private static void BuildProps(Kit kit, Transform colliders, Transform lights)
         {
-            // 벽 쪽 나무 더미 (장식, 맞으면 총알이 막힘)
             foreach (var (x, z, yaw) in new[] { (-13.8f, 3.5f, 70f), (-14.2f, -3f, 100f), (13.8f, -2.5f, -80f), (13.2f, -7.5f, -50f) })
             {
                 var m = Matrix4x4.TRS(new Vector3(x, 0f, z), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
@@ -442,7 +414,6 @@ namespace HJH.EditorTools
                 BoxCol(colliders, "Post", new Vector3(x, 1f, z), Quaternion.identity, new Vector3(0.7f, 2f, 0.7f), "Obstacle");
             }
 
-            // 과녁
             foreach (var (x, z, yaw) in new[] { (-14.3f, 8.2f, 125f), (-11.4f, 11.2f, 145f) })
             {
                 var m = Matrix4x4.TRS(new Vector3(x, 0f, z), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
@@ -457,7 +428,6 @@ namespace HJH.EditorTools
                 BoxCol(colliders, "Target", new Vector3(x, 1.1f, z), Quaternion.Euler(0f, yaw, 0f), new Vector3(1.5f, 2.2f, 0.7f), "Obstacle");
             }
 
-            // 무기대
             foreach (var (x, z, yaw) in new[] { (15.9f, 2.2f, -90f), (15.9f, -3.4f, -90f), (-7.5f, 13.1f, 180f), (-15.9f, -6.5f, 90f) })
             {
                 var m = Matrix4x4.TRS(new Vector3(x, 0f, z), Quaternion.Euler(0f, yaw, 0f), Vector3.one);
@@ -484,7 +454,6 @@ namespace HJH.EditorTools
                 BoxCol(colliders, "Rack", new Vector3(x, 0.9f, z), Quaternion.Euler(0f, yaw, 0f), new Vector3(3.3f, 1.8f, 0.8f), "Obstacle");
             }
 
-            // 통·상자·건초
             foreach (var (x, z) in new[] { (7.4f, 12.8f), (8.4f, 12.9f), (7.9f, 12f), (-15.8f, -1f), (15.8f, 6.2f), (10.8f, -11.3f) })
                 Barrel(kit, colliders, new Vector3(x, 0f, z), L(0.85f, 1.05f));
             foreach (var (x, z, s) in new[] { (9.7f, 12.7f, 1f), (10.6f, 12.4f, 0.75f), (-11.2f, -11.1f, 1.1f), (-12.3f, -10.4f, 0.8f), (15.5f, 7.4f, 0.9f) })
@@ -506,7 +475,6 @@ namespace HJH.EditorTools
                 BoxCol(colliders, "Hay", new Vector3(x, 0.4f, z), rot, new Vector3(1.5f, 0.8f, 0.85f), "Obstacle");
             }
 
-            // 화로
             foreach (var (x, z) in new[] { (-3.9f, 11.9f), (3.9f, 11.9f), (-13.4f, -8.4f), (13.6f, 4.9f) })
             {
                 var m = Matrix4x4.TRS(new Vector3(x, 0f, z), Quaternion.identity, Vector3.one);
@@ -526,7 +494,6 @@ namespace HJH.EditorTools
                 light.shadows = LightShadows.None;
             }
 
-            // 벽 밑 풀
             Vector2[] edge = Outline(-0.35f);
             for (int i = 0; i < edge.Length; i++)
             {
@@ -556,7 +523,6 @@ namespace HJH.EditorTools
             BoxCol(colliders, "Barrel", at + new Vector3(0f, 0.55f * s, 0f), Quaternion.identity, new Vector3(0.85f, 1.1f, 0.85f) * s, "Obstacle");
         }
 
-        // 미니맵에만 보이는 바닥과 벽 윤곽
         private static void BuildMiniMap(Transform root)
         {
             int layer = LayerMask.NameToLayer("MiniMap");
@@ -581,8 +547,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // ───────────────────────── 훈련 더미 ─────────────────────────
-        // 슬라임 적을 복사해 겉모습만 허수아비로 바꿈 (체력·피격·CC·미니맵 등 적 기능은 그대로)
         private static GameObject BuildDummyPrefab()
         {
             GameObject source = PrefabUtility.LoadPrefabContents(SlimePath);
@@ -638,7 +602,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // ───────────────────────── 머티리얼·텍스처 ─────────────────────────
         private static void BuildMaterials()
         {
             Mats.Clear();
@@ -682,12 +645,10 @@ namespace HJH.EditorTools
             Unlit("MapWall", new Color(0.78f, 0.62f, 0.5f));
         }
 
-        // metersPerTile = 텍스처 한 장이 덮는 길이는 Kit 의 UV(1 = 1m)를 나눠서 맞춤
         private static Material Toon(string name, Texture2D texture, Color color, float metersPerTile)
         {
             Material m = LoadOrCreate(name, "HJH/Map/Toon");
             m.SetTexture("_BaseMap", texture);
-            // 바닥(Sand/OuterStone)은 Floor 에서 UV 를 이미 타일 길이로 나눔
             float scale = name is "Sand" or "OuterStone" or "Leaf" or "LeafDark" ? 1f : 1f / metersPerTile;
             m.SetTextureScale("_BaseMap", new Vector2(scale, scale));
             m.SetColor("_BaseColor", color);
@@ -748,7 +709,6 @@ namespace HJH.EditorTools
             return AssetDatabase.LoadAssetAtPath<Texture2D>(path);
         }
 
-        // 이어 붙여도 티가 안 나는 값 노이즈 (period = 한 장에 들어가는 칸 수)
         private static float Noise(float u, float v, int period, int seed)
         {
             float x = u * period, y = v * period;
@@ -776,7 +736,6 @@ namespace HJH.EditorTools
         private static float Fbm(float u, float v, int period, int seed) =>
             Noise(u, v, period, seed) * 0.55f + Noise(u, v, period * 2, seed + 1) * 0.3f + Noise(u, v, period * 4, seed + 2) * 0.15f;
 
-        // 낡은 벽돌: 3m 한 장에 8줄 x 4장. 색이 제각각, 모서리가 깨지고 줄눈에 이끼
         private static Color BrickPixel(float u, float v)
         {
             const int rows = 8, cols = 4;
@@ -797,7 +756,7 @@ namespace HJH.EditorTools
             brick *= 0.86f + tone * 0.26f + (Fbm(u, v, 16, 3) - 0.5f) * 0.35f;
             if (by > 0.8f) brick *= 1.12f;
             if (by < 0.22f) brick *= 0.82f;
-            if (Mathf.Abs(Noise(u, v, 9, 31) - 0.5f) < 0.012f && pick > 0.55f) brick *= 0.62f;   // 금
+            if (Mathf.Abs(Noise(u, v, 9, 31) - 0.5f) < 0.012f && pick > 0.55f) brick *= 0.62f;
 
             Color mortar = new Color(0.60f, 0.55f, 0.47f) * (0.82f + Noise(u, v, 90, 7) * 0.3f);
             Color c = edge < 0.09f ? mortar : edge < 0.13f ? brick * 0.72f : brick;
@@ -812,7 +771,7 @@ namespace HJH.EditorTools
         {
             Color c = new Color(0.79f, 0.64f, 0.43f);
             c *= 0.9f + (Fbm(u, v, 5, 51) - 0.5f) * 0.32f + (Noise(u, v, 128, 53) - 0.5f) * 0.14f + 0.06f;
-            c = Color.Lerp(c, new Color(0.62f, 0.47f, 0.31f), Mathf.Clamp01((Fbm(u, v, 3, 57) - 0.55f) * 2.4f) * 0.7f);   // 눌린 자국
+            c = Color.Lerp(c, new Color(0.62f, 0.47f, 0.31f), Mathf.Clamp01((Fbm(u, v, 3, 57) - 0.55f) * 2.4f) * 0.7f);
             float grain = Noise(u, v, 170, 59);
             if (grain > 0.8f) c *= 1.13f;
             else if (grain < 0.16f) c *= 0.84f;
@@ -838,10 +797,8 @@ namespace HJH.EditorTools
             return new Color(shade * 0.92f, shade * 0.78f, shade * 0.62f, 1f);
         }
 
-        // 담쟁이 잎 뭉치 (잎 7장)
         private static readonly Vector4[] Leaves =
         {
-            // x, y, 크기, 각도
             new(0.50f, 0.70f, 0.24f, 0f), new(0.27f, 0.58f, 0.22f, 55f), new(0.74f, 0.57f, 0.22f, -50f), new(0.50f, 0.45f, 0.25f, 180f),
             new(0.26f, 0.29f, 0.20f, 130f), new(0.72f, 0.27f, 0.21f, -135f), new(0.51f, 0.19f, 0.16f, 175f)
         };
@@ -870,7 +827,6 @@ namespace HJH.EditorTools
             return c;
         }
 
-        // ───────────────────────── 도우미 ─────────────────────────
         private static Transform Child(Transform parent, string name)
         {
             var go = new GameObject(name);
@@ -878,7 +834,6 @@ namespace HJH.EditorTools
             return go.transform;
         }
 
-        // position/rotation 은 parent 기준
         private static void BoxCol(Transform parent, string name, Vector3 position, Quaternion rotation, Vector3 size, string layer)
         {
             Transform t = Child(parent, name);
@@ -896,7 +851,6 @@ namespace HJH.EditorTools
             EditorBuildSettings.scenes = list.ToArray();
         }
 
-        // 머티리얼별로 모아서 메시 하나씩 만드는 조립기. UV 는 1 = 1m (면 방향에 맞춘 평면 투영)
         private sealed class Kit
         {
             private sealed class Buffer
@@ -922,7 +876,6 @@ namespace HJH.EditorTools
                 return new Vector2(Vector3.Dot(p, tangent), p.y);
             }
 
-            // a b c d 는 앞에서 볼 때 시계 방향
             private void Quad(string material, Vector3 a, Vector3 b, Vector3 c, Vector3 d)
             {
                 Vector3 n = Vector3.Cross(b - a, c - a);
@@ -977,7 +930,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 반원 채움 (아치 창·문). center = 반원 중심, +z 를 보는 면
             public void ArchFill(string material, Matrix4x4 m, Vector3 center, float radius)
             {
                 const int steps = 10;
@@ -990,7 +942,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 잎 한 장 (텍스처 전체가 올라가는 사각형, 양면 머티리얼)
             public void Card(string material, Matrix4x4 m, float size)
             {
                 float h = size * 0.5f;
@@ -1008,7 +959,6 @@ namespace HJH.EditorTools
                 buf.T.AddRange(new[] { start, start + 1, start + 2, start, start + 2, start + 3 });
             }
 
-            // 평평한 볼록 다각형 바닥. UV 는 tile(m) 로 나눔
             public void Floor(string material, Vector2[] outline, float y, float tile)
             {
                 Buffer buf = Of(material);
@@ -1022,7 +972,7 @@ namespace HJH.EditorTools
                     buf.N.Add(Vector3.up);
                     buf.U.Add(a / tile);
                 }
-                bool clockwise = area < 0f;   // 위에서 볼 때 시계 방향이면 그대로가 앞면
+                bool clockwise = area < 0f;
                 for (int i = 1; i < outline.Length - 1; i++)
                     buf.T.AddRange(clockwise ? new[] { start, start + i, start + i + 1 } : new[] { start, start + i + 1, start + i });
             }

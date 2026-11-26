@@ -8,16 +8,10 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Audio
 {
-    // 스킬별 소리(SkillSoundData)를 제때 재생. 씬에 자동으로 하나 생김.
-    //  - 몸 동작 소리: 클립의 AnimationEvent PlaySkillSound(eventName) → PlayerAnimationEventRelay → 여기
-    //    (같은 클립을 여러 스킬이 같이 쓰니까, 지금 쓰는 스킬의 목록에서 그 이름을 찾아 냄)
-    //  - 파티클 시점 소리: 스킬 이펙트 칸이 터질 때(ElementSkillCast.FxPlayed) / 스킬 쓴 순간 / 범위 공격이 닿은 순간 + time 초
-    //  - 캐릭터 모델이 없으면(애니 이벤트가 안 옴) Animation 소리는 fallbackDelay 로 대신
-    // 소리 쪽 오류가 스킬 코드로 올라가지 않게 듣는 함수는 전부 막아 둠.
     public class SkillSoundPlayer : MonoBehaviour
     {
         private const string Folder = "HJH/SkillSounds";
-        private const float AnimEventWindow = 4f;   // 스킬 쓴 뒤 이 시간 안에 온 애니 이벤트만 그 스킬 것으로 봄
+        private const float AnimEventWindow = 4f;
 
         private sealed class Caster
         {
@@ -65,7 +59,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         {
             if (skill == null)
                 return null;
-            // SoundLibrary 의 skillSounds 가 꺼져 있으면 전용 소리 없음 → 재생도 안 하고, 공통 소리도 안 막음
             if (SoundManager.Library == null || !SoundManager.Library.skillSounds)
                 return null;
             if (_bySkill == null)
@@ -78,11 +71,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             return _bySkill.TryGetValue(skill, out SkillSoundData found) ? found : null;
         }
 
-        // SkillPresentation 이 공통 시전음/폭발음을 낼지 물어봄
         public static bool ReplacesGenericCast(SkillData skill) => Of(skill) is { replacesGenericCast: true };
         public static bool ReplacesGenericImpact(SkillData skill) => Of(skill) is { replacesGenericImpact: true };
-
-        // ------------------------------------------------ 듣기
 
         private void OnEnable()
         {
@@ -100,7 +90,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             _casters.Clear();
         }
 
-        // 애니 이벤트에서 부름 (PlayerAnimationEventRelay.PlaySkillSound)
         public static void OnAnimationEvent(SkillStateModule module, string eventName)
         {
             if (_instance == null || module == null || string.IsNullOrEmpty(eventName))
@@ -172,7 +161,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         private void OnImpact(Vector3 position, float radius, SkillData skill)
         {
             if (radius < 0.9f)
-                return;   // 적 하나 맞힌 건 hitFx 소리가 맡음
+                return;
             try
             {
                 SkillSoundData data = Of(skill);
@@ -187,8 +176,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
                 Debug.LogException(ex);
             }
         }
-
-        // ------------------------------------------------ 재생
 
         private void Schedule(SkillSoundEntry e, float delay, Vector3 position)
         {
@@ -208,7 +195,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
 
             SoundHandle handle = SoundManager.Play(e.Cue, position);
             if (!handle.IsPlaying)
-                return;   // 막혔음 (너무 멀다·간격·통 부족)
+                return;
             if (e.holdTime > 0f)
                 handle.StopAfter(e.holdTime);
             PlayedCount++;
@@ -228,7 +215,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             ScanCasters();
         }
 
-        // 플레이어(스킬 모듈)가 늦게 생기거나 바뀌어도 잡히게 가끔 다시 찾음
         private void ScanCasters()
         {
             if (Time.unscaledTime < _nextScan)
@@ -253,7 +239,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
             return model != null && model.Animator != null && model.Animator.isActiveAndEnabled;
         }
 
-        // 이펙트 칸 객체 → 필드 이름 (castFx, impactFx ...)
         private static string SlotName(ElementSkillBase skill, FxSlot slot)
         {
             if (skill == null || slot == null)

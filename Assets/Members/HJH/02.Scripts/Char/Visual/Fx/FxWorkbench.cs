@@ -10,32 +10,17 @@ using UnityEditor;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 이펙트 꾸미기 작업대 (테스트 씬 전용). 빈 오브젝트에 붙이고 Skill 칸에 원소 스킬 에셋 하나를 넣은 뒤 Play.
-    //
-    //  [스킬 파트] 이 오브젝트 자리 = 시전자(캡슐). 스킬의 "진짜 코드"를 그대로 돌려서 게임과 똑같이 나감
-    //             (시전 위치, 투사체, 선 따라 여러 번 터짐, 돌진, 장판 틱... 전부 스킬 에셋 그대로)
-    //  [적 파트]  옆에 따로 서 있는 허수아비들. 스킬이 맞히면 맞은 이펙트(hitFx)·CC 표시(statusFx)·데미지 숫자가 여기에 뜸
-    //             (판정은 스킬 파트의 조준 지점에서 함 → 투사체가 멈추고 터지는 자리는 게임과 같음)
-    //
-    //  1. Play하면 그 스킬이 쓰는 파티클 프리팹이 전부 "[작업대 파티클]" 아래에 수정용 사본으로 채워짐
-    //  2. 스킬이 이펙트를 낼 때 프리팹 대신 이 사본을 씀 → Play 중에 사본을 고치면 다음 시전에 바로 보임
-    //  3. 고친 건 "프리팹에 저장" 버튼 또는 Play를 끌 때 원래 프리팹 파일에 저장됨 (Save On Stop)
-    //  4. Play 중에 Skill 칸을 다른 스킬로 바꾸면: (바뀐 건 저장하고) 기존 사본은 빠지고 새 스킬 것으로 다시 채워짐
-    //
-    //  F5 = 스킬 쓰기 · F6 = 자동 반복 켜기/끄기 (게임 조작키와 안 겹치게 F키)
     public class FxWorkbench : MonoBehaviour
     {
-        // 스킬 하나가 쓰는 프리팹 하나 = Part. 같은 프리팹을 여러 칸이 쓰면 사본은 하나 (예: 예고와 속박이 같은 프리팹)
         public sealed class Part
         {
             public string Slots;
             public GameObject Prefab;
             public GameObject Copy;
-            public string Snapshot; // 마지막으로 저장/불러온 상태. 지금과 다르면 "바뀜"
-            public double CheckedAt;  // 바뀜 검사 캐시 (인스펙터가 매 프레임 묻지 않게)
+            public string Snapshot;
+            public double CheckedAt;
             public bool WasChanged;
 
-            // 보기용 끄기 (재생할 때만 안 보이게. 사본·프리팹은 안 바뀜 → 저장 안 됨)
             public bool Hidden;
             public readonly HashSet<Transform> HiddenLayers = new();
         }
@@ -93,7 +78,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private Vector3 AimPoint => transform.position + Forward * aimDistance;
         private Vector3 EnemyCenter => transform.position + Right * enemyArea.x + Vector3.up * enemyArea.y + Forward * enemyArea.z;
 
-        // ---------- 시작 / 끝 ----------
         private void Start() => BuildStage();
 
         private void OnEnable()
@@ -127,7 +111,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         }
 #endif
 
-        // 스킬이 이펙트를 낼 때 "이 프리팹 대신 수정용 사본을 써" (작업대가 불러온 프리팹만)
         private GameObject EditedCopyOf(GameObject prefab)
         {
             foreach (Part part in _parts)
@@ -136,16 +119,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return null;
         }
 
-        // ---------- 보기용 켜기/끄기 ----------
-        // 재생용 복사본의 렌더러만 켜고 끔 (사본·프리팹은 그대로 → ● 안 생기고 저장 안 됨).
-        // 화면에 떠 있는 복사본에도 매 프레임 적용해서, 체크를 바꾸면 바로 보임.
         private sealed class Live
         {
             public Part Part;
             public GameObject Root;
             public Renderer[] Renderers;
-            public Transform[] Layers;   // 각 렌더러가 사본의 어느 오브젝트(레이어)에 해당하는지
-            public bool[] WasEnabled;    // 프리팹에서 원래 꺼져 있던 렌더러는 계속 꺼둠
+            public Transform[] Layers;
+            public bool[] WasEnabled;
         }
 
         private readonly List<Live> _live = new();
@@ -199,7 +179,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // from 쪽 node 와 같은 자리(형제 순서 경로)에 있는 to 쪽 오브젝트
         private static Transform Twin(Transform node, Transform fromRoot, Transform toRoot)
         {
             if (node == null)
@@ -231,7 +210,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 이 칸만 보이게 (다른 칸 전부 끔)
         public void SoloPart(Part solo)
         {
             foreach (Part part in _parts)
@@ -239,7 +217,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             solo.HiddenLayers.Clear();
         }
 
-        // 이 칸에서 이 레이어(와 그 자식들)만 보이게
         public void SoloLayer(Part part, Transform layer)
         {
             SoloPart(part);
@@ -250,7 +227,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 여러 칸에 걸쳐 고른 레이어들만 보이게 (검색 결과만 보기)
         public void SoloLayers(IEnumerable<(Part part, Transform layer)> keep)
         {
             var keepSet = new HashSet<Transform>();
@@ -292,7 +268,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 파티클·트레일이 붙은 오브젝트들 = 레이어 목록 (인스펙터에 보여줄 순서)
         public static List<Transform> Layers(Part part)
         {
             var layers = new List<Transform>();
@@ -306,7 +281,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return layers;
         }
 
-        // 시전자 캡슐 + 허수아비(판정용은 스킬 파트, 몸은 적 파트)
         private void BuildStage()
         {
             _stage = new GameObject("[작업대 무대]").transform;
@@ -334,7 +308,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             ResetCaster();
         }
 
-        // 발 위치(= 게임 캐릭터의 위치 기준)에 빈 오브젝트, 그 1m 위에 보이는 캡슐
         private static GameObject Capsule(string name, Transform parent, Color color)
         {
             var root = new GameObject(name);
@@ -353,7 +326,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private void ResetCaster() =>
             _caster.SetPositionAndRotation(transform.position, Quaternion.LookRotation(Forward));
 
-        // ---------- 매 프레임 ----------
         private void Update()
         {
             if (skill != _loaded)
@@ -382,7 +354,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (autoFire && Time.time >= _next)
                 PlayNow();
 
-            // 게임의 스킬 상태와 같은 순서: 지속 시간 동안 Tick, 끝나면 End
             _context?.Tick(Time.deltaTime);
             if (_execution != null && _loaded != null)
             {
@@ -394,7 +365,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // ---------- 스킬 쓰기 (진짜 스킬 코드) ----------
         public void PlayNow()
         {
             _next = Time.time + interval;
@@ -423,8 +393,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _context.ActiveSkill = null;
         }
 
-        // ---------- 불러오기 / 비우기 ----------
-        // 지금 사본을 버리고 (필요하면 먼저 저장하고) next 스킬의 파티클로 다시 채움
         public void Load(ElementSkillBase next, bool saveChanges)
         {
 #if UNITY_EDITOR
@@ -440,7 +408,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (next == null)
                 return;
 
-            // 꺼둔 부모 아래에 만들면 사본은 재생되지 않고 값만 들고 있음 (재생은 이걸 복사해서)
             _holder = new GameObject($"[작업대 파티클] {next.name}").transform;
             _holder.SetParent(transform, false);
             _holder.gameObject.SetActive(false);
@@ -474,10 +441,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _next = Time.time + 0.3f;
         }
 
-        // 저장 안 하고 프리팹 상태로 되돌리기
         public void Revert() => Load(_loaded, saveChanges: false);
 
-        // travelFx 같은 칸은 스킬 모양 클래스 안에 private로 있어서 이름으로 꺼냄 (테스트 도구라 괜찮음)
         private static FxSlot Slot(ElementSkillBase owner, string field)
         {
             for (System.Type type = owner.GetType(); type != null; type = type.BaseType)
@@ -489,7 +454,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return null;
         }
 
-        // ---------- 보이기 ----------
         private void OnDrawGizmos()
         {
             Vector3 forward = Forward, right = Right;
@@ -518,7 +482,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (view == null)
                 return;
 
-            // 허수아비 머리 위에 지금 걸린 CC
             foreach (WorkbenchDummy dummy in _dummies)
             {
                 if (dummy == null || dummy.Body == null)

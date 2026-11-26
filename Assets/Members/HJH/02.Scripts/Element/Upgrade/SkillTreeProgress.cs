@@ -1,23 +1,16 @@
 using System;
 using System.Collections.Generic;
-using Assets.Members.HJH._02.Scripts.Char.Character;
 using Members.KYR._01.Scripts.Currency;
 using Members.KYR._01.Scripts.Enchant;
-using Members.KYR._01.Scripts.Enchant.Data;
 using Members.KYR._01.Scripts.Enchant.So;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
 {
-    // 아웃게임 스킬 트리의 "내 진행도": 씬을 넘어 남고(PlayerPrefs), 지금 캐릭터의 강화를 SkillUpgrades 판에 올림.
-    //  - 규칙은 인챈트 트리와 같음: 선행 중 하나라도 배웠으면 열림, 택일 그룹은 하나만, 입구(Entry)는 항상 배운 것으로 침
-    //  - 소울(MetaSoul)로 사고, 되돌리면 비용의 70% 만 돌려줌 (반올림). 되돌려서 끊긴 아랫 노드는 같이 풀림(그 몫은 환급 없음)
-    //  - 트리 에셋 없이도 판을 복원할 수 있게 "랭크 + 계산된 강화 목록"을 같이 저장함 (게임 씬에는 트리 참조가 없어도 됨)
-    //  - 화면(SkillTreeScreen)은 이 클래스만 부르고, 스킬은 SkillUpgrades 판만 읽음
     public static class SkillTreeProgress
     {
         private const string SaveKey = "HJH.SkillTree.v1";
-        private const int StartingSoul = 80;   // 첫 실행 때만. 소울 획득처가 생기기 전까지 화면을 써볼 수 있게 (임시)
+        private const int StartingSoul = 80;
         private static readonly object BoardSource = new();
 
         [Serializable]
@@ -42,7 +35,7 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
         {
             public bool started;
             public int soul;
-            public string applied;   // 지금 판에 올라가 있는 트리 (이름)
+            public string applied;
             public List<TreeSave> trees = new();
         }
 
@@ -50,8 +43,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
         private static bool _hooked;
 
         public static event Action Changed;
-
-        // ------------------------------------------------------------ 불러오기 / 저장
 
         public static void EnsureLoaded()
         {
@@ -77,7 +68,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             PushApplied();
         }
 
-        // 소울은 CurrencyService(MetaSoul)가 들고 있고, 저장본과 맞춘다. 서비스는 씬 시작 전에 만들어짐
         private static void SyncCurrency()
         {
             CurrencyService currency = GameBootstrap.Currency;
@@ -110,7 +100,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             PlayerPrefs.Save();
         }
 
-        // 도메인 리로드 없이 다시 플레이해도 저장본을 새로 읽게
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
         private static void ResetStatics()
         {
@@ -118,11 +107,8 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             _hooked = false;
         }
 
-        // 씬이 뜨면 저장된 강화를 판에 올림 (픽 화면을 안 거치고 바로 시작한 테스트 씬에서도 적용되게)
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         private static void Boot() => EnsureLoaded();
-
-        // ------------------------------------------------------------ 조회
 
         public static int Soul
         {
@@ -161,7 +147,7 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             if (tree == null || node == null)
                 return false;
             if (!tree.HasParents(node.id))
-                return true;   // 선행이 없는 노드(계열 입구)는 처음부터 배울 수 있음
+                return true;
 
             foreach (EnchantTreeLink link in tree.Links)
             {
@@ -199,14 +185,11 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             return EnchantLearnResult.Ok;
         }
 
-        // 되돌리면 돌려받는 소울 (비용의 70%, 반올림. 5점 노드 = 3점)
         public static int RefundOf(EnchantTreeNode node) =>
             node == null ? 0 : Mathf.CeilToInt(Mathf.Max(0, node.cost) * 0.7f - 0.5f);
 
         public static bool CanRefund(EnchantTree tree, EnchantTreeNode node) =>
             tree != null && node != null && Rank(tree, node) > 0;
-
-        // ------------------------------------------------------------ 배우기 / 되돌리기
 
         public static bool TryLearn(EnchantTree tree, EnchantTreeNode node)
         {
@@ -229,12 +212,11 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             TreeSave save = Find(tree, true);
             SetRank(save, node.id, Rank(tree, node) - 1);
             Refund(RefundOf(node));
-            Prune(tree, save);   // 이 노드를 지나야만 열리던 아랫 노드는 같이 풀림
+            Prune(tree, save);
             Commit(tree);
             return true;
         }
 
-        // 전부 되돌림 (환급 규칙은 같음)
         public static void RefundAll(EnchantTree tree)
         {
             if (tree == null)
@@ -256,7 +238,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             Commit(tree);
         }
 
-        // 지금 캐릭터의 트리를 판에 올림 (CharacterPick 의 게임 시작 때). tree 가 null 이면 비움
         public static void Apply(EnchantTree tree)
         {
             EnsureLoaded();
@@ -265,13 +246,11 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             PushApplied();
         }
 
-        // ------------------------------------------------------------ 안쪽
-
         private static bool Spend(int amount)
         {
             CurrencyService currency = GameBootstrap.Currency;
             if (currency != null)
-                return currency.TrySpend(CurrencyType.MetaSoul, amount);   // OnChanged 가 저장본을 맞춤
+                return currency.TrySpend(CurrencyType.MetaSoul, amount);
             if (_save.soul < amount)
                 return false;
             _save.soul -= amount;
@@ -291,7 +270,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
 
         private static void Prune(EnchantTree tree, TreeSave save)
         {
-            // 입구에서 이어진 노드만 남김
             var reachable = new HashSet<string>();
             foreach (EnchantTreeNode node in tree.Nodes)
             {
@@ -319,7 +297,7 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             {
                 if (!reachable.Contains(save.ids[i]))
                 {
-                    Refund(RefundOf(tree.FindNode(save.ids[i])) * save.ranks[i]);   // 끊긴 노드는 환급하고 풀림
+                    Refund(RefundOf(tree.FindNode(save.ids[i])) * save.ranks[i]);
                     save.ids.RemoveAt(i);
                     save.ranks.RemoveAt(i);
                 }
@@ -355,7 +333,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             }
         }
 
-        // 트리 하나의 강화 목록을 다시 계산해 저장하고, 지금 올라가 있는 트리면 판도 갱신
         private static void Commit(EnchantTree tree)
         {
             TreeSave save = Find(tree, true);
@@ -407,7 +384,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
 
         public static bool SameTab(string a, string b) => string.Equals(a ?? string.Empty, b ?? string.Empty, StringComparison.Ordinal);
 
-        // 트리의 탭 이름들 (노드에 처음 나온 순서). 탭이 하나도 안 적혀 있으면 빈 이름 하나
         public static List<string> TabsOf(EnchantTree tree)
         {
             var tabs = new List<string>();
@@ -421,7 +397,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             return tabs;
         }
 
-        // 테스트/디버그용: 소울 지급
         public static void Grant(int amount)
         {
             EnsureLoaded();
@@ -430,7 +405,6 @@ namespace Assets.Members.HJH._02.Scripts.Element.Upgrade
             Changed?.Invoke();
         }
 
-        // 테스트/디버그용: 저장 전부 지우고 처음 상태로
         public static void WipeAll()
         {
             PlayerPrefs.DeleteKey(SaveKey);

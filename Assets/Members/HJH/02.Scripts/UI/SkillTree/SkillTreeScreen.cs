@@ -13,16 +13,10 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 아웃 업그레이드(스킬 트리) 창. 캐릭터 선택 화면의 "아웃 업그레이드" 버튼이 프리팹을 넘겨 연다.
-    //  - 위: 제목 + 가진 소울 + 닫기, 그 아래 탭(노드의 tab 이름별), 왼쪽 트리 그래프, 오른쪽 고른 노드 정보 + 배우기/되돌리기
-    //  - 그래프는 위에서 아래로: 윗 노드를 1랭크 이상 배워야 아래가 열림 (선은 직각으로 꺾임)
-    //  - 진행도·소울은 SkillTreeProgress (씬을 넘어 저장됨), 이 창은 그걸 보여주고 누른 것만 전달
-    // 모양은 프리팹(05.Data/Prefab/UI/SkillTreeScreen)에 저장된 그대로 → 폰트·크기·위치·색은 프리팹에서 수정.
-    // 실행 중에는 글자와 색만 바꾸고, 노드/선/탭은 프리팹 안의 견본(NodeTemplate, LineTemplate, TabTemplate)을 복제함.
     public class SkillTreeScreen : MonoBehaviour, IUiBake
     {
         private const float LineThickness = 3f;
-        private const float BusGap = 40f;   // 아래 노드 위에서 가로선이 꺾이는 높이
+        private const float BusGap = 40f;
 
         public static SkillTreeScreen Current { get; private set; }
         public static bool IsOpen => Current != null;
@@ -79,7 +73,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private Action _onClosed;
         private bool _closing;
 
-        // 노드 종류별 반지름 (선이 모양 가장자리에서 시작하게)
         private static float RadiusOf(EnchantNodeKind kind) => kind switch
         {
             EnchantNodeKind.Stat => 28f,
@@ -158,7 +151,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Current = null;
         }
 
-        // 버튼 OnClick 용
         public void Close()
         {
             if (_closing)
@@ -179,7 +171,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             if (node == null)
                 return;
             if (!SkillTreeProgress.TryLearn(_tree, node))
-                Refresh();   // 안 되는 이유를 패널이 보여줌
+                Refresh();
         }
 
         public void OnRefundClicked()
@@ -198,8 +190,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         private EnchantTreeNode SelectedNode => _tree != null && !string.IsNullOrEmpty(_selected) ? _tree.FindNode(_selected) : null;
 
         private void OnProgressChanged() => Refresh();
-
-        // ---------------------------------------------------------------- 탭 / 그래프
 
         private void BuildTabs()
         {
@@ -221,8 +211,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 궁극기 탭에서만 보이는 기본 규칙. 숫자는 코드의 기본값(CritSystem)을 읽어서, 값이 바뀌어도 글이 맞음.
-        // 노드(초기화 필요 치명 횟수, 집계 시간, 연쇄 …)는 이 기본값을 바꾸는 것
         private const string UltimateTab = "궁극기";
         private string _subtitleBase;
 
@@ -257,7 +245,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                     inTab[node.id] = node;
             }
 
-            // 선을 먼저 (노드가 위에 그려지게)
             foreach (EnchantTreeLink link in _tree.Links)
             {
                 if (link == null || !inTab.TryGetValue(link.parentId, out EnchantTreeNode parent) || !inTab.TryGetValue(link.childId, out EnchantTreeNode child))
@@ -280,7 +267,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 노드 위치(디자인 좌표, y 아래로)를 그래프 칸의 좌표로. 가로는 가운데 기준
         private static Vector2 LocalOf(EnchantTreeNode node) => new(node.position.x - 400f, -node.position.y);
 
         private static bool IsCooldownNode(EnchantTreeNode node)
@@ -311,7 +297,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 return;
             }
 
-            // 위쪽 노드 아래에서 내려와, 아래 노드 위 BusGap 에서 가로로 꺾고, 다시 내려감
             bool parentIsTop = p.y > c.y;
             Vector2 top = parentIsTop ? p : c;
             Vector2 bottom = parentIsTop ? c : p;
@@ -341,8 +326,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _selected = id;
             Refresh();
         }
-
-        // ---------------------------------------------------------------- 갱신
 
         private void Refresh()
         {
@@ -455,8 +438,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _ => "핵심 노드",
         };
 
-        // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)
-
 #if UNITY_EDITOR
         private const float WindowWidth = 1840f;
         private const float WindowHeight = 1056f;
@@ -500,14 +481,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
             windowGroup = panel.gameObject.AddComponent<CanvasGroup>();
             Outline(window, EdgeColor, 2f);
 
-            // 머리: 제목 / 부제 / 소울 / 닫기
             titleText = Label("Title", window, "스킬 트리", 42f, Fg, TextAlignmentOptions.TopLeft, new Vector2(0f, 1f), new Vector2(Pad, -30f), new Vector2(700f, 54f));
             subtitleText = Label("Subtitle", window, "", 20f, Muted, TextAlignmentOptions.TopLeft, new Vector2(0f, 1f), new Vector2(Pad, -86f), new Vector2(1100f, 30f));
             soulText = Label("Soul", window, "소울  60", 32f, Fg, TextAlignmentOptions.TopRight, new Vector2(1f, 1f), new Vector2(-Pad - 200f, -38f), new Vector2(360f, 44f));
             Button close = TextButton("Close", window, "닫기  ESC", new Vector2(1f, 1f), new Vector2(-Pad, -34f), new Vector2(170f, 54f), 20f, null, out _);
             Wire(close, Close);
 
-            // 탭 줄
             tabRow = HudUiKit.NewRect("Tabs", window);
             HudUiKit.Place(tabRow, new Vector2(0f, 1f), new Vector2(Pad, -128f), new Vector2(GraphWidth, 64f));
             var tabs = tabRow.gameObject.AddComponent<HorizontalLayoutGroup>();
@@ -518,7 +497,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             tabs.childForceExpandWidth = false;
             tabs.childForceExpandHeight = false;
 
-            // 그래프 칸 (넘치면 잘림)
             Image graph = HudUiKit.NewImage("Graph", window, null, PanelColor);
             HudUiKit.Place(graph.rectTransform, new Vector2(0f, 1f), new Vector2(Pad, -204f), new Vector2(GraphWidth, GraphHeight));
             graph.raycastTarget = true;
@@ -564,7 +542,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Wire(s.Find("RefundAll").GetComponent<Button>(), OnRefundAllClicked);
         }
 
-        // 견본 (실행 중에 복제함). 창 밖에 꺼 둔 채로 저장
         private void BuildTemplates()
         {
             RectTransform templates = HudUiKit.NewRect("Templates", window);
@@ -604,13 +581,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             root.gameObject.AddComponent<HoverScale>().Scale = 1.06f;
 
             Sprite circleSprite = UnityEditor.AssetDatabase.GetBuiltinExtraResource<Sprite>("UI/Skin/Knob.psd");
-            // 모양마다 바깥선(outline) + 안쪽(fill). 마름모는 사각을 45도 돌림
             SkillTreeNodeView.Shape diamond = BuildShape(root, "Diamond", 46f, 5f, null, 45f, EdgeColor);
             SkillTreeNodeView.Shape circle = BuildShape(root, "Circle", 62f, 5f, circleSprite, 0f, EdgeColor);
             SkillTreeNodeView.Shape entry = BuildShape(root, "Entry", 66f, 5f, null, 0f, EdgeColor);
             SkillTreeNodeView.Shape key = BuildShape(root, "Key", 90f, 6f, null, 0f, GoldColor);
 
-            // 글자 판: 노드 아래로 지나가는 선이 글자를 가로지르지 않게 그래프 바탕색으로 덮음
             Image plate = HudUiKit.NewImage("LabelPlate", root, null, PanelColor);
             HudUiKit.Place(plate.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, -57f), new Vector2(146f, 42f));
             TMP_Text glyph = Label("Glyph", root, "+", 26f, Fg, TextAlignmentOptions.Center, new Vector2(0.5f, 0.5f), Vector2.zero, new Vector2(80f, 40f));
@@ -660,7 +635,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             p.FindPropertyRelative("fill").objectReferenceValue = shape.fill;
         }
 
-        // 가장자리 선 (안쪽으로 thickness)
         private static void Outline(RectTransform target, Color color, float thickness)
         {
             RectTransform frame = HudUiKit.NewRect("Edge", target);

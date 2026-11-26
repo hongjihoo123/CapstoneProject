@@ -4,16 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 총 잡는 양손 IK. Generic 리그라 유니티 기본 IK(Humanoid 전용)가 안 돼서 팔을 직접 2본 IK 로 풂.
-    //
-    //   - 총을 "어디에 어떤 각도로 들지"(자세)만 정함 -> 오른손은 권총 손잡이, 왼손은 앞 수직 손잡이를 정확히 잡음
-    //   - 이 캐릭터는 팔이 짧아서(어깨~손목 ≈ 총 길이의 40%) 두 손이 닿는 범위 안으로 총 위치를 자동으로 끌어당김
-    //   - 오른손 검지는 방아쇠 쪽으로 펴고 나머지 손가락은 모션 그대로(쥔 채)
-    //   - 가슴/몸통이 흔들리면 총도 따라옴 (몸통이 평소 자세에서 돈 만큼)
-    //   - 쏜 직후엔 견착 클립 첫 프레임 자세로 올림 (CharacterAnimator.Hold == Aim)
-    //
-    // 자세 숫자 단위: 모델 원본 미터(캐릭터 키 ≈ 0.85). 캐릭터 앞 기준 x=오른쪽, y=위, z=앞.
-    // 손 위치는 "오른쪽 어깨 뼈" 기준. 총 방향은 pitch(총구 아래로)/yaw(+오른쪽)/roll(총 기울임)
     [DefaultExecutionOrder(100)]
     [DisallowMultipleComponent]
     public class GunHoldIK : MonoBehaviour
@@ -53,7 +43,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         [SerializeField, Range(0f, 1f), Tooltip("몸통이 흔들리고 기울 때 총이 따라가는 정도")] private float bodyFollow = 0.85f;
 
         private const string TemplateClip = "AimIdle";
-        private const float BlenderLeftGripAlong = 0.177f;   // 견착 클립에서 왼손이 오른손 앞 0.177 에 있음 (Blender 측정) -> 크기 환산 기준
+        private const float BlenderLeftGripAlong = 0.177f;
 
         private CharacterModel _model;
         private CharacterAnimator _anim;
@@ -62,23 +52,21 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private Transform _chest, _rUpper, _rFore, _rHand, _lUpper, _lFore, _lHand, _rLeg, _lLeg;
         private Transform _idx1, _idx2, _idx3, _idx4;
         private Transform _spine1, _neck, _head;
-        private float _twist;     // 지금 적용 중인 상체 비틀기 각도
+        private float _twist;
         private bool _ready;
 
-        // 견착 클립에서 읽은 기준 (월드 스케일로 나눠 크기에 상관없게)
-        private Vector3 _aimHandPos;          // 오른쪽 어깨 기준, 캐릭터 앞 축
-        private Quaternion _aimHandRot;       // 캐릭터 앞 기준 손 회전
+        private Vector3 _aimHandPos;
+        private Quaternion _aimHandRot;
         private Quaternion _lHandRotInRHand;
-        private Vector3 _axLocal = Vector3.forward;   // 오른손 뼈 기준 총구 방향
-        private Vector3 _upLocal = Vector3.up;        // 오른손 뼈 기준 총 위쪽
+        private Vector3 _axLocal = Vector3.forward;
+        private Vector3 _upLocal = Vector3.up;
         private Quaternion _gunBasisLocal = Quaternion.identity;
-        private float _unit = 1f;             // Blender 미터 -> 이 모델 단위
+        private float _unit = 1f;
         private Vector3 _forwardLocal = Vector3.forward;
         private Quaternion _chestRefInFrame;
 
-        // 지금 적용 중인 값
         private HoldPose _cur = new();
-        private float _aim;      // 0 = 낮춰 듦, 1 = 견착
+        private float _aim;
         private float _blend;
         private bool _poseInit;
 
@@ -90,7 +78,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private Animator _standalone;
 
-        // 플레이어(CharacterModel/CharacterAnimator) 없이 모델 단독으로 쓸 때(픽 화면): 이 애니메이터를 "낮춰 든 자세"로 고정해서 잡음
         public void BindStandalone(Animator animator)
         {
             _standalone = animator;
@@ -151,7 +138,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             cur.roll = Mathf.Lerp(cur.roll, to.roll, k);
         }
 
-        // ---------- 준비: 뼈 찾고, 견착 클립에서 기준 읽기 ----------
         private void Bind(Animator animator)
         {
             _bound = animator;
@@ -196,17 +182,14 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 return;
             }
 
-            // 견착 자세를 한 번 입혀서 기준을 읽고, 바로 원래 자세로 되돌림 (Update(0) = 시간 안 흐르게 다시 계산)
             aimClip.SampleAnimation(root.gameObject, 0f);
             float s = Mathf.Max(0.0001f, root.lossyScale.y);
 
-            // 앞 방향 = (왼다리 -> 오른다리) 가로 방향에서 구함. 왼쪽이 -X 일 때 +Z 를 봄
             Vector3 right = _rLeg.position - _lLeg.position;
             right.y = 0f;
             if (right.sqrMagnitude < 1e-6f)
                 right = root.right;
             Vector3 forward = Vector3.Cross(right.normalized, Vector3.up);
-            // 견착 클립은 총이 캐릭터 정면을 곧게 겨눔 -> 총구(오른손->왼손) 수평 방향이 곧 앞. 다리 뼈로 구한 값은 부호가 뒤집힌 적이 있어 이걸 우선함
             Vector3 barrelFlat = _lHand.position - _rHand.position;
             barrelFlat.y = 0f;
             if (barrelFlat.sqrMagnitude > 1e-6f)
@@ -223,7 +206,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _aimHandRot = frameInv * _rHand.rotation;
             _chestRefInFrame = frameInv * _chest.rotation;
 
-            // 총 축: 견착 자세에서 왼손은 총구 쪽(앞) 일직선 0.177 위치 -> 그 방향이 총구, 월드 위쪽이 총 위쪽
             Quaternion rInv = Quaternion.Inverse(_rHand.rotation);
             Vector3 lInR = rInv * (_lHand.position - _rHand.position) / s;
             _lHandRotInRHand = rInv * _lHand.rotation;
@@ -234,7 +216,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             _upLocal = upL.sqrMagnitude > 1e-6f ? upL.normalized : Vector3.ProjectOnPlane(Vector3.up, _axLocal).normalized;
             _gunBasisLocal = Quaternion.LookRotation(_axLocal, _upLocal);
 
-            // 평소 상체(Carry)의 가슴 회전을 "흔들림 0" 기준으로 씀
             if (carryClip != null)
             {
                 carryClip.SampleAnimation(root.gameObject, 0f);
@@ -255,28 +236,24 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return null;
         }
 
-        // ---------- 매 프레임: 총 위치 정하고 -> 양손 목표 -> 팔 IK ----------
         private void Apply(Transform root, float w)
         {
             float s = Mathf.Max(0.0001f, root.lossyScale.y);
-            float u = _unit * s;   // Blender 미터 -> 월드
+            float u = _unit * s;
             Vector3 forward = root.TransformDirection(_forwardLocal);
             forward.y = 0f;
             if (forward.sqrMagnitude < 1e-6f)
                 forward = root.forward;
             Quaternion frame = Quaternion.LookRotation(forward.normalized, Vector3.up);
 
-            // 몸통 흔들림 = 평소 자세 대비 가슴이 더 돈 만큼 (비틀기 넣기 전에 잼)
             Quaternion sway = _chest.rotation * Quaternion.Inverse(frame * _chestRefInFrame);
             sway = Quaternion.Slerp(Quaternion.identity, sway, bodyFollow);
 
-            // 팔 길이(고정) 와 왼손이 잡을 앞 손잡이 (오른손 뼈 기준 벡터)
             float rReach = (Vector3.Distance(_rUpper.position, _rFore.position) + Vector3.Distance(_rFore.position, _rHand.position)) * reachFraction;
             float lReach = (Vector3.Distance(_lUpper.position, _lFore.position) + Vector3.Distance(_lFore.position, _lHand.position)) * reachFraction;
             Vector3 gunRight = Vector3.Cross(_upLocal, _axLocal);
             Vector3 leftLocal = (_axLocal * leftGrip.x + _upLocal * leftGrip.y + gunRight * leftGrip.z) * u;
 
-            // (1) 두 손이 닿을 때까지 상체를 오른쪽으로 비틀 각도 찾기 (팔이 짧아서 정면 상태로는 앞 손잡이에 못 닿음)
             Vector3 pivot = _chest.position;
             float needed = 0f;
             for (float a = 0f; a <= maxTwist + 0.01f; a += 4f)
@@ -291,7 +268,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
             _twist = Mathf.Lerp(_twist, needed, 1f - Mathf.Exp(-poseSharpness * Time.deltaTime));
 
-            // (2) 비틀기 적용: 척추 둘에 나눠서, 머리는 정면 유지
             float ang = _twist * w;
             if (ang > 0.01f)
             {
@@ -301,7 +277,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 if (_head != null) _head.rotation = Quaternion.AngleAxis(-ang * 0.5f, Vector3.up) * _head.rotation;
             }
 
-            // (3) 비튼 뒤 어깨 위치로 총 위치·양손 목표 다시 계산
             Targets(_rUpper.position, _lUpper.position, frame, sway, u, s, leftLocal, rReach, lReach, true, out Vector3 grip, out Quaternion rRot, out Vector3 lPos);
             Quaternion lRot = rRot * _lHandRotInRHand * Quaternion.Euler(leftWristEuler);
             Vector3 rPole = _rUpper.position + frame * (rightElbowHint * u);
@@ -312,22 +287,18 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             ExtendIndex(rRot * _axLocal, w);
         }
 
-        // 어깨 위치가 주어졌을 때 총 손잡이(오른손) 위치/회전과 왼손 위치. 두 손이 닿는 범위 밖이면 총을 끌어당김
         private void Targets(Vector3 rShoulder, Vector3 lShoulder, Quaternion frame, Quaternion sway, float u, float s, Vector3 leftLocal,
             float rReach, float lReach, bool pull, out Vector3 grip, out Quaternion rRot, out Vector3 lPos)
         {
-            // 낮춰 든 자세: 지정한 위치/방향
             Vector3 gripLow = rShoulder + frame * (_cur.hand * u);
             Quaternion gunLow = sway * frame * Quaternion.Euler(_cur.pitch, _cur.yaw, _cur.roll);
             Quaternion rotLow = gunLow * Quaternion.Inverse(_gunBasisLocal);
-            // 견착 자세: 클립에서 읽은 것
             Vector3 gripAim = rShoulder + frame * (_aimHandPos * s);
             Quaternion rotAim = sway * frame * _aimHandRot;
 
             grip = Vector3.Lerp(gripLow, gripAim, _aim);
             rRot = Quaternion.Slerp(rotLow, rotAim, _aim);
 
-            // 왼손 먼저, 방아쇠 손이 마지막이라 오른손이 우선. (비틀기 각도 탐색 땐 끌어당기지 않고 닿는지만 봄)
             for (int i = 0; pull && i < 4; i++)
             {
                 Vector3 lw = grip + rRot * leftLocal;
@@ -341,7 +312,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             lPos = grip + rRot * leftLocal;
         }
 
-        // 오른손 검지를 총구 방향(약간 아래 = 방아쇠 위)으로 폄. 나머지 손가락은 모션대로 쥠
         private void ExtendIndex(Vector3 barrel, float w)
         {
             if (_idx1 == null || _idx2 == null || _idx3 == null || _idx4 == null || indexExtend <= 0f)
@@ -361,7 +331,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             bone.rotation = Quaternion.Slerp(Quaternion.identity, Quaternion.FromToRotation(cur, dir), t) * bone.rotation;
         }
 
-        // 어깨-팔꿈치-손목 2본 IK. 손 위치·회전을 목표에 맞추고 팔꿈치는 pole 쪽으로 꺾음. w 로 원래 모션과 섞음
         private static void Solve(Transform upper, Transform fore, Transform hand, Vector3 target, Quaternion handRot, Vector3 pole, float w)
         {
             Quaternion localUpper = upper.localRotation, localFore = fore.localRotation, localHand = hand.localRotation;
@@ -372,7 +341,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 return;
 
             Vector3 toTarget = target - a;
-            float dist = Mathf.Clamp(toTarget.magnitude, Mathf.Abs(l1 - l2) + 0.001f, l1 + l2 - 0.001f);   // 팔 길이 밖은 최대한 뻗기만
+            float dist = Mathf.Clamp(toTarget.magnitude, Mathf.Abs(l1 - l2) + 0.001f, l1 + l2 - 0.001f);
             Vector3 dir = toTarget.sqrMagnitude > 1e-8f ? toTarget.normalized : (c - a).normalized;
 
             float cosA = Mathf.Clamp((l1 * l1 + dist * dist - l2 * l2) / (2f * l1 * dist), -1f, 1f);

@@ -31,7 +31,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
             preview.RangeCircle(start, maxRange);
             preview.DirectionLine(start, start + direction * maxRange);
 
-            // The hit area follows the player, so the path is as wide as the strike circle.
             preview.Path(start, end, strikeRadius * 2f);
             preview.Circle(end, strikeRadius);
         }
@@ -63,15 +62,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 if (_landed)
                     return;
 
-                // Hits while travelling: 0s, interval, 2*interval ... (catch up so a long frame never skips one).
                 while (_dashTicksDone < DashTickCount && elapsed >= _dashTicksDone * DashTickInterval && _context.IsDashing)
                 {
                     DamageTick();
                     _dashTicksDone++;
                 }
 
-                // The final hit is tied to the dash actually stopping, so it always lands on the destination
-                // even when stats stretch the dash.
                 if (!_context.IsDashing)
                     Land();
             }
@@ -86,11 +82,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                     return;
 
                 _landed = true;
-                // 회전 이펙트부터 끈다: 아래에서 무슨 일이 생겨도 이펙트가 계속 도는 일이 없게.
                 _context.SetSpinEffect(_data.spinEffectPrefab, false, _data.strikeRadius);
                 DamageTick();
 
-                // Landing: two blades crossing in an X.
                 Vector3 landing = _context.Transform.position;
                 Vector3 chest = landing + Vector3.up * 0.9f;
                 Fx.Slash(chest, _direction, _data.strikeRadius * 1.2f, false, 25f, 2.2f);
@@ -98,12 +92,9 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Chain
                 _context.PlayHitFeel(0.04f, 0.25f);
             }
 
-            // Centered on the player's position at this tick, so the hit area travels with the dash.
-            // Every enemy inside is hit once per tick (no once-per-cast dedupe).
             private void DamageTick()
             {
                 _context.FlashRange(_data.strikeRadius, _data.rangeFlashDuration);
-                // A quick blade along the dash, alternating sides each tick.
                 Fx.Slash(_context.Transform.position + Vector3.up * 0.9f, _direction, _data.strikeRadius, _slashes++ % 2 == 1, 0f, 2.6f);
 
                 Vector3 center = _context.Transform.position + Vector3.up;

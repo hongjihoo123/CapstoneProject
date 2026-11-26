@@ -7,9 +7,6 @@ using UnityEngine.SceneManagement;
 
 namespace HJH.EditorTools
 {
-    // 타이틀 배경으로 쓸 맵 장면 만들기: Map_Bridge_Normal 을 복사해서 플레이어/적 스포너/포탈/내비메시 등 게임 요소를 뺀 TitleBackdrop.unity.
-    // 원본 맵은 건드리지 않음. 카메라 자리는 TitleCameraAnchor 오브젝트(씬에서 옮기면 구도가 바뀜).
-    // 이어서 UI 장식(TitleDecorMenu)과 카메라 맞추기(TitleCameraMenu.SnapCamera)까지 한 번에 실행.
     public static class TitleBackdropMenu
     {
         public const string MainMenuPath = "Assets/Members/HJH/01.Scene/MainMenu.unity";
@@ -52,7 +49,6 @@ namespace HJH.EditorTools
                         }
                 }
 
-                // 폭포 정면 먼 곳 (캡처로 고른 구도: 대상 기준 +18,+16,-34 에서 (0,3,0) 쪽)
                 Transform fall = Find(scene, "폭포");
                 if (fall != null)
                 {

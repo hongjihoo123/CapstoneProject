@@ -10,8 +10,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 스킬 툴팁. 아이콘 + 이름 + 속성, 설명, 그 밑에 SkillData.DescribeStats 수치 (왼쪽 이름, 오른쪽 값)
-    // 맨 밑에 한 줄 더 있음. 카드 바로 위에 뜸
     public class SkillTooltipView : MonoBehaviour
     {
         [SerializeField] private CanvasGroup group;
@@ -88,7 +86,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         public void Hide() => _visible = false;
 
-        // Shape of Dreams 처럼 설명 안 숫자만 강조색으로
         private static readonly Regex Numbers = new(@"\d+(\.\d+)?(초|m|%|회)?");
 
         private static string HighlightNumbers(string text) => Numbers.Replace(text, "<color=#FFD36B><b>$0</b></color>");
@@ -108,7 +105,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Place();
         }
 
-        // 카드 위에 띄우고 (pivot 아래 가운데), 위에 자리 없으면 아래로
         private void Place()
         {
             if (_anchor == null)

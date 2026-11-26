@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.RuneMage
 {
-    // Character 3 Q: launches every stored rune at the cursor point; each one explodes where it
-    // lands (or on the first enemy it meets). With no runes it still throws a minimum volley.
     [CreateAssetMenu(menuName = "Skill/Rune Mage/Rune Burst")]
     public class RuneBurstSkillData : SkillData
     {

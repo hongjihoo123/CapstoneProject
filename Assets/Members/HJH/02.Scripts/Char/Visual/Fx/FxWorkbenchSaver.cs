@@ -6,20 +6,11 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // FxWorkbench의 수정용 사본(Play 중에 고친 것)을 원래 프리팹 파일에 써 넣음. 에디터에서만 있음.
-    // 보통 Play 중에 고친 값은 Play를 끄면 사라지지만, 이걸로 프리팹에 남김.
-    //
-    // 방법: 프리팹 파일을 열어서(LoadPrefabContents) 사본과 같은 위치의 오브젝트끼리 짝을 지어
-    //   - 컴포넌트 값 복사 (CopySerialized) / 사본에만 있는 자식·컴포넌트는 추가 / 사본에서 지운 건 삭제
-    //   - 자식 위치·회전·크기, 켜짐/꺼짐, 순서 맞춤
-    //   - 복사된 참조(서브 에미터, untinted 목록 등)가 사본 쪽을 가리키면 프리팹 쪽 짝으로 바꿔줌
-    // 그리고 저장(SaveAsPrefabAsset). 프리팹 파일의 GUID와 루트는 그대로라 스킬 에셋 연결은 안 깨짐.
     public static class FxWorkbenchSaver
     {
         public static bool IsChanged(FxWorkbench.Part part) =>
             part.Copy != null && part.Snapshot != Snapshot(part.Copy);
 
-        // 인스펙터 표시용: 0.5초에 한 번만 실제로 비교 (큰 프리팹은 비교가 무거움)
         public static bool IsChangedCached(FxWorkbench.Part part)
         {
             double now = EditorApplication.timeSinceStartup;
@@ -63,7 +54,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 };
                 var copied = new List<Component>();
 
-                // 루트는 이름·위치·켜짐을 건드리지 않음 (작업대가 바꿔놓은 것이라)
                 SyncComponents(part.Copy, contents, map, copied);
                 SyncChildren(part.Copy.transform, contents.transform, map, copied);
                 Remap(copied, map);
@@ -85,7 +75,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return true;
         }
 
-        // 사본의 지금 상태를 글자로 (바뀌었는지 비교용)
         public static string Snapshot(GameObject root)
         {
             var text = new StringBuilder();
@@ -106,7 +95,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
         private static void SyncChildren(Transform source, Transform target, Dictionary<Object, Object> map, List<Component> copied)
         {
-            // 이름이 같은 자식이 여럿일 수 있어서 "이름 + 몇 번째" 로 짝을 지음
             var byName = new Dictionary<string, List<Transform>>();
             foreach (Transform child in target)
             {
@@ -131,7 +119,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
                 if (to == null)
                 {
-                    // 사본에 새로 생긴 자식 → 프리팹에도 통째로 추가
                     to = Object.Instantiate(from.gameObject, target).transform;
                     to.name = from.name;
                 }
@@ -140,7 +127,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 pairs.Add((from, to));
             }
 
-            // 사본에서 지운 자식 → 프리팹에서도 삭제
             var removed = new List<GameObject>();
             foreach (Transform child in target)
                 if (!used.Contains(child))
@@ -190,7 +176,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 map[from] = to;
             }
 
-            // 사본에서 뺀 컴포넌트 → 프리팹에서도 삭제 (렌더러는 파티클 시스템이 필요로 해서 나중에)
             var removed = new List<Component>();
             foreach (Component component in target.GetComponents<Component>())
                 if (component != null && !keep.Contains(component))
@@ -200,7 +185,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 Object.DestroyImmediate(component);
         }
 
-        // 복사해 온 값 안의 참조가 사본(씬) 쪽 오브젝트를 가리키면, 프리팹 안의 짝으로 바꿔줌
         private static void Remap(List<Component> copied, Dictionary<Object, Object> map)
         {
             foreach (Component component in copied)

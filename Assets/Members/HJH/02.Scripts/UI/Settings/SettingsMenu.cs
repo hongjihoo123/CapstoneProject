@@ -9,10 +9,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 설정 창 (화면 + 소리). 프리팹 05.Data/Prefab/UI/SettingsMenu 를 MainMenu 씬과 PlayerRig 에 놓음 (HJH/UI/설정 창 만들기).
-    //   - 이 오브젝트는 켜 두고 자식 window 만 켜고 끔. ESC 로 열고 닫음, 메인 화면의 설정 버튼은 Open 에 연결
-    //   - 열려 있는 동안 시간 정지 + UiFocusService (플레이어 입력 막힘, 마우스 보임)
-    //   - 소리는 움직이는 즉시, 화면은 "적용" 을 눌러야 바뀜
     public class SettingsMenu : MonoBehaviour, IUiBake
     {
         [Serializable]
@@ -62,14 +58,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 Open();
         }
 
-        // 다른 창(콤보 바인딩·강화 제단·튜토리얼 카드)이 ESC 를 쓰는 중인지는 "지난 프레임" 상태로 봄
-        // → 그 창이 이번 ESC 로 먼저 닫혀도 설정 창이 이어서 열리지 않음
         private void LateUpdate()
         {
             _blocked = Time.timeScale <= 0f || UiFocusService.IsUiFocused;
         }
 
-        // 버튼 OnClick 용
         public void Open()
         {
             if (_open != null)
@@ -91,7 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Refresh(Application.isEditor ? "에디터에서는 화면 모드·해상도가 안 바뀝니다 (빌드에서 확인)" : string.Empty);
         }
 
-        // 버튼 OnClick 용
         public void Close()
         {
             if (_open != this)
@@ -103,15 +95,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
             UiFocusService.Release(this);
             Cursor.lockState = _lockBefore;
             CursorService.Refresh();
-            // Enter/Space 가 방금 누른 버튼을 다시 누르지 않게
             if (EventSystem.current != null)
                 EventSystem.current.SetSelectedGameObject(null);
             PlayerPrefs.Save();
         }
 
         private void OnDisable() => Close();
-
-        // ---------------------------------------------------------------- 화면 (버튼 OnClick, step = -1 / +1)
 
         public void StepMode(int step)
         {
@@ -145,7 +134,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Refresh("적용했습니다");
         }
 
-        // 화면과 소리를 기본값으로 (바로 적용)
         public void ResetToDefaults()
         {
             _pending = GameSettings.Defaults();
@@ -157,15 +145,12 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Refresh("기본값으로 되돌렸습니다");
         }
 
-        // ---------------------------------------------------------------- 소리 (슬라이더 OnValueChanged)
-
         public void SetMaster(float value)
         {
             SoundManager.SetMasterBusVolume(value);
             Show(master, value);
         }
 
-        // "효과음" 하나로 플레이어·적·UI 소리를 같이 조절
         public void SetEffects(float value)
         {
             SoundManager.SetBusVolume(SoundBus.Sfx, value);
@@ -194,7 +179,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private static void Show(VolumeRow row, float value) => row.value.text = Mathf.RoundToInt(value * 100f) + "%";
 
-        // notice: null = 값이 바뀜 ("적용" 안내)
         private void Refresh(string notice)
         {
             modeText.text = _pending.Mode switch
@@ -205,14 +189,11 @@ namespace Assets.Members.HJH._02.Scripts.UI
             };
             sizeText.text = $"{_pending.Size.x} x {_pending.Size.y}";
             vsyncText.text = _pending.VSync ? "켬" : "끔";
-            // 수직동기화가 켜지면 프레임 제한은 무시됨
             fpsText.text = _pending.VSync ? "모니터에 맞춤" : _pending.FpsCap < 0 ? "제한 없음" : _pending.FpsCap + " FPS";
             noticeText.text = notice ?? "\"적용\" 을 눌러야 화면 설정이 바뀝니다";
         }
 
         private static int Wrap(int value, int count) => ((value % count) + count) % count;
-
-        // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)
 
         [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
         public void BakeLayout()
@@ -224,16 +205,16 @@ namespace Assets.Members.HJH._02.Scripts.UI
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.GetComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
-            canvas.sortingOrder = 1100;   // HUD(3), 튜토리얼(900), 콤보·스킬 트리(1000) 위
+            canvas.sortingOrder = 1100;
             var scaler = canvasGo.GetComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
-            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;   // 4:3 에서도 창이 안 잘림
+            scaler.screenMatchMode = CanvasScaler.ScreenMatchMode.Expand;
             window = canvasGo;
 
             Image dim = HudUiKit.NewImage("Dim", canvasGo.transform, null, new Color(0f, 0.01f, 0.03f, 0.75f));
             HudUiKit.Stretch(dim.rectTransform);
-            dim.raycastTarget = true;   // 뒤 버튼이 안 눌리게
+            dim.raycastTarget = true;
 
             var middle = new Vector2(0.5f, 0.5f);
             Image panel = HudUiKit.NewImage("Panel", canvasGo.transform, null, new Color(0.035f, 0.055f, 0.1f, 0.97f));
@@ -265,7 +246,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         }
 
 #if UNITY_EDITOR
-        // 패널 왼쪽 위 기준 배치
         private static TMP_Text Text(Transform parent, string name, string text, float size, Color color,
             TextAlignmentOptions align, float x, float y, float width, float height)
         {
@@ -310,7 +290,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return button;
         }
 
-        // "이름   <  값  >"
         private static TMP_Text Stepper(Transform root, string name, string label, float y, UnityEngine.Events.UnityAction<int> step)
         {
             Text(root, name + "Label", label, 26f, HudUiKit.Label, TextAlignmentOptions.MidlineLeft, 60f, y, 280f, 48f);
@@ -329,7 +308,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
             RectTransform area = HudUiKit.NewRect(name + "Slider", root);
             HudUiKit.Place(area, new Vector2(0f, 1f), new Vector2(400f, y), new Vector2(360f, 48f));
-            var hit = area.gameObject.AddComponent<Image>();   // 막대 주변 어디를 눌러도 잡히게
+            var hit = area.gameObject.AddComponent<Image>();
             hit.color = Color.clear;
 
             Image back = HudUiKit.NewImage("Background", area, null, new Color(0.13f, 0.2f, 0.32f, 1f));
@@ -360,7 +339,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             return new VolumeRow { slider = slider, value = value };
         }
 
-        // 부모 가로를 꽉 채우고 세로 가운데에 높이 height 인 띠
         private static void Band(RectTransform rect, float height)
         {
             rect.anchorMin = new Vector2(0f, 0.5f);

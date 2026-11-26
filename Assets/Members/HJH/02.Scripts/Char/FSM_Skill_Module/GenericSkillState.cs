@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // State-machine state that runs one SkillData in one slot: Enter starts the skill's execution, Tick drives it,
-    // Exit ends it. Cooldown / charges / swap lock come from SkillStateBase.
     public class GenericSkillState : SkillStateBase
     {
         private ISkillExecution _execution;
@@ -14,7 +12,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public override float Cooldown => Data.Cooldown;
 
-        // 기존 쿨감 스탯 + 스킬 트리의 원소별 쿨감. 최대 75% 까지만
         protected override float CooldownReduction =>
             Mathf.Clamp(base.CooldownReduction + SkillUpgrades.Bonus(SkillUpgradeKind.Cooldown, Data) + CritSystem.ChainHasteBonus(), 0f, 0.75f);
         public override int MaxCharges => Data.Charges + (Slot == SkillSlotId.Dash ? Mathf.RoundToInt(SkillUpgrades.Exact(SkillUpgradeKind.DashCharge, SkillUpgradeScope.Dash)) : 0);

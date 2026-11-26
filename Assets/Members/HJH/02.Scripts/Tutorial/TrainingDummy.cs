@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 허수아비 겉모습 연출: 맞으면 때린 반대쪽(플레이어 반대쪽)으로 출렁이고, 체력이 다하면 쓰러짐.
-    // 체력만 보고 움직임 (적 코드는 건드리지 않음)
     public class TrainingDummy : MonoBehaviour
     {
         [SerializeField] private Transform visual;
@@ -29,7 +27,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 return;
 
             float health = _enemy.Health.CurrentHealth;
-            // 체력은 적 Start 에서 채워짐 → 그 전의 0 은 죽음이 아님
             if (_lastHealth < 0f)
             {
                 if (health > 0f)

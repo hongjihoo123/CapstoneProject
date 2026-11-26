@@ -7,39 +7,20 @@ using Assets.Members.HJH._02.Scripts.Element;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
 using Assets.Members.HJH._02.Scripts.SkillSwap;
 using Members.JJH._02_Scripts.ElementsSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using Members.KYR._01.Scripts.Stats;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Hud
 {
-    // The one place HUD code reads from. UI scripts should use only this (and the data types it hands out:
-    // SkillData, PassiveData, CharacterData, ElementComboBook.Recipe, SkillPickup, ElementType),
-    // never SkillStateModule / ElementComboChain / SkillSwapInteractor directly. Then gameplay code can
-    // change freely as long as this class keeps its shape, and UI can be rebuilt without touching gameplay.
-    //
-    // No wiring needed: PlayerHudSource.Instance finds (or adds) it on the player, and every reference
-    // below is found automatically. Features missing from a scene just never raise their events.
-    //
-    //   Skills    GetSlot(slot) -> SlotInfo, Passive, TryGetPassiveGauge(...), Character, KeyLabel(slot)
-    //             LoadoutChanged, SkillUsed, SkillDenied, SkillReady, CharacterChanged
-    //   Combo     HasCombo, ComboInputs, ComboList, ComboStock, MaxComboStock, ComboTimeLeft, ComboWindow,
-    //             FinisherKey, TryGetNextCombo(...), KeyFor(element)
-    //             ComboInputAdded, ComboChanged (redraw the trail), ComboLanded, ComboBroken,
-    //             FinisherArmed / FinisherExpired / FinisherReleased, FinisherReady, FinisherTimeLeft
-    //   Swap      SwapPickup (null = closed), InteractKey, SwapChanged, Swapped
-    //   Elements  Palette, ColorOf(element / skill), ElementName(element)
     [DisallowMultipleComponent]
     public class PlayerHudSource : MonoBehaviour
     {
-        // Everything a skill icon needs, already resolved (swap lock, charges, key, element color).
         public readonly struct SlotInfo
         {
             public readonly SkillSlotId Slot;
             public readonly SkillData Skill;
             public readonly string Key;
-            // Time until the skill can be cast again (0 = castable now) and the length it counts down from.
             public readonly float CooldownRemaining;
             public readonly float CooldownDuration;
             public readonly int Charges;
@@ -61,7 +42,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
             public bool IsEmpty => Skill == null;
             public bool IsReady => Skill != null && CooldownRemaining <= 0f;
-            // 1 = just used, 0 = ready (for radial fills).
             public float CooldownFill => CooldownDuration > 0f ? Mathf.Clamp01(CooldownRemaining / CooldownDuration) : 0f;
         }
 
@@ -101,29 +81,23 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public event Action<SkillSlotId> SkillDenied;
         public event Action<SkillSlotId> SkillReady;
         public event Action<CharacterData> CharacterChanged;
-        // 치명 연쇄로 궁극기 쿨이 초기화됨 (인자 = 새 연쇄 단계). 배너가 듣는다
         public event Action<int> UltimateChained;
 
-        // A skill just added an input to the combo trail (ComboChanged follows right after).
         public event Action ComboInputAdded;
         public event Action ComboChanged;
         public event Action<ElementComboBook.Recipe> ComboLanded;
         public event Action ComboBroken;
-        // 들고 있는 콤보가 바뀜 (맛보기 선택, 바인딩 교체) → 콤보 목록을 다시 그려야 함
         public event Action ComboListChanged;
-        // 피니시: 준비됨(스택, 배율) / 시간 끝 / 나감(칸, 배율)
         public event Action<int, float> FinisherArmed;
         public event Action FinisherExpired;
         public event Action<SkillSlotId, float> FinisherReleased;
 
         public event Action<SkillPickup> SwapChanged;
-        // slot, skill that went to the floor, skill that came in
         public event Action<SkillSlotId, SkillData, SkillData> Swapped;
 
         public PassiveData Passive => Skills != null ? Skills.Passive : null;
         public CharacterData Character => characterSwitcher != null ? characterSwitcher.Current : null;
 
-        // Passive with a gauge (e.g. the gunner's charged shot). False when the current passive has none.
         public bool TryGetPassiveGauge(out float fill, out bool full)
         {
             if (Skills != null && Skills.Context?.Passive is IPassiveGauge gauge)
@@ -140,7 +114,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
         public string KeyLabel(SkillSlotId slot) => ComboKeyMap.Key(Player, slot);
 
-        // A combo effect that is on right now: seconds left and the full length (false when it is off).
         public bool TryGetComboEffectTime(string comboName, out float remaining, out float total)
         {
             total = ComboLoadout.DurationOf(comboName);
@@ -148,19 +121,15 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             return comboChain != null && comboChain.TryGetEffectRemaining(comboName, out remaining);
         }
 
-        // How much the active combo effects add to a stat right now (current value minus the value without them).
-        // 0 when no combo buff touches it. Changes the moment a combo effect starts or ends.
         public float ComboStatBonus(PlayerStatId stat)
         {
             var stats = Player != null ? Player.Stats : null;
             if (stats == null || stats.Tree == null)
                 return 0f;
 
-            // 콤보 효과 + 스킬이 건 시간제 버프(BuffSkill, 원소 스킬의 자기 효과 등)가 준 몫
             return stats.Get(stat) - stats.Tree.GetExcludingModifiers(stat, m => m.IsTimed || ComboStatBuff.IsComboSource(m.Source));
         }
 
-        // 궁극기 초기화 규칙 (치명 연쇄): 설명 글과 진행도 표시용. 숫자는 스킬 트리 강화가 반영된 지금 값
         public readonly struct UltRule
         {
             public readonly int Need;
@@ -181,7 +150,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public bool TryGetUltimateProgress(out int crits, out int need, out float timeLeft) =>
             CritSystem.TryGetUltProgress(out crits, out need, out timeLeft);
 
-        // 스킬이 건 시간제 스탯 버프 하나 (콤보 효과는 따로 ComboList 로 나옴)
         public readonly struct TimedBuff
         {
             public readonly string Name;
@@ -199,7 +167,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
         private readonly List<(PlayerStatId Stat, StatModifier Modifier, float Remaining)> _timedScratch = new();
 
-        // 지금 걸려 있는 시간제 스킬 버프를 `into` 에 채움 (비우고 시작)
         public void CollectTimedBuffs(List<TimedBuff> into)
         {
             into.Clear();
@@ -232,7 +199,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             float cooldown = skills.GetCooldownRemaining(slot);
             float lockLeft = skills.GetLockRemaining(slot);
 
-            // Castable while a charge is left, unless a swap lock is still running.
             float remaining = 0f;
             float duration = skills.GetCooldownDuration(slot);
             if (charges <= 0)
@@ -261,7 +227,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
         public float FinisherScaleFor(int stacks) => comboChain != null ? comboChain.ScaleFor(stacks) : 1f;
         public bool CanCarryFinisher(SkillSlotId slot) => ElementComboChain.CanCarryFinisher(slot);
 
-        // The element that continues the best combo in progress (false when no combo is under way).
         public bool TryGetNextCombo(out ElementType next, out ElementComboBook.Recipe combo, out int progress)
         {
             if (comboChain != null)
@@ -273,10 +238,8 @@ namespace Assets.Members.HJH._02.Scripts.Hud
             return false;
         }
 
-        // True when any combo still in reach (not only the best one) wants this element next.
         public bool IsNextElement(ElementType element) => comboChain != null && comboChain.IsNextElement(element);
 
-        // Key(s) that cast this element with the current loadout: "Q", "Q/E", or "-" when none does.
         public string KeyFor(ElementType element) => ComboKeyMap.KeyFor(_elementKeys, element);
 
         public SkillPickup SwapPickup => swapInteractor != null ? swapInteractor.Choosing : null;
@@ -315,8 +278,6 @@ namespace Assets.Members.HJH._02.Scripts.Hud
 
         private void Start() => Bind();
 
-        // Lazy so getters work even when another script's Start runs first. Subscribes once the player's
-        // SkillFsm exists (it is set in PlayerAgent.Awake).
         private void Bind()
         {
             if (_bound)

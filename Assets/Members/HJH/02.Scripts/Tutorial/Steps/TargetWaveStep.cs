@@ -4,8 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 마무리 훈련: 더미 여러 개를 한꺼번에 세우고 전부 부수면 끝.
-    // 설 자리는 맵의 TrainingDummySpot, 없으면 플레이어 둘레에 원형으로
     [CreateAssetMenu(menuName = "HJH/Tutorial/Step - Target Wave", fileName = "Step_TargetWave")]
     public class TargetWaveStep : TutorialStep
     {

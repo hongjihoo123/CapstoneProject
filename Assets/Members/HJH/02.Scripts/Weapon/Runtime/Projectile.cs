@@ -18,7 +18,6 @@ namespace RobotWeapons
 
         private static readonly RaycastHit[] HitBuffer = new RaycastHit[16];
 
-        // 지금 날아가는 투사체들 (스킬 장막이 막을 때 씀)
         private static readonly System.Collections.Generic.List<Projectile> ActiveList = new();
         public static System.Collections.Generic.IReadOnlyList<Projectile> Active => ActiveList;
         public IWeaponOwner Shooter => shooter;
@@ -26,7 +25,6 @@ namespace RobotWeapons
         private void OnEnable() => ActiveList.Add(this);
         private void OnDisable() => ActiveList.Remove(this);
 
-        // 막힘: 데미지 없이 그 자리에서 사라짐
         public void Block()
         {
             if (_destroyed) return;
@@ -71,8 +69,7 @@ namespace RobotWeapons
         
         private bool TryFindClosestHit(Vector3 direction, float distance, out RaycastHit result)
         {
-            // Obstacle / Ground / Enemy(Weakpoint) 에만 닿음. 적 투사체가 플레이어를 맞출 수 있게 Player 레이어는 남김 (보이지 않는 경계 벽은 통과)
-            int mask = (hitMask.value | BulletLayers.Environment) & (BulletLayers.All | LayerMask.GetMask("Player"));   // 환경 레이어(Obstacle/Ground)는 항상 포함
+            int mask = (hitMask.value | BulletLayers.Environment) & (BulletLayers.All | LayerMask.GetMask("Player"));
             int count = Physics.RaycastNonAlloc(_previousPosition, direction, HitBuffer, distance, mask, QueryTriggerInteraction.Collide);
             if (count == 0)
             {

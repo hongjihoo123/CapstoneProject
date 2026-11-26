@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Audio
 {
-    // 원소별 시전음·폭발음
     [Serializable]
     public class ElementSfx
     {
@@ -13,9 +12,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         public SoundCue impact = new();
     }
 
-    // 주인이 없는 공용 소리 + 기본값. Resources/HJH/SfxBank.asset 하나만 둠 (에셋 이름은 예전 그대로).
-    //  - 적·무기·스킬 전용 소리는 여기 말고 그 객체의 SO 에 SoundCue 필드로 넣을 것 (소리는 그 이벤트의 주인이 가짐)
-    //  - 객체의 칸이 비어 있으면 여기 기본값으로 대신 (새 적을 만들어도 조용하지 않게)
     [CreateAssetMenu(menuName = "HJH/Sound Library", fileName = "SfxBank")]
     public class SoundLibrary : ScriptableObject
     {

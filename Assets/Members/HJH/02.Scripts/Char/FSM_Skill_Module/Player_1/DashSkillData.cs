@@ -12,7 +12,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Player_1
         [SerializeField] private bool reloadOnDash = true;
         [SerializeField, Tooltip("건슬링어 연출: 출발 파동 + 조명 + 잔상")] private bool flashyFx;
 
-        // 스킬 트리: 대쉬 거리
         private float Force => dashForce * SkillUpgrades.Multiplier(SkillUpgradeKind.Range, this);
 
         public override void Execute(ISkillContext context)

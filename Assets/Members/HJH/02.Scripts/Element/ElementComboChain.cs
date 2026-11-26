@@ -1,7 +1,6 @@
 using Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module;
 using Assets.Members.HJH._02.Scripts.Char.Visual;
 using Assets.Members.HJH._02.Scripts.Element.Upgrade;
-using Assets.Members.HJH._02.Scripts.UI;
 using Members.JJH._02_Scripts.ElementsSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem;
 using Members.JJH._02_Scripts.Systems.EventChannelSystem.Events;
@@ -12,13 +11,6 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 스킬 콤보 체인 + 피니시 (콤보 테스트 씬에서 JJH ElementStackManager 대신 씀. 둘 중 하나만)
-    //  - 원소 있는 스킬을 쓸 때마다 입력 하나. 다음 스킬을 chainWindow 안에 쓰면 체인이 이어짐
-    //  - 마지막 입력들이 JJH 콤보 표의 콤보가 되면 바로 완성 (기다림 없음). 입력은 안 지워져서 콤보끼리 이어짐
-    //  - 완성된 콤보(입력 2개 이상, 서로 다른 것만)는 피니시 스택 +1 (최대 maxStock)
-    //  - C: 스택 전부 써서 readyTime 동안 "피니시 준비". 그 안에 쓰는 Q/E/우클릭/R 하나가
-    //       피해 ×stackScale[스택] 로 강화됨 (데미지 배수만). 시간 안에 안 쓰면 날아감
-    // 완성된 콤보는 JJH 쪽에 ElementBuffTriggeredEvent(콤보 입력들)로 보내서 ElementBuffController 가 버프를 검.
     public class ElementComboChain : MonoBehaviour
     {
         public readonly struct ComboInput
@@ -92,7 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public int MaxStock => maxStock;
         public SkillStateModule Skills => skills;
 
-        // 이어갈 수 있는 콤보(진행 중인 것 전부) 중 하나라도 다음에 이 속성을 원하면 true
         public bool IsNextElement(ElementType element)
         {
             if (_elements.Count == 0)
@@ -107,7 +98,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             return false;
         }
 
-        // 지금 켜져 있는 콤보 효과의 남은 시간 (꺼져 있으면 false)
         public bool TryGetEffectRemaining(string comboName, out float seconds)
         {
             seconds = 0f;
@@ -121,17 +111,14 @@ namespace Assets.Members.HJH._02.Scripts.Element
         public int ArmedStacks => _armedStacks;
         public float ArmedScale => ScaleFor(_armedStacks);
 
-        // 스킬 트리의 피니셔 강화는 "더해지는 몫"(1.3 -> 0.3)에 곱해짐: 강화해도 1배 밑으로 안 내려감
         public float ScaleFor(int stacks) =>
             stacks <= 0 || stackScale == null || stackScale.Length == 0
                 ? 1f
                 : 1f + (stackScale[Mathf.Clamp(stacks - 1, 0, stackScale.Length - 1)] - 1f) * SkillUpgrades.Multiplier(SkillUpgradeKind.FinisherPower);
 
-        // 피니시를 실어 보낼 수 있는 칸 (대쉬·평타 제외)
         public static bool CanCarryFinisher(SkillSlotId slot) =>
             slot is SkillSlotId.Basic1 or SkillSlotId.Basic2 or SkillSlotId.Weapon or SkillSlotId.Ultimate;
 
-        // The combo the chain is furthest into and the element that advances it (what the UI calls NEXT).
         public bool TryGetNext(out ElementType next, out ElementComboBook.Recipe route, out int progress)
         {
             bool onRoute = Book.TryFindBestProgress(_elements, out route, out progress);
@@ -139,26 +126,17 @@ namespace Assets.Members.HJH._02.Scripts.Element
             return onRoute;
         }
 
-        // shifted = the input list was full and the oldest input dropped out.
         public event Action<bool> InputAdded;
         public event Action<LandedCombo> ComboLanded;
-        // Final chain count, raised before the inputs are cleared.
         public event Action<int> ChainBroken;
         public event Action StockChanged;
-        // 콤보 표가 바뀜 (맛보기 선택 / 바인딩 교체)
         public event Action BookChanged;
-        // C 눌러서 준비됨: (쓴 스택, 피해 배율)
         public event Action<int, float> FinisherArmed;
-        // 준비 시간 안에 스킬을 안 씀
         public event Action FinisherExpired;
-        // 강화된 스킬 나감: (칸, 피해 배율)
         public event Action<SkillSlotId, float> FinisherReleased;
 
         private void Awake()
         {
-            // 픽 화면에서 고른 콤보로 표를 바꾼 다음에 읽음 (목록 에셋이 없으면 씬에 적힌 그대로)
-            // 화면의 입력 칸/타이머는 JJH ElementStackManager 의 시간(triggerDelay)으로 줄어듦.
-            // 체인이 다른 시간(5초)을 쓰면 화면은 끝났는데 콤보는 이어지니까, 그 매니저가 있으면 같은 시간을 씀
             ElementStackManager stackManager = FindFirstObjectByType<ElementStackManager>();
             if (stackManager != null)
                 chainWindow = stackManager.TriggerDelay;
@@ -171,7 +149,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
 
         private void Start()
         {
-            // 콤보 배너·효과 바는 HUD(PlayerRig) 하이어라키에 놓여 있음 (예전엔 여기서 붙였음)
             EnsureStarter();
             RefreshStackViews();
         }
@@ -196,14 +173,12 @@ namespace Assets.Members.HJH._02.Scripts.Element
             skills.LoadoutChanged -= EnsureStarter;
         }
 
-        // 픽 없이 맵을 열었거나 캐릭터를 바꿨으면 그 캐릭터의 맛보기 콤보로 (바뀌면 Changed 로 표가 다시 만들어짐)
         private void EnsureStarter()
         {
             if (skills != null)
                 ComboLoadout.EnsureStarterFor(skills.GetSkill(SkillSlotId.Weapon), skills.GetSkill(SkillSlotId.Ultimate));
         }
 
-        // 맛보기/바인딩 콤보가 바뀜 → 표를 새로 만들고 진행 중이던 체인은 끊음 (스택·저장된 피니시는 유지)
         private void HandleLoadoutChanged()
         {
             RebuildBook();
@@ -220,11 +195,10 @@ namespace Assets.Members.HJH._02.Scripts.Element
             maxInputs = Mathf.Max(_baseInputs, Book.LongestLength);
         }
 
-        // JJH 콤보 목록 UI 는 Awake 에서 씬에 적힌 표로 목록을 만들어서, 표를 바꾼 뒤 다시 만들어 줘야 고른 콤보가 보임
         private static void RefreshStackViews()
         {
             foreach (ElementStackView view in FindObjectsByType<ElementStackView>(FindObjectsInactive.Include, FindObjectsSortMode.None))
-                view.RebuildComboList(true, ComboLoadout.EffectOf);   // 속성 하나짜리는 빼고, 줄마다 효과 글자를 채움
+                view.RebuildComboList(true, ComboLoadout.EffectOf);
         }
 
         private void Update()
@@ -248,7 +222,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 Break();
         }
 
-        // 스킬 코드가 돌기 전에 강화를 걸어둠 → 바로 맞는 스킬도 배율이 들어감
         private void HandleSkillCasting(SkillUsedInfo info)
         {
             if (!IsArmed || info.Data == null || !CanCarryFinisher(info.Slot))
@@ -259,13 +232,11 @@ namespace Assets.Members.HJH._02.Scripts.Element
             _releasing = true;
         }
 
-        // Skills without an element are not part of the combo language: they neither add nor break the chain.
         private void HandleSkillUsed(SkillUsedInfo info)
         {
             if (info.Data != null && info.Data.TryGetElement(out ElementType element))
                 AddInput(new ComboInput(element, info.Slot));
 
-            // 강화된 스킬이 나간 뒤 피니시 연출 (데미지 배수만, 따로 터지는 스킬 없음)
             if (_releasing)
             {
                 _releasing = false;
@@ -295,7 +266,7 @@ namespace Assets.Members.HJH._02.Scripts.Element
                 ComboLanded?.Invoke(new LandedCombo(combo, _inputs.Count - combo.Length));
                 if (sendBuffEvents)
                     elementsChannel.RaiseEvent(ElementEvents.ElementBuffTriggeredEvent.Init(combo.Sequence));
-                if (combo.Length > 1)   // 원소 하나짜리 콤보는 스킬마다 터져서 스택은 안 줌
+                if (combo.Length > 1)
                     AddToStock(combo);
             }
         }
@@ -309,7 +280,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             StockChanged?.Invoke();
         }
 
-        // C: 스택 전부 소모 → 준비. 스택 없거나 이미 준비 중이면 아무 일 없음
         private void TryArm()
         {
             if (IsArmed || _stock.Count == 0)
@@ -334,7 +304,6 @@ namespace Assets.Members.HJH._02.Scripts.Element
             StockChanged?.Invoke();
         }
 
-        // 배율은 HandleSkillCasting 에서 이미 걸림. 여기선 연출/이벤트만
         private void Release(SkillSlotId slot)
         {
             float scale = ArmedScale;

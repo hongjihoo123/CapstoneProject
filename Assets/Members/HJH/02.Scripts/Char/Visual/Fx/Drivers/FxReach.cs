@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Makes particles cover a runtime distance within their lifetime:
-    //   Inward  - spawn on a circle of radius Params.Radius and fly to the center (pull, charge-up)
-    //   Toward  - fly along +Z for |End - Start| (lifesteal drawn toward the player)
     public class FxReach : MonoBehaviour, IFxDriver
     {
         public enum Mode { Inward, Toward }

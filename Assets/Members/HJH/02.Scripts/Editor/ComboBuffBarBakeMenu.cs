@@ -7,10 +7,6 @@ using UnityEngine;
 
 namespace HJH.EditorTools
 {
-    // 버프 바(ComboBuffBar 프리팹) 하나만 다시 굽기. 다른 UI 는 안 건드림.
-    //  - StatIconSet 에셋이 없으면 만들어서 UI/Icons/Stats 의 그림을 스탯마다 연결
-    //  - 프리팹 루트는 그대로 두고 자식만 다시 만듦 → PlayerRig 안의 버프 바 위치(오버라이드)는 그대로
-    //  - 버프 바 프리팹 안에서 손으로 고친 것(글자 크기 등)은 지워짐
     public static class ComboBuffBarBakeMenu
     {
         private const string PrefabPath = "Assets/Members/HJH/05.Data/Prefab/UI/ComboBuffBar.prefab";
@@ -47,7 +43,6 @@ namespace HJH.EditorTools
             WriteLog("DONE " + PrefabPath);
         }
 
-        // 없을 때만 만듦 (있으면 인스펙터에서 바꾼 그림·색을 지키려고 그대로 둠)
         public static StatIconSet EnsureStatIconSet()
         {
             var set = AssetDatabase.LoadAssetAtPath<StatIconSet>(ComboBuffBarView.StatIconSetPath);

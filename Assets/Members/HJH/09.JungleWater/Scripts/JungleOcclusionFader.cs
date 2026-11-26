@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH.Environment
 {
-    // 카메라와 플레이어 사이, 그리고 방금 스킬이 터진 자리를 가리는 나무·잎을 반투명하게 (캐릭터·이펙트가 안 가려지게).
-    //  - 셰이더에 _Fade 가 있는 머티리얼(잎 SG_JungleLeaf, 줄기 SG_JungleBark)을 쓰는 렌더러만 대상
-    //  - 콜라이더가 필요 없다: 렌더러 바운딩 박스가 '카메라 → 플레이어' 선분에 걸리는지만 본다
-    //  - 셰이더는 디더링으로 반투명 처리 → 투명 셰이더처럼 그리는 순서 문제가 없음
-    // 씬에 _Fade 머티리얼이 있으면 메인 카메라에 자동으로 붙는다.
     [DisallowMultipleComponent]
     public class JungleOcclusionFader : MonoBehaviour
     {
@@ -29,7 +24,6 @@ namespace Assets.Members.HJH.Environment
         private sealed class Entry
         {
             public Renderer Renderer;
-            // 나무는 안 움직이니 박스를 Scan 때 저장해 둠 (renderer.bounds 는 엔진 호출이라 매 프레임 부르면 비쌈)
             public Bounds Bounds;
             public float Alpha = 1f;
         }
@@ -37,9 +31,6 @@ namespace Assets.Members.HJH.Environment
         [Tooltip("스킬이 터진 자리 위 나무를 반투명하게 두는 시간 (초)")]
         [SerializeField] private float impactFadeSeconds = 2f;
 
-        // ---- 바위 (2026-11-02): 큰 바위가 카메라를 가리면 반투명 머티리얼로 바꿔 끼움
-        //  - 바위 셰이더(SG_PBR)엔 _Fade 가 없어서, Resources/HJH/RockFade/<원본>_Fade 반투명 복사본으로 교체 (HJH/Map/Rocks 메뉴가 만듦)
-        //  - 큰 절벽은 바운딩 박스가 커서 상자 검사로는 늘 가린다고 나옴 → 실제 콜라이더에 광선을 쏴서 판정
         [Header("Rocks")]
         [Tooltip("더 이상 쓰지 않음. 이제 돌 Scale 0.7 미만은 안 투명해짐 (StoneScale.FadeMin)")]
         [SerializeField] private float rockMinSize = 3f;
@@ -53,13 +44,11 @@ namespace Assets.Members.HJH.Environment
             public float Alpha = 1f;
             public bool Swapped;
             public bool Blocking;
-            public Transform Group;   // 같은 묶음(RockFadeGroup / RockMass_*)이면 함께 투명해짐
+            public Transform Group;
         }
 
-        // 묶음 → 그 안의 바위들. 하나라도 가리면 전원 투명
         private readonly Dictionary<Transform, List<RockEntry>> _groups = new();
 
-        // 가장 가까운 위쪽의 묶음 루트: RockFadeGroup 이 붙었거나 이름이 RockMass_ 로 시작 (RockMass_Auto 같은 컨테이너는 제외)
         private static Transform FindGroupRoot(Transform t)
         {
             for (Transform p = t; p != null; p = p.parent)
@@ -127,7 +116,6 @@ namespace Assets.Members.HJH.Environment
 
             Vector3 from = _camera != null ? _camera.transform.position : transform.position;
 
-            // 가리는지 볼 선들: 카메라 → 플레이어, 카메라 → 방금 스킬이 터진 자리들
             _sights.Clear();
             AddSight(from, target.position + Vector3.up * targetHeight, margin);
             float now = Time.unscaledTime;
@@ -137,7 +125,6 @@ namespace Assets.Members.HJH.Environment
             foreach ((Vector3 point, float radius, float _) in _impacts)
                 AddSight(from, point + Vector3.up, Mathf.Max(margin, radius));
 
-            // 모든 선을 감싸는 큰 상자. 이 밖의 나무는 정밀 검사(IntersectRay, 엔진 호출)를 건너뜀
             var area = new Bounds(from, Vector3.zero);
             float widest = 0f;
             foreach ((Ray ray, float length, float width) in _sights)
@@ -168,7 +155,6 @@ namespace Assets.Members.HJH.Environment
                 if (Mathf.Approximately(e.Alpha, goal))
                     continue;
 
-                // 지워진 렌더러는 값을 바꿀 때만 확인 (null 확인도 엔진 호출이라 전부에 매 프레임 하지 않음)
                 if (e.Renderer == null)
                 {
                     _entries.RemoveAt(i);
@@ -184,7 +170,6 @@ namespace Assets.Members.HJH.Environment
             UpdateRocks(step);
         }
 
-        // 카메라 → 플레이어(·스킬 자리) 선마다 광선 3개(가운데·양옆)를 바위 콜라이더에 쏴서 가리는 바위를 찾음
         private void UpdateRocks(float step)
         {
             if (_rocks.Count == 0)
@@ -193,7 +178,6 @@ namespace Assets.Members.HJH.Environment
             foreach (RockEntry rock in _rocks)
                 rock.Blocking = false;
 
-            // 카메라가 바위 속에 들어가 있어도 맞게 (메시 콜라이더 안쪽 면도 맞힘)
             bool backfaces = Physics.queriesHitBackfaces;
             Physics.queriesHitBackfaces = true;
             Vector3 side = _camera != null ? _camera.transform.right : transform.right;
@@ -206,7 +190,6 @@ namespace Assets.Members.HJH.Environment
             }
             Physics.queriesHitBackfaces = backfaces;
 
-            // 묶음 안에서 하나라도 가리면 묶음 전체(자식 조각 포함)를 투명하게
             foreach (var members in _groups.Values)
             {
                 bool any = false;
@@ -227,7 +210,6 @@ namespace Assets.Members.HJH.Environment
                 rock.Alpha = Mathf.MoveTowards(rock.Alpha, goal, step);
                 if (rock.Alpha >= 0.999f)
                 {
-                    // 다 돌아왔으면 원래 머티리얼로 (불투명 + SRP 배칭 그대로)
                     rock.Renderer.sharedMaterials = rock.Original;
                     rock.Renderer.SetPropertyBlock(null);
                     rock.Swapped = false;
@@ -257,19 +239,16 @@ namespace Assets.Members.HJH.Environment
                     rock.Blocking = true;
         }
 
-        // 큰 바위 + 반투명 복사본이 있는 머티리얼 + 콜라이더가 있으면 등록
         private bool TryAddRock(Renderer r)
         {
             if (r is not MeshRenderer)
                 return false;
-            // 작은 돌(Scale 0.7 미만)은 가려도 투명해지지 않음 (StoneScale 기준)
             if (!StoneScale.CanFade(r.transform))
                 return false;
             Transform group = FindGroupRoot(r.transform);
             bool hasCollider = r.TryGetComponent(out Collider collider);
             if (group == null && !hasCollider)
-                return false;   // 낱개 바위는 콜라이더가 있을 때만 (콜라이더로 가림을 판정함)
-            // 묶음의 일원이면 콜라이더가 없어도 등록 (직접 가리는지는 콜라이더 있는 조각이 판정하고 나머지는 따라감)
+                return false;
 
             Material[] original = r.sharedMaterials;
             var faded = new Material[original.Length];
@@ -312,14 +291,12 @@ namespace Assets.Members.HJH.Environment
                 _sights.Add((new Ray(from, segment / length), length, width));
         }
 
-        // 스킬이 터진 자리는 잠깐 동안 그 위 나무·잎을 반투명하게 (이펙트가 나무에 안 가려지게)
         private void OnEnable() => SkillImpacts.Impacted += OnSkillImpact;
         private void OnSkillImpact(Vector3 position, float radius) =>
             _impacts.Add((position, radius, Time.unscaledTime + impactFadeSeconds));
 
         private void Scan()
         {
-            // 이미 아는 것: 지워졌으면 빼고, 남은 건 박스를 새로 (옮겨진 나무가 있어도 다음 Scan 에 맞춰짐)
             for (int i = _entries.Count - 1; i >= 0; i--)
             {
                 Entry e = _entries[i];
@@ -336,7 +313,7 @@ namespace Assets.Members.HJH.Environment
                     continue;
                 if (IsNeverFade(r))
                 {
-                    _rockRejected.Add(r);   // 바닥 취급 → 다음 Scan 때 다시 안 봄
+                    _rockRejected.Add(r);
                     continue;
                 }
                 if (HasFade(r))
@@ -349,7 +326,7 @@ namespace Assets.Members.HJH.Environment
                     if (TryAddRock(r))
                         _known.Add(r);
                     else
-                        _rockRejected.Add(r);   // 바위 아님 → 다음 Scan 때 다시 안 봄
+                        _rockRejected.Add(r);
                 }
             }
         }
@@ -382,7 +359,6 @@ namespace Assets.Members.HJH.Environment
         private void OnDisable()
         {
             SkillImpacts.Impacted -= OnSkillImpact;
-            // 꺼질 때 반투명으로 남지 않게 되돌림 (플레이 중 코드 다시 불러오기 뒤엔 블록이 비어 있을 수 있음)
             _block ??= new MaterialPropertyBlock();
             foreach (Entry e in _entries)
             {

@@ -18,7 +18,6 @@ namespace RobotWeapons
 
         public override bool PrimaryIsHeld => true;
 
-        // Scales the whole swing (windup, hit window, recovery); the animator gets the same value.
         public float AttackSpeedMultiplier { get; set; } = 1f;
 
         public event System.Action<SwingVisual> Swung;
@@ -164,7 +163,6 @@ namespace RobotWeapons
                 found[target] = found.TryGetValue(target, out bool already) && already || weakpoint;
             }
 
-            // 이번 휘두르기에서 처음 맞힌 순간에만 알림 (히트 판정이 여러 프레임이라 매번 보내면 히트스톱이 겹침)
             if (found.Count > 0 && hitThisSwing.Count == 0)
             {
                 SwingHit?.Invoke(new SwingHitVisual

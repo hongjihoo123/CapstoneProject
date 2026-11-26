@@ -13,11 +13,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 에디터 전용 확인 도구: 메인 화면 → "예" → 픽 화면 → 스테이지 → 클리어 → 메인 화면까지 튜토리얼을 입력 없이 돌림.
-    // 메뉴 HJH/튜토리얼/자동 진행 데모 로 Captures/_tutorial_auto.txt 를 만들어 두면 다음 플레이에서 한 번 돎.
-    //  - 튜토리얼 확인 입력(Enter/Space)은 TutorialInput.DebugPress, 스킬은 실제 스킬 입력 경로(SkillStateModule.ResolveInput)로
-    //  - 적 처치는 데미지를 직접 줌 (조준 없이)
-    //  - 카드마다 Captures/tutorial_auto/NN_단계.png 저장, 진행 기록은 Captures/_tutorial_auto_log.txt
     public sealed class TutorialAutoPilot : MonoBehaviour
     {
         private const string Flag = "Captures/_tutorial_auto.txt";
@@ -200,7 +195,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
                 case ComboBindStep:
                 {
-                    // 상점 앞으로 가서 창을 열고 불 → 물 바인딩
                     var station = FindFirstObjectByType<Element.ComboBindStation>();
                     if (station != null && ctx.Player != null)
                         ctx.Player.Teleport(station.transform.position + new Vector3(-1.5f, 0.3f, -1.5f));
@@ -237,7 +231,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             }
         }
 
-        // 실제 스킬 입력 경로: 누름 → 잠깐 누르고 있음 → 뗌 (누르면 바로 나가는 칸 / 떼면 나가는 칸 모두)
         private IEnumerator Cast(TutorialContext ctx, SkillSlotId slot)
         {
             SkillStateModule skills = ctx.Player != null ? ctx.Player.SkillFsm : null;
@@ -271,10 +264,8 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         private IEnumerator ClearRoom(TutorialContext ctx)
         {
-            // 확인 도구라 플레이어는 죽지 않게 채워 줌 (조준 없이 적 사이로 순간이동하니 맞기만 함)
             ctx.Player?.Heal(1000f);
 
-            // 아직 안 터진 스포너로 가서 적을 불러내고, 나온 적을 처치
             if (ctx.TryGetGuideTarget(out Vector3 point) && ctx.Player != null)
             {
                 ctx.Player.Teleport(point + Vector3.up * 0.5f + Vector3.back * 2f);
@@ -282,7 +273,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             }
             yield return Wait(1.5f);
 
-            // 한 방에 죽이면 보스는 페이즈 전환을 건너뛰어 죽음 처리가 안 됨 → 최대 체력의 20% 씩 나눠 때림 (실제 전투처럼)
             for (int hit = 0; hit < 8; hit++)
             {
                 foreach (AbstractEnemy enemy in FindObjectsByType<AbstractEnemy>(FindObjectsSortMode.None))

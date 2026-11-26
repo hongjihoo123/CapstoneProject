@@ -4,10 +4,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
 {
-    // 지연 체력바 (Gunfire Reborn / SoD 식). 값은 IHealthSignal 이벤트로만 받고, 여기서는 그리기만 함.
-    //  - 피격: 실제 바(fill)는 즉시 줄고, 뒤의 밝은 잔상(damageGhost)이 잠깐 머문 뒤 천천히 따라 내려옴
-    //  - 회복: 밝은 예고 바(healGhost)가 회복될 위치까지 먼저 차고, 실제 바가 부드럽게 따라 차오름
-    // 적/플레이어 공용. Image 는 전부 Filled(Horizontal) 이고, 뒤→앞 순서: 배경, damageGhost, healGhost, shield, fill
     public sealed class DelayedHealthBarView : MonoBehaviour
     {
         [Header("바 (Filled Image)")]
@@ -34,14 +30,14 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
         [SerializeField, Tooltip("히트스톱·슬로모션 중에도 같은 속도로 움직이게")] private bool unscaledTime = true;
 
         private IHealthSignal _signal;
-        private float _shown = 1f;        // 실제 바가 지금 그리는 값
-        private float _target = 1f;       // 실제 체력 비율
-        private float _ghost = 1f;        // 피격 잔상 위치
+        private float _shown = 1f;
+        private float _target = 1f;
+        private float _ghost = 1f;
         private float _ghostFrom = 1f;
-        private float _drainAt;           // 이 시각부터 잔상이 내려감
+        private float _drainAt;
         private float _flashUntil;
         private float _healFrom = 1f;
-        private float _healAt;            // 이 시각부터 실제 바가 차오름
+        private float _healAt;
         private bool _healing;
 
         private float Now => unscaledTime ? Time.unscaledTime : Time.time;
@@ -67,9 +63,8 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
         {
             float ratio = change.Ratio;
 
-            // 처음 붙었거나, 죽었다 다시 살아난(풀에서 재사용) 경우는 연출 없이 맞춤
             bool revived = change.PreviousRatio <= 0f && !change.IsDamage;
-            bool sameValue = !change.IsDamage && !change.IsHeal;   // 첫 값, 최대 체력·보호막만 바뀜
+            bool sameValue = !change.IsDamage && !change.IsHeal;
             if (revived || sameValue)
             {
                 if (revived || Mathf.Abs(_target - ratio) > 0.0005f)
@@ -88,17 +83,16 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
 
         private void OnDamage(float ratio)
         {
-            // 잔상은 지금 보이는 맨 위 위치에서 시작 (회복이 차오르던 중이면 그 위치)
             float top = Mathf.Max(_ghost, _shown);
             if (_ghost <= _shown + 0.0001f)
                 _flashUntil = Now + damageFlashTime;
 
             _healing = false;
             _target = ratio;
-            _shown = ratio;               // 실제 바는 즉시
+            _shown = ratio;
             _ghost = top;
             _ghostFrom = top;
-            _drainAt = Now + damageHold;  // 연타면 계속 미뤄져서 깎인 양이 쌓여 보임
+            _drainAt = Now + damageHold;
         }
 
         private void OnHeal(float ratio)
@@ -108,7 +102,7 @@ namespace Assets.Members.HJH._02.Scripts.UI.HealthBar
             _healAt = Now + healHold;
             _healing = true;
             if (_ghost < ratio)
-                _ghost = _shown;          // 잔상이 회복 위치 아래로 숨게
+                _ghost = _shown;
         }
 
         private void Snap(float ratio)

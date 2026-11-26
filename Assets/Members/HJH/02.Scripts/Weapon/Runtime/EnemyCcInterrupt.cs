@@ -5,12 +5,7 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
 {
-    // 적이 기절·밀려남·끌려감(CC)에 걸리면 하던 공격/스킬을 캔슬하는 어댑터 (JJH 적 코드는 안 고침).
-    //  걸리는 순간: 스킬 캔슬(텔레그래프 포함) → 적 AI(BT) 일시정지(평타가 안 나감) → 기절/피격 애니메이션
-    //  풀리는 순간: AI 를 처음부터 다시 시작 → 끊긴 공격을 이어서 바로 때리지 않고, 다시 접근·조준부터
-    //  죽으면: AI 를 바로 다시 켜서 JJH 의 DEAD 처리가 그대로 돌게 함
-    // CrowdControlReceiver 가 생길 때(적 프리팹에 이미 있음 / 맞을 때 자동) 같이 붙음 (씬·프리팹에 따로 놓을 것 없음)
-    [DefaultExecutionOrder(1010)]   // Receiver(1000) 다음
+    [DefaultExecutionOrder(1010)]
     public sealed class EnemyCcInterrupt : MonoBehaviour
     {
         private static readonly int StunnedHash = Animator.StringToHash("STUNNED");
@@ -50,7 +45,6 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
 
         private void LateUpdate()
         {
-            // Health 는 적 모듈 초기화 후에야 생김 (초기화 전/IHealth 없는 프리팹에서 IsAlive 가 NRE)
             if (_receiver == null || _enemy == null || _enemy.Health == null)
                 return;
 
@@ -76,7 +70,7 @@ namespace Assets.Members.HJH._02.Scripts.Weapon.Runtime
             _enemy.SkillModule?.CancelAllSkills();
             if (_behavior != null && _behavior.enabled)
             {
-                _behavior.enabled = false;   // 일시정지: 평타 액션·스킬 사용 액션이 안 돌아감
+                _behavior.enabled = false;
                 _pausedBehavior = true;
             }
 

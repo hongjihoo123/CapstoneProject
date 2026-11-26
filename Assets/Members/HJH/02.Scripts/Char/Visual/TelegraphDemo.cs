@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 조준 미리보기·적 예고 모양 확인용 데모 (입력·적 없이 캡처 도구로 찍으려고)
-    //  - 에디터 메뉴 HJH/디버그/조준·적 예고 데모 로 켜면, 다음 플레이부터 자동으로 생김 (에디터 전용, 빌드엔 안 생김)
-    //  - 2.5초마다 조준 모양이 바뀜: 0 목+부채꼴 / 1 떨어진 원 / 2 직선
-    //  - 오른쪽에 적 예고(원·부채꼴·사각형)가 2초 주기로 차오름
     public sealed class TelegraphDemo : MonoBehaviour
     {
         public const string SessionKey = "HJH.TelegraphDemo";
@@ -66,20 +62,20 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         {
             Vector3 origin = Anchor();
             ScreenAxes(out Vector3 right, out Vector3 up);
-            Vector3 aim = Quaternion.AngleAxis(15f, Vector3.up) * up;   // 화면 위쪽에서 살짝 오른쪽
+            Vector3 aim = Quaternion.AngleAxis(15f, Vector3.up) * up;
 
             switch ((int)(Time.time / ModeSeconds) % 3)
             {
-                case 0:   // 대쉬 경로(목) + 도착 지점 부채꼴 (DashBlast 같은 모양)
+                case 0:
                     Vector3 landing = origin + aim * 2.2f;
                     preview.Path(origin, landing, 1f);
                     preview.Cone(landing, aim, 4.5f, 100f);
                     break;
-                case 1:   // 사거리 안 커서 위치 원 (Zone/Circle 스킬)
+                case 1:
                     preview.RangeCircle(origin, 7f);
                     preview.Circle(origin + aim * 4.5f, 2f);
                     break;
-                default:  // 직선 (Line/관통 투사체)
+                default:
                     preview.Path(origin, origin + aim * 7f, 1.2f);
                     break;
             }

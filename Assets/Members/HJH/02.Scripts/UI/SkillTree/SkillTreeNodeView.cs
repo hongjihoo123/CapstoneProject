@@ -6,9 +6,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 스킬 트리 노드 한 칸. 모양은 프리팹(SkillTreeScreen 안의 NodeTemplate)에 저장돼 있고,
-    // 여기선 종류에 맞는 모양을 켜고 색(배움/잠김/선택)과 글자만 바꿈.
-    //   ◆ 마름모 = 스탯(여러 랭크)   ● 원 = 능력(특성)   ■ 작은 사각 = 계열 입구   ■ 금색 큰 사각 = 핵심
     public class SkillTreeNodeView : MonoBehaviour
     {
         [Serializable]
@@ -30,7 +27,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private Button button;
         [SerializeField] private CanvasGroup group;
 
-        // 색 (HTML 시안의 어두운 팔레트)
         [Header("색")]
         [SerializeField] private Color fillColor = new(0.149f, 0.149f, 0.133f, 1f);
         [SerializeField] private Color lineColor = new(0.302f, 0.294f, 0.267f, 1f);
@@ -61,10 +57,9 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 _ => "핵",
             };
             glyph.fontSize = kind == EnchantNodeKind.Stat ? 15f : 20f;
-            rankText.gameObject.SetActive(false);   // 랭크는 모양 안에 (스탯) / 채움 색으로 (나머지)
+            rankText.gameObject.SetActive(false);
             if (kind == EnchantNodeKind.Key)
             {
-                // 핵심: 이름을 큰 사각 안에 (아래 칸이 모자라서)
                 glyph.gameObject.SetActive(false);
                 plate.SetActive(false);
                 nameText.rectTransform.anchoredPosition = Vector2.zero;
@@ -78,7 +73,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private static Color WithAlpha(Color c, float a) => new(c.r, c.g, c.b, a);
 
-        // rank/max: 랭크, open: 지금 배울 수 있는 위치인가(선행을 배웠나), selected: 오른쪽 패널에 보이는 중
         public void Show(int rank, int max, bool open, bool selected)
         {
             bool full = rank >= max;
@@ -105,8 +99,7 @@ namespace Assets.Members.HJH._02.Scripts.UI
             rankText.color = full && learned ? goldColor : mutedColor;
             nameText.color = locked || !_wired ? mutedColor : textColor;
             if (_kind == EnchantNodeKind.Key && learned && full)
-                nameText.color = darkColor;   // 이름이 금색 채움 위에 있음
-            // 잠긴 노드는 모양만 흐리게 (글자 판 뒤의 선이 비치지 않게 그룹 알파는 안 씀)
+                nameText.color = darkColor;
             if (locked)
             {
                 shape.outline.color = WithAlpha(shape.outline.color, 0.45f);

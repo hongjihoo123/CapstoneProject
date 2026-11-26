@@ -1,4 +1,3 @@
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -30,7 +29,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
         public Vector3 AimPoint { get; private set; }
 
-        // 녹화·자동 시연용: 값이 있으면 마우스 대신 이 월드 위치를 조준 (사람이 마우스를 안 움직여도 됨). 평소엔 null
         public static Vector3? ScriptedAimPoint;
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.SubsystemRegistration)]
@@ -39,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
         private bool _wasLocked;
         private Vector3 _lockedFacing;
 
-        // 다른 코드(마우스 룩 회전 등)가 Update 에서 몸을 돌려도 잠금 중엔 프레임 끝에서 다시 고정
         private void LateUpdate()
         {
             if (_wasLocked && _lockedFacing.sqrMagnitude > 0.0001f)
@@ -74,7 +71,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                 _skills.SkillCasting += OnSkillCasting;
         }
 
-        // 스킬 나가기 직전: 몸을 바로 마우스 쪽으로 (몸 앞 기준으로 나가는 연출이 엉뚱한 데로 안 가게). 대시는 제외
         private void OnSkillCasting(Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillUsedInfo info)
         {
             if (info.Slot == Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.SkillSlotId.Dash)
@@ -93,7 +89,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                 transform.rotation = Quaternion.LookRotation(toAim);
         }
 
-        // 지금 마우스 쪽을 봐야 하나: 사격 누르는 중 / 스킬 조준 중 / 대시 아닌 스킬 도는 중 / 방금 쏘거나 스킬 씀
         private bool InCombat()
         {
             if (player.Input.FireHeld || player.Input.FirePressed)
@@ -142,7 +137,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
 
             var context = player.SkillFsm != null ? player.SkillFsm.Context : null;
 
-            // 조준 잠금 중 (충전 사격 등): 마우스 무시하고 잠근 방향으로 조준·몸 고정
             if (context != null && context.TryGetAimLock(out Vector3 locked))
             {
                 float reach = Mathf.Max(toAim.magnitude, 1f);
@@ -156,19 +150,15 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
             }
 
             player.SetAimPoint(AimPoint);
-            // 마우스가 캐릭터 바로 위면 조준 방향은 그대로 둠 (걷는 방향 돌기는 계속)
             bool hasAim = toAim.sqrMagnitude >= 0.04f;
             if (hasAim)
                 player.SetAimDirection(toAim.normalized);
             else
                 toAim = transform.forward;
 
-            // 대쉬 중엔 날아가는 방향을 봄 (더 빨리 돌아서 짧은 대쉬에도 바로 향함). 끝나면 다시 마우스 쪽.
-            // 쏘는 방향(AimDirection)은 그대로 마우스라 대쉬 중에 쏴도 마우스 쪽으로 나감
             Vector3 facing = toAim;
             float speed = turnSpeed;
 
-            // 걸을 땐 걷는 방향, 쏘거나 스킬 쓸 땐 마우스 쪽 (전투 들어가는 순간엔 바로 홱 돌아봄)
             if (faceMoveDirection)
             {
                 bool combat = InCombat();
@@ -180,7 +170,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                     Vector3 move = player.Input.HasMoveInput ? player.Mover.ToWorldMove(player.Input.Move) : Vector3.zero;
                     move.y = 0f;
                     if (move.sqrMagnitude < 0.0001f)
-                        facing = transform.forward;   // 가만히 있으면 보던 쪽 그대로
+                        facing = transform.forward;
                     else
                         facing = move;
                     speed = turnSpeed * moveTurnMultiplier;
@@ -197,8 +187,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.TopDown
                 return;
 
             Quaternion target = Quaternion.LookRotation(facing);
-            // Normalize: RotateTowards fed its own output every frame drifts off unit length, which the
-            // Inspector reports as "QuaternionToEuler: Input quaternion was not normalized".
             transform.rotation = Quaternion.Normalize(Quaternion.RotateTowards(transform.rotation, target, speed * Time.deltaTime));
         }
     }

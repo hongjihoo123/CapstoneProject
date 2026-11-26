@@ -1,18 +1,10 @@
 using Assets.Members.HJH._02.Scripts.Char.Audio;
 using Assets.Members.HJH._02.Scripts.Char.Character;
-using Members.KYR._01_Scripts;
 using Members.KYR._01.Scripts.Player;
 using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 플레이어가 맞았을 때 "몸"이 반응하는 거 (화면 빨개지는 건 PlayerDamageScreenFx 가 함)
-    //  - 몸이 빨갛게 번쩍
-    //  - 때린 쪽 반대로 몸(Visual)만 툭 밀렸다 돌아옴 + 찌그러짐. 실제 위치(판정)는 안 움직임
-    //  - 머리 위에 흰색 피해 숫자 (내가 받은 피해)
-    //  - 카메라가 맞은 방향으로 살짝 밀림. 세게 맞으면 아주 짧게 멈칫
-    //  - 컨트롤러에 "Hit" 상태 있으면 맞는 모션 (CharacterAnimator)
-    // CharacterModel.For 가 알아서 붙여줌. 씬에 따로 안 붙여도 됨
     public class PlayerHitReaction : MonoBehaviour
     {
         [SerializeField] private Color flashColor = new(1f, 0.2f, 0.15f);
@@ -75,8 +67,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 _player.DamageTaken -= HandleDamageTaken;
         }
 
-        // 죽는 순간 한 번: 확 느려지고 + 크게 흔들리고 + 카메라가 다가감. 쓰러지는 건 CharacterAnimator 의 Dead,
-        // 화면 회색+빨간 테두리는 PlayerDamageScreenFx 가 함
         private void Update()
         {
             if (_player == null || _player.Health == null)
@@ -87,7 +77,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
                 PlayDeath();
             _wasAlive = alive;
 
-            // 기절이 막 걸린 순간 한 번 (PlayerHealth 가 맞을 때 거는 경직 기절 포함)
             bool stunned = alive && _player.Health.IsStunned;
             if (stunned && !_wasStunned)
             {
@@ -119,14 +108,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             float ratio = amount / maxHp;
             bool heavy = ratio >= heavyRatio;
 
-            // 몸 번쩍 (모델 없으면 캡슐째로)
             Component body = _model != null && _model.Current != null ? _model.Current.transform : transform;
             HitFlash.Flash(body, flashColor, heavy ? flashTime * 1.4f : flashTime);
 
             if (showNumber)
                 Fx.DamageNumber(transform.position + Vector3.up * 2.1f, amount, numberColor, heavy ? 1.15f : 0.9f, DamageNumberStyle.Taken);
 
-            // 흔들림은 매번 (센 쪽이 이겨서 연타에도 쌓이지 않음)
             float shakeWeight = heavy ? 1f : Mathf.Clamp01(ratio / Mathf.Max(0.01f, heavyRatio));
             HitFeel.Shake(Mathf.Lerp(hitShake.x, hitShake.y, shakeWeight), hitShakeTime);
 
@@ -136,14 +123,13 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
             Vector3 away = AwayFrom(source);
 
-            // 몸만 밀기 (Visual 이 플레이어 자식이라 판정·이동은 그대로)
             Transform visual = _model != null ? _model.Visual : null;
             if (visual != null && visual != transform)
                 Fx.Punch(visual, away, heavy ? punch.y : Mathf.Lerp(punch.x, punch.y, ratio / Mathf.Max(0.01f, heavyRatio)));
 
             HitFeel.Kick(away * cameraKick * (heavy ? 1.6f : 1f), heavy ? 0.2f : 0.14f);
             if (heavy)
-                HitFeel.Play(heavyHitStop, 0f);   // 흔들림은 위에서 이미 줌
+                HitFeel.Play(heavyHitStop, 0f);
 
             if (_animator != null)
                 _animator.PlayHit();
@@ -156,7 +142,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             }
         }
 
-        // 때린 쪽 반대 방향 (모르면 뒤로)
         private Vector3 AwayFrom(GameObject source)
         {
             Vector3 away = source != null ? transform.position - source.transform.position : -transform.forward;

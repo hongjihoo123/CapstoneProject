@@ -6,8 +6,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 {
-    // 건슬링어 기본스킬(우클릭): 마우스 방향으로 대쉬한 다음, 그 방향 앞으로 부채꼴 충격포를 쏴서 적들을 뒤로 밀어냄.
-    // 대쉬 끝나는 순간(벽에 막혀도) 충격포가 나감.
     [CreateAssetMenu(menuName = "Skill/Gunner/Dash Blast")]
     public class DashBlastSkillData : SkillData
     {
@@ -36,7 +34,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             Vector3 start = context.Transform.position;
             Vector3 landing = start + direction * (dashSpeed * dashTime);
 
-            // 대쉬 경로 + 도착 지점에서 나갈 부채꼴 범위
             preview.Path(start, landing, 1f);
             preview.Cone(landing, direction, blastRange, blastAngle);
         }
@@ -61,13 +58,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 _data = data;
                 _context = context;
                 _direction = SkillAim.Resolve(context, 0f, 1f, out _);
-                context.Dash(_direction, data.dashSpeed, data.dashTime);   // 대쉬 잔상은 CombatFeedback 이 알아서 그림
+                context.Dash(_direction, data.dashSpeed, data.dashTime);
                 GunnerFx.DashStart(context.Transform, _direction, data.FxColor, data.dashTime);
             }
 
             public void Tick(float elapsed)
             {
-                // 대쉬 끝나면(시간 다 됐거나 벽에 막혀서 멈췄으면) 바로 쏨
                 if (!_fired && (elapsed >= _data.dashTime || (elapsed > 0.02f && !_context.IsDashing)))
                     Fire();
             }
@@ -84,9 +80,8 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             {
                 _fired = true;
                 Vector3 origin = _context.Transform.position;
-                float blastRange = _data.blastRange * SkillUpgrades.Multiplier(SkillUpgradeKind.Range, _data);   // 스킬 트리: 범위
+                float blastRange = _data.blastRange * SkillUpgrades.Multiplier(SkillUpgradeKind.Range, _data);
 
-                // 치명이 난 적 수 / 맞은 적 수를 센다 (연쇄 충격 / 맞은 적당 쿨 감소 / 충격파 사슬)
                 int crits = 0;
                 void OnLanded(SkillUpgradeScope slot)
                 {
@@ -98,7 +93,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                 try
                 {
                     hits = Blast(origin, _direction, blastRange, ref crits);
-                    // 이중 충격파: 반대 방향으로 한 번 더 (같은 적은 두 번 맞지 않음)
                     if (SkillUpgrades.Exact(SkillUpgradeKind.DoubleBlast, SkillUpgradeScope.Shock) > 0f)
                         hits += Blast(origin, -_direction, blastRange, ref crits);
                 }
@@ -120,7 +114,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
             private PlayerAgent _player() =>
                 (_context.Transform != null) ? _context.Transform.GetComponentInParent<PlayerAgent>() : null;
 
-            // 한 방향 부채꼴 하나. 맞은 적 수를 돌려줌
             private int Blast(Vector3 origin, Vector3 direction, float blastRange, ref int crits)
             {
                 Color color = _data.FxColor;
@@ -138,18 +131,17 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
                     Vector3 toTarget = component.transform.position - origin;
                     toTarget.y = 0f;
                     if (toTarget.sqrMagnitude > 0.01f && Vector3.Angle(direction, toTarget) > halfAngle)
-                        continue;   // 부채꼴 밖
+                        continue;
                     if (!_struck.Add(target))
-                        continue;   // 이중 충격파에서 같은 적 두 번 맞지 않게
+                        continue;
 
-                    CritSystem.Mark(target);   // 표식 계열을 배웠으면 맞은 적에 표식
+                    CritSystem.Mark(target);
                     int before = crits;
                     _context.DealDamage(target, _data.damage);
                     if (chain > 0f && crits > before)
-                        Chain(component.transform.position, target, _data.damage * chain);   // 충격파 사슬: 치명이면 주변 적에게 전이
+                        Chain(component.transform.position, target, _data.damage * chain);
 
                     GunnerFx.BlastHit(component.transform.position + Vector3.up, toTarget.sqrMagnitude > 0.01f ? toTarget.normalized : direction, color);
-                    // 정면 방향 + 옆으로 벌어지는 방향 섞어서 밀어냄 (부채꼴 모양으로 퍼지게)
                     Vector3 push = toTarget.sqrMagnitude > 0.01f ? (direction + toTarget.normalized).normalized : direction;
                     _context.Knockback(target, push, _data.knockback);
                     hits++;
@@ -160,7 +152,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.Gunner
 
             private readonly System.Collections.Generic.HashSet<IDamageable> _struck = new();
 
-            // 충격파 사슬: 치명이 난 자리 주변의 다른 적에게 충격파가 번짐 (연쇄는 한 번만)
             private void Chain(Vector3 center, IDamageable source, float damage)
             {
                 foreach (IDamageable other in _context.OverlapSphere(center + Vector3.up, ChainRadius))

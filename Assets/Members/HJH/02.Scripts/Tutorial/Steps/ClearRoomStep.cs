@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 실전: 튜토리얼 동안 멈춰 둔 맵 스포너·씬 적을 풀고, 방의 적을 모두 잡으면 끝.
-    // 화면 밖 적/아직 안 가 본 스포너 쪽으로 가장자리 화살표로 길 안내.
-    //
-    // 끝 판단: RoomClearTracker.IsCleared. 단, 죽음 연출에 Dead() 신호가 없는 적(현재 엔트 보스: 죽음 애니메이션에
-    // OnObjectDead 이벤트 없음)은 체력 0 이 되어도 방 클리어 수에 안 잡혀서, 체력 0 으로 잠깐 서 있으면 처치로 쳐 줌.
     [CreateAssetMenu(menuName = "HJH/Tutorial/Step - Clear Room", fileName = "Step_ClearRoom")]
     public class ClearRoomStep : TutorialStep
     {
@@ -36,7 +31,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 ScanStuckDead();
             }
 
-            // 방 클리어 추적이 없는 씬(적이 없는 방)이면 바로 끝
             if (ctx.Tracker == null || ctx.Tracker.IsCleared || ctx.Tracker.Total <= 0)
                 return true;
             return Left(ctx) <= 0 && !AnyAlive();
@@ -44,7 +38,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         private int Left(TutorialContext ctx) => Mathf.Max(0, ctx.Tracker.Total - ctx.Tracker.Kills - _stuckDead);
 
-        // 체력 0 인데 Dead() 가 안 불려 남아 있는 적을 셈
         private void ScanStuckDead()
         {
             int stuck = 0;

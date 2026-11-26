@@ -7,9 +7,6 @@ using UnityEngine.Rendering;
 
 namespace HJH.EditorTools
 {
-    // 맵 스펙(윤곽선·물·다리·길·진흙 띠·시작/끝)만 정의하면 씬 전체를 만든다. 메뉴: HJH/맵/새 맵/...
-    // 파이프라인: Map_L_Normal 씬을 복사(카메라·태양·저녁 Volume 유지) → 지형/물/안개 → 보이지 않는 벽 → 다리 → 숲 → 바위·꽃·뿌리·물가 → 반딧불이 → 포탈·스폰 → 라이트 프로브.
-    // 스케치 좌표는 픽셀이고 PxScale(0.2m/px)로 미터로 바꾼다. 다른 맵은 Spec 하나만 더 추가하면 된다.
     public static class MapSpecBuilder
     {
         private const float PxScale = 0.2f, PxH = 570f;
@@ -28,29 +25,27 @@ namespace HJH.EditorTools
             public List<Vector2[]> blobs = new List<Vector2[]>();
             public Vector2[] water;
             public Vector2 bridgeA, bridgeB;
-            public List<Vector2[]> routes = new List<Vector2[]>();   // 시작→다리 앞, 다리 뒤→끝
+            public List<Vector2[]> routes = new List<Vector2[]>();
             public List<Vector2[]> mud = new List<Vector2[]>();
             public Vector2 start, end;
             public float waterY = -0.12f;
-            // ── 아래는 새 맵용 선택 항목 (다리 맵은 기본값 그대로) ──
-            public bool bridge = true;                 // false 면 다리·다리 입구 등불 없음
-            public int[] swamp = { 1 };                // 늪지대로 꾸밀 구역(blobs 번호)
-            public int surround;                       // 0 언덕+숲, 1 주변이 가라앉은 절벽, 2 물에 잠긴 맹그로브 숲
-            public Vector2[] fall;                     // 폭포가 떨어지는 가장자리 선 (절벽 맵)
-            public Vector2 clear; public float clearR; // 아무것도 놓지 않을 자리 (상점 오브젝트 자리)
-            public bool spawns = true;                 // 적 스폰 표시를 만들지
-            public bool keepBackup;                    // true 면 덮어쓰기 창 대신 기존 씬을 _RemovedBackup 에 복사하고 진행
+            public bool bridge = true;
+            public int[] swamp = { 1 };
+            public int surround;
+            public Vector2[] fall;
+            public Vector2 clear; public float clearR;
+            public bool spawns = true;
+            public bool keepBackup;
             public float pitDepth = 11f;
         }
 
-        private static Vector2[] M(params float[] xz)   // 미터 좌표 그대로 (x 동쪽, z 북쪽)
+        private static Vector2[] M(params float[] xz)
         {
             var r = new Vector2[xz.Length / 2];
             for (int i = 0; i < r.Length; i++) r[i] = new Vector2(xz[i * 2], xz[i * 2 + 1]);
             return r;
         }
 
-        // 일반 맵 (스케치 1·4): 왼쪽 아래 시작 → 위로 솟은 몸통 → 오른쪽 끝. 전체가 늪지대, 사방이 가라앉은 절벽, 오목한 곳에서 폭포가 떨어진다.
         private static Spec CliffSwamp()
         {
             var s = new Spec { sceneName = "_HJH_Map", bridge = false, swamp = new[] { 0 }, surround = 1, keepBackup = true };
@@ -64,7 +59,6 @@ namespace HJH.EditorTools
             return s;
         }
 
-        // 상점 맵 (스케치 3·5): 작은 콩 모양. 전체가 늪지대, 둘레는 물에 잠긴 맹그로브 숲. 오른쪽에 상점 오브젝트 자리를 비워 둔다.
         private static Spec Shop()
         {
             var s = new Spec { sceneName = "Map_Shop", bridge = false, swamp = new[] { 0 }, surround = 2, spawns = false, keepBackup = true };
@@ -82,7 +76,6 @@ namespace HJH.EditorTools
         [MenuItem("HJH/맵/새 맵/상점 맵 만들기 (Map_Shop, 맹그로브 숲)")]
         private static void BuildShop() => Build(Shop());
 
-        // 방금 만든 맵에 기존 꾸미기 도구들을 순서대로 돌리고 저장한다 (다리 맵을 꾸민 것과 같은 도구).
         [MenuItem("HJH/맵/새 맵/지금 맵 한 번에 꾸미기 (늪지대→버섯→조명→꽃→폭포→저장)")]
         private static void DecorateAll()
         {
@@ -103,7 +96,6 @@ namespace HJH.EditorTools
             Debug.Log("[SpecBuild] 꾸미기 끝, 씬 저장함.");
         }
 
-        // 씬 이름으로 스펙을 고른다 (꾸미기 도구들이 구역·길을 물어볼 때). 모르는 씬이면 false.
         internal static bool UseSpecFor(string sceneName)
         {
             switch (sceneName)
@@ -125,7 +117,6 @@ namespace HJH.EditorTools
             return r;
         }
 
-        // 일반 맵 2: 두 구역이 얕은 물로 갈라지고 다리로 건넌다 (스케치 기준)
         private static Spec BridgeNormal()
         {
             var s = new Spec { sceneName = "Map_Bridge_Normal" };
@@ -144,16 +135,13 @@ namespace HJH.EditorTools
         [MenuItem("HJH/맵/새 맵/일반2 다리 맵 만들기 (스케치)")]
         private static void BuildBridge() => Build(BridgeNormal());
 
-        // ───────────────────────── 기하 ─────────────────────────
         private static Spec S;
-        internal static void UseBridgeSpec() { S = BridgeNormal(); }          // 콜라이더 정리 등 다른 도구가 플레이 영역을 물어볼 때
+        internal static void UseBridgeSpec() { S = BridgeNormal(); }
         internal static float PlayDist(Vector2 p) => DistPlay(p);
-        // 다리 건너편(끝) 구역 질의 (늪지대 도구용)
         internal static bool InEnd(Vector2 p) { foreach (int i in S.swamp) if (InPoly(S.blobs[i], p)) return true; return false; }
         internal static float EndDepth(Vector2 p) { foreach (int i in S.swamp) if (InPoly(S.blobs[i], p)) return DistPoly(S.blobs[i], p); return 0f; }
         internal static float RouteDist(Vector2 p) => DistRoute(p);
         internal static float SpecWaterY => S.waterY;
-        // 암벽 쌓기 도구용: 시작 구역(blobs[0]) 윤곽과 물·다리 질의
         internal static Vector2[] SpecBlob(int i) => S.blobs[i];
         internal static bool SpecInBlob(int i, Vector2 p) => InPoly(S.blobs[i], p);
         internal static bool SpecInWater(Vector2 p) => InWater(p);
@@ -182,14 +170,14 @@ namespace HJH.EditorTools
         private static bool InBlob(Vector2 p) { foreach (var b in S.blobs) if (InPoly(b, p)) return true; return false; }
         private static bool InPlay(Vector2 p) => InBlob(p) || (S.bridge && (Vector2.Distance(p, S.bridgeA) < 3f || Vector2.Distance(p, S.bridgeB) < 3f));
         private static float DistBlobEdge(Vector2 p) { float d = float.MaxValue; foreach (var b in S.blobs) d = Mathf.Min(d, DistPoly(b, p)); return d; }
-        private static float DistPlay(Vector2 p)   // 구역 밖으로의 거리 (안이면 0)
+        private static float DistPlay(Vector2 p)
         {
             if (InPlay(p)) return 0f;
             float d = DistBlobEdge(p);
             if (S.bridge) { d = Mathf.Min(d, Vector2.Distance(p, S.bridgeA) - 3f); d = Mathf.Min(d, Vector2.Distance(p, S.bridgeB) - 3f); }
             return Mathf.Max(0f, d);
         }
-        private static float Depth(Vector2 p) => InBlob(p) ? DistBlobEdge(p) : 0f;   // 구역 안쪽 깊이
+        private static float Depth(Vector2 p) => InBlob(p) ? DistBlobEdge(p) : 0f;
         private static bool InWater(Vector2 p) => S.water != null && InPoly(S.water, p);
         private static float DistWater(Vector2 p) => S.water != null ? DistPoly(S.water, p) : 999f;
         private static float DistRoute(Vector2 p) { float d = float.MaxValue; foreach (var r in S.routes) d = Mathf.Min(d, DistPoly(r, p, false)); if (S.bridge) d = Mathf.Min(d, Seg(p, S.bridgeA, S.bridgeB)); return d; }
@@ -218,16 +206,16 @@ namespace HJH.EditorTools
             if (InPlay(p))
             {
                 float flat = (Mathf.PerlinNoise(p.x * 0.15f, p.y * 0.15f) - 0.5f) * 0.10f;
-                if (S.fall != null) { float df = DistPoly(S.fall, p, false); if (df < 4.5f) return Mathf.Lerp(S.waterY - 0.3f, flat, Smooth(1.5f, 4.5f, df)); }   // 폭포로 흘러드는 얕은 물길
+                if (S.fall != null) { float df = DistPoly(S.fall, p, false); if (df < 4.5f) return Mathf.Lerp(S.waterY - 0.3f, flat, Smooth(1.5f, 4.5f, df)); }
                 return flat;
             }
-            if (S.surround == 1)   // 사방이 가라앉은 절벽: 가장자리에서 2m 만에 뚝 떨어지고 바닥은 울퉁불퉁
+            if (S.surround == 1)
             {
                 float dc = DistPlay(p);
                 float n1 = Mathf.PerlinNoise(p.x * 0.06f + 3f, p.y * 0.06f + 7f) * 2.5f + Mathf.PerlinNoise(p.x * 0.2f, p.y * 0.2f) * 0.8f;
                 return -Smooth(0.3f, 2.4f, dc) * S.pitDepth + n1 * Smooth(3f, 12f, dc);
             }
-            if (S.surround == 2)   // 물에 잠긴 맹그로브 숲: 16m 까지 얕은 물 바닥, 그 뒤로 언덕
+            if (S.surround == 2)
             {
                 float dm = DistPlay(p);
                 float bottom = S.waterY - 0.3f - 0.35f * Smooth(0f, 4f, dm) + (Mathf.PerlinNoise(p.x * 0.7f, p.y * 0.7f) - 0.5f) * 0.08f;
@@ -245,7 +233,6 @@ namespace HJH.EditorTools
             return hill;
         }
 
-        // ───────────────────────── 빌드 ─────────────────────────
         private static void Build(Spec spec)
         {
             if (EditorApplication.isPlaying) { Debug.LogWarning("[SpecBuild] 플레이 중에는 못 합니다."); return; }
@@ -262,12 +249,11 @@ namespace HJH.EditorTools
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo()) return;
 
             S = spec;
-            if (File.Exists(path)) { File.Copy(SourceScene, path, true); AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate); }   // .meta(GUID) 는 그대로 두고 내용만 교체
+            if (File.Exists(path)) { File.Copy(SourceScene, path, true); AssetDatabase.ImportAsset(path, ImportAssetOptions.ForceUpdate); }
             else AssetDatabase.CopyAsset(SourceScene, path);
             var scene = EditorSceneManager.OpenScene(path, OpenSceneMode.Single);
-            Lightmapping.lightingDataAsset = null;   // 원본의 베이크 데이터는 이 맵과 맞지 않음
+            Lightmapping.lightingDataAsset = null;
 
-            // 원본 내용 정리: 태양·카메라·Volume 만 남김
             var root = GameObject.Find("Map_L_Normal");
             if (root == null) root = new GameObject();
             root.name = spec.sceneName;
@@ -285,13 +271,12 @@ namespace HJH.EditorTools
             float R() => (float)rng.NextDouble();
             float L(float lo, float hi) => Mathf.Lerp(lo, hi, R());
 
-            // 범위
             Vector2 mn = new Vector2(1e9f, 1e9f), mx = new Vector2(-1e9f, -1e9f);
             foreach (var b in spec.blobs) foreach (var p in b) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
             if (spec.water != null) foreach (var p in spec.water) { mn = Vector2.Min(mn, p); mx = Vector2.Max(mx, p); }
             var center = (mn + mx) * 0.5f;
             const float TSize = 160f, THeight = 16f; const int HRes = 513, ARes = 512;
-            float BaseY = spec.surround == 1 ? -(spec.pitDepth + 3f) : -2f;   // 절벽 맵은 아래로 파야 해서 바닥 기준을 내림
+            float BaseY = spec.surround == 1 ? -(spec.pitDepth + 3f) : -2f;
             var origin = new Vector2(Mathf.Round(center.x - TSize / 2f), Mathf.Round(center.y - TSize / 2f));
 
             Terrain terrain = BuildTerrain(root.transform, origin, TSize, THeight, BaseY, HRes, ARes, spec);
@@ -316,12 +301,11 @@ namespace HJH.EditorTools
                 g.transform.position = new Vector3(p.x, Ground(p) - sink, p.y);
                 g.transform.rotation = Quaternion.Euler(L(-tilt, tilt), R() * 360f, L(-tilt, tilt));
                 g.transform.localScale = scale;
-                if (bySize) { var mr = g.GetComponentInChildren<MeshRenderer>(); float ext = mr != null ? Mathf.Max(mr.bounds.size.x, mr.bounds.size.z) : 0f; foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = ext >= 0.8f; }   // 조약돌(0.8m 미만)만 콜라이더 끔
+                if (bySize) { var mr = g.GetComponentInChildren<MeshRenderer>(); float ext = mr != null ? Mathf.Max(mr.bounds.size.x, mr.bounds.size.z) : 0f; foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = ext >= 0.8f; }
                 else if (!colliders) foreach (var c in g.GetComponentsInChildren<Collider>()) c.enabled = false;
                 return g;
             }
 
-            // 숲: 구역 밖 1.2~16m 띠에 지터 격자로 (콜라이더 없음, 먼 것은 그림자 끔)
             int trees = 0;
             if (spec.surround != 0) trees = BuildSurround(props, spec, mn, mx, Ground, rng);
             else if (prefabTree != null)
@@ -341,12 +325,10 @@ namespace HJH.EditorTools
                     }
             }
 
-            // 포탈·스폰
             BuildPortals(root.transform, spec, lantern, Ground);
             var avoid = new List<Vector2> { spec.start, spec.end };
             if (spec.spawns) BuildSpawns(root.transform, spec, Ground, avoid);
 
-            // 큰 바위(암반 덩어리): 구역 가장자리 안쪽 2~6.5m, 길에서 5m 떨어져서
             int masses = 0;
             var massPts = new List<Vector2>();
             {
@@ -366,7 +348,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 돌무리·꽃·뿌리·물가 (전부 콜라이더 없음)
             int rocks = 0, chips = 0, flowers = 0, rootsN = 0, edge = 0;
             var deco = new GameObject("Deco").transform; deco.SetParent(props, false);
             for (int c = 0, t = 0; c < 26 && t < 1500; t++)
@@ -402,7 +383,6 @@ namespace HJH.EditorTools
                 if (!InBlob(p) || Depth(p) < 1f || Depth(p) > 4f || DistRoute(p) < 2.6f || roots == null || Blocked(p, 1f)) continue;
                 float s = L(0.35f, 0.6f); Put(roots, deco, p, 0.05f, new Vector3(s, s * L(0.8f, 1.1f), s), 5f); rootsN++; c++;
             }
-            // 물가: 물 윤곽을 따라 구역 쪽에 돌·꽃·뿌리
             for (int i = 0; S.water != null && i < S.water.Length; i++)
             {
                 var a = S.water[i]; var b = S.water[(i + 1) % S.water.Length]; float len = Vector2.Distance(a, b);
@@ -421,7 +401,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 반딧불이: 구역 가장자리 나무 쪽, 라이트는 가장자리로 비껴
             int ff = 0;
             if (fireflies != null)
             {
@@ -443,7 +422,6 @@ namespace HJH.EditorTools
                 }
             }
 
-            // 라이트 프로브
             {
                 var pg = new GameObject("LightProbes_Map"); var grp = pg.AddComponent<LightProbeGroup>();
                 var pts = new List<Vector3>();
@@ -460,7 +438,6 @@ namespace HJH.EditorTools
             var ls = AssetDatabase.LoadAssetAtPath<LightingSettings>(DataDir + "MapL_Lighting.lighting");
             if (ls != null) Lightmapping.lightingSettings = ls;
 
-            // 플레이어 세트(Start 씬에서 만든 PlayerRig 프리팹)를 시작 지점에 배치. 프리팹이 없으면 기존 카메라 위치만 옮김.
             var startPos = new Vector3(spec.start.x + 1.5f, Ground(spec.start) + 0.1f, spec.start.y + 1.5f);
             if (!PlayerRigBuilder.PlaceRigAt(startPos))
             {
@@ -479,11 +456,9 @@ namespace HJH.EditorTools
             Debug.Log($"[SpecBuild] {spec.sceneName} 생성: 나무 {trees}, 큰 바위 {masses}, 돌무리 {rocks}(+작은 돌 {chips}), 꽃 {flowers}, 뿌리 {rootsN}, 물가 {edge}, 반딧불이 {ff}곳. 이 씬에서는 기존 'L맵 전용' 메뉴(가장자리/다듬기)를 쓰지 마세요. 다시 만들려면 같은 메뉴(덮어쓰기).");
         }
 
-        // ───────────────────────── 새 맵용: 비울 자리 · 둘레 · 절벽 · 폭포 자리 ─────────────────────────
         private const string JwProps = "Assets/Members/HJH/09.JungleWater/Generated/Prefabs/Props/";
         private const string StoneDir = "Assets/Members/HJH/05.Data/MapProps/Stones/Prefabs";
 
-        // 아무것도 놓으면 안 되는 곳: 상점 자리, 폭포로 흘러드는 물길
         private static bool Blocked(Vector2 p, float margin) => InClear(p, margin) || (S.fall != null && DistPoly(S.fall, p, false) < 5f + margin);
         internal static bool SpecBlocked(Vector2 p, float margin) => Blocked(p, margin);
 
@@ -497,7 +472,6 @@ namespace HJH.EditorTools
             return b.size.y;
         }
 
-        // 프리팹 원래 크기와 상관없이 원하는 높이(m)로 맞춰 놓는다. 콜라이더는 끈다 (구역 밖 장식).
         private static GameObject PutSized(GameObject prefab, Transform parent, Vector3 pos, float height, float yaw, bool shadows)
         {
             var g = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent);
@@ -510,7 +484,6 @@ namespace HJH.EditorTools
             return g;
         }
 
-        // 구역 둘레: surround 1 = 가라앉은 바닥의 어두운 숲, surround 2 = 물에 선 맹그로브 나무 + 발치의 뿌리
         private static int BuildSurround(Transform props, Spec spec, Vector2 mn, Vector2 mx, System.Func<Vector2, float> ground, System.Random rng)
         {
             float R() => (float)rng.NextDouble();
@@ -533,7 +506,7 @@ namespace HJH.EditorTools
                     PutSized(trees[rng.Next(trees.Count)], forest, new Vector3(p.x, ground(p) - 0.15f, p.y), h, R() * 360f, !pit && d < 6f);
                     n++;
                 }
-            if (!pit)   // 맹그로브 줄기·뿌리: 물가에서 8m 까지 나무 발치에 깔림
+            if (!pit)
             {
                 var rootsA = Load(PropDir + "Roots_A.prefab"); var rootsB = Load(JwProps + "PF_MangroveRoots_0.prefab");
                 var g = new GameObject("Mangrove_Roots").transform; g.SetParent(props, false);
@@ -555,7 +528,6 @@ namespace HJH.EditorTools
             return n;
         }
 
-        // 절벽 면: 구역 가장자리 바로 바깥·아래에 돌을 세 줄로 쌓아 지형 절벽을 가린다 (폭포 자리는 폭포 도구가 쌓음)
         private static void BuildRim(Transform props, Spec spec, System.Random rng)
         {
             float R() => (float)rng.NextDouble();
@@ -571,7 +543,7 @@ namespace HJH.EditorTools
                 {
                     Vector2 a = poly[i], b = poly[(i + 1) % poly.Length]; float len = Vector2.Distance(a, b);
                     Vector2 dir = (b - a) / Mathf.Max(len, 0.01f), nrm = new Vector2(dir.y, -dir.x);
-                    if (InBlob((a + b) * 0.5f + nrm * 0.6f)) nrm = -nrm;   // 바깥쪽
+                    if (InBlob((a + b) * 0.5f + nrm * 0.6f)) nrm = -nrm;
                     for (float s = 0f; s < len; s += 2.8f)
                     {
                         Vector2 e = a + dir * (s + L(-0.4f, 0.4f));
@@ -596,7 +568,6 @@ namespace HJH.EditorTools
                 }
         }
 
-        // 폭포 자리: 가장자리 선마다 "폭포" 밑에 Cube(면 안내)를 세우고, 그 안쪽에 흘러드는 물 판을 깐다. 실제 폭포는 HJH/맵/폭포 메뉴가 만든다.
         private static void BuildFall(Transform root, Spec spec)
         {
             if (spec.fall == null || spec.fall.Length < 2) return;
@@ -606,7 +577,7 @@ namespace HJH.EditorTools
             {
                 Vector2 a = spec.fall[i], b = spec.fall[i + 1]; float len = Vector2.Distance(a, b);
                 Vector2 dir = (b - a) / len, outward = new Vector2(dir.y, -dir.x);
-                if (InBlob((a + b) * 0.5f + outward * 0.8f)) { dir = -dir; outward = -outward; }   // Cube 의 로컬 +X 가 절벽 바깥을 향하게
+                if (InBlob((a + b) * 0.5f + outward * 0.8f)) { dir = -dir; outward = -outward; }
                 Vector2 mid = (a + b) * 0.5f + outward * 0.7f;
                 float top = 0.15f, bottom = -spec.pitDepth + 0.5f;
                 var cube = GameObject.CreatePrimitive(PrimitiveType.Cube);
@@ -624,7 +595,6 @@ namespace HJH.EditorTools
             }
         }
 
-        // 상점 오브젝트 자리 표시 (빈 오브젝트 하나). 여기 반경 안에는 아무 장식도 놓지 않는다.
         private static void BuildClearMarker(Transform root, Spec spec, System.Func<Vector2, float> ground)
         {
             if (spec.clearR <= 0f) return;
@@ -635,7 +605,6 @@ namespace HJH.EditorTools
 
         private static GameObject Load(string path) => AssetDatabase.LoadAssetAtPath<GameObject>(path);
 
-        // ───────────────────────── 지형 ─────────────────────────
         private static Terrain BuildTerrain(Transform parent, Vector2 origin, float size, float height, float baseY, int hres, int ares, Spec spec)
         {
             var data = new TerrainData { heightmapResolution = hres, size = new Vector3(size, height, size), alphamapResolution = ares };
@@ -696,14 +665,12 @@ namespace HJH.EditorTools
             return t;
         }
 
-        // ───────────────────────── 물 · 안개 ─────────────────────────
         private static void BuildWaterAndFog(Transform root, Vector2 mn, Vector2 mx, Vector2 center, Spec spec)
         {
             var group = new GameObject("Water_Fog").transform; group.SetParent(root, false);
             var waterMat = AssetDatabase.LoadAssetAtPath<Material>("Assets/Members/HJH/09.JungleWater/Generated/Materials/M_JungleWater.mat");
             if (spec.water == null && spec.surround != 2)
             {
-                // 큰 물이 없는 맵(절벽 맵): 낮은 안개만 깔고, 가라앉은 바닥에는 깊이감을 주는 안개를 한 겹 더
                 BuildFogPlane(group, "GroundFog", center, 1.0f, 16f);
                 if (spec.surround == 1) BuildFogPlane(group, "PitFog", center, -spec.pitDepth * 0.55f, 26f);
                 return;
@@ -712,7 +679,7 @@ namespace HJH.EditorTools
             plane.name = "Water"; plane.transform.SetParent(group, false);
             Vector2 wmn = new Vector2(1e9f, 1e9f), wmx = new Vector2(-1e9f, -1e9f);
             if (spec.water != null) foreach (var p in spec.water) { wmn = Vector2.Min(wmn, p); wmx = Vector2.Max(wmx, p); }
-            else { wmn = mn - Vector2.one * 22f; wmx = mx + Vector2.one * 22f; }   // 맹그로브 숲 전체를 덮는 물
+            else { wmn = mn - Vector2.one * 22f; wmx = mx + Vector2.one * 22f; }
             float side = Mathf.Max(wmx.x - wmn.x, wmx.y - wmn.y) + 4f;
             var wc = (wmn + wmx) * 0.5f;
             plane.transform.position = new Vector3(wc.x, spec.waterY, wc.y);
@@ -750,7 +717,6 @@ namespace HJH.EditorTools
             fog.GetComponent<MeshRenderer>().shadowCastingMode = ShadowCastingMode.Off;
         }
 
-        // ───────────────────────── 보이지 않는 벽 ─────────────────────────
         private static void BuildWalls(Transform root, Spec spec)
         {
             var group = new GameObject("Boundary_Walls").transform; group.SetParent(root, false);
@@ -763,7 +729,7 @@ namespace HJH.EditorTools
                     for (int s = 0; s < segs; s++)
                     {
                         var mid = a + dir * (sl * (s + 0.5f));
-                        if (spec.bridge && Seg(mid, spec.bridgeA, spec.bridgeB) < 2.8f) continue;        // 다리 입구는 열어 둠
+                        if (spec.bridge && Seg(mid, spec.bridgeA, spec.bridgeB) < 2.8f) continue;
                         var go = new GameObject("Wall_" + (n++)); go.transform.SetParent(group, false);
                         go.transform.position = new Vector3(mid.x, 4f, mid.y);
                         go.transform.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0, dir.y));
@@ -772,7 +738,6 @@ namespace HJH.EditorTools
                 }
         }
 
-        // ───────────────────────── 다리 (임시 절차 모델) ─────────────────────────
         private static Transform BuildBridge(Transform root, Spec spec)
         {
             var wood = AssetDatabase.LoadAssetAtPath<Material>(PropDir.Replace("Prefabs/", "Materials/") + "MapBridge_Wood.mat");
@@ -785,7 +750,7 @@ namespace HJH.EditorTools
             var a = spec.bridgeA; var b = spec.bridgeB; float len = Vector2.Distance(a, b); var dir = (b - a) / len;
             var g = new GameObject("Bridge").transform; g.SetParent(root, false);
             g.position = new Vector3((a.x + b.x) * 0.5f, 0.05f, (a.y + b.y) * 0.5f);
-            g.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.y));   // 로컬 z = 다리 방향
+            g.rotation = Quaternion.LookRotation(new Vector3(dir.x, 0f, dir.y));
             const float width = 3.6f;
             var rng = new System.Random(5);
             for (float z = -len / 2f + 0.3f; z < len / 2f; z += 0.52f)
@@ -813,7 +778,6 @@ namespace HJH.EditorTools
             return g;
         }
 
-        // ───────────────────────── 포탈 · 스폰 ─────────────────────────
         private static Material Emissive(string name, Color c)
         {
             string path = DataDir + name + ".mat";
@@ -842,7 +806,7 @@ namespace HJH.EditorTools
                         foreach (var c in lt.GetComponentsInChildren<Collider>()) c.enabled = false;
                     }
             }
-            if (lantern != null && spec.bridge)   // 다리 양끝
+            if (lantern != null && spec.bridge)
                 foreach (var end in new[] { spec.bridgeA, spec.bridgeB })
                     foreach (float s in new[] { -2.2f, 2.2f })
                     {
@@ -859,7 +823,6 @@ namespace HJH.EditorTools
             var group = new GameObject("EnemySpawns (markers only)").transform; group.SetParent(root, false);
             var mat = Emissive("MapB_SpawnMarker", new Color(1f, 0.15f, 0.2f));
             var roles = new[] { "근접", "원거리", "근접", "원거리", "엘리트", "주력/원거리" };
-            // 길(시작→다리, 다리 뒤→끝)에서 일정 비율 지점을 찾고, 구역 안쪽으로 4m 비껴 놓는다
             var pts = new List<Vector2>();
             void Along(Vector2[] route, params float[] fr)
             {
@@ -884,7 +847,7 @@ namespace HJH.EditorTools
             }
             Along(spec.routes[0], 0.35f, 0.62f, 0.85f);
             if (spec.routes.Count > 1) Along(spec.routes[1], 0.3f, 0.6f, 0.9f);
-            else Along(spec.routes[0], 0.22f, 0.5f, 0.74f, 0.93f);   // 길이 하나뿐인 맵은 같은 길에 이어서
+            else Along(spec.routes[0], 0.22f, 0.5f, 0.74f, 0.93f);
             for (int i = 0; i < pts.Count; i++)
             {
                 var m = GameObject.CreatePrimitive(PrimitiveType.Sphere);

@@ -5,11 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Audio
 {
-    // 소리가 언제 나나
-    //  Animation : 몸 동작 클립의 AnimationEvent PlaySkillSound(eventName) 가 올 때 (time = 클립 안 시각)
-    //  Cast      : 스킬 쓴 순간부터 time 초 뒤
-    //  Fx        : 스킬의 이펙트 칸(fxSlot, 예: impactFx)이 터진 순간부터 time 초 뒤 (파티클 burst·startDelay 에 맞춘 값)
-    //  Impact    : 범위 공격이 닿은 순간(SkillImpacts)부터 time 초 뒤
     public enum SkillSoundTrigger { Animation, Cast, Fx, Impact }
 
     [Serializable]
@@ -38,7 +33,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
 
         [NonSerialized] private SoundCue _cue;
 
-        // 이 항목의 소리를 SoundManager 에 넘길 SoundCue (처음 쓸 때 한 번 만들어 둠)
         public SoundCue Cue => _cue ??= new SoundCue
         {
             clips = clip != null ? new[] { clip } : null,
@@ -52,8 +46,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Audio
         };
     }
 
-    // 스킬 하나의 소리 목록. Resources/HJH/SkillSounds/<스킬 이름>.asset
-    // 만드는 곳: HJH/Sfx/스킬 소리/3. 에셋·애니 이벤트 만들기 (SkillSoundBuilder)
     [CreateAssetMenu(menuName = "HJH/Skill Sound Data", fileName = "SkillSound")]
     public class SkillSoundData : ScriptableObject
     {

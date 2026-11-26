@@ -3,12 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Places a mesh slash (the Batslash effect under "holder") for one swing:
-    //   - lays the blade flat and points its arc forward automatically, measured from the slash mesh
-    //     (thinnest mesh axis = blade normal -> up, mesh bulge -> +Z), so any source slash works
-    //   - faces the swing: Follow's flat facing x SwingShape plane (yaw/roll/pitch), or the spawn rotation
-    //   - mirrored for counter-clockwise swings (flipped around the swing axis; the shader is double-sided)
-    //   - sized so the arc reaches Radius, and played faster/slower so it fits the swing time
     public class FxSlash : MonoBehaviour, IFxDriver
     {
         [SerializeField] private Transform holder;
@@ -43,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (!shape.clockwise)
                 basis *= Quaternion.Euler(0f, 0f, 180f);
 
-            // Normalized: a product of several rotations drifts slightly, which the Inspector warns about.
             holder.rotation = Quaternion.Normalize(basis * Quaternion.Euler(0f, yawOffset, 0f) * _alignment);
             holder.localPosition = Vector3.up * _height;
 
@@ -80,8 +73,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             return Quaternion.LookRotation(forward.sqrMagnitude > 0.0001f ? forward.normalized : Vector3.forward);
         }
 
-        // Once per instance, with the holder at identity: blade radius, and the rotation that lays the blade
-        // flat (its thinnest axis up) with the arc's bulge pointing to +Z.
         private void Measure()
         {
             if (_measured)
@@ -107,13 +98,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
 
                 _baseRadius = radius;
 
-                // Blade normal = thinnest mesh axis, expressed in holder space.
                 Vector3 thinAxis = e.x <= e.y && e.x <= e.z ? Vector3.right : e.y <= e.z ? Vector3.up : Vector3.forward;
                 Transform t = system.transform;
                 Vector3 normal = holder.InverseTransformDirection(t.TransformDirection(thinAxis));
                 Quaternion flat = Quaternion.FromToRotation(normal, Vector3.up);
 
-                // Arc bulge = direction from the pivot to the mesh's center, once laid flat.
                 Vector3 center = flat * holder.InverseTransformPoint(t.TransformPoint(bounds.center * size));
                 center.y = 0f;
                 Quaternion yaw = center.magnitude > radius * 0.1f

@@ -4,22 +4,19 @@ namespace Assets.Members.HJH._02.Scripts.Settings
 {
     public enum ScreenModeOption
     {
-        Fullscreen,   // 전체 화면 (모니터를 독점)
-        Borderless,   // 전체 창 화면 (테두리 없는 창이 화면을 덮음. Alt+Tab 이 빠름)
-        Windowed      // 창 화면
+        Fullscreen,
+        Borderless,
+        Windowed
     }
 
-    // 화면 설정 한 벌 (설정 창에서 고르고 "적용" 하면 저장 + 반영)
     public struct DisplayOptions
     {
         public ScreenModeOption Mode;
         public Vector2Int Size;
         public bool VSync;
-        public int FpsCap;          // -1 = 제한 없음
+        public int FpsCap;
     }
 
-    // 화면 설정의 저장·적용 (소리 음량은 SoundManager 가 저장·적용).
-    // 처음 켜면 1920 x 1080 + 전체 창 화면. 프레임은 저장한 적이 없으면 FrameRateCap 의 60
     public static class GameSettings
     {
         private const string ModeKey = "Screen.Mode";
@@ -30,7 +27,6 @@ namespace Assets.Members.HJH._02.Scripts.Settings
 
         public static readonly Vector2Int DefaultSize = new(1920, 1080);
 
-        // 고를 수 있는 해상도 (화면 비율은 해상도에 따라 정해짐)
         public static readonly Vector2Int[] Sizes =
         {
             new(2560, 1600),
@@ -41,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.Settings
 
         public static readonly int[] FpsCaps = { 30, 60, 120, 144, -1 };
 
-        // 저장된 값. 없으면 기본값
         public static DisplayOptions Current()
         {
             DisplayOptions defaults = Defaults();
@@ -89,7 +84,6 @@ namespace Assets.Members.HJH._02.Scripts.Settings
 
         private static void ApplyFrameRate(DisplayOptions options)
         {
-            // 수직동기화가 켜지면 targetFrameRate 는 무시됨
             QualitySettings.vSyncCount = options.VSync ? 1 : 0;
             Application.targetFrameRate = options.FpsCap;
         }

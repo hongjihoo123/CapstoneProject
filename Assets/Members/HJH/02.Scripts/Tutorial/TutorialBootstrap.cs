@@ -5,9 +5,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 씬이 열릴 때 튜토리얼 중이면 그 씬에 맞는 순서를 틂 (씬에 따로 놓을 것 없음).
-    //   픽 화면(ITutorialPickScreen 이 있음) → Tutorial_Pick
-    //   플레이어가 있는 맵 씬            → Tutorial_Stage (스포너는 실전 단계 전까지 멈춰 둠)
     public static class TutorialBootstrap
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

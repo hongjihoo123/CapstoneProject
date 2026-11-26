@@ -5,10 +5,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Element
 {
-    // 피니시 로직(ElementComboChain: 스택, C, 강화)을 JJH 콤보 UI(ElementStackView)에 보여주는 연결.
-    // 씬의 체인 옆에 하나 붙이면 끝. 켜져 있는 ElementStackView 를 전부 찾아서
-    //   다이아 = 체인 스택, READY 글자 = 준비 중이면 배율 + 남은 시간, 배너 = 준비 / 피니시 / 놓침
-    // JJH 뷰는 연결되면 자기 스톡 계산과 피니시 키를 끔 (UseExternalFinisher)
     public class FinisherViewLink : MonoBehaviour
     {
         [SerializeField, Tooltip("비우면 씬에서 찾음")] private ElementComboChain chain;

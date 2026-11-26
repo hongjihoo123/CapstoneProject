@@ -7,8 +7,6 @@ using UnityEngine.UI;
 
 namespace HJH.EditorTools
 {
-    // PlayerRig HUD 배치 도구.
-    //  - 진단: HUD 캔버스 자식들의 앵커·위치·크기를 Captures/_hud_dump.txt 로
     public static class HudLayoutMenu
     {
         private const string PlayerRigPath = "Assets/Members/HJH/05.Data/Prefab/PlayerRig.prefab";
@@ -36,10 +34,6 @@ namespace HJH.EditorTools
             Debug.Log("[HudLayout] Captures/_hud_dump.txt");
         }
 
-        // 11-23 스케치 배치. 각 HUD 묶음의 앵커·피벗·위치만 바꿈 (안쪽 모양·글자는 그대로). 얼굴 칸이 없으면 하나 만듦.
-        //  좌상단 콤보 목록 / 우상단 미니맵 / 우하단 스탯(Ctrl 펼치면 위로) / 좌하단 플레이어 상태(얼굴·체력·골드, 위에 버프) / 가운데 아래 스킬
-        //  퀘스트는 스케치에 없어서 위 가운데 시간 밑으로
-        // 주의: "코드 UI 굽기" 를 다시 돌리면 각 HUD 가 예전 위치로 돌아감 → 그 뒤에 이 메뉴를 다시 돌리면 됨
         [MenuItem("HJH/UI/HUD 배치 (11-23 스케치)")]
         public static void Arrange()
         {
@@ -60,31 +54,24 @@ namespace HJH.EditorTools
                 var anchorLeftTop = new Vector2(0f, 1f);
                 var anchorRightTop = new Vector2(1f, 1f);
 
-                // 좌하단: 플레이어 상태
                 RectTransform hp = Find(root, "PlayerHpHud", log);
                 Transform hud = hp != null ? hp.parent : null;
                 RectTransform portrait = hud != null ? EnsurePortrait(hud, log) : null;
                 Set(portrait, anchorLeftBottom, anchorLeftBottom, new Vector2(32f, 28f), log);
                 Set(hp, anchorLeftBottom, anchorLeftBottom, new Vector2(160f, 82f), log);
                 Set(Find(root, "GoldHud", log), anchorLeftBottom, anchorLeftBottom, new Vector2(160f, 28f), log);
-                // 버프: 얼굴 칸 위. 피벗 아래 → 줄이 늘면 위로 자람 (긴 것 좌상단 순서는 그대로)
                 Set(Find(root, "ComboBuffBar", log), anchorLeftBottom, anchorLeftBottom, new Vector2(32f, 156f), log);
 
-                // 좌상단: 콤보 목록
                 Set(Find(root, "ComboList", log), anchorLeftTop, anchorLeftTop, new Vector2(32f, -28f), log);
 
-                // 우상단: 미니맵 (원 중심 기준이라 피벗 가운데)
                 Set(Find(root, "MiniMap", log), anchorRightTop, new Vector2(0.5f, 0.5f), new Vector2(-135f, -135f), log);
                 Set(Find(root, "MiniMapFrame", log), anchorRightTop, new Vector2(0.5f, 0.5f), new Vector2(-135f, -135f), log);
 
-                // 우하단: 스탯. 피벗이 아래라 Ctrl 로 펼치면 위로 늘어남 (ContentSizeFitter)
                 var anchorRightBottom = new Vector2(1f, 0f);
                 Set(Find(root, "StatsMiniHud", log), anchorRightBottom, anchorRightBottom, new Vector2(-48f, 84f), log);
 
-                // 퀘스트: 위 가운데 시간 밑
                 Set(Find(root, "KillQuestHud", log), new Vector2(0.5f, 1f), new Vector2(0.5f, 1f), new Vector2(0f, -82f), log);
 
-                // 가운데 아래: 스킬 바 그대로, 패시브 칸은 스킬 줄 왼쪽 끝 (Q 왼쪽)
                 RectTransform skillBar = Find(root, "SkillBar", log);
                 RectTransform passive = skillBar != null ? skillBar.Find("Passive") as RectTransform : null;
                 if (passive != null)
@@ -106,7 +93,6 @@ namespace HJH.EditorTools
             Debug.Log("[HudLayout]\n" + log);
         }
 
-        // 위 배치로 옮기는 HUD 묶음 이름
         private static readonly string[] Managed =
         {
             "PlayerPortrait", "PlayerHpHud", "GoldHud", "ComboBuffBar", "ComboList", "MiniMap", "MiniMapFrame", "StatsMiniHud", "KillQuestHud", "Passive"
@@ -114,8 +100,6 @@ namespace HJH.EditorTools
 
         private static readonly string[] PositionProps = { "m_AnchoredPosition", "m_AnchorMin", "m_AnchorMax", "m_Pivot" };
 
-        // 열린 씬의 PlayerRig 에서 위 HUD 묶음의 "위치·앵커·피벗" 덮어쓰기만 되돌림 → 프리팹 배치가 보이게.
-        // 씬은 저장하지 않음 (저장은 직접)
         [MenuItem("HJH/UI/HUD 배치 - 열린 씬 위치 덮어쓰기 되돌리기")]
         public static void RevertOpenSceneOverrides()
         {
@@ -163,7 +147,6 @@ namespace HJH.EditorTools
             return found;
         }
 
-        // 앵커·피벗을 바꾸고 위치를 줌. 크기는 그대로
         private static void Set(RectTransform rect, Vector2 anchor, Vector2 pivot, Vector2 pos, StringBuilder log)
         {
             if (rect == null)
@@ -203,7 +186,6 @@ namespace HJH.EditorTools
             edge.anchorMax = Vector2.one;
             edge.sizeDelta = Vector2.zero;
             var edgeImage = edge.gameObject.AddComponent<Image>();
-            // 테두리 = 9-slice 판 그림 (가운데 비움). 다른 테두리를 쓰려면 Frame 의 Image 그림만 바꾸면 됨
             edgeImage.sprite = AssetDatabase.LoadAssetAtPath<Sprite>("Assets/Members/HJH/05.Data/Resources/HJH/UI/panel_9slice.png");
             edgeImage.type = Image.Type.Sliced;
             edgeImage.fillCenter = false;

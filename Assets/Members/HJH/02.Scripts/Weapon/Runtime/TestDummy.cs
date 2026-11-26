@@ -12,10 +12,10 @@ namespace RobotWeapons
         private float respawnDelay = 3f;
 
         [Header("CC 걸린 동안 색 (여러 개면 위에 있는 게 우선)")]
-        [SerializeField] private Color stunColor = new Color(1f, 0.85f, 0.1f);    // 기절: 노랑
-        [SerializeField] private Color rootColor = new Color(0.2f, 0.9f, 0.4f);   // 속박: 초록
-        [SerializeField] private Color knockbackColor = Color.white;              // 밀치기: 흰색
-        [SerializeField] private Color slowColor = new Color(0.3f, 0.6f, 1f);     // 둔화: 파랑
+        [SerializeField] private Color stunColor = new Color(1f, 0.85f, 0.1f);
+        [SerializeField] private Color rootColor = new Color(0.2f, 0.9f, 0.4f);
+        [SerializeField] private Color knockbackColor = Color.white;
+        [SerializeField] private Color slowColor = new Color(0.3f, 0.6f, 1f);
 
         public GameObject HitEffectPrefab => hitEffectPrefab;
 
@@ -34,7 +34,6 @@ namespace RobotWeapons
             rend = GetComponent<Renderer>();
             if (rend != null) originalColor = rend.material.color;
 
-            // 첫 CC 맞을 때 자동으로 붙긴 하지만, 테스트할 땐 처음부터 보이게 미리 붙여 둠
             if (!TryGetComponent(out cc))
                 cc = gameObject.AddComponent<CrowdControlReceiver>();
         }
@@ -62,7 +61,6 @@ namespace RobotWeapons
                 if (rend != null) rend.material.color = Color.gray;
                 Debug.Log($"[TestDummy] {gameObject.name} 파괴됨");
 
-                // Same kill report as JJH Agent, so on-kill passives can be tested on dummies.
                 if (source != null && source.TryGetComponent(out PlayerAgent killer))
                     killer.OnEnemyKilled();
             }
@@ -81,7 +79,6 @@ namespace RobotWeapons
                 return;
             }
 
-            // 맞은 빨간 깜빡임이 먼저, 끝나면 CC 색 (없으면 원래 색)
             if (flashTimer > 0f)
             {
                 flashTimer -= Time.deltaTime;

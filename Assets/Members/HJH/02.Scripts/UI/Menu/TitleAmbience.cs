@@ -4,9 +4,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 타이틀 배경 움직임: 반딧불이 둥둥 + 안개 흐름 + 빛 숨쉬기.
-    // 오브젝트는 씬(MenuCanvas/Backdrop)에 구워져 있고, 여기선 위치/투명도만 움직임 (unscaled → 시간이 멈춰도 동작).
-    // 숫자(속도·범위)는 전부 인스펙터에서 수정
     public class TitleAmbience : MonoBehaviour
     {
         [Header("반딧불이")]
@@ -52,7 +49,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 제자리 근처를 불규칙하게 떠다니며 깜빡임
         private void Wander(RectTransform fly)
         {
             Image image = fly.GetComponent<Image>();

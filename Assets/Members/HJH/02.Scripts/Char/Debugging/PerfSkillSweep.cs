@@ -13,10 +13,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Debugging
 {
-    // 스킬 하나씩 비용 재기. exe 인자 "-perfsweep <로그파일>" (+ -perfcap -1 로 상한 풀고 재야 차이가 보임)
-    // 옵션: -perfsweepmap <씬> -perfsweepcasts <횟수> -perfsweepgap <초> -perfsweepfilter <이름 일부>
-    // 스킬마다: Q 칸에 끼움 → 매 시전 전 다시 끼워 쿨타임 없앰 → 같은 자리·같은 조준점에 N번 시전. 적은 꺼 둠(조건 같게).
-    // 창(window) 동안: 프레임 시간(평균·p95·최대), GPU·CPU 메인 스레드 시간(FrameTimingManager), 살아 있는 파티클·조명 최대치.
     public sealed class PerfSkillSweep : MonoBehaviour
     {
         private const string EditorFlag = "Captures/_perfsweep_on.txt";
@@ -27,7 +23,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
         private float _gap = 1.2f;
         private string _filter;
 
-        // 창 단위 누적
         private readonly List<float> _frameMs = new();
         private readonly List<float> _gpuMs = new();
         private readonly List<float> _cpuMs = new();
@@ -98,7 +93,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
             {
                 if (_filter != null && skill.name.IndexOf(_filter, StringComparison.OrdinalIgnoreCase) < 0) continue;
                 yield return Window(skill.name, skill, player, home, aim, input);
-                // 남은 이펙트가 다음 스킬 창에 섞이지 않게 쉼
                 yield return new WaitForSecondsRealtime(3f);
             }
 
@@ -126,7 +120,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.Debugging
                     Teleport(player, home);
                     TopDownAimController.ScriptedAimPoint = aim;
                     player.SkillFsm.ForceIdle();
-                    player.SkillFsm.Equip(SkillSlotId.Basic1, skill);   // 새로 끼우면 쿨타임 없음
+                    player.SkillFsm.Equip(SkillSlotId.Basic1, skill);
                     try { player.SkillFsm.ResolveInput(input); }
                     catch (Exception e) { Line($"# {label} cast err {e.GetType().Name} {e.Message}"); }
                 }

@@ -4,7 +4,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 발밑이 무슨 바닥인지 알아냄. 순서: 물속 → 물가(진흙) → MoveFxSurface 붙은 콜라이더 → 터레인 페인트 → 기본(흙)
     public class MoveSurfaceProbe
     {
         private readonly MoveSurfaceTable _table;
@@ -35,7 +34,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (hit.collider is TerrainCollider && hit.collider.TryGetComponent(out Terrain terrain))
                 SampleTerrain(terrain, hit.point, ref result);
 
-            // 물가 바로 위의 흙·이끼는 젖은 진흙으로
             float shore = _table != null ? _table.ShoreMudHeight : 0.25f;
             if (result.Kind is MoveSurfaceKind.Dust or MoveSurfaceKind.Moss && shore > 0f && JungleWater.IsInWater(hit.point, shore))
                 result.Kind = MoveSurfaceKind.Mud;
@@ -70,7 +68,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             int z = Mathf.Clamp(Mathf.FloorToInt(local.z / data.size.z * res), 0, res - 1);
             float[,,] weights = data.GetAlphamaps(x, z, 1, 1);
 
-            // 가장 진하게 칠해진 레이어의 종류, 색은 비율대로 섞음
             int count = Mathf.Min(weights.GetLength(2), info.kinds.Length);
             int best = 0;
             Color tint = Color.black;

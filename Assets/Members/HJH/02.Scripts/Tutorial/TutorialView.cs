@@ -6,20 +6,13 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 튜토리얼 화면 (HUD 와 같은 스타일: 얇은 유리 패널, 금색 키, Pretendard). 하이어라키에 구워 둔 그대로(인스펙터에서 수정), 시간이 멈춰도 움직임(unscaled).
-    //   카드     : 위쪽 가운데. 시간이 멈춘 동안 크게 (제목·설명·"[Enter] 계속" 버튼)
-    //   목표     : 시간이 흐르는 동안 같은 자리에 작게 (제목 + 진행)
-    //   강조     : 앵커 UI 둘레 금색 테두리 (깜빡임)
-    //   표적     : 연습용 적 머리 위 고리 + 화살표 / 화면 밖이면 가장자리 화살표 (길 안내)
-    //   건너뛰기 : Tab 안내 + 길게 누를 때 차오르는 줄
     public sealed class TutorialView : MonoBehaviour, IUiBake
     {
-        private const float CardWidth = 600f;   // 픽 화면 양쪽 열 사이(620)에 들어가는 폭
+        private const float CardWidth = 600f;
         private static readonly Color Glass = new(0.02f, 0.035f, 0.07f, 0.86f);
 
         private TutorialContext _ctx;
 
-        // 하이어라키에 구워 둔 부품 (⋮ > 레이아웃 굽기). 꺼진 채로 씬(픽 화면)·PlayerRig 에 놓여 있고, 튜토리얼이 켬
         [SerializeField] private RectTransform _root;
         [SerializeField] private Image _dim;
         [SerializeField] private RectTransform _card;
@@ -39,7 +32,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         private Transform _worldTarget;
         private bool _guideMode;
 
-        // 씬에 놓인 (꺼진) 화면을 찾아 켬. 없으면 null
         public static TutorialView Attach(TutorialContext ctx)
         {
             TutorialView view = FindFirstObjectByType<TutorialView>(FindObjectsInactive.Include);
@@ -56,7 +48,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return view;
         }
 
-        // 튜토리얼이 끝나면 다시 끔
         public void Detach()
         {
             Hide();
@@ -67,7 +58,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             gameObject.SetActive(false);
         }
 
-        // "계속" 버튼 OnClick (인스펙터)
         public void OnContinueClicked() => _ctx?.Input.Click();
 
         [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
@@ -78,7 +68,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             var canvas = GetComponent<Canvas>() ? GetComponent<Canvas>() : gameObject.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.ScreenSpaceOverlay;
             canvas.overrideSorting = true;
-            canvas.sortingOrder = 900;   // HUD·픽 화면 위
+            canvas.sortingOrder = 900;
             var scaler = GetComponent<CanvasScaler>() ? GetComponent<CanvasScaler>() : gameObject.AddComponent<CanvasScaler>();
             scaler.uiScaleMode = CanvasScaler.ScaleMode.ScaleWithScreenSize;
             scaler.referenceResolution = new Vector2(1920f, 1080f);
@@ -178,7 +168,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             Image glow = HudUiKit.NewImage("Glow", _highlight, HudUiKit.Load("soft_glow"), new Color(HudUiKit.Gold.r, HudUiKit.Gold.g, HudUiKit.Gold.b, 0.22f));
             HudUiKit.Stretch(glow.rectTransform, -40f);
 
-            // 얇은 금색 테두리 4줄 + 모서리 꺾쇠
             const float t = 2f;
             Line(new Vector2(0f, 1f), new Vector2(1f, 1f), new Vector2(0f, t));
             Line(new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, t));
@@ -221,7 +210,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _edgeArrow = HudUiKit.NewRect("EdgeArrow", _root);
             _edgeArrow.anchorMin = _edgeArrow.anchorMax = Vector2.zero;
             _edgeArrow.sizeDelta = new Vector2(60f, 60f);
-            // 꺾쇠(>) 두 줄
             foreach (float sign in new[] { 1f, -1f })
             {
                 Image bar = HudUiKit.NewImage("Chevron", _edgeArrow, null, HudUiKit.Gold);
@@ -236,10 +224,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         }
 
 #endif
-        // ---------------------------------------------------------------- 단계가 부르는 것
 
-        // 시간이 멈춘 큰 카드
-        // waiting = 시간이 멈춘 채 입력을 기다림 (계속 버튼 + 안내). false = 시간은 흐르고 설명만 크게 (픽 화면)
         public void ShowFull(TutorialStep step, bool waiting = true)
         {
             _full = waiting;
@@ -258,7 +243,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             PopIn();
         }
 
-        // 시간이 흐르는 동안의 작은 목표 카드
         public void ShowObjective(TutorialStep step, bool pop)
         {
             _full = false;
@@ -269,7 +253,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _continue.gameObject.SetActive(false);
             _card.sizeDelta = new Vector2(CardWidth, 156f);
 
-            // 작은 카드엔 설명 첫 줄만 제목 밑에
             _hint.gameObject.SetActive(true);
             _hint.alignment = TextAlignmentOptions.MidlineLeft;
             _hint.rectTransform.anchorMin = _hint.rectTransform.anchorMax = new Vector2(0f, 0f);
@@ -284,7 +267,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 PopIn();
         }
 
-        // 카드를 화면 아래쪽에 (픽 화면: 위쪽은 캐릭터 얼굴이라)
         public void DockBottom(float y)
         {
             _card.anchorMin = _card.anchorMax = new Vector2(0.5f, 0f);
@@ -350,8 +332,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _worldTarget = null;
         }
 
-        // ---------------------------------------------------------------- 매 프레임
-
         private void LateUpdate()
         {
             float pulse = 0.55f + 0.45f * Mathf.Sin(Time.unscaledTime * 5f);
@@ -370,7 +350,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 return;
             }
 
-            // 앵커가 어느 캔버스에 있든(오버레이/카메라) 화면 좌표로 바꿔서 이 캔버스 위에 맞춤
             Canvas source = _anchor.GetComponentInParent<Canvas>();
             Camera cam = source != null && source.renderMode != RenderMode.ScreenSpaceOverlay ? source.worldCamera : null;
             var corners = new Vector3[4];
@@ -380,7 +359,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             {
                 Vector2 screen = RectTransformUtility.WorldToScreenPoint(cam, corner);
                 RectTransformUtility.ScreenPointToLocalPointInRectangle(_root, screen, null, out Vector2 local);
-                local += _root.rect.size * 0.5f;   // 왼쪽 아래 기준
+                local += _root.rect.size * 0.5f;
                 min = Vector2.Min(min, local);
                 max = Vector2.Max(max, local);
             }
@@ -446,8 +425,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             float meters = _ctx.Player != null ? Vector3.Distance(_ctx.Player.transform.position, _worldTarget.position) : 0f;
             _edgeDistance.text = $"{meters:0}m";
         }
-
-        // ---------------------------------------------------------------- 내부
 
         private void SetTexts(TutorialStep step)
         {

@@ -6,8 +6,6 @@ using UnityEngine;
 
 namespace HJH.EditorTools
 {
-    // TutorialDefaults 의 문구·순서를 저장된 튜토리얼 에셋에 덮어씀 (GUID 유지, 종류가 바뀐 단계만 새로 만듦).
-    // 인스펙터에서 직접 고친 문구는 사라지므로, 덮어쓰기 전에 _RemovedBackup 에 복사해 둠.
     public static class TutorialAssetSync
     {
         private const string Root = "Assets/Members/HJH/05.Data/Resources/" + TutorialDefaults.ResourceFolder;

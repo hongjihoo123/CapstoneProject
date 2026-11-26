@@ -4,8 +4,6 @@ using UnityEngine.SceneManagement;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 상단 가운데: 경과 시간 | 스테이지 이름. 이름을 비워 두면 씬 이름을 씀.
-    // 모양은 하이어라키에 저장된 자식 그대로 (인스펙터에서 수정)
     public class StageTimerHud : MonoBehaviour, IUiBake
     {
         [SerializeField] private string stageName;

@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Cooldowns are charge based: a cast spends one charge, and charges come back one at a time,
-    // each taking the cooldown. The first recharge starts when the skill ends (MaxCharges 1 = classic cooldown).
     public abstract class SkillStateBase : ISkillState
     {
         protected readonly ISkillHost Host;
@@ -37,7 +35,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         public bool IsReady => Charges > 0 && Time.time >= _lockedUntil;
 
-        // Short block on top of the cooldown (e.g. right after the skill was swapped in).
         public float LockRemaining => Mathf.Max(0f, _lockedUntil - Time.time);
         public float LockDuration { get; private set; }
 
@@ -64,7 +61,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Refresh();
         }
 
-        // Time until the next charge comes back (0 when every charge is available).
         public float CooldownRemaining
         {
             get
@@ -74,7 +70,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
-        // 쿨타임 감소 비율. 스킬마다 더할 게 있으면(스킬 트리 강화) override
         protected virtual float CooldownReduction => Host.CooldownReduction;
 
         protected float EffectiveCooldown
@@ -86,14 +81,12 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             }
         }
 
-        // 실제로 깎인 초를 돌려줌 (이미 쿨이 없으면 0). UI 연출이 "줄었다"를 알려면 이 값이 필요함
         public float ReduceCooldown(float seconds)
         {
             if (seconds <= 0f)
                 return 0f;
             if (!_recharging)
             {
-                // 시전 중(아직 쿨이 안 돌기 시작함)이면 쿨이 돌기 시작할 때 한꺼번에 깎음
                 if (_spentCharges > 0)
                 {
                     _pendingReduce += seconds;

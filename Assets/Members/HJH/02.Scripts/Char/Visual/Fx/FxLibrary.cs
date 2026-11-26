@@ -2,9 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // Every effect in the game, one prefab each (Particle System / Line / Trail / Mesh + Shader Graph materials).
-    // Swap a slot to change that effect everywhere. Lives in Resources so Fx finds it without scene setup.
-    // "Authored for radius/size 1" = the prefab root is scaled by the runtime radius/size.
     [CreateAssetMenu(menuName = "HJH/FX Library")]
     public class FxLibrary : ScriptableObject
     {
@@ -53,7 +50,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
         private static bool _searched;
         private static FxLibrary _override;
 
-        // A scene can play a different library (FxLibraryOverride) without touching the one in Resources.
         public static void SetOverride(FxLibrary library) => _override = library;
 
         public static FxLibrary Override => _override;

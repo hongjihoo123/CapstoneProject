@@ -13,10 +13,6 @@ using UnityEngine.InputSystem;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 단계들이 게임을 들여다보는 창구. 단계는 이것만 보고 판단함 (게임 코드를 직접 찾지 않음).
-    //  - 입력(시간이 멈춰도 동작), 플레이어/HUD/방 클리어, UI 자리 찾기, 연습용 적 소환, 키 이름
-    //  - 횟수 기록: 스킬 사용, 기본 공격, 콤보 성공, 이동 거리 → 단계는 Begin 때 값을 기억해 두고 늘었는지 비교
-    //    (이벤트를 단계마다 구독하면 건너뛸 때 해제가 꼬이므로 여기 한 곳에서만 구독)
     public sealed class TutorialContext
     {
         public readonly TutorialInput Input = new();
@@ -38,7 +34,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         public int CombosLanded { get; private set; }
         public float MovedDistance { get; private set; }
 
-        // 확인 도구(자동 진행)용: 기본 공격 한 번 친 것으로
         public void DebugCountBasicAttack() => BasicAttacks++;
 
         public int SkillUses(SkillSlotId slot) => _skillUses.TryGetValue(slot, out int n) ? n : 0;
@@ -92,7 +87,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
         public bool HasSkill(SkillSlotId slot) => Player != null && Player.SkillFsm != null && Player.SkillFsm.GetSkill(slot) != null;
 
-        // 연습 단계 시작 때 쿨타임을 비워 줌 (궁극기 20초 같은 대기 없이 바로 해 보게). 지금 쓰는 중인 스킬은 안 건드림
         public void RefreshCooldowns()
         {
             SkillStateModule skills = Player != null ? Player.SkillFsm : null;
@@ -105,11 +99,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 if (skill == null || skills.AnimBlendIndex == (int)slot)
                     continue;
                 if (skills.GetCooldownRemaining(slot) > 0f || skills.GetCharges(slot) < skills.GetMaxCharges(slot) || skills.GetLockRemaining(slot) > 0f)
-                    skills.Equip(slot, skill);   // 다시 끼우면 쿨타임·충전이 처음 상태
+                    skills.Equip(slot, skill);
             }
         }
 
-        // 이 원소를 내는 스킬 칸 (없으면 false)
         public bool TryGetSlotFor(global::Members.JJH._02_Scripts.ElementsSystem.ElementType element, out SkillSlotId found)
         {
             SkillStateModule skills = Player != null ? Player.SkillFsm : null;
@@ -126,11 +119,9 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return false;
         }
 
-        // ---------------------------------------------------------------- 매 프레임 (TutorialDirector 가 부름)
-
         internal void Tick(bool paused)
         {
-            _ = Hud;   // 플레이어가 늦게 생겨도 구독되게
+            _ = Hud;
             Input.Tick();
 
             PlayerAgent player = Player;
@@ -144,12 +135,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 {
                     Vector3 delta = pos - _lastPlayerPos;
                     delta.y = 0f;
-                    // 순간이동(대시 블링크 등)은 이동 연습으로 안 셈
                     if (delta.magnitude < 1.5f)
                         MovedDistance += delta.magnitude;
                 }
 
-                // PlayerAgent.Update 가 먼저 돌아서(실행 순서) 이번 프레임 입력이 이미 채워져 있음
                 if (player.Input.FirePressed)
                     BasicAttacks++;
             }
@@ -157,8 +146,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _lastPlayerPos = pos;
             _hasLastPos = true;
         }
-
-        // ---------------------------------------------------------------- UI 자리
 
         public bool TryGetAnchor(string id, out RectTransform rect)
         {
@@ -186,9 +173,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return TutorialAnchors.TryFindHud(id, out rect);
         }
 
-        // ---------------------------------------------------------------- 적
-
-        // 정해진 자리에 연습용 적 하나 (제자리, 방 클리어 수에는 안 셈). 마무리 훈련에서 씀
         public AbstractEnemy SpawnTargetAt(GameObject prefab, Vector3 position)
         {
             if (prefab == null)
@@ -212,8 +196,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return enemy;
         }
 
-        // 플레이어 앞(조준 방향) distance 만큼에 연습용 적 하나. 내비 메시 위로 맞추고, 방 클리어 수에는 안 셈.
-        // stationary = 행동 트리를 꺼서 제자리에 서 있게 (때리지도 않음)
         public AbstractEnemy SpawnTarget(GameObject prefab, float distance, bool stationary)
         {
             PlayerAgent player = Player;
@@ -234,8 +216,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return enemy;
         }
 
-        // 화면 안, 길이 뚫린 곳: 카메라 기준 오른쪽 → 왼쪽 → 위 → 아래 순으로 내비 메시 위 + 플레이어에서 막힘 없이 갈 수 있는 자리.
-        // (조준 방향으로 두면 HUD 밑이나 벽 뒤에 생길 수 있음)
         private static Vector3 PickTargetSpot(Vector3 origin, float distance, out Vector3 direction)
         {
             Camera cam = Camera.main;
@@ -256,7 +236,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                     if (!NavMesh.SamplePosition(want, out NavMeshHit hit, 1.5f, NavMesh.AllAreas))
                         continue;
                     if (hasOrigin && NavMesh.Raycast(from.position, hit.position, out _, NavMesh.AllAreas))
-                        continue;   // 가는 길이 막힘
+                        continue;
                     direction = dir;
                     return hit.position;
                 }
@@ -267,7 +247,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             return NavMesh.SamplePosition(fallback, out NavMeshHit any, 4f, NavMesh.AllAreas) ? any.position : fallback;
         }
 
-        // 튜토리얼 동안 맵의 적 스포너를 멈춰 둠 (연습 중 엉뚱한 적이 몰려오지 않게). 방 클리어 수에는 그대로 들어감
         public void HoldStageSpawners(bool hold)
         {
             if (hold)
@@ -288,8 +267,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             HoldSceneEnemies(false);
         }
 
-        // 씬에 처음부터 서 있는 적(예: 시작 지점 근처 엔트 보스)도 연습 동안 멈춤: 행동 트리를 끄고, 쓰던 스킬 취소, 길찾기 정지.
-        // 적 Start(행동 트리 변수 설정)가 끝난 뒤에 불러야 함 (TutorialDirector 가 첫 단계 전에 부름). 연습용 적은 제외.
         private readonly List<(AbstractEnemy enemy, Unity.Behavior.BehaviorGraphAgent agent, NavMeshAgent nav)> _heldEnemies = new();
 
         public void HoldSceneEnemies(bool hold)
@@ -336,7 +313,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _heldSpawners.Add(spawner);
         }
 
-        // 길 안내: 살아 있는 적 중 가장 가까운 적, 없으면 아직 안 가 본 스포너 중 가장 가까운 곳
         private readonly HashSet<TestEnemySpawner> _visited = new();
 
         public bool TryGetGuideTarget(out Vector3 position)
@@ -369,7 +345,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 float d = (spawner.transform.position - me).sqrMagnitude;
                 if (d < 7f * 7f)
                 {
-                    _visited.Add(spawner);   // 이 근처까지 왔으면 스포너가 터졌다고 봄
+                    _visited.Add(spawner);
                     continue;
                 }
                 if (d < best)
@@ -380,8 +356,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             }
             return best < float.MaxValue;
         }
-
-        // ---------------------------------------------------------------- 글자
 
         public string KeyLabel(SkillSlotId slot)
         {
@@ -406,7 +380,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             }
         }
 
-        // {Weapon} 같은 자리표시를 지금 키 이름으로 (금색)
         public string Format(string text)
         {
             if (string.IsNullOrEmpty(text) || text.IndexOf('{') < 0)
@@ -417,13 +390,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             text = text.Replace("{Finisher}", Key(Hud != null && !string.IsNullOrEmpty(Hud.FinisherKey) ? PrettyKey(Hud.FinisherKey) : "R"));
             foreach (SkillSlotId slot in SkillSlots.All)
                 text = text.Replace("{" + slot + "}", Key(KeyLabel(slot)));
-            // 나머지 {글자} 는 그 글자 그대로 키 모양으로 ({W A S D} → [W A S D])
             return System.Text.RegularExpressions.Regex.Replace(text, @"\{([^{}]+)\}", m => Key(m.Groups[1].Value));
         }
 
         public static string Key(string label) => $"<color=#D6B878>[{label}]</color>";
-
-        // ---------------------------------------------------------------- 정리
 
         internal void Dispose() => HoldStageSpawners(false);
 
@@ -438,13 +408,11 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         }
     }
 
-    // 시간이 멈춰도 동작하는 입력 (새 입력 시스템 장치를 직접 읽음)
     public sealed class TutorialInput
     {
         private bool _clicked;
         private bool _injConfirm, _injSpace, _injMove, _injFire;
 
-        // 확인 도구(자동 진행)용: 다음 프레임에 이 키를 누른 것으로
         public void DebugPress(bool confirm = false, bool space = false, bool move = false, bool fire = false)
         {
             _injConfirm |= confirm;
@@ -458,7 +426,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         public bool MovePressed { get; private set; }
         public bool FirePressed { get; private set; }
 
-        // 카드의 "계속" 버튼
         internal void Click() => _clicked = true;
 
         internal void Tick()
@@ -477,14 +444,10 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
             _clicked = _injConfirm = _injSpace = _injMove = _injFire = false;
         }
 
-        // 스킬 키 (플레이어 입력 설정을 그대로 따름 → 키를 바꿔도 맞음)
         public bool SkillPressed(TutorialContext ctx, SkillSlotId slot) =>
             ctx.Player != null && ctx.Player.Input.WasSkillPressed(slot);
     }
 
-    // 연습용 적 (때리지도 움직이지도 않는 표적)
-    //  살아 있는 동안: 행동 트리 컴포넌트를 꺼 두고 쓰던 스킬을 취소 (StopBehavior 만으로는 공격을 계속했음)
-    //  체력이 0 이 되면: 행동 트리가 꺼져 있어 원래 죽음 연출(행동 트리 → 애니메이션 → Dead)이 안 도니 잠깐 뒤 직접 치움
     internal sealed class TutorialStationary : MonoBehaviour
     {
         public AbstractEnemy Enemy;
@@ -502,7 +465,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
             if (Enemy.IsAlive)
             {
-                // 적 Start(행동 트리 변수 설정)가 끝난 다음 프레임부터 끔
                 if (_frames++ < 1)
                     return;
                 if (_agent == null)
@@ -527,7 +489,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
         }
     }
 
-    // HUD 부품 찾아 주기 (인게임 앵커)
     internal static class TutorialAnchors
     {
         public static bool TryFindHud(string id, out RectTransform rect)

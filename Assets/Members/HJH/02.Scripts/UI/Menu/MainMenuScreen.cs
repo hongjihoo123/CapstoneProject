@@ -10,13 +10,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 게임을 켜면 처음 나오는 화면 (씬 MainMenu, 빌드 설정 맨 앞).
-    //   [인트로 자리] → "처음인가요?" (위쪽 가운데) + 예 / 아니요 (아래쪽 가운데) → 메인 화면(게임 시작 / 튜토리얼 / 종료)
-    //   예      → 튜토리얼 시작: 픽 화면부터 안내 → 스테이지 클리어 → 이 화면으로 돌아옴
-    //   아니요  → 바로 메인 화면
-    // "처음인가요?" 는 게임을 켤 때 한 번만 물음 (튜토리얼 끝나고 돌아오면 바로 메인 화면).
-    // 화면은 씬 하이어라키(MenuCanvas)에 저장된 그대로 → 글자·크기·위치는 인스펙터에서 수정. 처음 만들 때만 ⋮ > 레이아웃 굽기.
-    // 두 페이지(Question / Menu)를 켜고 끄기만 함. 버튼은 OnClick 에 연결돼 있음 (AnswerYes/No, StartGame, StartTutorial, Quit)
     public class MainMenuScreen : MonoBehaviour, IUiBake
     {
         [SerializeField] private string gameTitle = "GAME TITLE";
@@ -92,13 +85,10 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 ShowMenu();
         }
 
-        // 나중에 인트로(영상/연출)가 들어갈 자리. 지금은 바로 넘어감
         protected virtual IEnumerator PlayIntro()
         {
             yield break;
         }
-
-        // ---------------------------------------------------------------- 페이지
 
         private void ShowQuestion()
         {
@@ -123,8 +113,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             page.DOFade(1f, 0.3f).SetUpdate(true).SetLink(page.gameObject);
             SetFocus(0);
         }
-
-        // ---------------------------------------------------------------- 동작 (버튼 OnClick)
 
         public void AnswerYes() => Answer(yesStartsTutorial);
         public void AnswerNo() => Answer(!yesStartsTutorial);
@@ -157,7 +145,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             Go(pickScene);
         }
 
-        // 설정 버튼/톱니 버튼이 호출. onSettings 는 SettingsMenu.Open 에 연결 (HJH/UI/설정 창 만들기)
         public void OpenSettings() => onSettings?.Invoke();
 
         public UnityEngine.Events.UnityEvent OnSettings => onSettings;
@@ -184,16 +171,13 @@ namespace Assets.Members.HJH._02.Scripts.UI
             fade.DOFade(1f, fadeTime).SetUpdate(true).OnComplete(() => SceneManager.LoadScene(scene));
         }
 
-        // 테스트 도구용 (버튼을 누른 것과 같음)
         public void DebugAnswer(bool yes) => Answer(yes == yesStartsTutorial);
         public void DebugStartGame() => StartGame();
-
-        // ---------------------------------------------------------------- 키보드 (←/→/↑/↓ + Enter, 예/아니요는 Y/N 도)
 
         private void Update()
         {
             Keyboard k = Keyboard.current;
-            if (_busy || k == null || _buttons.Length == 0 || UiFocusService.IsUiFocused)   // 설정 창이 열려 있으면 뒤 메뉴는 안 움직임
+            if (_busy || k == null || _buttons.Length == 0 || UiFocusService.IsUiFocused)
                 return;
 
             if (k.leftArrowKey.wasPressedThisFrame || k.upArrowKey.wasPressedThisFrame)
@@ -212,7 +196,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 마우스를 올리거나 키보드로 고른 버튼 (HoverSelect OnEnter 에 연결)
         public void SetFocus(int index)
         {
             if (_buttons.Length == 0)
@@ -225,7 +208,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 RectTransform root = entry.back.rectTransform;
                 root.DOKill();
                 root.DOScale(on ? 1.05f : 1f, 0.15f).SetUpdate(true);
-                // 고른 버튼은 밝은 버튼 그림, 나머지는 어두운 그림
                 entry.back.sprite = on ? focusedSprite : normalSprite;
                 entry.back.color = on ? focusedTint : normalTint;
                 entry.label.color = on ? focusedLabel : normalLabel;
@@ -234,7 +216,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             }
         }
 
-        // 누른 버튼이 톡 튀어나왔다 돌아옴
         private void Punch(int index)
         {
             if (index < 0 || index >= _buttons.Length)
@@ -244,8 +225,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             root.localScale = Vector3.one * 1.05f;
             root.DOPunchScale(Vector3.one * -0.08f, 0.2f, 6, 0.6f).SetUpdate(true).SetLink(root.gameObject);
         }
-
-        // ---------------------------------------------------------------- 레이아웃 굽기 (에디터 전용)
 
         [ContextMenu("레이아웃 굽기 (자식 다시 만들기)")]
         public void BakeLayout()
@@ -265,7 +244,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             var canvasGo = new GameObject("MenuCanvas", typeof(RectTransform), typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
             canvasGo.transform.SetParent(transform, false);
             var canvas = canvasGo.GetComponent<Canvas>();
-            // 카메라 앞 캔버스: 캡처 도구가 카메라로 찍어도 UI 가 나옴 (픽 화면과 같음)
             canvas.renderMode = RenderMode.ScreenSpaceCamera;
             canvas.worldCamera = cam;
             canvas.planeDistance = 0.5f;
@@ -279,7 +257,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             HudUiKit.Place(glow.rectTransform, new Vector2(0.5f, 0.5f), new Vector2(0f, 60f), new Vector2(1800f, 1300f));
             backGlow = glow.rectTransform;
 
-            // 처음인가요?
             questionPage = NewPage("Question", root);
             TMP_Text title = HudUiKit.NewText("Title", questionPage.transform, "처음인가요?", 60f, HudUiKit.Title, TextAlignmentOptions.Center, 8f);
             HudUiKit.Place(title.rectTransform, new Vector2(0.5f, 1f), new Vector2(0f, -190f), new Vector2(1000f, 80f));
@@ -296,7 +273,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 NewButton(questionPage.transform, "No", "아니요", bottom, new Vector2(170f, 170f), new Vector2(300f, 84f), false, AnswerNo, 1),
             };
 
-            // 메인 화면
             menuPage = NewPage("Menu", root);
             Transform menu = menuPage.transform;
             var middle = new Vector2(0.5f, 0.5f);

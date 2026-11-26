@@ -4,9 +4,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 스킬 칸 테두리 바깥에 속성 모양 링(셰이더 HJH/UI/ElementRing)을 씌우는 부품.
-    //  - 칸보다 크게(약 1.9배) 깔고 스프라이트는 비워 둔다. 클릭은 안 받는다.
-    //  - SetIntensity 로 세기를 바꾸면 부드럽게 따라감: 0.5 약함 / 1 기본 / 2.4 "이걸 쓰세요"
     [RequireComponent(typeof(Image))]
     public class ElementRingView : MonoBehaviour
     {
@@ -53,7 +50,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private static readonly int RadiusId = Shader.PropertyToID("_RingRadius");
 
-        // 링 반지름 (정사각형 절반 = 1 기준). 칸 가장자리에 링이 오도록 칸 크기/링 크기 비율로 넣어줌
         public void SetRingRadius(float radius)
         {
             EnsureMaterial();
@@ -61,7 +57,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 _material.SetFloat(RadiusId, radius);
         }
 
-        // snap = true 면 바로 그 값으로 (처음 세팅 때)
         public void SetIntensity(float value, bool snap = false)
         {
             _target = Mathf.Max(0f, value);
@@ -91,7 +86,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             _image.raycastTarget = false;
         }
 
-        // 셰이더의 _Element 번호 (Fire 0, Water 1, Wind 2, Electric 3, Earth 4) - ElementType 순서와 같음
         private static float ToShaderIndex(ElementType element) => element switch
         {
             ElementType.Fire => 0f,

@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Members.JJH._02_Scripts.Systems.ModuleSystem;
-using Members.KYR._01_Scripts;
 using Members.KYR._01_Scripts.FSM.Core;
 using Members.KYR._01.Scripts.Modules;
 using Members.KYR._01.Scripts.Player;
@@ -11,10 +10,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 {
-    // Player skill system entry point (a KYR Module on PlayerAgent). Holds one GenericSkillState per slot,
-    // resolves input every frame (press / hold-aim / release / cancel), runs the active skill through a StateMachine
-    // and raises events for everything else: SkillUsed, LoadoutChanged, SkillDenied, SkillReady.
-    // Swap / UI / combo code only talk to it through Equip(...), the Get* queries and those events.
     public class SkillStateModule : AbstractModule, IAfterInitModule, ISkillHost, IPassiveHost
     {
         [Serializable]
@@ -64,17 +59,11 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
         }
 
         public event Action<SkillUsedInfo> SkillUsed;
-        // SkillUsed 와 같은 시전인데, 스킬의 Begin 이 돌기 직전에 옴
         public event Action<SkillUsedInfo> SkillCasting;
-        // Any slot's skill changed (skill swap, kit / character change). Once per EquipKit.
         public event Action LoadoutChanged;
-        // A key was pressed for an equipped skill that cannot be cast yet (cooldown, no charge, swap lock).
         public event Action<SkillSlotId> SkillDenied;
-        // A skill became castable again: cooldown done (multi-charge: first charge back) or swap lock over.
         public event Action<SkillSlotId> SkillReady;
-        // 쿨이 깎였음 (치명 환류 같은 것): 칸, 실제로 깎인 초, 완전 초기화인가. 롤 나보리처럼 아이콘이 반응하게 함
         public event Action<SkillSlotId, float, bool> CooldownReduced;
-        // 이 초 이상 깎으라는 요청은 "초기화"로 봄 (CritSystem 이 9999 를 넘김)
         private const float ResetSeconds = 900f;
 
         private readonly Dictionary<SkillSlotId, bool> _wasReady = new();
@@ -150,8 +139,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 LoadoutChanged?.Invoke();
         }
 
-        // Equips and carries a cooldown over (a skill picked back up resumes where it was),
-        // then blocks the slot for lockSeconds so swapping cannot be used to skip cooldowns.
         public void Equip(SkillSlotId slot, SkillData data, SkillCooldownState cooldown, float lockSeconds)
         {
             Equip(slot, data);
@@ -188,8 +175,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             DetectReady();
         }
 
-        // Edge detection lives here, not in the UI: views only hear "this slot is ready now".
-        // A freshly equipped skill has no history, so it is recorded first and never fires on equip.
         private void DetectReady()
         {
             foreach (KeyValuePair<SkillSlotId, GenericSkillState> pair in _slots)
@@ -241,7 +226,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             if (_aimingSlot == null)
                 return;
 
-            // While a skill is held, the cancel key (right click) only cancels; it does not dash.
             SkillSlotId slot = _aimingSlot.Value;
             if (input.WasCancelPressed())
             {
@@ -256,9 +240,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             Cast(slot);
         }
 
-        // Hands intercepted presses to their owner and hides those keys from the rest of ResolveInput.
-        // A handed-off press stays hidden for this frame even if the interceptor lets go of the key in
-        // OnInterceptedPress (otherwise the swap key would also cast the skill it just equipped).
         private ISkillInputSource Intercept(ISkillInputSource input)
         {
             _interceptedInput ??= new InterceptedInput(this);
@@ -281,7 +262,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
             return _interceptedInput;
         }
 
-        // The running skill's own key is a cancel key, not a cast attempt, so it is never reported.
         private void ReportDenied(ISkillInputSource input, SkillSlotId? except)
         {
             if (SkillDenied == null)
@@ -323,7 +303,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
                 return false;
 
             var info = new SkillUsedInfo(slot, state.Data);
-            SkillCasting?.Invoke(info);   // 스킬 코드가 돌기 전 (피니시 강화처럼 미리 걸어야 하는 것)
+            SkillCasting?.Invoke(info);
             Machine.ChangeState(state);
             _passive?.OnSkillUsed(info);
             SkillUsed?.Invoke(info);
@@ -415,7 +395,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module
 
         void ISkillHost.OnSkillEntered() => _context.BeginActivation();
 
-        // Same input, with intercepted keys reading as "not pressed / not held".
         private sealed class InterceptedInput : ISkillInputSource
         {
             private readonly SkillStateModule _owner;

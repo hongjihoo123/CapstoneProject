@@ -3,15 +3,13 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Tutorial
 {
-    // 기본 튜토리얼 순서. 훈련장 만들기 메뉴(TutorialAssetSync)가 이걸 에셋에 덮어쓰고,
-    // 실행 중 에셋이 없을 때도 이걸로 돎. 문구·순서를 바꾸려면 저장된 에셋을 고치면 됨.
     public static class TutorialDefaults
     {
         public const string ResourceFolder = "HJH/Tutorial/";
         public const string PickName = "Tutorial_Pick";
         public const string StageName = "Tutorial_Stage";
         public const string MainMenuScene = "MainMenu";
-        public const string StageScene = "Map_Training";   // 튜토리얼 스테이지는 왕국 훈련장에서 (콤보 상점도 놓여 있음)
+        public const string StageScene = "Map_Training";
 
         public const string PickComboTitle = "시작 콤보";
         public const string PickComboBody = "우클릭 스킬과 궁극기 원소로 만든 콤보 두 개 중 하나를 고르세요.\n튜토리얼과 초반에는 이 콤보로 싸우고, 게임 중 상점에서 새 콤보를 바인딩할 수 있습니다.";
@@ -46,7 +44,6 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
                 "준비가 되면 게임 시작을 누르세요.\n왕국 훈련장에서 튜토리얼이 이어집니다.",
                 TutorialAnchorIds.PickStart, pauseTime: false));
 
-        // targetPrefab = 데미지 단계에 세울 연습용 적 (없으면 적 없이 진행)
         public static TutorialSequence CreateStage(GameObject targetPrefab)
         {
             ActionStep basic = Step<ActionStep>().Set(ActionStep.ActionKind.BasicAttack, uses: 1);
@@ -59,7 +56,7 @@ namespace Assets.Members.HJH._02.Scripts.Tutorial
 
             ActionStep dash = Step<ActionStep>().Set(ActionStep.ActionKind.Skill, SkillSlotId.Dash);
             dash.Configure("대시", "대시 {Dash}  —  움직이는 방향으로 빠르게 이동합니다.\n적의 공격을 피할 때 씁니다.");
-            dash.SetTarget(null, spawn: false);   // 거너 대시는 데미지가 없음 → 적 없이
+            dash.SetTarget(null, spawn: false);
 
             ComboStep combo = Step<ComboStep>();
             combo.Configure("원소 콤보", "아래 순서대로 스킬을 이어 써서 콤보를 성공시키고, 더미를 부수세요.", TutorialAnchorIds.HudCombo);

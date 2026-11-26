@@ -11,10 +11,6 @@ using Item = HJH.EditorTools.MapAudit.Item;
 
 namespace HJH.EditorTools
 {
-    // 다리 맵에서 어색하게 놓인 작은 프랍만 가까운 빈자리로 옮긴다 (지우지 않음, Ctrl+Z 가능, 씬 파일은 먼저 백업).
-    //   옮기는 이유: ROCK 큰 바위 속/밑에 묻힘, OVERLAP 다른 종류 프랍과 박힘, ROUTE 길 한가운데, PORTAL 포탈 바로 앞, FLOAT 떠 있음
-    //   옮기는 대상: 꽃·버섯·작은 돌·뿌리·통나무·구역 안 나무. 큰 바위·암벽·등불·벽 나무는 그대로 둔다.
-    //   꽃·버섯 옆의 점광원(GlowLight 등)은 같이 따라간다. 결과 목록: Captures/_tidy.txt
     public static class MapPropTidy
     {
         private const string OutPath = "Captures/_tidy.txt";
@@ -37,7 +33,7 @@ namespace HJH.EditorTools
                 case "flower": return 0;
                 case "mushroom": return 1;
                 case "rock": return (i.name.StartsWith("Rock_") && Mathf.Max(i.b.size.x, i.b.size.z) < 2.6f) ? 2 : -1;
-                case "roots": return i.b.size.y > 0.05f ? 3 : -1;     // 크기 0 인 것(렌더러 없음)은 건드리지 않음
+                case "roots": return i.b.size.y > 0.05f ? 3 : -1;
                 case "log": return 4;
                 case "tree": return i.name == "PF_JungleTree" ? 5 : -1;
                 default: return -1;
@@ -56,7 +52,6 @@ namespace HJH.EditorTools
             float Ground(Vector2 p) => terrain != null ? terrain.SampleHeight(new Vector3(p.x, 0f, p.y)) + terrain.transform.position.y : 0f;
 
             List<Item> items = MapAudit.Collect(true).Where(i => i.cat != "fx" && i.cat != "light" && i.cat != "other").ToList();
-            // 큰 바위의 낱개 렌더러마다 타원(바운드의 70%)으로 "바위 속" 판정
             var rockBounds = new List<(Item owner, Bounds b)>();
             foreach (Item i in items)
                 if (i.cat == "rock" && i.b.size.y > 2.5f)
@@ -79,15 +74,15 @@ namespace HJH.EditorTools
             {
                 Transform t = it.go.transform;
                 bool water = MapSpecBuilder.SpecInWater(it.xz);
-                if (it.cat != "rock" && InRock(it.xz, it, it.ground)) return "ROCK";   // 작은 돌이 큰 바위 발치에 붙은 건 자연스러워서 그대로
+                if (it.cat != "rock" && InRock(it.xz, it, it.ground)) return "ROCK";
                 if (it.play <= 0f && it.b.size.y > 0.4f && it.route < RouteNeed(it) && MapSpecBuilder.SpecBridgeDist(it.xz) > 3f) return "ROUTE";
                 if (portals.Any(p => Vector2.Distance(p, it.xz) < it.ext + 1.6f)) return "PORTAL";
                 foreach (Item o in items)
                 {
                     if (o == it || o.cat == it.cat || o.cat == "lantern" && it.cat == "flower") continue;
                     int ro = Rank(o);
-                    if (ro >= 0 && ro < Rank(it)) continue;   // 더 작은 쪽이 비킨다
-                    if (o.cat == "rock" && o.b.size.y > 2.5f) continue;   // 큰 바위는 위의 타원 판정으로
+                    if (ro >= 0 && ro < Rank(it)) continue;
+                    if (o.cat == "rock" && o.b.size.y > 2.5f) continue;
                     if (Vector2.Distance(o.xz, it.xz) < Gap(it, o) && o.b.Intersects(it.b)) return "OVERLAP " + o.name;
                 }
                 float floor = water ? Mathf.Min(it.ground, MapSpecBuilder.SpecWaterY) : it.ground;
@@ -118,8 +113,8 @@ namespace HJH.EditorTools
                 if (why == null) continue;
                 bool wasWater = MapSpecBuilder.SpecInWater(it.xz), wasPlay = it.play <= 0f;
                 Vector2? spot = null;
-                if (why == "FLOAT") spot = it.xz;   // 제자리에서 바닥에 붙이기만
-                float phase = Mathf.Repeat(it.xz.x * 12.9898f + it.xz.y * 78.233f, Mathf.PI * 2f);   // 물체마다 다른 방향부터 (실행할 때마다 같은 결과)
+                if (why == "FLOAT") spot = it.xz;
+                float phase = Mathf.Repeat(it.xz.x * 12.9898f + it.xz.y * 78.233f, Mathf.PI * 2f);
                 for (float r = 1f; r <= 8f && spot == null; r += 0.5f)
                     for (int k = 0; k < 12 && spot == null; k++)
                     {
@@ -156,8 +151,6 @@ namespace HJH.EditorTools
             Debug.Log($"[Tidy] {moved}개 옮김, {stuck}개는 빈자리 없어 그대로, 따라간 조명 {movedLights.Count}개. 씬은 저장하지 않았습니다 (Ctrl+Z 가능). 목록: {Path.GetFullPath(OutPath)}");
         }
 
-        // 시작 구역 한가운데처럼 아무것도 없는 넓은 바닥에 발광 꽃 무리(꽃 2~3 + 조명 1 + 조약돌 1~2)를 드문드문 놓는다.
-        // 길에서 3.5m 이상, 기존 프랍에서 4m 이상, 무리끼리 9m 이상 떨어진 곳만. 콜라이더 없음(전투 공간을 막지 않음). 다시 돌리면 FillDeco 만 새로 만든다.
         [MenuItem("HJH/맵/정리/빈 바닥에 발광 꽃 무리 놓기 (플레이 구역)")]
         public static void Fill()
         {
@@ -165,7 +158,6 @@ namespace HJH.EditorTools
             Scene scene = SceneManager.GetActiveScene();
             if (!MapSpecBuilder.UseSpecFor(scene.name)) { Debug.LogWarning("[Fill] 맵 스펙이 있는 씬에서만 됩니다."); return; }
             BackupActiveScene();
-            // (스펙은 위에서 씬 이름으로 골랐음)
             GameObject old = GameObject.Find("FillDeco");
             if (old != null) Undo.DestroyObjectImmediate(old);
 
@@ -179,7 +171,7 @@ namespace HJH.EditorTools
                 .Where(l => l.type == LightType.Point && !l.transform.IsChildOf(flower.go.transform))
                 .OrderBy(l => Vector2.Distance(new Vector2(l.transform.position.x, l.transform.position.z), flower.xz)).FirstOrDefault();
             Light glowSrc = UnityEngine.Object.FindObjectsByType<Light>(FindObjectsSortMode.None).Where(l => l.name.StartsWith("GlowLight_"))
-                .OrderBy(l => Vector3.Distance(l.transform.position, flower.go.transform.position)).FirstOrDefault();   // 원본 꽃을 비추는 조명 색을 따름
+                .OrderBy(l => Vector3.Distance(l.transform.position, flower.go.transform.position)).FirstOrDefault();
             if (glowSrc != null && Vector3.Distance(glowSrc.transform.position, flower.go.transform.position) > 3.2f) glowSrc = null;
             Color glowColor = glowSrc != null ? glowSrc.color : new Color(0.35f, 0.65f, 1f);
             float flowerLift = flower.go.transform.position.y - flower.ground;
@@ -195,7 +187,7 @@ namespace HJH.EditorTools
                 var p = new Vector2(R(10f, 105f), R(5f, 110f));
                 if (MapSpecBuilder.PlayDist(p) > 0f || MapSpecBuilder.SpecInWater(p)) continue;
                 if (MapSpecBuilder.PlayDist(p + new Vector2(4f, 0f)) > 0f || MapSpecBuilder.PlayDist(p - new Vector2(4f, 0f)) > 0f
-                    || MapSpecBuilder.PlayDist(p + new Vector2(0f, 4f)) > 0f || MapSpecBuilder.PlayDist(p - new Vector2(0f, 4f)) > 0f) continue;   // 가장자리에서 4m 안쪽
+                    || MapSpecBuilder.PlayDist(p + new Vector2(0f, 4f)) > 0f || MapSpecBuilder.PlayDist(p - new Vector2(0f, 4f)) > 0f) continue;
                 if (MapSpecBuilder.RouteDist(p) < 3.5f || MapSpecBuilder.SpecBridgeDist(p) < 6f || MapSpecBuilder.SpecBlocked(p, 2f)) continue;
                 if (spots.Any(s => Vector2.Distance(s, p) < 9f)) continue;
                 if (items.Any(i => Vector2.Distance(i.xz, p) < 4f + i.ext)) continue;
@@ -212,7 +204,6 @@ namespace HJH.EditorTools
                     flowers++;
                 }
                 {
-                    // MapLightTools 의 발광 무리 조명과 같은 규칙 (점광원, 그림자 없음, 꽃 수에 따라 밝기)
                     var lg = new GameObject("GlowLight_Fill");
                     lg.transform.SetParent(root.transform, false);
                     lg.transform.position = new Vector3(p.x, Ground(p) + 0.6f, p.y);

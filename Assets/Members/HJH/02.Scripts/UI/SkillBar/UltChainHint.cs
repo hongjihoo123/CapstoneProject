@@ -7,11 +7,6 @@ using UnityEngine.UI;
 
 namespace Assets.Members.HJH._02.Scripts.UI
 {
-    // 궁극기 초기화(치명 연쇄) 규칙을 플레이어에게 알려주는 부분.
-    //  - 궁극기 칸에 마우스를 올리면 규칙 설명 상자 ("파편이 3초 안에 치명타를 8번 터뜨리면 궁극기가 초기화돼요")
-    //  - 파편 치명을 세는 동안 칸 위에 "치명 3/8" 진행도
-    // 숫자는 전부 PlayerHudSource.UltimateRule / TryGetUltimateProgress 에서 읽음 (스킬 트리 강화가 바뀌어도 글이 맞음).
-    // PlayerRig 하이어라키에 구워 둔 오브젝트. 글자 크기·색·상자 모양은 인스펙터에서 수정
     public class UltChainHint : MonoBehaviour, IUiBake
     {
         [SerializeField] private TMP_Text progressText;
@@ -74,7 +69,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
                 tip.gameObject.SetActive(false);
         }
 
-        // 칸 위쪽 가운데의 화면 좌표(월드). 캔버스 배율을 곱해서 px 간격이 어느 해상도에서도 같게
         private Vector3 TopCenter(float gap)
         {
             Vector3[] corners = new Vector3[4];

@@ -3,9 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Audio
 {
-    // 소리 하나 = "무엇을 어떻게 낼지". 언제 낼지는 쓰는 쪽(스킬 항목·코드)이 정함.
-    //  - 적·무기·스킬 SO 에 이 필드를 직렬화로 넣고, SoundManager.Play(cue, 위치) 로 요청
-    //  - 클립 여러 개 중 랜덤 + 볼륨·피치 흔들기 (같은 소리 반복이 지루하지 않게)
     [Serializable]
     public class SoundCue
     {

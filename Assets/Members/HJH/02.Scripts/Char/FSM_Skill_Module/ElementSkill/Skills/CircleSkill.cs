@@ -3,8 +3,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
 {
-    // 원형 한 방. 커서 위치(or 내 주변)에 터짐. 딜레이 주면 바닥 예고 보여주고 잠깐 뒤에 떨어짐
-    // 예) 메테오, 낙뢰, 대지의 손아귀
     [CreateAssetMenu(menuName = "Skill/Element/Circle (원형)")]
     public class CircleSkill : ElementSkillBase
     {
@@ -15,7 +13,7 @@ namespace Assets.Members.HJH._02.Scripts.Char.FSM_Skill_Module.ElementSkill
         [SerializeField, Tooltip("떨어지기까지 (초). 0 = 바로")] private float delay;
         [SerializeField, Tooltip("떨어지기 전 바닥 예고 이펙트")] private FxSlot windupFx = new();
 
-        protected override CastMotion DefaultMotion => delay > 0f ? CastMotion.Sky : CastMotion.Ground;   // 지연 낙하(메테오) = 하늘 부르기
+        protected override CastMotion DefaultMotion => delay > 0f ? CastMotion.Sky : CastMotion.Ground;
 
         protected override ISkillExecution Cast(ElementSkillCast cast)
         {

@@ -2,8 +2,6 @@ using UnityEngine;
 
 namespace Assets.Members.HJH._02.Scripts.Char.Visual
 {
-    // 이펙트가 켜질 때마다 target 을 from → to (로컬 좌표) 로 duration 동안 옮김. 점점 빨라짐 (떨어지는 운석)
-    // target 의 자식(바위, 불꽃 꼬리, 공기 막)이 같이 따라 움직임. 꼬리는 월드 공간 + 거리당 방출로 만들면 됨
     public class FxLocalMover : MonoBehaviour, IFxDriver
     {
         [SerializeField] private Transform target;
@@ -35,7 +33,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             if (travel.sqrMagnitude > 0.0001f)
                 target.localRotation = Quaternion.LookRotation(travel);
 
-            // 풀에서 재사용될 때 끝자리 → 시작자리로 순간이동한 거리만큼 꼬리가 그어지지 않게 다시 시작
             foreach (ParticleSystem ps in target.GetComponentsInChildren<ParticleSystem>())
             {
                 ps.Stop(true, ParticleSystemStopBehavior.StopEmittingAndClear);
@@ -53,7 +50,6 @@ namespace Assets.Members.HJH._02.Scripts.Char.Visual
             Evaluate(_elapsed);
         }
 
-        // 켜지고 elapsed 초 지난 자리로 (영상 녹화처럼 시간을 직접 넘길 때도 씀)
         public void Evaluate(float elapsed)
         {
             if (target == null)

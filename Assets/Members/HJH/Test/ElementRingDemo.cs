@@ -5,25 +5,23 @@ using UnityEngine.UI;
 
 namespace Members.HJH.Test
 {
-    // 속성 링 셰이더 확인용 데모. 플레이하면 UI를 코드로 만들어서 위 줄(사용 전) / 아래 줄(Q 쓴 직후)을 보여줌.
-    // 씬은 HJH/UI/속성 링 데모 씬 만들기 메뉴가 만든다. 게임 쪽 코드는 건드리지 않음.
     public class ElementRingDemo : MonoBehaviour
     {
         private struct Slot
         {
             public string key;
             public ElementType element;
-            public float after;     // 아래 줄(Q 사용 직후)에서의 세기
-            public float scale;     // 아래 줄에서 칸 크기 배율
+            public float after;
+            public float scale;
         }
 
         private static readonly Slot[] Slots =
         {
-            new Slot { key = "Q",     element = ElementType.Water,    after = 1.6f, scale = 1.00f },   // 방금 쓴 스킬: 번쩍
-            new Slot { key = "E",     element = ElementType.Earth,    after = 1.9f, scale = 1.18f },   // 연계 (중간)
-            new Slot { key = "RMB",   element = ElementType.Electric, after = 2.8f, scale = 1.48f },   // 연계 (강하게)
-            new Slot { key = "R",     element = ElementType.Fire,     after = 1.7f, scale = 1.10f },   // 연계 (중간)
-            new Slot { key = "SPACE", element = ElementType.Wind,     after = 2.8f, scale = 1.52f },   // 연계 (강하게)
+            new Slot { key = "Q",     element = ElementType.Water,    after = 1.6f, scale = 1.00f },
+            new Slot { key = "E",     element = ElementType.Earth,    after = 1.9f, scale = 1.18f },
+            new Slot { key = "RMB",   element = ElementType.Electric, after = 2.8f, scale = 1.48f },
+            new Slot { key = "R",     element = ElementType.Fire,     after = 1.7f, scale = 1.10f },
+            new Slot { key = "SPACE", element = ElementType.Wind,     after = 2.8f, scale = 1.52f },
         };
 
         private Font _font;
@@ -72,7 +70,6 @@ namespace Members.HJH.Test
                 float size = 110f * scale;
                 var pos = new Vector2((i - 2) * spacing, y);
 
-                // 칸
                 var disc = new GameObject("Slot_" + s.key, typeof(RectTransform), typeof(Image));
                 disc.transform.SetParent(root, false);
                 var dr = (RectTransform)disc.transform;
@@ -82,7 +79,6 @@ namespace Members.HJH.Test
                 img.sprite = MakeDisc(s.element);
                 img.raycastTarget = false;
 
-                // 링
                 var ring = new GameObject("Ring_" + s.key, typeof(RectTransform), typeof(Image), typeof(ElementRingView));
                 ring.transform.SetParent(root, false);
                 var rr = (RectTransform)ring.transform;
@@ -114,7 +110,6 @@ namespace Members.HJH.Test
             t.raycastTarget = false;
         }
 
-        // 아이콘 대신 쓰는 속성 색 어두운 원판
         private static Sprite MakeDisc(ElementType element)
         {
             Color baseColor = element switch
