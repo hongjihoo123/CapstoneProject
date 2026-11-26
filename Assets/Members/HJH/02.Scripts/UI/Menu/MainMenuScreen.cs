@@ -37,7 +37,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
         [SerializeField] private MenuButton[] questionButtons;
         [SerializeField] private CanvasGroup menuPage;
         [SerializeField] private MenuButton[] menuButtons;
-        [SerializeField] private GameObject tutorialDone;
         [SerializeField, Tooltip("고른 버튼 / 나머지 버튼 그림")] private Sprite focusedSprite;
         [SerializeField] private Sprite normalSprite;
 
@@ -99,7 +98,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
 
         private void ShowMenu()
         {
-            tutorialDone.SetActive(TutorialSession.EverCompleted);
             ShowPage(menuPage, menuButtons, false);
         }
 
@@ -292,7 +290,6 @@ namespace Assets.Members.HJH._02.Scripts.UI
             };
             TMP_Text done = HudUiKit.NewText("Done", menu, "튜토리얼 완료", 16f, HudUiKit.Label, TextAlignmentOptions.Center, 2f);
             HudUiKit.Place(done.rectTransform, middle, new Vector2(0f, -268f), new Vector2(300f, 26f));
-            tutorialDone = done.gameObject;
             menuPage.gameObject.SetActive(false);
 
             fade = HudUiKit.NewImage("Fade", root, null, new Color(0f, 0f, 0f, 0f));
