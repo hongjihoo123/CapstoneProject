@@ -5,9 +5,6 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
 {
     public class MeleeEnemy : AbstractEnemy
     {
-        [Header("Normal Attack")]
-        [SerializeField] private float attackDamage = 10f;
-        [SerializeField] private LayerMask targetLayer;
         [Tooltip("사각형 크기 (x: 가로, y: 높이, z: 앞쪽 길이)")]
         [SerializeField] private Vector3 attackBoxSize = new Vector3(2f, 2f, 2.5f);
 
@@ -15,7 +12,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
         {
             GetAttackBox(out Vector3 center, out Quaternion rotation);
 
-            Collider[] hits = Physics.OverlapBox(center, attackBoxSize * 0.5f, rotation, targetLayer);
+            Collider[] hits = Physics.OverlapBox(center, attackBoxSize * 0.5f, rotation, Sensor.TargetLayer);
 
             foreach (Collider hit in hits)
             {
@@ -28,7 +25,7 @@ namespace Members.JJH._02_Scripts.Agents.Enemies
                 {
                     if (damageable.IsAlive)
                     {
-                        damageable.TakeDamage(attackDamage, gameObject);
+                        damageable.TakeDamage(EnemyData.AttackDamage, gameObject);
                         return;
                     }
                 }
